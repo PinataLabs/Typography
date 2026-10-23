@@ -2,29 +2,28 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography
+namespace PinataLabs.Typography;
+
+/// <summary>
+/// Represent the metrics of a font face specific to horizontal text.
+/// </summary>
+public class HorizontalMetrics : IMetricsHeader
 {
-    /// <summary>
-    /// Represent the metrics of a font face specific to horizontal text.
-    /// </summary>
-    public class HorizontalMetrics : IMetricsHeader
-    {
-        /// <inheritdoc/>
-        public short Ascender { get; internal set; }
+    /// <inheritdoc/>
+    public short Ascender { get; internal set; }
 
-        /// <inheritdoc/>
-        public short Descender { get; internal set; }
+    /// <inheritdoc/>
+    public short Descender { get; internal set; }
 
-        /// <inheritdoc/>
-        public short LineGap { get; internal set; }
+    /// <inheritdoc/>
+    public short LineGap { get; internal set; }
 
-        /// <inheritdoc/>
-        public short LineHeight { get; internal set; }
+    /// <inheritdoc/>
+    public short LineHeight { get; internal set; }
 
-        /// <inheritdoc/>
-        public short AdvanceWidthMax { get; internal set; }
+    /// <inheritdoc/>
+    public short AdvanceWidthMax { get; internal set; }
 
-        /// <inheritdoc/>
-        public short AdvanceHeightMax { get; internal set; }
-    }
+    /// <inheritdoc/>
+    public short AdvanceHeightMax { get; internal set; }
 }

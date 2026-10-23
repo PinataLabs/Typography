@@ -4,24 +4,23 @@
 
 using System.Threading.Tasks;
 
-namespace PinataLabs.Typography.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues;
+
+public class Issues_334
 {
-    public class Issues_334
+    [Test]
+    public async Task DoesNotSkewCompositeGlyph()
     {
-        [Test]
-        public async Task DoesNotSkewCompositeGlyph()
-        {
-            FontFamily family = new FontCollection().Add(TestFonts.SumanaRegularFile);
-            family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        FontFamily family = new FontCollection().Add(TestFonts.SumanaRegularFile);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
 
-            Font font = family.CreateFont(metrics.UnitsPerEm);
-            ColorGlyphRenderer renderer = new();
-            TextRenderer.RenderTextTo(renderer, "(", new TextOptions(font));
+        Font font = family.CreateFont(metrics.UnitsPerEm);
+        ColorGlyphRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "(", new TextOptions(font));
 
-            await Assert.That(renderer.GlyphRects).HasSingleItem();
+        await Assert.That(renderer.GlyphRects).HasSingleItem();
 
-            FontRectangle expected = new(31, 190.5F, 264, 1047);
-            await Assert.That(renderer.GlyphRects[0]).IsEqualTo(expected);
-        }
+        FontRectangle expected = new(31, 190.5F, 264, 1047);
+        await Assert.That(renderer.GlyphRects[0]).IsEqualTo(expected);
     }
 }

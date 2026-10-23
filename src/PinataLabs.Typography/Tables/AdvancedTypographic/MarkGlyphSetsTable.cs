@@ -4,26 +4,25 @@
 
 using System.IO;
 
-namespace PinataLabs.Typography.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic;
+
+internal sealed class MarkGlyphSetsTable
 {
-    internal sealed class MarkGlyphSetsTable
+    public ushort Format { get; internal set; }
+
+    public ushort[]? CoverageOffset { get; internal set; }
+
+    public static MarkGlyphSetsTable Load(BigEndianBinaryReader reader, long offset)
     {
-        public ushort Format { get; internal set; }
+        reader.Seek(offset, SeekOrigin.Begin);
 
-        public ushort[]? CoverageOffset { get; internal set; }
-
-        public static MarkGlyphSetsTable Load(BigEndianBinaryReader reader, long offset)
+        var markGlyphSetsTable = new MarkGlyphSetsTable
         {
-            reader.Seek(offset, SeekOrigin.Begin);
+            Format = reader.ReadUInt16()
+        };
+        ushort markSetCount = reader.ReadUInt16();
+        markGlyphSetsTable.CoverageOffset = reader.ReadUInt16Array(markSetCount);
 
-            var markGlyphSetsTable = new MarkGlyphSetsTable
-            {
-                Format = reader.ReadUInt16()
-            };
-            ushort markSetCount = reader.ReadUInt16();
-            markGlyphSetsTable.CoverageOffset = reader.ReadUInt16Array(markSetCount);
-
-            return markGlyphSetsTable;
-        }
+        return markGlyphSetsTable;
     }
 }

@@ -4,24 +4,23 @@
 
 using System;
 
-namespace PinataLabs.Typography
+namespace PinataLabs.Typography;
+
+/// <summary>
+/// A surface that can have a glyph rendered to it as a series of actions.
+/// </summary>
+public static class IGlyphRendererExtensions
 {
     /// <summary>
-    /// A surface that can have a glyph rendered to it as a series of actions.
+    /// Renders the text.
     /// </summary>
-    public static class IGlyphRendererExtensions
+    /// <param name="renderer">The target renderer surface.</param>
+    /// <param name="text">The text.</param>
+    /// <param name="options">The options.</param>
+    /// <returns>Returns the original <paramref name="renderer"/></returns>
+    public static IGlyphRenderer Render(this IGlyphRenderer renderer, ReadOnlySpan<char> text, TextOptions options)
     {
-        /// <summary>
-        /// Renders the text.
-        /// </summary>
-        /// <param name="renderer">The target renderer surface.</param>
-        /// <param name="text">The text.</param>
-        /// <param name="options">The options.</param>
-        /// <returns>Returns the original <paramref name="renderer"/></returns>
-        public static IGlyphRenderer Render(this IGlyphRenderer renderer, ReadOnlySpan<char> text, TextOptions options)
-        {
-            new TextRenderer(renderer).RenderText(text, options);
-            return renderer;
-        }
+        new TextRenderer(renderer).RenderText(text, options);
+        return renderer;
     }
 }

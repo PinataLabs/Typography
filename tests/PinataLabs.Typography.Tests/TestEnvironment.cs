@@ -7,55 +7,54 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace PinataLabs.Typography.Tests
+namespace PinataLabs.Typography.Tests;
+
+internal static class TestEnvironment
 {
-    internal static class TestEnvironment
+    private const string SolutionFileName = "PinataLabs.Typography.slnx";
+
+    private const string UnicodeTestDataRelativePath = @"tests\UnicodeTestData\";
+
+    private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new(GetSolutionDirectoryFullPathImpl);
+
+    internal static string SolutionDirectoryFullPath => SolutionDirectoryFullPathLazy.Value;
+
+    /// <summary>
+    /// Gets the correct full path to the Unicode TestData directory.
+    /// </summary>
+    internal static string UnicodeTestDataFullPath => GetFullPath(UnicodeTestDataRelativePath);
+
+    private static string GetSolutionDirectoryFullPathImpl()
     {
-        private const string SolutionFileName = "PinataLabs.Typography.slnx";
+        string assemblyLocation = Path.GetDirectoryName(typeof(TestEnvironment).GetTypeInfo().Assembly.Location);
 
-        private const string UnicodeTestDataRelativePath = @"tests\UnicodeTestData\";
+        var assemblyFile = new FileInfo(assemblyLocation);
 
-        private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new(GetSolutionDirectoryFullPathImpl);
+        DirectoryInfo directory = assemblyFile.Directory;
 
-        internal static string SolutionDirectoryFullPath => SolutionDirectoryFullPathLazy.Value;
-
-        /// <summary>
-        /// Gets the correct full path to the Unicode TestData directory.
-        /// </summary>
-        internal static string UnicodeTestDataFullPath => GetFullPath(UnicodeTestDataRelativePath);
-
-        private static string GetSolutionDirectoryFullPathImpl()
+        while (!directory.EnumerateFiles(SolutionFileName).Any())
         {
-            string assemblyLocation = Path.GetDirectoryName(typeof(TestEnvironment).GetTypeInfo().Assembly.Location);
-
-            var assemblyFile = new FileInfo(assemblyLocation);
-
-            DirectoryInfo directory = assemblyFile.Directory;
-
-            while (!directory.EnumerateFiles(SolutionFileName).Any())
+            try
             {
-                try
-                {
-                    directory = directory.Parent;
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(
-                        $"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation} because of {ex.GetType().Name}!",
-                        ex);
-                }
-
-                if (directory == null)
-                {
-                    throw new Exception($"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!");
-                }
+                directory = directory.Parent;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    $"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation} because of {ex.GetType().Name}!",
+                    ex);
             }
 
-            return directory.FullName;
+            if (directory == null)
+            {
+                throw new Exception($"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!");
+            }
         }
 
-        private static string GetFullPath(string relativePath) =>
-            Path.Combine(SolutionDirectoryFullPath, relativePath)
-            .Replace('\\', Path.DirectorySeparatorChar);
+        return directory.FullName;
     }
+
+    private static string GetFullPath(string relativePath) =>
+        Path.Combine(SolutionDirectoryFullPath, relativePath)
+        .Replace('\\', Path.DirectorySeparatorChar);
 }

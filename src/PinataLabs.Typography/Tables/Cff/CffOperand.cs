@@ -2,28 +2,27 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff;
+
+internal readonly struct CffOperand
 {
-    internal readonly struct CffOperand
+    public CffOperand(double number, OperandKind kind)
     {
-        public CffOperand(double number, OperandKind kind)
-        {
-            this.Kind = kind;
-            this.RealNumValue = number;
-        }
+        this.Kind = kind;
+        this.RealNumValue = number;
+    }
 
-        public readonly OperandKind Kind { get; }
+    public readonly OperandKind Kind { get; }
 
-        public readonly double RealNumValue { get; }
+    public readonly double RealNumValue { get; }
 
 #if DEBUG
-        public override string ToString()
-            => this.Kind switch
-            {
-                OperandKind.IntNumber => ((int)this.RealNumValue).ToString(),
-                _ => this.RealNumValue.ToString(),
-            };
+    public override string ToString()
+        => this.Kind switch
+        {
+            OperandKind.IntNumber => ((int)this.RealNumValue).ToString(),
+            _ => this.RealNumValue.ToString(),
+        };
 #endif
 
-    }
 }

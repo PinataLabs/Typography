@@ -2,25 +2,24 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tables.TrueType.Glyphs
+namespace PinataLabs.Typography.Tables.TrueType.Glyphs;
+
+internal abstract class GlyphLoader
 {
-    internal abstract class GlyphLoader
+    public abstract GlyphVector CreateGlyph(GlyphTable table);
+
+    public static GlyphLoader Load(BigEndianBinaryReader reader)
     {
-        public abstract GlyphVector CreateGlyph(GlyphTable table);
+        short contoursCount = reader.ReadInt16();
+        var bounds = Bounds.Load(reader);
 
-        public static GlyphLoader Load(BigEndianBinaryReader reader)
+        if (contoursCount >= 0)
         {
-            short contoursCount = reader.ReadInt16();
-            var bounds = Bounds.Load(reader);
-
-            if (contoursCount >= 0)
-            {
-                return SimpleGlyphLoader.LoadSimpleGlyph(reader, contoursCount, bounds);
-            }
-            else
-            {
-                return CompositeGlyphLoader.LoadCompositeGlyph(reader, bounds);
-            }
+            return SimpleGlyphLoader.LoadSimpleGlyph(reader, contoursCount, bounds);
+        }
+        else
+        {
+            return CompositeGlyphLoader.LoadCompositeGlyph(reader, bounds);
         }
     }
 }

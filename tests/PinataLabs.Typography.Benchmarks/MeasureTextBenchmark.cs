@@ -6,47 +6,46 @@ using System;
 using BenchmarkDotNet.Attributes;
 using SkiaSharp;
 
-namespace PinataLabs.Typography.Benchmarks
+namespace PinataLabs.Typography.Benchmarks;
+
+/// <summary>
+/// <para>
+/// This benchmark is not actually measuring the same operation as SkiSharp is
+/// not doing any layout or shaping operations. However it is useful as a marker to measure
+/// performance against.
+/// </para>
+/// <para>We should see if we can include the Skia HarfBuzz extensions to see how we compare.</para>
+/// </summary>
+[MediumRunJob]
+public class MeasureTextBenchmark : IDisposable
 {
-    /// <summary>
-    /// <para>
-    /// This benchmark is not actually measuring the same operation as SkiSharp is
-    /// not doing any layout or shaping operations. However it is useful as a marker to measure
-    /// performance against.
-    /// </para>
-    /// <para>We should see if we can include the Skia HarfBuzz extensions to see how we compare.</para>
-    /// </summary>
-    [MediumRunJob]
-    public class MeasureTextBenchmark : IDisposable
+    private readonly TextOptions textOptions;
+    private readonly SKTypeface arialTypeface;
+    private readonly SKFont font;
+
+    public MeasureTextBenchmark()
     {
-        private readonly TextOptions textOptions;
-        private readonly SKTypeface arialTypeface;
-        private readonly SKFont font;
+        const string fontFamilyName = "Arial";
+        const int fontSize = 16;
 
-        public MeasureTextBenchmark()
-        {
-            const string fontFamilyName = "Arial";
-            const int fontSize = 16;
+        this.textOptions = new TextOptions(SystemFonts.Get(fontFamilyName).CreateFont(fontSize, FontStyle.Regular));
 
-            this.textOptions = new TextOptions(SystemFonts.Get(fontFamilyName).CreateFont(fontSize, FontStyle.Regular));
-
-            this.arialTypeface = SKTypeface.FromFamilyName(fontFamilyName, SKFontStyle.Normal);
-            this.font = new SKFont(this.arialTypeface, fontSize);
-        }
-
-        public void Dispose()
-        {
-            this.arialTypeface.Dispose();
-            this.font.Dispose();
-        }
-
-        [Params("a", "Hello world", "The quick brown fox jumps over the lazy dog")]
-        public string Text { get; set; } = string.Empty;
-
-        [Benchmark]
-        public void PinataLabsTypography() => TextMeasurer.MeasureSize(this.Text, this.textOptions);
-
-        [Benchmark]
-        public void SkiaSharp() => this.font.MeasureText(this.Text);
+        this.arialTypeface = SKTypeface.FromFamilyName(fontFamilyName, SKFontStyle.Normal);
+        this.font = new SKFont(this.arialTypeface, fontSize);
     }
+
+    public void Dispose()
+    {
+        this.arialTypeface.Dispose();
+        this.font.Dispose();
+    }
+
+    [Params("a", "Hello world", "The quick brown fox jumps over the lazy dog")]
+    public string Text { get; set; } = string.Empty;
+
+    [Benchmark]
+    public void PinataLabsTypography() => TextMeasurer.MeasureSize(this.Text, this.textOptions);
+
+    [Benchmark]
+    public void SkiaSharp() => this.font.MeasureText(this.Text);
 }

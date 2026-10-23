@@ -2,23 +2,22 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tables
+namespace PinataLabs.Typography.Tables;
+
+internal enum TableFormat
 {
-    internal enum TableFormat
-    {
-        /// <summary>
-        /// woff font table format.
-        /// </summary>
-        Woff,
+    /// <summary>
+    /// woff font table format.
+    /// </summary>
+    Woff,
 
-        /// <summary>
-        /// woff2 font table format.
-        /// </summary>
-        Woff2,
+    /// <summary>
+    /// woff2 font table format.
+    /// </summary>
+    Woff2,
 
-        /// <summary>
-        /// otf font table format.
-        /// </summary>
-        Otf
-    }
+    /// <summary>
+    /// otf font table format.
+    /// </summary>
+    Otf
 }

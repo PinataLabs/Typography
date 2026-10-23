@@ -5,14 +5,13 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace PinataLabs.Typography.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues;
+
+public class Issues_96
 {
-    public class Issues_96
+    [Test]
+    public async Task ShouldNotThrowArgumentExceptionWhenFontContainsDuplicateTables()
     {
-        [Test]
-        public async Task ShouldNotThrowArgumentExceptionWhenFontContainsDuplicateTables()
-        {
-            await Assert.That(() => FontDescription.LoadDescription(TestFonts.Issues.Issue96File)).ThrowsExactly<EndOfStreamException>();
-        }
+        await Assert.That(() => FontDescription.LoadDescription(TestFonts.Issues.Issue96File)).ThrowsExactly<EndOfStreamException>();
     }
 }

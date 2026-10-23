@@ -2,16 +2,15 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues;
+
+public class Issues_333
 {
-    public class Issues_333
+    [Test]
+    public void DoesNotThrowMissingTableException()
     {
-        [Test]
-        public void DoesNotThrowMissingTableException()
-        {
-            const string text = "文字測試文字測試文字測試文字測試文字測試";
-            Font font = new FontCollection().Add(TestFonts.PMINGLIUFile).CreateFont(1024);
-            TextMeasurer.MeasureSize(text, new TextOptions(font));
-        }
+        const string text = "文字測試文字測試文字測試文字測試文字測試";
+        Font font = new FontCollection().Add(TestFonts.PMINGLIUFile).CreateFont(1024);
+        TextMeasurer.MeasureSize(text, new TextOptions(font));
     }
 }
