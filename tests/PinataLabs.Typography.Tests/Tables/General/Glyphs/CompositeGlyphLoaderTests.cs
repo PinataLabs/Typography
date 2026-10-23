@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 {
     public class CompositeGlyphLoaderTests
     {
-        [Fact]
+        [Test]
         public void LoadSingleGlyphWithUInt16Offset_unsigned_short()
         {
             var writer = new BigEndianBinaryWriter();
@@ -37,7 +37,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             Assert.Equal(new Vector2(short.MaxValue + 1 + 20, short.MaxValue + 2 + 21), point.Point);
         }
 
-        [Fact]
+        [Test]
         public void LoadSingleGlyphWithInt16Offset_signed_short()
         {
             var writer = new BigEndianBinaryWriter();
@@ -63,7 +63,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             Assert.Equal(new Vector2(short.MinValue + 1 + 20, short.MinValue + 2 + 21), point.Point);
         }
 
-        [Fact]
+        [Test]
         public void LoadSingleGlyphWithUInt8Offset_unsigned_byte()
         {
             var writer = new BigEndianBinaryWriter();
@@ -89,7 +89,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             Assert.Equal(new Vector2(sbyte.MaxValue + 1 + 20, sbyte.MaxValue + 2 + 21), point.Point);
         }
 
-        [Fact]
+        [Test]
         public void LoadSingleGlyphWithInt8Offset_signed_byte()
         {
             var writer = new BigEndianBinaryWriter();

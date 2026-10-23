@@ -21,7 +21,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             return family.CreateFont(12);
         }
 
-        [Fact]
+        [Test]
         public void ShouldUseComposedSyllablesCFF()
         {
             // arrange
@@ -40,7 +40,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldComposeDecomposedSyllablesCFF()
         {
             // arrange
@@ -59,7 +59,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldUseOTFeaturesForNonCombining_L_V_T_CFF()
         {
             // arrange
@@ -78,7 +78,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldDecompose_LV_T_To_L_V_T_If_LVT_IsNotSupportedCFF()
         {
             // <L,V> combine at first, but the T is non-combining, so this
@@ -100,7 +100,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReorderToneMarksToBeginningOf_L_V_SyllablesCFF()
         {
             // arrange
@@ -122,7 +122,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 #if OS_WINDOWS
         private readonly Font hangulFontTTF = SystemFonts.CreateFont("Malgun Gothic", 12);
 
-        [Fact]
+        [Test]
         public void ShouldUseComposedSyllablesTTF()
         {
             // arrange
@@ -141,7 +141,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldComposeDecomposedSyllablesTTF()
         {
             // arrange
@@ -160,7 +160,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldUseOTFeaturesForNonCombining_L_V_T_TTF()
         {
             // arrange
@@ -179,7 +179,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldDecompose_LV_T_To_L_V_T_If_LVT_IsNotSupportedTTF()
         {
             // <L,V> combine at first, but the T is non-combining, so this
@@ -201,7 +201,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReorderToneMarksToBeginningOf_L_V_SyllablesTTF()
         {
             // arrange
@@ -220,7 +220,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReorderToneMarksToBeginningOf_L_V_T_Syllables()
         {
             // arrange
@@ -239,7 +239,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReorderToneMarksToBeginningOf_LV_Syllables()
         {
             // arrange
@@ -258,7 +258,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReorderToneMarksToBeginningOf_LVT_Syllables()
         {
             // arrange
@@ -277,7 +277,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldInsertDottedCircleForInvalidToneMarks()
         {
             // arrange

@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
 {
     public class Format0SubTableTests
     {
-        [Fact]
+        [Test]
         public void LoadFormat0()
         {
             var writer = new BigEndianBinaryWriter();
@@ -39,7 +39,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, table.GlyphIds);
         }
 
-        [Fact]
+        [Test]
         public void GetCharacter()
         {
             var format = new Format0SubTable(0, PlatformIDs.Windows, 2, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
@@ -50,7 +50,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
             Assert.Equal(5, id);
         }
 
-        [Fact]
+        [Test]
         public void GetCharacter_missing()
         {
             var format = new Format0SubTable(0, PlatformIDs.Windows, 2, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });

@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests.Native
 {
     public class MacSystemFontsEnumeratorTests
     {
-        [Fact]
+        [Test]
         public void TestReset()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

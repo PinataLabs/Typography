@@ -10,15 +10,14 @@ namespace PinataLabs.Typography.Tests.Tables
 {
     public class TableHeaderTests
     {
-        public static TheoryData<string, uint, uint, uint> ReadAllValuesData { get; } =
-            new TheoryData<string, uint, uint, uint>
-            {
-                { "TAG1", 98, 18, 1218 },
-                { "TAG2", 198, 0, 121 },
-            };
+        public static System.Collections.Generic.IEnumerable<(string Tag, uint Checksum, uint Offset, uint Length)> ReadAllValuesData { get; } =
+            [
+                ("TAG1", 98, 18, 1218),
+                ("TAG2", 198, 0, 121),
+            ];
 
-        [Theory]
-        [MemberData(nameof(ReadAllValuesData))]
+        [Test]
+        [MethodDataSource(nameof(ReadAllValuesData))]
         public void ReadAllValues(string tag, uint checksum, uint offset, uint length)
         {
             var writer = new BigEndianBinaryWriter();

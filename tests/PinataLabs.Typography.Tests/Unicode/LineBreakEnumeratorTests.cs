@@ -9,18 +9,16 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using PinataLabs.Typography.Unicode;
+using TUnit.Core.Interfaces;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
     public class LineBreakEnumeratorTests
     {
-        private readonly ITestOutputHelper output;
+        private ITestOutput Output => TestContext.Current!.Output;
 
-        public LineBreakEnumeratorTests(ITestOutputHelper output) => this.output = output;
-
-        [Fact]
+        [Test]
         public void BasicLatinTest()
         {
             var lineBreaker = new LineBreakEnumerator("Hello World\r\nThis is a test.".AsSpan());
@@ -52,7 +50,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.False(lineBreaker.MoveNext());
         }
 
-        [Fact]
+        [Test]
         public void ForwardTextWithOuterWhitespace()
         {
             string text = " Apples Pears Bananas   ";
@@ -73,7 +71,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(21, breaks[3].PositionMeasure);
         }
 
-        [Fact]
+        [Test]
         public void ForwardTest()
         {
             string text = "Apples Pears Bananas";
@@ -92,15 +90,15 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(20, breaks[2].PositionMeasure);
         }
 
-        [Fact]
+        [Test]
         public void ICUTests() => Assert.True(this.ICUTestsImpl());
 
         // Contains over 7000 tests
         // https://www.unicode.org/Public/13.0.0/ucd/auxiliary/LineBreakTest.html
-        public bool ICUTestsImpl()
+        private bool ICUTestsImpl()
         {
-            this.output.WriteLine("Line Breaker Tests");
-            this.output.WriteLine("------------------");
+            this.Output.WriteLine("Line Breaker Tests");
+            this.Output.WriteLine("------------------");
 
             // Read the test file
             string[] lines = File.ReadAllLines(Path.Combine(TestEnvironment.UnicodeTestDataFullPath, "LineBreakTest.txt"));
@@ -199,11 +197,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 {
                     LineBreakClass[] classes = t.CodePoints.Select(x => UnicodeData.GetLineBreakClass(x)).ToArray();
 
-                    this.output.WriteLine($"Failed test on line {t.LineNumber}");
-                    this.output.WriteLine($"    Code Points: {string.Join(" ", t.CodePoints)}");
-                    this.output.WriteLine($"Expected Breaks: {string.Join(" ", t.BreakPoints)}");
-                    this.output.WriteLine($"  Actual Breaks: {string.Join(" ", foundBreaks)}");
-                    this.output.WriteLine($"     Char Props: {string.Join(" ", classes)}");
+                    this.Output.WriteLine($"Failed test on line {t.LineNumber}");
+                    this.Output.WriteLine($"    Code Points: {string.Join(" ", t.CodePoints)}");
+                    this.Output.WriteLine($"Expected Breaks: {string.Join(" ", t.BreakPoints)}");
+                    this.Output.WriteLine($"  Actual Breaks: {string.Join(" ", foundBreaks)}");
+                    this.Output.WriteLine($"     Char Props: {string.Join(" ", classes)}");
 
                     return false;
                 }

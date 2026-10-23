@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Issues
     public class Issues_302
     {
 #if OS_WINDOWS
-        [Fact]
+        [Test]
         public void DoesNotThrowOutOfBounds()
         {
             const string content = "فِيلْمٌ";

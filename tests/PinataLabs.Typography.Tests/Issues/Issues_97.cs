@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_97
     {
-        [Fact]
+        [Test]
         public void ShouldNotThrowNullReferenceExceptionWhenReaderCannotBeCreatedForTable()
             => Assert.Throws<InvalidFontTableException>(() => FontDescription.LoadDescription(TestFonts.Issues.Issue97File));
     }

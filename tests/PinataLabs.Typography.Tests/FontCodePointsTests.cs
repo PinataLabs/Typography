@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontCodePointsTests
     {
-        [Fact]
+        [Test]
         public void TtfTest()
         {
             var collection = new FontCollection();
@@ -48,7 +48,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(8, glyphIds.Count);
         }
 
-        [Fact]
+        [Test]
         public void WoffTest()
         {
             var collection = new FontCollection();

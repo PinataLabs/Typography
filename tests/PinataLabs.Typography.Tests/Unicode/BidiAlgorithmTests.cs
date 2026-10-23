@@ -7,18 +7,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using PinataLabs.Typography.Unicode;
+using TUnit.Core.Interfaces;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
     public class BidiAlgorithmTests
     {
-        private readonly ITestOutputHelper output;
+        private ITestOutput Output => TestContext.Current!.Output;
 
-        public BidiAlgorithmTests(ITestOutputHelper output) => this.output = output;
-
-        [Fact]
+        [Test]
         public void RendersKurdishTextCorrect()
         {
             // arrange
@@ -42,7 +40,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void RendersFarsiTextCorrect()
         {
             // arrange
@@ -66,7 +64,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void RendersArabicTextWithPunctuationCorrectly()
         {
             // arrange
@@ -91,7 +89,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void RendersArabicNumbersFromLeftToRight()
         {
             // arrange
@@ -111,7 +109,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void MixingArabicWordsWithNumbers_Works()
         {
             // arrange
@@ -131,7 +129,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void MathematicalFormulasWithArabicText_Works()
         {
             // arrange
@@ -151,13 +149,13 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void ICUTests() => Assert.True(this.ICUTestsImpl());
 
         private bool ICUTestsImpl()
         {
-            this.output.WriteLine("Bidi Class Tests");
-            this.output.WriteLine("----------------");
+            this.Output.WriteLine("Bidi Class Tests");
+            this.Output.WriteLine("----------------");
 
             // Read the test file
             string[] lines = File.ReadAllLines(Path.Combine(TestEnvironment.UnicodeTestDataFullPath, "BidiTest.txt"));
@@ -246,7 +244,7 @@ namespace PinataLabs.Typography.Tests.Unicode
                 }
             }
 
-            this.output.WriteLine($"Test data loaded: {tests.Count} test cases");
+            this.Output.WriteLine($"Test data loaded: {tests.Count} test cases");
 
             for (int testNumber = 0; testNumber < tests.Count; testNumber++)
             {
@@ -292,11 +290,11 @@ namespace PinataLabs.Typography.Tests.Unicode
 
                 if (!pass)
                 {
-                    this.output.WriteLine($"Failed line {t.LineNumber}");
-                    this.output.WriteLine($"        Data: {string.Join(" ", t.Types)}");
-                    this.output.WriteLine($" Embed Level: {t.ParagraphEmbeddingLevel}");
-                    this.output.WriteLine($"    Expected: {string.Join(" ", t.ExpectedLevels)}");
-                    this.output.WriteLine($"      Actual: {string.Join(" ", resultLevels)}");
+                    this.Output.WriteLine($"Failed line {t.LineNumber}");
+                    this.Output.WriteLine($"        Data: {string.Join(" ", t.Types)}");
+                    this.Output.WriteLine($" Embed Level: {t.ParagraphEmbeddingLevel}");
+                    this.Output.WriteLine($"    Expected: {string.Join(" ", t.ExpectedLevels)}");
+                    this.Output.WriteLine($"      Actual: {string.Join(" ", resultLevels)}");
                     return false;
                 }
             }

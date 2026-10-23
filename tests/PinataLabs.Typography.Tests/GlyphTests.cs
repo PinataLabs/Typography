@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using Moq;
+using NSubstitute;
 using PinataLabs.Typography.Tables.TrueType;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Tests.Fakes;
@@ -21,7 +21,7 @@ namespace PinataLabs.Typography.Tests
     {
         private readonly GlyphRenderer renderer = new();
 
-        [Fact]
+        [Test]
         public void RenderToPointAndSingleDPI()
         {
             const string text = "A";
@@ -56,7 +56,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(new FontRectangle(99, 89, 0, 0), this.renderer.GlyphRects.Single());
         }
 
-        [Fact]
+        [Test]
         public void IdenticalGlyphsInDifferentPlacesCreateIdenticalKeys()
         {
             Font fakeFont = CreateFont("AB");
@@ -68,28 +68,28 @@ namespace PinataLabs.Typography.Tests
             Assert.NotEqual(this.renderer.GlyphKeys[1], this.renderer.GlyphKeys[2]);
         }
 
-        [Fact]
+        [Test]
         public void BeginGlyph_ReturnsFalse_SkipRenderingFigures()
         {
-            var renderer = new Mock<IGlyphRenderer>();
-            renderer.Setup(x => x.BeginGlyph(It.Ref<FontRectangle>.IsAny, It.Ref<GlyphRendererParameters>.IsAny)).Returns(false);
+            IGlyphRenderer renderer = Substitute.For<IGlyphRenderer>();
+            renderer.BeginGlyph(default, default).ReturnsForAnyArgs(false);
             Font fakeFont = CreateFont("A");
-            var textRenderer = new TextRenderer(renderer.Object);
+            var textRenderer = new TextRenderer(renderer);
 
             textRenderer.RenderText("ABA", new TextOptions(fakeFont));
-            renderer.Verify(x => x.BeginFigure(), Times.Never);
+            renderer.DidNotReceive().BeginFigure();
         }
 
-        [Fact]
+        [Test]
         public void BeginGlyph_ReturnsTrue_RendersFigures()
         {
-            var renderer = new Mock<IGlyphRenderer>();
-            renderer.Setup(x => x.BeginGlyph(It.Ref<FontRectangle>.IsAny, It.Ref<GlyphRendererParameters>.IsAny)).Returns(true);
+            IGlyphRenderer renderer = Substitute.For<IGlyphRenderer>();
+            renderer.BeginGlyph(default, default).ReturnsForAnyArgs(true);
             Font fakeFont = CreateFont("A");
-            var textRenderer = new TextRenderer(renderer.Object);
+            var textRenderer = new TextRenderer(renderer);
 
             textRenderer.RenderText("ABA", new TextOptions(fakeFont));
-            renderer.Verify(x => x.BeginFigure(), Times.Exactly(3));
+            renderer.Received(3).BeginFigure();
         }
 
         public static Font CreateFont(string text, float pointSize = 1)
@@ -99,7 +99,7 @@ namespace PinataLabs.Typography.Tests
             return new Font(d, pointSize);
         }
 
-        [Fact]
+        [Test]
         public void LoadGlyph()
         {
             Font font = new FontCollection().Add(TestFonts.SimpleFontFileData()).CreateFont(12);
@@ -112,7 +112,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(20, instance.ControlPoints.Count);
         }
 
-        [Fact]
+        [Test]
         public void RenderColrGlyph()
         {
             Font font = new FontCollection().Add(TestFonts.TwemojiMozillaData()).CreateFont(12);
@@ -132,7 +132,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(3, vectors.Count());
         }
 
-        [Fact]
+        [Test]
         public void RenderColrGlyphTextRenderer()
         {
             Font font = new FontCollection().Add(TestFonts.TwemojiMozillaData()).CreateFont(12);
@@ -146,7 +146,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(3, renderer.Colors.Count);
         }
 
-        [Fact]
+        [Test]
         public void RenderColrGlyphWithVariationSelector()
         {
             Font font = new FontCollection().Add(TestFonts.TwemojiMozillaData()).CreateFont(12);
@@ -159,7 +159,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(4, layout.Count);
         }
 
-        [Fact]
+        [Test]
         public void EmojiWidthIsComputedCorrectlyWithSubstitutionOnZwj()
         {
             Font font = new FontCollection().Add(TestFonts.SegoeuiEmojiData()).CreateFont(72);
@@ -174,11 +174,11 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(75F, size2.Width);
         }
 
-        [Theory]
-        [InlineData(false, false, 1238)]
-        [InlineData(false, true, 1238)]
-        [InlineData(true, false, 1238)]
-        [InlineData(true, true, 1238)]
+        [Test]
+        [Arguments(false, false, 1238)]
+        [Arguments(false, true, 1238)]
+        [Arguments(true, false, 1238)]
+        [Arguments(true, true, 1238)]
         public void RenderWoffGlyphs_IsEqualToTtfGlyphs(bool applyKerning, bool applyHinting, int expectedControlPoint)
         {
             Font fontTtf = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
@@ -204,12 +204,12 @@ namespace PinataLabs.Typography.Tests
             Assert.True(rendererTtf.ControlPoints.SequenceEqual(rendererWoff.ControlPoints));
         }
 
-        [Theory]
-        [InlineData("\uFB00")]
-        [InlineData("\uFB01")]
-        [InlineData("\uFB02")]
-        [InlineData("\uFB03")]
-        [InlineData("\uFB04")]
+        [Test]
+        [Arguments("\uFB00")]
+        [Arguments("\uFB01")]
+        [Arguments("\uFB02")]
+        [Arguments("\uFB03")]
+        [Arguments("\uFB04")]
         public void RenderWoff_CompositeGlyphs_IsEqualToTtfGlyphs(string testStr)
         {
             Font fontTtf = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
@@ -232,11 +232,11 @@ namespace PinataLabs.Typography.Tests
             Assert.True(rendererTtf.ControlPoints.SequenceEqual(rendererWoff.ControlPoints));
         }
 
-        [Theory]
-        [InlineData(false, false, 1238)]
-        [InlineData(false, true, 1238)]
-        [InlineData(true, false, 1238)]
-        [InlineData(true, true, 1238)]
+        [Test]
+        [Arguments(false, false, 1238)]
+        [Arguments(false, true, 1238)]
+        [Arguments(true, false, 1238)]
+        [Arguments(true, true, 1238)]
         public void RenderWoff2Glyphs_IsEqualToTtfGlyphs(bool applyKerning, bool applyHinting, int expectedControlPoints)
         {
             Font fontTtf = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
@@ -262,12 +262,12 @@ namespace PinataLabs.Typography.Tests
             Assert.True(rendererTtf.ControlPoints.SequenceEqual(rendererWoff2.ControlPoints));
         }
 
-        [Theory]
-        [InlineData("\uFB00")]
-        [InlineData("\uFB01")]
-        [InlineData("\uFB02")]
-        [InlineData("\uFB03")]
-        [InlineData("\uFB04")]
+        [Test]
+        [Arguments("\uFB00")]
+        [Arguments("\uFB01")]
+        [Arguments("\uFB02")]
+        [Arguments("\uFB03")]
+        [Arguments("\uFB04")]
         public void RenderWoff2_CompositeGlyphs_IsEqualToTtfGlyphs(string testStr)
         {
             Font fontTtf = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
@@ -291,9 +291,9 @@ namespace PinataLabs.Typography.Tests
         }
 
 #if OS_WINDOWS
-        [Theory]
-        [InlineData("Arial")]
-        [InlineData("Segoe UI Emoji")]
+        [Test]
+        [Arguments("Arial")]
+        [Arguments("Segoe UI Emoji")]
         public void RendererIsThreadsafe(string fontName)
         {
             const int threadCount = 10;

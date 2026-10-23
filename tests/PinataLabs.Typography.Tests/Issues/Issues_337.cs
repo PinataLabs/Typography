@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_337
     {
-        [Fact]
+        [Test]
         public void CanShapeCompositeGlyphs()
         {
             Font font = new FontCollection().Add(TestFonts.DFKaiSBFile).CreateFont(1024);

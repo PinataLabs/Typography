@@ -23,7 +23,7 @@ namespace PinataLabs.Typography.Tests
             this.clonedTextOptions = new TextOptions(this.newTextOptions);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontOnly()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -36,7 +36,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontWithSingleDpi()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -50,7 +50,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontWithOrigin()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -64,7 +64,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontWithSingleDpiWithOrigin()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -79,7 +79,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontOnly_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -101,7 +101,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontWithSingleDpi_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -125,7 +125,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontWithOrigin_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -149,7 +149,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void ConstructorTest_FontWithSingleDpiWithOrigin_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
@@ -175,7 +175,7 @@ namespace PinataLabs.Typography.Tests
             VerifyPropertyDefault(options);
         }
 
-        [Fact]
+        [Test]
         public void GetMissingGlyphFromMainFont()
         {
             Font font = FakeFont.CreateFontWithInstance("ABC", "ABC", out Fakes.FakeFontInstance abcFontInstance);
@@ -200,10 +200,10 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(abcFontInstance.Description.FontNameInvariantCulture.ToUpper(), glyph.Font);
         }
 
-        [Theory]
-        [InlineData('A', "abcFontInstance")]
-        [InlineData('F', "defFontInstance")]
-        [InlineData('H', "efghiFontInstance")]
+        [Test]
+        [Arguments('A', "abcFontInstance")]
+        [Arguments('F', "defFontInstance")]
+        [Arguments('H', "efghiFontInstance")]
         public void GetGlyphFromFirstAvailableInstance(char character, string instance)
         {
             Font font = FakeFont.CreateFontWithInstance("ABC", "ABC", out Fakes.FakeFontInstance abcFontInstance);
@@ -235,10 +235,10 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expectedInstance.Description.FontNameInvariantCulture.ToUpper(), glyph.Font);
         }
 
-        [Fact]
+        [Test]
         public void CloneTextOptionsIsNotNull() => Assert.True(this.clonedTextOptions != null);
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsApplyKerning()
         {
             const KerningMode expected = KerningMode.Standard;
@@ -246,7 +246,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.KerningMode);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsHorizontalAlignment()
         {
             const HorizontalAlignment expected = HorizontalAlignment.Left;
@@ -254,7 +254,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.HorizontalAlignment);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsVerticalAlignment()
         {
             const VerticalAlignment expected = VerticalAlignment.Top;
@@ -262,7 +262,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.VerticalAlignment);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsDpi()
         {
             const float expected = 72F;
@@ -270,7 +270,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.Dpi);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsTabWidth()
         {
             const float expected = -1F;
@@ -278,7 +278,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.TabWidth);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsWrappingLength()
         {
             const float expected = -1F;
@@ -286,7 +286,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.WrappingLength);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsLineSpacing()
         {
             const float expected = 1F;
@@ -294,7 +294,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.LineSpacing);
         }
 
-        [Fact]
+        [Test]
         public void DefaultTextOptionsTextJustification()
         {
             const TextJustification expected = TextJustification.None;
@@ -302,7 +302,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, this.clonedTextOptions.TextJustification);
         }
 
-        [Fact]
+        [Test]
         public void NonDefaultClone()
         {
             TextOptions expected = new(this.fakeFont)
@@ -329,7 +329,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected.FeatureTags, actual.FeatureTags);
         }
 
-        [Fact]
+        [Test]
         public void CloneIsDeep()
         {
             var expected = new TextOptions(this.fakeFont);

@@ -9,24 +9,22 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using PinataLabs.Typography.Unicode;
+using TUnit.Core.Interfaces;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
     public class BidiCharacterTests
     {
-        private readonly ITestOutputHelper output;
+        private ITestOutput Output => TestContext.Current!.Output;
 
-        public BidiCharacterTests(ITestOutputHelper output) => this.output = output;
-
-        [Fact]
+        [Test]
         public void ICUTests() => Assert.True(this.ICUTestsImpl());
 
         private bool ICUTestsImpl()
         {
-            this.output.WriteLine("Bidi Character Tests");
-            this.output.WriteLine("--------------------");
+            this.Output.WriteLine("Bidi Character Tests");
+            this.Output.WriteLine("--------------------");
 
             // Read the test file
             string[] lines = File.ReadAllLines(Path.Combine(TestEnvironment.UnicodeTestDataFullPath, "BidiCharacterTest.txt"));
@@ -66,7 +64,7 @@ namespace PinataLabs.Typography.Tests.Unicode
                 tests.Add(test);
             }
 
-            this.output.WriteLine($"Test data loaded: {tests.Count} test cases");
+            this.Output.WriteLine($"Test data loaded: {tests.Count} test cases");
 
             var bidi = new BidiAlgorithm();
             var bidiData = new BidiData();
@@ -113,16 +111,16 @@ namespace PinataLabs.Typography.Tests.Unicode
 
                 if (!passed)
                 {
-                    this.output.WriteLine($"Failed line {t.LineNumber}");
-                    this.output.WriteLine($"             Code Points: {string.Join(" ", t.CodePoints.Select(x => x.ToString("X4")))}");
-                    this.output.WriteLine($"      Pair Bracket Types: {string.Join(" ", bidiData.PairedBracketTypes.Select(x => "   " + x.ToString()))}");
-                    this.output.WriteLine($"     Pair Bracket Values: {string.Join(" ", bidiData.PairedBracketValues.Select(x => x.ToString("X4")))}");
-                    this.output.WriteLine($"             Embed Level: {t.ParagraphLevel}");
-                    this.output.WriteLine($"    Expected Embed Level: {t.ResolvedParagraphLevel}");
-                    this.output.WriteLine($"      Actual Embed Level: {resultParagraphLevel}");
-                    this.output.WriteLine($"          Directionality: {string.Join(" ", bidiData.Types)}");
-                    this.output.WriteLine($"         Expected Levels: {string.Join(" ", t.ResolvedLevels)}");
-                    this.output.WriteLine($"           Actual Levels: {string.Join(" ", resultLevels)}");
+                    this.Output.WriteLine($"Failed line {t.LineNumber}");
+                    this.Output.WriteLine($"             Code Points: {string.Join(" ", t.CodePoints.Select(x => x.ToString("X4")))}");
+                    this.Output.WriteLine($"      Pair Bracket Types: {string.Join(" ", bidiData.PairedBracketTypes.Select(x => "   " + x.ToString()))}");
+                    this.Output.WriteLine($"     Pair Bracket Values: {string.Join(" ", bidiData.PairedBracketValues.Select(x => x.ToString("X4")))}");
+                    this.Output.WriteLine($"             Embed Level: {t.ParagraphLevel}");
+                    this.Output.WriteLine($"    Expected Embed Level: {t.ResolvedParagraphLevel}");
+                    this.Output.WriteLine($"      Actual Embed Level: {resultParagraphLevel}");
+                    this.Output.WriteLine($"          Directionality: {string.Join(" ", bidiData.Types)}");
+                    this.Output.WriteLine($"         Expected Levels: {string.Join(" ", t.ResolvedLevels)}");
+                    this.Output.WriteLine($"           Actual Levels: {string.Join(" ", resultLevels)}");
                     return false;
                 }
             }

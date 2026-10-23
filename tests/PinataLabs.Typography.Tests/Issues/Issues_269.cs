@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_269
     {
-        [Fact]
+        [Test]
         public void CorrectlySetsMetricsForFontsNotAdheringToSpec()
         {
             // AliceFrancesHMK has invalid subtables.

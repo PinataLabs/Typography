@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class NameTableTests
     {
-        [Fact]
+        [Test]
         public void LoadFormat0()
         {
             var writer = new BigEndianBinaryWriter();
@@ -40,7 +40,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             Assert.Equal("other2", table.GetNameById(CultureInfo.InvariantCulture, 91));
         }
 
-        [Fact]
+        [Test]
         public void LoadFormat1()
         {
             var writer = new BigEndianBinaryWriter();
@@ -73,7 +73,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             Assert.Equal("other2", table.GetNameById(CultureInfo.InvariantCulture, 91));
         }
 
-        [Fact]
+        [Test]
         public void ShouldThrowExceptionWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

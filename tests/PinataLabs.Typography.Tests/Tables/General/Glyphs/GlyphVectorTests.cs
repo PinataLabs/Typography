@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 {
     public class GlyphVectorTests
     {
-        [Fact]
+        [Test]
         public void CloneIsDeep()
         {
             // arrange
@@ -31,7 +31,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             Assert.True(outline.EndPoints.SequenceEqual(clone.EndPoints));
         }
 
-        [Fact]
+        [Test]
         public void TtfOffsetXy_Works()
         {
             // arrange
@@ -50,7 +50,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             Assert.Equal(expectedBounds, glyphVector.Bounds);
         }
 
-        [Fact]
+        [Test]
         public void TtfTransformWith2x2Matrix_Works()
         {
             // arrange

@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class VerticalHeadTableTests
     {
-        [Fact]
+        [Test]
         public void LoadVerticalHeadTable()
         {
             var writer = new BigEndianBinaryWriter();
@@ -32,7 +32,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             Assert.Equal(11, tbl.NumberOfVMetrics);
         }
 
-        [Fact]
+        [Test]
         public void ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

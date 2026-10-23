@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_32
     {
-        [Fact]
+        [Test]
         public void TabWidth0CausesBadTabRendering()
         {
             string text = "Hello\tworld";

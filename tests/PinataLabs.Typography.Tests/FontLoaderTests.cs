@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontLoaderTests
     {
-        [Fact]
+        [Test]
         public void Issue21_LoopDetectedLoadingGlyphs()
         {
             Font font = new FontCollection().Add(TestFonts.CarterOneFileData()).CreateFont(12);
@@ -26,7 +26,7 @@ namespace PinataLabs.Typography.Tests
                 out IReadOnlyList<GlyphMetrics> _));
         }
 
-        [Fact]
+        [Test]
         public void LoadFontMetadata()
         {
             var description = FontDescription.LoadDescription(TestFonts.SimpleFontFileData());
@@ -35,7 +35,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontMetadataWoff()
         {
             var description = FontDescription.LoadDescription(TestFonts.SimpleFontFileWoffData());
@@ -44,7 +44,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFont_WithTtfFormat()
         {
             Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
@@ -60,7 +60,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Single(r.GlyphRects);
         }
 
-        [Fact]
+        [Test]
         public void LoadFont_WithWoff1Format()
         {
             Font font = new FontCollection().Add(TestFonts.OpenSansFileWoff1).CreateFont(12);
@@ -75,7 +75,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Single(r.GlyphRects);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontMetadata_WithWoff1Format()
         {
             var description = FontDescription.LoadDescription(TestFonts.OpensSansWoff1Data());
@@ -84,7 +84,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontMetadata_WithWoff2Format()
         {
             var description = FontDescription.LoadDescription(TestFonts.OpensSansWoff2Data());
@@ -93,7 +93,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFont_WithWoff2Format()
         {
             Font font = new FontCollection().Add(TestFonts.OpensSansWoff2Data()).CreateFont(12);
@@ -108,7 +108,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Single(r.GlyphRects);
         }
 
-        [Fact]
+        [Test]
         public void LoadFont()
         {
             Font font = new FontCollection().Add(TestFonts.SimpleFontFileData()).CreateFont(12);
@@ -125,7 +125,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(6, r.ControlPoints.Distinct().Count());
         }
 
-        [Fact]
+        [Test]
         public void LoadFontWoff()
         {
             Font font = new FontCollection().Add(TestFonts.SimpleFontFileWoffData()).CreateFont(12);

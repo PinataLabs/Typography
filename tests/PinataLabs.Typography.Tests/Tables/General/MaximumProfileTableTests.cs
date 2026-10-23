@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class MaximumProfileTableTests
     {
-        [Fact]
+        [Test]
         public void ShouldThrowExceptionWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

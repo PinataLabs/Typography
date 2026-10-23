@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontReaderTests
     {
-        [Fact]
+        [Test]
         public void ReadTrueTypeOutlineType()
         {
             var writer = new BigEndianBinaryWriter();
@@ -21,7 +21,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(OutlineType.TrueType, reader.OutlineType);
         }
 
-        [Fact]
+        [Test]
         public void ReadCffOutlineType()
         {
             var writer = new BigEndianBinaryWriter();
@@ -31,7 +31,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(OutlineType.CFF, reader.OutlineType);
         }
 
-        [Fact]
+        [Test]
         public void ReadTableHeaders()
         {
             var writer = new BigEndianBinaryWriter();
@@ -44,7 +44,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(2, reader.Headers.Count);
         }
 
-        [Fact]
+        [Test]
         public void ReadCMapTable()
         {
             var writer = new BigEndianBinaryWriter();
@@ -66,7 +66,7 @@ namespace PinataLabs.Typography.Tests
             Assert.NotNull(cmap);
         }
 
-        [Fact]
+        [Test]
         public void ReadFont_WithWoffFormat_EqualsTtf()
         {
             var fontReaderTtf = new FontReader(TestFonts.OpenSansTtfData());
@@ -79,7 +79,7 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void GlyphsCount_WithWoffFormat_EqualsTtf()
         {
             var fontReaderWoff = new FontReader(TestFonts.OpensSansWoff1Data());
@@ -90,7 +90,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(glyphsTtf.GlyphCount, glyphsWoff.GlyphCount);
         }
 
-        [Fact]
+        [Test]
         public void ReadFont_WithWoff2Format_EqualsTtf()
         {
             var fontReaderTtf = new FontReader(TestFonts.OpenSansTtfData());
@@ -103,7 +103,7 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void GlyphsCount_WithWoff2Format_EqualsTtf()
         {
             var fontReaderWoff = new FontReader(TestFonts.OpensSansWoff2Data());

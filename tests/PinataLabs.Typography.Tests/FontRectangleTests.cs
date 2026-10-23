@@ -11,15 +11,15 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontRectangleTests
     {
-        [Fact]
+        [Test]
         public void DefaultConstructorTest()
             => Assert.Equal(default, FontRectangle.Empty);
 
-        [Theory]
-        [InlineData(0, 0, 0, 0)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, 0, 0, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(0, 0, 0, 0)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, 0, 0, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void NonDefaultConstructorTest(float x, float y, float width, float height)
         {
             var rect1 = new FontRectangle(x, y, width, height);
@@ -30,11 +30,11 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(rect1, rect2);
         }
 
-        [Theory]
-        [InlineData(0, 0, 0, 0)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, 0, 0, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(0, 0, 0, 0)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, 0, 0, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void FromLTRBTest(float left, float top, float right, float bottom)
         {
             var expected = new FontRectangle(left, top, right - left, bottom - top);
@@ -43,11 +43,11 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, actual);
         }
 
-        [Theory]
-        [InlineData(0, 0, 0, 0)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, 0, 0, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(0, 0, 0, 0)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, 0, 0, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void DimensionsTest(float x, float y, float width, float height)
         {
             var rect = new FontRectangle(x, y, width, height);
@@ -66,7 +66,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(y + height, rect.Bottom);
         }
 
-        [Fact]
+        [Test]
         public void IsEmptyTest()
         {
             Assert.True(FontRectangle.Empty.IsEmpty);
@@ -78,9 +78,9 @@ namespace PinataLabs.Typography.Tests
             Assert.False(new FontRectangle(0, 0, 10, 10).IsEmpty);
         }
 
-        [Theory]
-        [InlineData(0, 0)]
-        [InlineData(float.MaxValue, float.MinValue)]
+        [Test]
+        [Arguments(0, 0)]
+        [Arguments(float.MaxValue, float.MinValue)]
         public void LocationSetTest(float x, float y)
         {
             var point = new Vector2(x, y);
@@ -90,9 +90,9 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(point.Y, rect.Y);
         }
 
-        [Theory]
-        [InlineData(0, 0)]
-        [InlineData(float.MaxValue, float.MinValue)]
+        [Test]
+        [Arguments(0, 0)]
+        [Arguments(float.MaxValue, float.MinValue)]
         public void SizeSetTest(float x, float y)
         {
             var size = new Vector2(x, y);
@@ -102,10 +102,10 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(size.Y, rect.Height);
         }
 
-        [Theory]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, 0, 0, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, 0, 0, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void EqualityTest(float x, float y, float width, float height)
         {
             var rect1 = new FontRectangle(x, y, width, height);
@@ -117,7 +117,7 @@ namespace PinataLabs.Typography.Tests
             Assert.False(rect1.Equals((object)rect2));
         }
 
-        [Fact]
+        [Test]
         public void GetHashCodeTest()
         {
             var rect1 = new FontRectangle(10, 10, 10, 10);
@@ -129,9 +129,9 @@ namespace PinataLabs.Typography.Tests
             Assert.NotEqual(rect1.GetHashCode(), new FontRectangle(10, 10, 10, 20).GetHashCode());
         }
 
-        [Theory]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void ContainsTest(float x, float y, float width, float height)
         {
             var rect = new FontRectangle(x, y, width, height);
@@ -145,10 +145,10 @@ namespace PinataLabs.Typography.Tests
             Assert.False(rect.Contains(r));
         }
 
-        [Theory]
-        [InlineData(0, 0, 0, 0)]
-        [InlineData(float.MaxValue / 2, float.MinValue / 2, float.MinValue / 2, float.MaxValue / 2)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(0, 0, 0, 0)]
+        [Arguments(float.MaxValue / 2, float.MinValue / 2, float.MinValue / 2, float.MaxValue / 2)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void InflateTest(float x, float y, float width, float height)
         {
             var rect = new FontRectangle(x, y, width, height);
@@ -164,9 +164,9 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(inflatedRect, rect);
         }
 
-        [Theory]
-        [InlineData(float.MaxValue, float.MinValue, float.MaxValue / 2, float.MinValue / 2)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(float.MaxValue, float.MinValue, float.MaxValue / 2, float.MinValue / 2)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void IntersectTest(float x, float y, float width, float height)
         {
             var rect1 = new FontRectangle(x, y, width, height);
@@ -177,7 +177,7 @@ namespace PinataLabs.Typography.Tests
             Assert.False(rect1.IntersectsWith(expectedRect));
         }
 
-        [Fact]
+        [Test]
         public void IntersectIntersectingRectsTest()
         {
             var rect1 = new FontRectangle(0, 0, 5, 5);
@@ -187,11 +187,11 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, FontRectangle.Intersect(rect1, rect2));
         }
 
-        [Theory]
-        [InlineData(0, 0, 0, 0)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, 0, 0, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(0, 0, 0, 0)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, 0, 0, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void UnionTest(float x, float y, float width, float height)
         {
             var a = new FontRectangle(x, y, width, height);
@@ -207,11 +207,11 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expectedRectangle, FontRectangle.Union(a, b));
         }
 
-        [Theory]
-        [InlineData(0, 0, 0, 0)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, 0, 0, float.MaxValue)]
-        [InlineData(0, float.MinValue, float.MaxValue, 0)]
+        [Test]
+        [Arguments(0, 0, 0, 0)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, 0, 0, float.MaxValue)]
+        [Arguments(0, float.MinValue, float.MaxValue, 0)]
         public void OffsetTest(float x, float y, float width, float height)
         {
             var r1 = new FontRectangle(x, y, width, height);
@@ -226,31 +226,31 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expectedRect, r1);
         }
 
-        [Fact]
+        [Test]
         public void ToStringTest()
         {
             var r = new FontRectangle(5, 5.1F, 1.3F, 1);
             Assert.Equal(string.Format(CultureInfo.CurrentCulture, "FontRectangle [ X={0}, Y={1}, Width={2}, Height={3} ]", r.X, r.Y, r.Width, r.Height), r.ToString());
         }
 
-        [Theory]
-        [InlineData(float.MinValue, float.MaxValue, float.MaxValue, float.MaxValue)]
-        [InlineData(float.MinValue, float.MaxValue, float.MaxValue, float.MinValue)]
-        [InlineData(float.MinValue, float.MaxValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MinValue, float.MaxValue, float.MinValue, float.MinValue)]
-        [InlineData(float.MinValue, float.MinValue, float.MaxValue, float.MaxValue)]
-        [InlineData(float.MinValue, float.MinValue, float.MaxValue, float.MinValue)]
-        [InlineData(float.MinValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MinValue, float.MinValue, float.MinValue, float.MinValue)]
-        [InlineData(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue)]
-        [InlineData(float.MaxValue, float.MaxValue, float.MaxValue, float.MinValue)]
-        [InlineData(float.MaxValue, float.MaxValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, float.MaxValue, float.MinValue, float.MinValue)]
-        [InlineData(float.MaxValue, float.MinValue, float.MaxValue, float.MaxValue)]
-        [InlineData(float.MaxValue, float.MinValue, float.MaxValue, float.MinValue)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
-        [InlineData(float.MaxValue, float.MinValue, float.MinValue, float.MinValue)]
-        [InlineData(0, 0, 0, 0)]
+        [Test]
+        [Arguments(float.MinValue, float.MaxValue, float.MaxValue, float.MaxValue)]
+        [Arguments(float.MinValue, float.MaxValue, float.MaxValue, float.MinValue)]
+        [Arguments(float.MinValue, float.MaxValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MinValue, float.MaxValue, float.MinValue, float.MinValue)]
+        [Arguments(float.MinValue, float.MinValue, float.MaxValue, float.MaxValue)]
+        [Arguments(float.MinValue, float.MinValue, float.MaxValue, float.MinValue)]
+        [Arguments(float.MinValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MinValue, float.MinValue, float.MinValue, float.MinValue)]
+        [Arguments(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue)]
+        [Arguments(float.MaxValue, float.MaxValue, float.MaxValue, float.MinValue)]
+        [Arguments(float.MaxValue, float.MaxValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, float.MaxValue, float.MinValue, float.MinValue)]
+        [Arguments(float.MaxValue, float.MinValue, float.MaxValue, float.MaxValue)]
+        [Arguments(float.MaxValue, float.MinValue, float.MaxValue, float.MinValue)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MaxValue)]
+        [Arguments(float.MaxValue, float.MinValue, float.MinValue, float.MinValue)]
+        [Arguments(0, 0, 0, 0)]
         public void DeconstructTest(float x, float y, float width, float height)
         {
             (float dx, float dy, float dw, float dh) = new FontRectangle(x, y, width, height);

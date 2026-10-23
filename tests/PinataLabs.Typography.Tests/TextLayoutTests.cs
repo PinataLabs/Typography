@@ -15,37 +15,37 @@ namespace PinataLabs.Typography.Tests
 {
     public class TextLayoutTests
     {
-        [Theory]
-        [InlineData(LayoutMode.HorizontalTopBottom, true)]
-        [InlineData(LayoutMode.HorizontalBottomTop, true)]
-        [InlineData(LayoutMode.VerticalLeftRight, false)]
-        [InlineData(LayoutMode.VerticalRightLeft, false)]
-        [InlineData(LayoutMode.VerticalMixedLeftRight, false)]
-        [InlineData(LayoutMode.VerticalMixedRightLeft, false)]
+        [Test]
+        [Arguments(LayoutMode.HorizontalTopBottom, true)]
+        [Arguments(LayoutMode.HorizontalBottomTop, true)]
+        [Arguments(LayoutMode.VerticalLeftRight, false)]
+        [Arguments(LayoutMode.VerticalRightLeft, false)]
+        [Arguments(LayoutMode.VerticalMixedLeftRight, false)]
+        [Arguments(LayoutMode.VerticalMixedRightLeft, false)]
         public void CanDetectHorizontalLayoutMode(LayoutMode mode, bool vertical)
             => Assert.Equal(vertical, mode.IsHorizontal());
 
-        [Theory]
-        [InlineData(LayoutMode.HorizontalTopBottom, false)]
-        [InlineData(LayoutMode.HorizontalBottomTop, false)]
-        [InlineData(LayoutMode.VerticalLeftRight, true)]
-        [InlineData(LayoutMode.VerticalRightLeft, true)]
-        [InlineData(LayoutMode.VerticalMixedLeftRight, false)]
-        [InlineData(LayoutMode.VerticalMixedRightLeft, false)]
+        [Test]
+        [Arguments(LayoutMode.HorizontalTopBottom, false)]
+        [Arguments(LayoutMode.HorizontalBottomTop, false)]
+        [Arguments(LayoutMode.VerticalLeftRight, true)]
+        [Arguments(LayoutMode.VerticalRightLeft, true)]
+        [Arguments(LayoutMode.VerticalMixedLeftRight, false)]
+        [Arguments(LayoutMode.VerticalMixedRightLeft, false)]
         public void CanDetectVerticalLayoutMode(LayoutMode mode, bool vertical)
             => Assert.Equal(vertical, mode.IsVertical());
 
-        [Theory]
-        [InlineData(LayoutMode.HorizontalTopBottom, false)]
-        [InlineData(LayoutMode.HorizontalBottomTop, false)]
-        [InlineData(LayoutMode.VerticalLeftRight, false)]
-        [InlineData(LayoutMode.VerticalRightLeft, false)]
-        [InlineData(LayoutMode.VerticalMixedLeftRight, true)]
-        [InlineData(LayoutMode.VerticalMixedRightLeft, true)]
+        [Test]
+        [Arguments(LayoutMode.HorizontalTopBottom, false)]
+        [Arguments(LayoutMode.HorizontalBottomTop, false)]
+        [Arguments(LayoutMode.VerticalLeftRight, false)]
+        [Arguments(LayoutMode.VerticalRightLeft, false)]
+        [Arguments(LayoutMode.VerticalMixedLeftRight, true)]
+        [Arguments(LayoutMode.VerticalMixedRightLeft, true)]
         public void CanDetectVerticalMixedLayoutMode(LayoutMode mode, bool vertical)
             => Assert.Equal(vertical, mode.IsVerticalMixed());
 
-        [Fact]
+        [Test]
         public void FakeFontGetGlyph()
         {
             Font font = CreateFont("hello world");
@@ -55,48 +55,48 @@ namespace PinataLabs.Typography.Tests
             Assert.NotEqual(default, glyph);
         }
 
-        [Theory]
-        [InlineData(
+        [Test]
+        [Arguments(
             VerticalAlignment.Top,
             HorizontalAlignment.Left,
             0,
             10)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Top,
             HorizontalAlignment.Right,
             0,
             -320)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Top,
             HorizontalAlignment.Center,
             0,
             -155)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Bottom,
             HorizontalAlignment.Left,
             -60,
             10)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Bottom,
             HorizontalAlignment.Right,
             -60,
             -320)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Bottom,
             HorizontalAlignment.Center,
             -60,
             -155)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Center,
             HorizontalAlignment.Left,
             -30,
             10)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Center,
             HorizontalAlignment.Right,
             -30,
             -320)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Center,
             HorizontalAlignment.Center,
             -30,
@@ -126,48 +126,48 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(top, bound.Top, 3);
         }
 
-        [Theory]
-        [InlineData(
+        [Test]
+        [Arguments(
             VerticalAlignment.Top,
             HorizontalAlignment.Left,
             0,
             180)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Top,
             HorizontalAlignment.Right,
             0,
             -320)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Top,
             HorizontalAlignment.Center,
             0,
             -70)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Bottom,
             HorizontalAlignment.Left,
             -60,
             180)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Bottom,
             HorizontalAlignment.Right,
             -60,
             -320)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Bottom,
             HorizontalAlignment.Center,
             -60,
             -70)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Center,
             HorizontalAlignment.Left,
             -30,
             180)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Center,
             HorizontalAlignment.Right,
             -30,
             -320)]
-        [InlineData(
+        [Arguments(
             VerticalAlignment.Center,
             HorizontalAlignment.Center,
             -30,
@@ -201,7 +201,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(top, bound.Top, 3);
         }
 
-        [Fact]
+        [Test]
         public unsafe void MeasureTextWithSpan()
         {
             Font font = CreateFont("hello");
@@ -222,14 +222,14 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(130, size.Width, 4);
         }
 
-        [Theory]
-        [InlineData("h", 10, 10)]
-        [InlineData("he", 10, 40)]
-        [InlineData("hel", 10, 70)]
-        [InlineData("hello", 10, 130)]
-        [InlineData("hello world", 10, 310)]
-        [InlineData("hello world\nhello world", 40, 310)]
-        [InlineData("hello\nworld", 40, 130)]
+        [Test]
+        [Arguments("h", 10, 10)]
+        [Arguments("he", 10, 40)]
+        [Arguments("hel", 10, 70)]
+        [Arguments("hello", 10, 130)]
+        [Arguments("hello world", 10, 310)]
+        [Arguments("hello world\nhello world", 40, 310)]
+        [Arguments("hello\nworld", 40, 130)]
         public void MeasureText(string text, float height, float width)
         {
             Font font = CreateFont(text);
@@ -239,7 +239,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(width, size.Width, 4);
         }
 
-        [Fact]
+        [Test]
         public void TryMeasureCharacterBounds()
         {
             const string text = "a b\nc";
@@ -273,13 +273,13 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Theory]
-        [InlineData("hello world", 10, 310)]
-        [InlineData(
+        [Test]
+        [Arguments("hello world", 10, 310)]
+        [Arguments(
             "hello world hello world hello world",
             70, // 30 actual line height * 2 + 10 actual height
             310)]
-        [InlineData(// issue https://github.com/SixLabors/ImageSharp.Drawing/issues/115
+        [Arguments(// issue https://github.com/SixLabors/ImageSharp.Drawing/issues/115
             "这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。",
             160, // 30 actual line height * 2 + 10 actual height
             310)]
@@ -297,13 +297,13 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(height, size.Height, 4);
         }
 
-        [Theory]
-        [InlineData("hello world", 10, 310)]
-        [InlineData(
+        [Test]
+        [Arguments("hello world", 10, 310)]
+        [Arguments(
             "hello world hello world hello world",
             70, // 30 actual line height * 2 + 10 actual height
             310)]
-        [InlineData(// issue https://github.com/SixLabors/ImageSharp.Drawing/issues/115
+        [Arguments(// issue https://github.com/SixLabors/ImageSharp.Drawing/issues/115
             "这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。",
             160, // 30 actual line height * 2 + 10 actual height
             310)]
@@ -321,10 +321,10 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(height, size.Height, 4);
         }
 
-        [Theory]
-        [InlineData("hello world", 310, 10)]
-        [InlineData("hello world hello world hello world", 310, 70)]
-        [InlineData("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
+        [Test]
+        [Arguments("hello world", 310, 10)]
+        [Arguments("hello world hello world hello world", 310, 70)]
+        [Arguments("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
         public void MeasureTextWordWrappingVerticalLeftRight(string text, float height, float width)
         {
             Font font = CreateFont(text);
@@ -339,10 +339,10 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(height, size.Height, 4);
         }
 
-        [Theory]
-        [InlineData("hello world", 310, 10)]
-        [InlineData("hello world hello world hello world", 310, 70)]
-        [InlineData("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
+        [Test]
+        [Arguments("hello world", 310, 10)]
+        [Arguments("hello world hello world hello world", 310, 70)]
+        [Arguments("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
         public void MeasureTextWordWrappingVerticalRightLeft(string text, float height, float width)
         {
             Font font = CreateFont(text);
@@ -357,10 +357,10 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(height, size.Height, 4);
         }
 
-        [Theory]
-        [InlineData("hello world", 310, 10)]
-        [InlineData("hello world hello world hello world", 310, 70)]
-        [InlineData("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
+        [Test]
+        [Arguments("hello world", 310, 10)]
+        [Arguments("hello world hello world hello world", 310, 70)]
+        [Arguments("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
         public void MeasureTextWordWrappingVerticalMixedLeftRight(string text, float height, float width)
         {
             Font font = CreateFont(text);
@@ -376,15 +376,15 @@ namespace PinataLabs.Typography.Tests
         }
 
 #if OS_WINDOWS
-        [Theory]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.Standard, 100, 870)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.BreakAll, 120, 399)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.BreakWord, 120, 400)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.KeepAll, 60, 699)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.Standard, 101, 870)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.BreakAll, 121, 399)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.BreakWord, 121, 400)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.KeepAll, 61, 699)]
+        [Test]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.Standard, 100, 870)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.BreakAll, 120, 399)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.BreakWord, 120, 400)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalTopBottom, WordBreaking.KeepAll, 60, 699)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.Standard, 101, 870)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.BreakAll, 121, 399)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.BreakWord, 121, 400)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.KeepAll, 61, 699)]
         public void MeasureTextWordBreak(string text, LayoutMode layoutMode, WordBreaking wordBreaking, float height, float width)
         {
             // Testing using Windows only to ensure that actual glyphs are rendered
@@ -408,11 +408,11 @@ namespace PinataLabs.Typography.Tests
         }
 #endif
 
-        [Theory]
-        [InlineData("ab", 477, 1081, false)] // no kerning rules defined for lowercase ab so widths should stay the same
-        [InlineData("ab", 477, 1081, true)]
-        [InlineData("AB", 465, 1033, false)] // width changes between kerning enabled or not
-        [InlineData("AB", 465, 654, true)]
+        [Test]
+        [Arguments("ab", 477, 1081, false)] // no kerning rules defined for lowercase ab so widths should stay the same
+        [Arguments("ab", 477, 1081, true)]
+        [Arguments("AB", 465, 1033, false)] // width changes between kerning enabled or not
+        [Arguments("AB", 465, 654, true)]
         public void MeasureTextWithKerning(string text, float height, float width, bool applyKerning)
         {
             var c = new FontCollection();
@@ -429,8 +429,8 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(width, size.Width, 4);
         }
 
-        [Theory]
-        [InlineData("a", 100, 100, 125, 396)]
+        [Test]
+        [Arguments("a", 100, 100, 125, 396)]
         public void LayoutWithLocation(string text, float x, float y, float expectedX, float expectedY)
         {
             var c = new FontCollection();
@@ -451,7 +451,7 @@ namespace PinataLabs.Typography.Tests
         }
 
         // https://github.com/SixLabors/Fonts/issues/244
-        [Fact]
+        [Test]
         public void MeasureTextLeadingFraction()
         {
             FontCollection c = new();
@@ -462,10 +462,10 @@ namespace PinataLabs.Typography.Tests
             Assert.NotEqual(FontRectangle.Empty, measurement);
         }
 
-        [Theory]
-        [InlineData("hello world", 1)]
-        [InlineData("hello world\nhello world", 2)]
-        [InlineData("hello world\nhello world\nhello world", 3)]
+        [Test]
+        [Arguments("hello world", 1)]
+        [Arguments("hello world\nhello world", 2)]
+        [Arguments("hello world\nhello world\nhello world", 3)]
         public void CountLines(string text, int usedLines)
         {
             Font font = CreateFont(text);
@@ -474,7 +474,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(usedLines, count);
         }
 
-        [Fact]
+        [Test]
         public void CountLinesWithSpan()
         {
             Font font = CreateFont("hello\n!");
@@ -494,11 +494,11 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(2, count);
         }
 
-        [Theory]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 25, 7)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 50, 7)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 6)]
-        [InlineData("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 200, 6)]
+        [Test]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 25, 7)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 50, 7)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 6)]
+        [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 200, 6)]
         public void CountLinesWrappingLength(string text, int wrappingLength, int usedLines)
         {
             Font font = CreateFont(text);
@@ -507,7 +507,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(usedLines, count);
         }
 
-        [Fact]
+        [Test]
         public void BuildTextRuns_EmptyReturnsDefaultRun()
         {
             const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
@@ -522,7 +522,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(CodePoint.GetCodePointCount(text.AsSpan()), runs[0].End);
         }
 
-        [Fact]
+        [Test]
         public void BuildTextRuns_ReturnsCreatesInterimRuns()
         {
             const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
@@ -578,7 +578,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(6, runs[6].Slice(text.AsSpan()).Length);
         }
 
-        [Fact]
+        [Test]
         public void BuildTextRuns_PreventsOverlappingRun()
         {
             const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
@@ -604,9 +604,9 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(76, runs[1].End);
         }
 
-        [Theory]
-        [InlineData(TextDirection.LeftToRight)]
-        [InlineData(TextDirection.RightToLeft)]
+        [Test]
+        [Arguments(TextDirection.LeftToRight)]
+        [Arguments(TextDirection.RightToLeft)]
         public void TextJustification_InterCharacter_Horizontal(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
@@ -648,9 +648,9 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Theory]
-        [InlineData(TextDirection.LeftToRight)]
-        [InlineData(TextDirection.RightToLeft)]
+        [Test]
+        [Arguments(TextDirection.LeftToRight)]
+        [Arguments(TextDirection.RightToLeft)]
         public void TextJustification_InterWord_Horizontal(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
@@ -692,9 +692,9 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Theory]
-        [InlineData(TextDirection.LeftToRight)]
-        [InlineData(TextDirection.RightToLeft)]
+        [Test]
+        [Arguments(TextDirection.LeftToRight)]
+        [Arguments(TextDirection.RightToLeft)]
         public void TextJustification_InterCharacter_Vertical(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
@@ -737,9 +737,9 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Theory]
-        [InlineData(TextDirection.LeftToRight)]
-        [InlineData(TextDirection.RightToLeft)]
+        [Test]
+        [Arguments(TextDirection.LeftToRight)]
+        [Arguments(TextDirection.RightToLeft)]
         public void TextJustification_InterWord_Vertical(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
@@ -782,107 +782,107 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        public static TheoryData<char, FontRectangle> OpenSans_Data
+        public static System.Collections.Generic.List<(char Character, FontRectangle Expected)> OpenSans_Data
             = new()
             {
-                { '!', new(0, 0, 2, 10) },
-                { '"', new(0, 0, 4, 5) },
-                { '#', new(0, 0, 7, 9) },
-                { '$', new(0, 0, 6, 10) },
-                { '%', new(0, 0, 8, 9) },
-                { '&', new(0, 0, 8, 9) },
-                { '\'', new(0, 0, 2, 5) },
-                { '(', new(0, 0, 3, 11) },
-                { ')', new(0, 0, 3, 11) },
-                { '*', new(0, 0, 6, 6) },
-                { '+', new(0, 0, 6, 8) },
-                { ',', new(0, 0, 2, 11) },
-                { '-', new(0, 0, 3, 7) },
-                { '.', new(0, 0, 2, 10) },
-                { '/', new(0, 0, 4, 9) },
-                { '0', new(0, 0, 6, 9) },
-                { '1', new(0, 0, 4, 9) },
-                { '2', new(0, 0, 6, 9) },
-                { '3', new(0, 0, 6, 9) },
-                { '4', new(0, 0, 6, 9) },
-                { '5', new(0, 0, 6, 9) },
-                { '6', new(0, 0, 6, 9) },
-                { '7', new(0, 0, 6, 9) },
-                { '8', new(0, 0, 6, 9) },
-                { '9', new(0, 0, 6, 9) },
-                { ':', new(0, 0, 2, 10) },
-                { ';', new(0, 0, 2, 11) },
-                { '<', new(0, 0, 6, 8) },
-                { '=', new(0, 0, 6, 7) },
-                { '>', new(0, 0, 6, 8) },
-                { '?', new(0, 0, 5, 10) },
-                { '@', new(0, 0, 9, 10) },
-                { 'A', new(0, 0, 7, 9) },
-                { 'B', new(0, 0, 6, 9) },
-                { 'C', new(0, 0, 6, 9) },
-                { 'D', new(0, 0, 7, 9) },
-                { 'E', new(0, 0, 5, 9) },
-                { 'F', new(0, 0, 5, 9) },
-                { 'G', new(0, 0, 7, 9) },
-                { 'H', new(0, 0, 7, 9) },
-                { 'I', new(0, 0, 2, 9) },
-                { 'J', new(0, 0, 2, 11) },
-                { 'K', new(0, 0, 7, 9) },
-                { 'L', new(0, 0, 5, 9) },
-                { 'M', new(0, 0, 9, 9) },
-                { 'N', new(0, 0, 7, 9) },
-                { 'O', new(0, 0, 8, 9) },
-                { 'P', new(0, 0, 6, 9) },
-                { 'Q', new(0, 0, 8, 11) },
-                { 'R', new(0, 0, 7, 9) },
-                { 'S', new(0, 0, 6, 9) },
-                { 'T', new(0, 0, 6, 9) },
-                { 'U', new(0, 0, 7, 9) },
-                { 'V', new(0, 0, 6, 9) },
-                { 'W', new(0, 0, 10, 9) },
-                { 'X', new(0, 0, 6, 9) },
-                { 'Y', new(0, 0, 6, 9) },
-                { 'Z', new(0, 0, 6, 9) },
-                { '[', new(0, 0, 4, 11) },
-                { '\\', new(0, 0, 4, 9) },
-                { ']', new(0, 0, 3, 11) },
-                { '^', new(0, 0, 6, 7) },
-                { '_', new(0, 0, 5, 11) },
-                { '`', new(0, 0, 3, 3) },
-                { 'a', new(0, 0, 5, 9) },
-                { 'b', new(0, 0, 6, 9) },
-                { 'c', new(0, 0, 5, 9) },
-                { 'd', new(0, 0, 6, 9) },
-                { 'e', new(0, 0, 6, 9) },
-                { 'f', new(0, 0, 4, 9) },
-                { 'g', new(0, 0, 6, 12) },
-                { 'h', new(0, 0, 6, 9) },
-                { 'i', new(0, 0, 2, 9) },
-                { 'j', new(0, 0, 2, 12) },
-                { 'k', new(0, 0, 6, 9) },
-                { 'l', new(0, 0, 2, 9) },
-                { 'm', new(0, 0, 9, 9) },
-                { 'n', new(0, 0, 6, 9) },
-                { 'o', new(0, 0, 6, 9) },
-                { 'p', new(0, 0, 6, 12) },
-                { 'q', new(0, 0, 6, 12) },
-                { 'r', new(0, 0, 4, 9) },
-                { 's', new(0, 0, 5, 9) },
-                { 't', new(0, 0, 4, 9) },
-                { 'u', new(0, 0, 6, 9) },
-                { 'v', new(0, 0, 5, 9) },
-                { 'w', new(0, 0, 8, 9) },
-                { 'x', new(0, 0, 6, 9) },
-                { 'y', new(0, 0, 6, 12) },
-                { 'z', new(0, 0, 5, 9) },
-                { '{', new(0, 0, 4, 11) },
-                { '|', new(0, 0, 4, 12) },
-                { '}', new(0, 0, 4, 11) },
-                { '~', new(0, 0, 6, 6) },
+                ('!', new(0, 0, 2, 10)),
+                ('"', new(0, 0, 4, 5)),
+                ('#', new(0, 0, 7, 9)),
+                ('$', new(0, 0, 6, 10)),
+                ('%', new(0, 0, 8, 9)),
+                ('&', new(0, 0, 8, 9)),
+                ('\'', new(0, 0, 2, 5)),
+                ('(', new(0, 0, 3, 11)),
+                (')', new(0, 0, 3, 11)),
+                ('*', new(0, 0, 6, 6)),
+                ('+', new(0, 0, 6, 8)),
+                (',', new(0, 0, 2, 11)),
+                ('-', new(0, 0, 3, 7)),
+                ('.', new(0, 0, 2, 10)),
+                ('/', new(0, 0, 4, 9)),
+                ('0', new(0, 0, 6, 9)),
+                ('1', new(0, 0, 4, 9)),
+                ('2', new(0, 0, 6, 9)),
+                ('3', new(0, 0, 6, 9)),
+                ('4', new(0, 0, 6, 9)),
+                ('5', new(0, 0, 6, 9)),
+                ('6', new(0, 0, 6, 9)),
+                ('7', new(0, 0, 6, 9)),
+                ('8', new(0, 0, 6, 9)),
+                ('9', new(0, 0, 6, 9)),
+                (':', new(0, 0, 2, 10)),
+                (';', new(0, 0, 2, 11)),
+                ('<', new(0, 0, 6, 8)),
+                ('=', new(0, 0, 6, 7)),
+                ('>', new(0, 0, 6, 8)),
+                ('?', new(0, 0, 5, 10)),
+                ('@', new(0, 0, 9, 10)),
+                ('A', new(0, 0, 7, 9)),
+                ('B', new(0, 0, 6, 9)),
+                ('C', new(0, 0, 6, 9)),
+                ('D', new(0, 0, 7, 9)),
+                ('E', new(0, 0, 5, 9)),
+                ('F', new(0, 0, 5, 9)),
+                ('G', new(0, 0, 7, 9)),
+                ('H', new(0, 0, 7, 9)),
+                ('I', new(0, 0, 2, 9)),
+                ('J', new(0, 0, 2, 11)),
+                ('K', new(0, 0, 7, 9)),
+                ('L', new(0, 0, 5, 9)),
+                ('M', new(0, 0, 9, 9)),
+                ('N', new(0, 0, 7, 9)),
+                ('O', new(0, 0, 8, 9)),
+                ('P', new(0, 0, 6, 9)),
+                ('Q', new(0, 0, 8, 11)),
+                ('R', new(0, 0, 7, 9)),
+                ('S', new(0, 0, 6, 9)),
+                ('T', new(0, 0, 6, 9)),
+                ('U', new(0, 0, 7, 9)),
+                ('V', new(0, 0, 6, 9)),
+                ('W', new(0, 0, 10, 9)),
+                ('X', new(0, 0, 6, 9)),
+                ('Y', new(0, 0, 6, 9)),
+                ('Z', new(0, 0, 6, 9)),
+                ('[', new(0, 0, 4, 11)),
+                ('\\', new(0, 0, 4, 9)),
+                (']', new(0, 0, 3, 11)),
+                ('^', new(0, 0, 6, 7)),
+                ('_', new(0, 0, 5, 11)),
+                ('`', new(0, 0, 3, 3)),
+                ('a', new(0, 0, 5, 9)),
+                ('b', new(0, 0, 6, 9)),
+                ('c', new(0, 0, 5, 9)),
+                ('d', new(0, 0, 6, 9)),
+                ('e', new(0, 0, 6, 9)),
+                ('f', new(0, 0, 4, 9)),
+                ('g', new(0, 0, 6, 12)),
+                ('h', new(0, 0, 6, 9)),
+                ('i', new(0, 0, 2, 9)),
+                ('j', new(0, 0, 2, 12)),
+                ('k', new(0, 0, 6, 9)),
+                ('l', new(0, 0, 2, 9)),
+                ('m', new(0, 0, 9, 9)),
+                ('n', new(0, 0, 6, 9)),
+                ('o', new(0, 0, 6, 9)),
+                ('p', new(0, 0, 6, 12)),
+                ('q', new(0, 0, 6, 12)),
+                ('r', new(0, 0, 4, 9)),
+                ('s', new(0, 0, 5, 9)),
+                ('t', new(0, 0, 4, 9)),
+                ('u', new(0, 0, 6, 9)),
+                ('v', new(0, 0, 5, 9)),
+                ('w', new(0, 0, 8, 9)),
+                ('x', new(0, 0, 6, 9)),
+                ('y', new(0, 0, 6, 12)),
+                ('z', new(0, 0, 5, 9)),
+                ('{', new(0, 0, 4, 11)),
+                ('|', new(0, 0, 4, 12)),
+                ('}', new(0, 0, 4, 11)),
+                ('~', new(0, 0, 6, 6)),
             };
 
-        [Theory]
-        [MemberData(nameof(OpenSans_Data))]
+        [Test]
+        [MethodDataSource(nameof(OpenSans_Data))]
         public void TrueTypeHinting_CanHintSmallOpenSans(char c, FontRectangle expected)
         {
             TextOptions options = new(OpenSansTTF)
@@ -904,7 +904,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
+        [Test]
         public void CanMeasureTextAdvance()
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
@@ -926,7 +926,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(new FontRectangle(0, 0, 11729, 4096), second);
         }
 
-        [Fact]
+        [Test]
         public void CanMeasureCharacterLayouts()
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
@@ -961,7 +961,7 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void CanMeasureMultilineCharacterLayouts()
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
@@ -1004,107 +1004,107 @@ namespace PinataLabs.Typography.Tests
         private static readonly Font OpenSansWoff = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(10);
 
 #if OS_WINDOWS
-        public static TheoryData<char, FontRectangle> SegoeUi_Data
+        public static System.Collections.Generic.List<(char Character, FontRectangle Expected)> SegoeUi_Data
             = new()
             {
-                { '!', new(0, 0, 2, 10) },
-                { '"', new(0, 0, 4, 5) },
-                { '#', new(0, 0, 6, 9) },
-                { '$', new(0, 0, 5, 11) },
-                { '%', new(0, 0, 8, 10) },
-                { '&', new(0, 0, 8, 10) },
-                { '\'', new(0, 0, 2, 5) },
-                { '(', new(0, 0, 3, 11) },
-                { ')', new(0, 0, 3, 11) },
-                { '*', new(0, 0, 4, 6) },
-                { '+', new(0, 0, 6, 9) },
-                { ',', new(0, 0, 2, 11) },
-                { '-', new(0, 0, 4, 7) },
-                { '.', new(0, 0, 2, 10) },
-                { '/', new(0, 0, 4, 11) },
-                { '0', new(0, 0, 5, 10) },
-                { '1', new(0, 0, 4, 10) },
-                { '2', new(0, 0, 5, 10) },
-                { '3', new(0, 0, 5, 10) },
-                { '4', new(0, 0, 6, 10) },
-                { '5', new(0, 0, 5, 10) },
-                { '6', new(0, 0, 5, 10) },
-                { '7', new(0, 0, 5, 10) },
-                { '8', new(0, 0, 5, 10) },
-                { '9', new(0, 0, 5, 10) },
-                { ':', new(0, 0, 2, 10) },
-                { ';', new(0, 0, 2, 11) },
-                { '<', new(0, 0, 6, 9) },
-                { '=', new(0, 0, 6, 8) },
-                { '>', new(0, 0, 6, 9) },
-                { '?', new(0, 0, 4, 10) },
-                { '@', new(0, 0, 9, 11) },
-                { 'A', new(0, 0, 7, 10) },
-                { 'B', new(0, 0, 6, 10) },
-                { 'C', new(0, 0, 6, 10) },
-                { 'D', new(0, 0, 7, 10) },
-                { 'E', new(0, 0, 5, 10) },
-                { 'F', new(0, 0, 5, 10) },
-                { 'G', new(0, 0, 7, 10) },
-                { 'H', new(0, 0, 7, 10) },
-                { 'I', new(0, 0, 2, 10) },
-                { 'J', new(0, 0, 3, 10) },
-                { 'K', new(0, 0, 6, 10) },
-                { 'L', new(0, 0, 5, 10) },
-                { 'M', new(0, 0, 9, 10) },
-                { 'N', new(0, 0, 7, 10) },
-                { 'O', new(0, 0, 8, 10) },
-                { 'P', new(0, 0, 6, 10) },
-                { 'Q', new(0, 0, 8, 11) },
-                { 'R', new(0, 0, 6, 10) },
-                { 'S', new(0, 0, 5, 10) },
-                { 'T', new(0, 0, 6, 10) },
-                { 'U', new(0, 0, 7, 10) },
-                { 'V', new(0, 0, 7, 10) },
-                { 'W', new(0, 0, 10, 10) },
-                { 'X', new(0, 0, 6, 10) },
-                { 'Y', new(0, 0, 6, 10) },
-                { 'Z', new(0, 0, 6, 10) },
-                { '[', new(0, 0, 3, 11) },
-                { '\\', new(0, 0, 4, 11) },
-                { ']', new(0, 0, 3, 11) },
-                { '^', new(0, 0, 6, 7) },
-                { '_', new(0, 0, 5, 11) },
-                { '`', new(0, 0, 3, 4) },
-                { 'a', new(0, 0, 5, 10) },
-                { 'b', new(0, 0, 6, 10) },
-                { 'c', new(0, 0, 5, 10) },
-                { 'd', new(0, 0, 6, 10) },
-                { 'e', new(0, 0, 5, 10) },
-                { 'f', new(0, 0, 4, 10) },
-                { 'g', new(0, 0, 6, 12) },
-                { 'h', new(0, 0, 5, 10) },
-                { 'i', new(0, 0, 2, 10) },
-                { 'j', new(0, 0, 2, 12) },
-                { 'k', new(0, 0, 5, 10) },
-                { 'l', new(0, 0, 2, 10) },
-                { 'm', new(0, 0, 8, 10) },
-                { 'n', new(0, 0, 5, 10) },
-                { 'o', new(0, 0, 6, 10) },
-                { 'p', new(0, 0, 6, 12) },
-                { 'q', new(0, 0, 6, 12) },
-                { 'r', new(0, 0, 4, 10) },
-                { 's', new(0, 0, 4, 10) },
-                { 't', new(0, 0, 4, 10) },
-                { 'u', new(0, 0, 5, 10) },
-                { 'v', new(0, 0, 5, 10) },
-                { 'w', new(0, 0, 8, 10) },
-                { 'x', new(0, 0, 5, 10) },
-                { 'y', new(0, 0, 5, 12) },
-                { 'z', new(0, 0, 5, 10) },
-                { '{', new(0, 0, 3, 11) },
-                { '|', new(0, 0, 2, 12) },
-                { '}', new(0, 0, 3, 11) },
-                { '~', new(0, 0, 6, 7) }
+                ('!', new(0, 0, 2, 10)),
+                ('"', new(0, 0, 4, 5)),
+                ('#', new(0, 0, 6, 9)),
+                ('$', new(0, 0, 5, 11)),
+                ('%', new(0, 0, 8, 10)),
+                ('&', new(0, 0, 8, 10)),
+                ('\'', new(0, 0, 2, 5)),
+                ('(', new(0, 0, 3, 11)),
+                (')', new(0, 0, 3, 11)),
+                ('*', new(0, 0, 4, 6)),
+                ('+', new(0, 0, 6, 9)),
+                (',', new(0, 0, 2, 11)),
+                ('-', new(0, 0, 4, 7)),
+                ('.', new(0, 0, 2, 10)),
+                ('/', new(0, 0, 4, 11)),
+                ('0', new(0, 0, 5, 10)),
+                ('1', new(0, 0, 4, 10)),
+                ('2', new(0, 0, 5, 10)),
+                ('3', new(0, 0, 5, 10)),
+                ('4', new(0, 0, 6, 10)),
+                ('5', new(0, 0, 5, 10)),
+                ('6', new(0, 0, 5, 10)),
+                ('7', new(0, 0, 5, 10)),
+                ('8', new(0, 0, 5, 10)),
+                ('9', new(0, 0, 5, 10)),
+                (':', new(0, 0, 2, 10)),
+                (';', new(0, 0, 2, 11)),
+                ('<', new(0, 0, 6, 9)),
+                ('=', new(0, 0, 6, 8)),
+                ('>', new(0, 0, 6, 9)),
+                ('?', new(0, 0, 4, 10)),
+                ('@', new(0, 0, 9, 11)),
+                ('A', new(0, 0, 7, 10)),
+                ('B', new(0, 0, 6, 10)),
+                ('C', new(0, 0, 6, 10)),
+                ('D', new(0, 0, 7, 10)),
+                ('E', new(0, 0, 5, 10)),
+                ('F', new(0, 0, 5, 10)),
+                ('G', new(0, 0, 7, 10)),
+                ('H', new(0, 0, 7, 10)),
+                ('I', new(0, 0, 2, 10)),
+                ('J', new(0, 0, 3, 10)),
+                ('K', new(0, 0, 6, 10)),
+                ('L', new(0, 0, 5, 10)),
+                ('M', new(0, 0, 9, 10)),
+                ('N', new(0, 0, 7, 10)),
+                ('O', new(0, 0, 8, 10)),
+                ('P', new(0, 0, 6, 10)),
+                ('Q', new(0, 0, 8, 11)),
+                ('R', new(0, 0, 6, 10)),
+                ('S', new(0, 0, 5, 10)),
+                ('T', new(0, 0, 6, 10)),
+                ('U', new(0, 0, 7, 10)),
+                ('V', new(0, 0, 7, 10)),
+                ('W', new(0, 0, 10, 10)),
+                ('X', new(0, 0, 6, 10)),
+                ('Y', new(0, 0, 6, 10)),
+                ('Z', new(0, 0, 6, 10)),
+                ('[', new(0, 0, 3, 11)),
+                ('\\', new(0, 0, 4, 11)),
+                (']', new(0, 0, 3, 11)),
+                ('^', new(0, 0, 6, 7)),
+                ('_', new(0, 0, 5, 11)),
+                ('`', new(0, 0, 3, 4)),
+                ('a', new(0, 0, 5, 10)),
+                ('b', new(0, 0, 6, 10)),
+                ('c', new(0, 0, 5, 10)),
+                ('d', new(0, 0, 6, 10)),
+                ('e', new(0, 0, 5, 10)),
+                ('f', new(0, 0, 4, 10)),
+                ('g', new(0, 0, 6, 12)),
+                ('h', new(0, 0, 5, 10)),
+                ('i', new(0, 0, 2, 10)),
+                ('j', new(0, 0, 2, 12)),
+                ('k', new(0, 0, 5, 10)),
+                ('l', new(0, 0, 2, 10)),
+                ('m', new(0, 0, 8, 10)),
+                ('n', new(0, 0, 5, 10)),
+                ('o', new(0, 0, 6, 10)),
+                ('p', new(0, 0, 6, 12)),
+                ('q', new(0, 0, 6, 12)),
+                ('r', new(0, 0, 4, 10)),
+                ('s', new(0, 0, 4, 10)),
+                ('t', new(0, 0, 4, 10)),
+                ('u', new(0, 0, 5, 10)),
+                ('v', new(0, 0, 5, 10)),
+                ('w', new(0, 0, 8, 10)),
+                ('x', new(0, 0, 5, 10)),
+                ('y', new(0, 0, 5, 12)),
+                ('z', new(0, 0, 5, 10)),
+                ('{', new(0, 0, 3, 11)),
+                ('|', new(0, 0, 2, 12)),
+                ('}', new(0, 0, 3, 11)),
+                ('~', new(0, 0, 6, 7))
             };
 
-        [Theory]
-        [MemberData(nameof(SegoeUi_Data))]
+        [Test]
+        [MethodDataSource(nameof(SegoeUi_Data))]
         public void TrueTypeHinting_CanHintSmallSegoeUi(char c, FontRectangle expected)
         {
             TextOptions options = new(SegoeUi)
@@ -1141,7 +1141,7 @@ namespace PinataLabs.Typography.Tests
         }
 
 #if OS_WINDOWS
-        [Fact]
+        [Test]
         public void BenchmarkTest()
         {
             Font font = Arial;

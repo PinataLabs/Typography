@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_39
     {
-        [Fact]
+        [Test]
         public void RenderingEmptyString_DoesNotThrow()
         {
             Font font = CreateFont("\t x");

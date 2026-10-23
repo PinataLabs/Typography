@@ -11,19 +11,19 @@ namespace PinataLabs.Typography.Tests
     {
         private const string Text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
 
-        [Theory]
-        [InlineData(-1, -1)]
-        [InlineData(0, 0)]
-        [InlineData(1, 0)]
-        [InlineData(1, 1)]
-        [InlineData(3, 2)]
+        [Test]
+        [Arguments(-1, -1)]
+        [Arguments(0, 0)]
+        [Arguments(1, 0)]
+        [Arguments(1, 1)]
+        [Arguments(3, 2)]
         public void ThrowsZeroValue(int start, int end)
         {
-            Exception ex = Record.Exception(() => new TextRun() { Start = start, End = end }.Slice(Text.AsSpan()));
+            Exception ex = Assert.ThrowsAny<Exception>(() => new TextRun() { Start = start, End = end }.Slice(Text.AsSpan()));
             Assert.NotNull(ex);
         }
 
-        [Fact]
+        [Test]
         public void SlicesTextCorrectly()
         {
             ReadOnlySpan<char> slice = new TextRun() { Start = 19, End = 46 }.Slice(Text.AsSpan());

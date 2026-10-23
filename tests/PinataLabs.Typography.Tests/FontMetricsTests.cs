@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontMetricsTests
     {
-        [Fact]
+        [Test]
         public void FontMetricsMatchesReference()
         {
             // Compared to EveryFonts TTFDump metrics
@@ -50,7 +50,7 @@ namespace PinataLabs.Typography.Tests
             Assert.False(font.IsItalic);
         }
 
-        [Fact]
+        [Test]
         public void FontMetricsVerticalFontMatchesReference()
         {
             // Compared to EveryFonts TTFDump metrics
@@ -97,7 +97,7 @@ namespace PinataLabs.Typography.Tests
             Assert.False(font.IsItalic);
         }
 
-        [Fact]
+        [Test]
         public void FontMetricsVerticalFontMatchesReferenceCFF()
         {
             // Compared to OpenTypeJS Font Inspector metrics
@@ -144,7 +144,7 @@ namespace PinataLabs.Typography.Tests
             Assert.False(font.IsItalic);
         }
 
-        [Fact]
+        [Test]
         public void GlyphMetricsMatchesReference()
         {
             // Compared to EveryFonts TTFDump metrics
@@ -176,7 +176,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(GlyphType.Standard, glyphMetrics.GlyphType);
         }
 
-        [Fact]
+        [Test]
         public void GlyphMetricsMatchesReference_WithWoff1format()
         {
             // Compared to EveryFonts TTFDump metrics
@@ -208,7 +208,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(GlyphType.Standard, glyphMetrics.GlyphType);
         }
 
-        [Fact]
+        [Test]
         public void GlyphMetricsMatchesReference_WithWoff2format()
         {
             // Compared to EveryFonts TTFDump metrics
@@ -240,7 +240,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(GlyphType.Standard, glyphMetrics.GlyphType);
         }
 
-        [Fact]
+        [Test]
         public void GlyphMetricsVerticalMatchesReference()
         {
             // Compared to EveryFonts TTFDump metrics

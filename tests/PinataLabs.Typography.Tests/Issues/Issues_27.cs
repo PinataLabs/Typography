@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_27
     {
-        [Fact]
+        [Test]
         public void ThrowsMeasuringWhitespace()
         {
             // wendy one returns wrong points for 'o'

@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class KerningTableTests
     {
-        [Fact]
+        [Test]
         public void ShouldReturnDefaultValueWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
