@@ -625,6 +625,53 @@ public class TextLayoutTests
     }
 
     [Test]
+    public async Task BuildTextRuns_TrailingMultiCodePointGraphemeGetsOwnRun()
+    {
+        // Four graphemes: a, b, c and "e" followed by a combining acute accent.
+        const string text = "abcé";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 0, End = 1, Font = font2 },
+                new TextRun() { Start = 2, End = 3, Font = font2 },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(4);
+        await Assert.That(runs[2].End).IsEqualTo(3);
+        await Assert.That(runs[2].Font).IsEqualTo(font2);
+        await Assert.That(runs[3].Start).IsEqualTo(3);
+        await Assert.That(runs[3].End).IsEqualTo(4);
+        await Assert.That(runs[3].Font).IsEqualTo(font);
+        await Assert.That(runs[3].Slice(text.AsSpan()).ToString()).IsEqualTo("é");
+    }
+
+    [Test]
+    public async Task BuildTextRuns_EndEqualToLengthAddsNoTrailingRun()
+    {
+        const string text = "abcde";
+        Font font = CreateFont(text);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 1, End = 5 },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(2);
+        await Assert.That(runs[1].Start).IsEqualTo(1);
+        await Assert.That(runs[1].End).IsEqualTo(5);
+    }
+
+    [Test]
     public async Task BuildTextRuns_PreventsOverlappingRun()
     {
         const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
