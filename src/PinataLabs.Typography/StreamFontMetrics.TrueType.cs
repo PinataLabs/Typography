@@ -22,6 +22,7 @@ namespace PinataLabs.Typography;
 /// </content>
 internal partial class StreamFontMetrics
 {
+    private readonly object interpreterLock = new();
     private TrueTypeInterpreter? interpreter;
 
     internal void ApplyTrueTypeHinting(HintingMode hintingMode, GlyphMetrics metrics, ref GlyphVector glyphVector, Vector2 scaleXY, float pixelSize)
@@ -32,28 +33,6 @@ internal partial class StreamFontMetrics
         }
 
         TrueTypeFontTables tables = this.trueTypeFontTables!;
-        if (this.interpreter == null)
-        {
-            MaximumProfileTable maxp = tables.Maxp;
-            this.interpreter = new TrueTypeInterpreter(
-                maxp.MaxStackElements,
-                maxp.MaxStorage,
-                maxp.MaxFunctionDefs,
-                maxp.MaxInstructionDefs,
-                maxp.MaxTwilightPoints);
-
-            FpgmTable? fpgm = tables.Fpgm;
-            if (fpgm is not null)
-            {
-                this.interpreter.InitializeFunctionDefs(fpgm.Instructions);
-            }
-        }
-
-        CvtTable? cvt = tables.Cvt;
-        PrepTable? prep = tables.Prep;
-        float scaleFactor = pixelSize / this.UnitsPerEm;
-        this.interpreter.SetControlValueTable(cvt?.ControlValues, scaleFactor, pixelSize, prep?.Instructions);
-
         Bounds bounds = glyphVector.Bounds;
 
         Vector2 pp1 = new(MathF.Round(bounds.Min.X - (metrics.LeftSideBearing * scaleXY.X)), 0);
@@ -61,7 +40,48 @@ internal partial class StreamFontMetrics
         Vector2 pp3 = new(0, MathF.Round(bounds.Max.Y + (metrics.TopSideBearing * scaleXY.Y)));
         Vector2 pp4 = new(0, MathF.Round(pp3.Y - (metrics.AdvanceHeight * scaleXY.Y)));
 
-        GlyphVector.Hint(hintingMode, ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
+        // The interpreter holds mutable state (stack, zones, storage, scaled control values)
+        // so it must only be used by one thread at a time.
+        lock (this.interpreterLock)
+        {
+            try
+            {
+                if (this.interpreter == null)
+                {
+                    MaximumProfileTable maxp = tables.Maxp;
+                    TrueTypeInterpreter created = new(
+                        maxp.MaxStackElements,
+                        maxp.MaxStorage,
+                        maxp.MaxFunctionDefs,
+                        maxp.MaxInstructionDefs,
+                        maxp.MaxTwilightPoints);
+
+                    FpgmTable? fpgm = tables.Fpgm;
+                    if (fpgm is not null)
+                    {
+                        created.InitializeFunctionDefs(fpgm.Instructions);
+                    }
+
+                    this.interpreter = created;
+                }
+
+                CvtTable? cvt = tables.Cvt;
+                PrepTable? prep = tables.Prep;
+                float scaleFactor = pixelSize / this.UnitsPerEm;
+                this.interpreter.SetControlValueTable(cvt?.ControlValues, scaleFactor, pixelSize, prep?.Instructions);
+
+                GlyphVector.Hint(hintingMode, ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
+            }
+            catch (Exception)
+            {
+                // Fonts can contain faulty hint programs (out of range control value, storage or
+                // point references, stack overflow, etc). Hinting is an optimization of the outline
+                // so we fall back to the unhinted glyph. The glyph vector is only updated after the
+                // glyph has been hinted successfully so it is left untouched here.
+                // The interpreter state is undefined after a failure so discard it.
+                this.interpreter = null;
+            }
+        }
     }
 
     private static StreamFontMetrics LoadTrueTypeFont(FontReader reader)

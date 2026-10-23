@@ -42,6 +42,11 @@ public static class TestFonts
 
     public static string TimesNewRomanFile => GetFullPath("TimesNewRoman.ttf");
 
+    // Noto Sans (OFL-1.1): https://github.com/notofonts/notofonts.github.io/tree/main/fonts
+    public static string NotoSansOghamFile => GetFullPath("Noto/NotoSansOgham-Regular.ttf");
+
+    public static string NotoSansRunicFile => GetFullPath("Noto/NotoSansRunic-Regular.ttf");
+
     // FdSelect format 0: https://github.com/adobe-fonts/fdarray-test/
     public static string FDArrayTest257File => GetFullPath("FDArrayTest257.otf");
 
