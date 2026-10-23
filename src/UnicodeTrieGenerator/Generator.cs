@@ -443,7 +443,7 @@ namespace UnicodeTrieGenerator
                 { "Tr", VerticalOrientationType.TransformRotate }
             };
 
-        private const string SixLaborsSolutionFileName = "SixLabors.Fonts.sln";
+        private const string SixLaborsSolutionFileName = "SixLabors.Fonts.slnx";
         private const string InputRulesRelativePath = @"src\UnicodeTrieGenerator\Rules";
         private const string OutputResourcesRelativePath = @"src\SixLabors.Fonts\Unicode\Resources";
 
