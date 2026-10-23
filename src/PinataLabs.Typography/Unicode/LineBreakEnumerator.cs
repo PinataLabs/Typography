@@ -349,7 +349,11 @@ internal ref struct LineBreakEnumerator
                 }
 
                 // LB25
-                if (this.lb25ex && (this.nextClass == LineBreakClass.PR || this.nextClass == LineBreakClass.NU))
+                // The exception only applies directly after the CL, IS or SY that triggered it.
+                // NU x NU, and the like, must never break.
+                if (this.lb25ex
+                    && this.currentClass is LineBreakClass.CL or LineBreakClass.IS or LineBreakClass.SY
+                    && (this.nextClass == LineBreakClass.PR || this.nextClass == LineBreakClass.NU))
                 {
                     shouldBreak = true;
                     this.lb25ex = false;
