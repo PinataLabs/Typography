@@ -676,6 +676,8 @@ namespace UnicodeTrieGenerator
         /// <param name="name">The name of the class.</param>
         /// <param name="symbols">The symbols data.</param>
         /// <param name="decompositions">The decompositions data.</param>
+        /// <param name="machine">The state machine.</param>
+        /// <param name="partial">Whether to emit the class as partial.</param>
         private static void GenerateDataClass(
             string name,
             Dictionary<string, int>? symbols,

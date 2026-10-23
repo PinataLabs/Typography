@@ -34,14 +34,6 @@ namespace SixLabors.Fonts.Tests.Issues
 
             for (int i = 0; i < expected.Length; i++)
             {
-#if NET472
-                if (!Environment.Is64BitProcess)
-                {
-                    // 32 bit process has different rounding
-                    CompareRectangle(expected[i], renderer.GlyphRects[i], 1);
-                }
-                else
-#endif
                 {
                     CompareRectangleExact(expected[i], renderer.GlyphRects[i]);
                 }

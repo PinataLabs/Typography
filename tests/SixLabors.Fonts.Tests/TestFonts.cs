@@ -299,7 +299,7 @@ namespace SixLabors.Fonts.Tests
 
         private static string GetFullPath(string path)
         {
-            string root = Path.GetDirectoryName(new Uri(typeof(TestFonts).GetTypeInfo().Assembly.CodeBase).LocalPath);
+            string root = Path.GetDirectoryName(typeof(TestFonts).GetTypeInfo().Assembly.Location);
 
             string[] paths = new[]
             {

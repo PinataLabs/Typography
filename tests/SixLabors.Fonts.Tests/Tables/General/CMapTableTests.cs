@@ -24,7 +24,7 @@ namespace SixLabors.Fonts.Tests.Tables.General
 
             var table = CMapTable.Load(writer.GetReader());
 
-            Assert.Single(table.Tables.Where(x => x != null));
+            Assert.Single(table.Tables, x => x != null);
 
             Format0SubTable[] format0Tables = table.Tables.OfType<Format0SubTable>().ToArray();
             Assert.Single(format0Tables);

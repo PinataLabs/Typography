@@ -49,9 +49,6 @@ term <ILogicalNode>
   / x:number { new Literal(x) }
   / '(' e:expr ')' { e }
 
-repetition <Func<ILogicalNode, int, double, ILogicalNode>>
-  = '{' number '}' { (nn, ii, dd) => NodeUtilities.BuildRepetition(nn, ii, dd) }
-
 name
   = a:name_start_char b:name_char* { a + string.Join("", b) }
 
