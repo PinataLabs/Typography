@@ -16,7 +16,7 @@ namespace PinataLabs.Typography;
 internal sealed class FontReader
 {
     private readonly Stream stream;
-    private readonly Dictionary<Type, Table> loadedTables = new();
+    private readonly Dictionary<Type, Table> loadedTables = [];
     private readonly TableLoader loader;
 
     internal FontReader(Stream stream, TableLoader loader)

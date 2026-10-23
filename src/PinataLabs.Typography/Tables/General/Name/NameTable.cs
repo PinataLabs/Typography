@@ -129,7 +129,7 @@ internal class NameTable : Table
             }
         }
 
-        StringLoader[]? langs = Array.Empty<StringLoader>();
+        StringLoader[]? langs = [];
         if (format == 1)
         {
             // Format 1 adds language data.
@@ -152,7 +152,7 @@ internal class NameTable : Table
             readable.LoadValue(reader);
         }
 
-        string[] langNames = langs?.Select(x => x.Value).ToArray() ?? Array.Empty<string>();
+        string[] langNames = langs?.Select(x => x.Value).ToArray() ?? [];
 
         return new NameTable(names, langNames);
     }

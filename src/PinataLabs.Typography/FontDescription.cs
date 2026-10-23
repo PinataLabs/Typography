@@ -2,6 +2,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Globalization;
 using System.IO;
 using PinataLabs.Typography.Tables;
@@ -91,7 +92,7 @@ public class FontDescription
     /// <returns>a <see cref="FontDescription"/>.</returns>
     public static FontDescription LoadDescription(string path)
     {
-        Guard.NotNullOrWhiteSpace(path, nameof(path));
+        ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
         using FileStream fs = File.OpenRead(path);
         var reader = new FontReader(fs);
@@ -105,7 +106,7 @@ public class FontDescription
     /// <returns>a <see cref="FontDescription"/>.</returns>
     public static FontDescription LoadDescription(Stream stream)
     {
-        Guard.NotNull(stream, nameof(stream));
+        ArgumentNullException.ThrowIfNull(stream, nameof(stream));
 
         // Only read the name tables.
         var reader = new FontReader(stream);
@@ -140,7 +141,7 @@ public class FontDescription
     /// <returns>a <see cref="FontDescription"/>.</returns>
     public static FontDescription[] LoadFontCollectionDescriptions(string path)
     {
-        Guard.NotNullOrWhiteSpace(path, nameof(path));
+        ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
         using FileStream fs = File.OpenRead(path);
         return LoadFontCollectionDescriptions(fs);

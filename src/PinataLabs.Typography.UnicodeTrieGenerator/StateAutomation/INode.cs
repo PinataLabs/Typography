@@ -68,10 +68,10 @@ internal interface ILogicalNode : INode
 /// </summary>
 internal abstract class Node : INode
 {
-    protected List<INode> Enumerator { get; } = new();
+    protected List<INode> Enumerator { get; } = [];
 
     /// <inheritdoc/>
-    public HashSet<INode> FollowPos { get; } = new();
+    public HashSet<INode> FollowPos { get; } = [];
 
     /// <inheritdoc/>
     public virtual bool Nullable => false;
@@ -111,10 +111,10 @@ internal class Variable : Node, ILogicalNode
     public string Name { get; }
 
     /// <inheritdoc/>
-    HashSet<INode> ILogicalNode.FirstPos { get; } = new HashSet<INode>();
+    HashSet<INode> ILogicalNode.FirstPos { get; } = [];
 
     /// <inheritdoc/>
-    HashSet<INode> ILogicalNode.LastPos { get; } = new HashSet<INode>();
+    HashSet<INode> ILogicalNode.LastPos { get; } = [];
 
     /// <inheritdoc/>
     public override INode Copy() => new Variable(this.Name);
@@ -292,10 +292,10 @@ internal class Repeat : Node, ILogicalNode
 internal abstract class Leaf : Node, ILogicalNode
 {
     /// <inheritdoc/>
-    public HashSet<INode> FirstPos => new() { this };
+    public HashSet<INode> FirstPos => [this];
 
     /// <inheritdoc/>
-    public HashSet<INode> LastPos => new() { this };
+    public HashSet<INode> LastPos => [this];
 }
 
 /// <summary>

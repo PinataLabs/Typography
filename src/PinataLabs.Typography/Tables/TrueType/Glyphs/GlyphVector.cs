@@ -40,7 +40,7 @@ internal struct GlyphVector
     public Bounds Bounds { get; set; }
 
     public static GlyphVector Empty(Bounds bounds = default)
-        => new(Array.Empty<ControlPoint>(), Array.Empty<ushort>(), bounds, Array.Empty<byte>(), false);
+        => new(Array.Empty<ControlPoint>(), [], bounds, Array.Empty<byte>(), false);
 
     /// <summary>
     /// Transforms a glyph vector by a specified 3x2 matrix.
@@ -110,8 +110,8 @@ internal struct GlyphVector
     /// <returns>The cloned <see cref="GlyphVector"/>.</returns>
     public static GlyphVector DeepClone(GlyphVector src)
     {
-        List<ControlPoint> controlPoints = new(src.ControlPoints);
-        List<ushort> endPoints = new(src.EndPoints);
+        List<ControlPoint> controlPoints = [with(src.ControlPoints)];
+        List<ushort> endPoints = [with(src.EndPoints)];
 
         return new(controlPoints, endPoints, src.Bounds, src.Instructions, src.IsComposite);
     }

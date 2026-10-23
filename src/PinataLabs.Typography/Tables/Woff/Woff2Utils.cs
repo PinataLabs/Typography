@@ -18,7 +18,7 @@ internal static class Woff2Utils
 {
     // We don't reuse the const tag headers from our table types for clarity.
     private static readonly string[] KnownTableTags =
-    {
+    [
         "cmap", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post", "cvt ",
         "fpgm", "glyf", "loca", "prep", "CFF ", "VORG", "EBDT", "EBLC", "gasp",
         "hdmx", "kern", "LTSH", "PCLT", "VDMX", "vhea", "vmtx", "BASE", "GDEF",
@@ -26,7 +26,7 @@ internal static class Woff2Utils
         "SVG ", "sbix", "acnt", "avar", "bdat", "bloc", "bsln", "cvar", "fdsc",
         "feat", "fmtx", "fvar", "gvar", "hsty", "just", "lcar", "mort", "morx",
         "opbd", "prop", "trak", "Zapf", "Silf", "Glat", "Gloc", "Feat", "Sill"
-    };
+    ];
 
     private const byte OneMoreByteCode1 = 255;
     private const byte OneMoreByteCode2 = 254;
@@ -423,8 +423,8 @@ internal static class Woff2Utils
 
     private static GlyphVector ReadCompositeGlyphData(GlyphVector[] createdGlyphs, BigEndianBinaryReader reader)
     {
-        List<ControlPoint> controlPoints = new();
-        List<ushort> endPoints = new();
+        List<ControlPoint> controlPoints = [];
+        List<ushort> endPoints = [];
         CompositeGlyphFlags flags;
         do
         {

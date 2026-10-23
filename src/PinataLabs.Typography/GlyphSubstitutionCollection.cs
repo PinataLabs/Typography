@@ -20,7 +20,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <summary>
     /// Contains a map the index of a map within the collection, non-sequential codepoint offsets, and their glyph ids.
     /// </summary>
-    private readonly List<OffsetGlyphDataPair> glyphs = new();
+    private readonly List<OffsetGlyphDataPair> glyphs = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphSubstitutionCollection"/> class.
@@ -205,7 +205,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// </returns>
     public bool TryGetGlyphShapingDataAtOffset(int offset, [NotNullWhen(true)] out IReadOnlyList<GlyphShapingData>? data)
     {
-        List<GlyphShapingData> match = new();
+        List<GlyphShapingData> match = [];
         for (int i = 0; i < this.glyphs.Count; i++)
         {
             if (this.glyphs[i].Offset == offset)

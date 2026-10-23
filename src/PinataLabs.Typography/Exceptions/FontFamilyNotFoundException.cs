@@ -19,7 +19,7 @@ public class FontFamilyNotFoundException : FontException
     /// </summary>
     /// <param name="family">The name of the missing font family.</param>
     public FontFamilyNotFoundException(string family)
-        : this(family, Array.Empty<string>())
+        : this(family, [])
     {
     }
 

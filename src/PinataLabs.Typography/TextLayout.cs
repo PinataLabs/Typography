@@ -20,7 +20,7 @@ internal static class TextLayout
     {
         if (text.IsEmpty)
         {
-            return Array.Empty<GlyphLayout>();
+            return [];
         }
 
         TextBox textBox = ProcessText(text, options);
@@ -44,7 +44,7 @@ internal static class TextLayout
 
         int start = 0;
         int end = text.GetGraphemeCount();
-        List<TextRun> textRuns = new();
+        List<TextRun> textRuns = [];
         foreach (TextRun textRun in options.TextRuns!.OrderBy(x => x.Start))
         {
             // Fill gaps within runs.
@@ -103,7 +103,7 @@ internal static class TextLayout
         // Gather the font and fallbacks.
         Font[] fallbackFonts = (options.FallbackFontFamilies?.Count > 0)
             ? options.FallbackFontFamilies.Select(x => new Font(x, options.Font.Size, options.Font.RequestedStyle)).ToArray()
-            : Array.Empty<Font>();
+            : [];
 
         LayoutMode layoutMode = options.LayoutMode;
         GlyphSubstitutionCollection substitutions = new(options);
@@ -127,7 +127,7 @@ internal static class TextLayout
 
         // Get the list of directional runs
         BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
-        Dictionary<int, int> bidiMap = new();
+        Dictionary<int, int> bidiMap = [];
 
         // Incrementally build out collection of glyphs.
         IReadOnlyList<TextRun> textRuns = BuildTextRuns(text, options);
@@ -204,7 +204,7 @@ internal static class TextLayout
     private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options)
     {
         LayoutMode layoutMode = options.LayoutMode;
-        List<GlyphLayout> glyphs = new();
+        List<GlyphLayout> glyphs = [];
 
         Vector2 boxLocation = options.Origin / options.Dpi;
         Vector2 penLocation = boxLocation;
@@ -399,7 +399,7 @@ internal static class TextLayout
 
         penLocation.X += offsetX;
 
-        List<GlyphLayout> glyphs = new();
+        List<GlyphLayout> glyphs = [];
         for (int i = 0; i < textLine.Count; i++)
         {
             TextLine.GlyphLayoutData data = textLine[i];
@@ -527,7 +527,7 @@ internal static class TextLayout
 
         penLocation.X += offsetX;
 
-        List<GlyphLayout> glyphs = new();
+        List<GlyphLayout> glyphs = [];
         for (int i = 0; i < textLine.Count; i++)
         {
             TextLine.GlyphLayoutData data = textLine[i];
@@ -659,7 +659,7 @@ internal static class TextLayout
 
         penLocation.X += offsetX;
 
-        List<GlyphLayout> glyphs = new();
+        List<GlyphLayout> glyphs = [];
         for (int i = 0; i < textLine.Count; i++)
         {
             TextLine.GlyphLayoutData data = textLine[i];
@@ -867,7 +867,7 @@ internal static class TextLayout
 
         // Calculate the position of potential line breaks.
         var lineBreakEnumerator = new LineBreakEnumerator(text);
-        List<LineBreak> lineBreaks = new();
+        List<LineBreak> lineBreaks = [];
         while (lineBreakEnumerator.MoveNext())
         {
             lineBreaks.Add(lineBreakEnumerator.Current);
@@ -879,7 +879,7 @@ internal static class TextLayout
         int graphemeIndex;
         int codePointIndex = 0;
         float lineAdvance = 0;
-        List<TextLine> textLines = new();
+        List<TextLine> textLines = [];
         TextLine textLine = new();
         int glyphCount = 0;
 
@@ -1253,7 +1253,7 @@ internal static class TextLayout
 
     internal sealed class TextLine
     {
-        private readonly List<GlyphLayoutData> data = new();
+        private readonly List<GlyphLayoutData> data = [];
 
         public int Count => this.data.Count;
 

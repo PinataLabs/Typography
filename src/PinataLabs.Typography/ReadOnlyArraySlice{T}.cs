@@ -51,7 +51,7 @@ internal readonly struct ReadOnlyArraySlice<T> : IEnumerable<T>, IEnumerable
     /// <summary>
     /// Gets an empty <see cref="ReadOnlyArraySlice{T}"/>
     /// </summary>
-    public static ReadOnlyArraySlice<T> Empty => new(new T[0]);
+    public static ReadOnlyArraySlice<T> Empty => new([]);
 
     /// <summary>
     /// Gets the offset position in the underlying buffer this slice was created from.

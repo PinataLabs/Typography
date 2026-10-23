@@ -25,7 +25,7 @@ public struct FontFamily : IEquatable<FontFamily>
     /// <param name="culture">The culture the family was extracted against</param>
     internal FontFamily(string name, IReadOnlyFontMetricsCollection collection, CultureInfo culture)
     {
-        Guard.NotNull(collection, nameof(collection));
+        ArgumentNullException.ThrowIfNull(collection, nameof(collection));
 
         this.collection = collection;
         this.Name = name;

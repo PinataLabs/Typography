@@ -25,7 +25,7 @@ internal readonly struct MappedArraySlice<T>
     /// <param name="map">The map slice.</param>
     public MappedArraySlice(in ArraySlice<T> data, in ArraySlice<int> map)
     {
-        Guard.MustBeGreaterThanOrEqualTo(data.Length, map.Length, nameof(map));
+        ArgumentOutOfRangeException.ThrowIfLessThan(data.Length, map.Length, nameof(map));
 
         this.data = data;
         this.map = map;

@@ -39,10 +39,10 @@ internal static class AdvancedTypographicUtils
     }
 
     public static int GetMaxAllowableShapingCollectionCount(int length)
-        => (int)Math.Min(Math.Max((long)length * MaxLengthFactor, MaxLengthMinimum), MaxShapingCharsLength);
+        => (int)Math.Clamp((long)length * MaxLengthFactor, MaxLengthMinimum, MaxShapingCharsLength);
 
     public static int GetMaxAllowableShapingOperationsCount(int length)
-        => (int)Math.Min(Math.Max((long)length * MaxOperationsFactor, MaxOperationsMinimum), MaxShapingCharsLength);
+        => (int)Math.Clamp((long)length * MaxOperationsFactor, MaxOperationsMinimum, MaxShapingCharsLength);
 
     public static bool ApplyLookupList(
         FontMetrics fontMetrics,

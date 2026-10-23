@@ -141,7 +141,7 @@ internal sealed class Format14SubTable : CMapSubTable
     }
 
     public override IEnumerable<int> GetAvailableCodePoints()
-        => Array.Empty<int>();
+        => [];
 
     public ushort CharacterPairToGlyphId(CodePoint codePoint, ushort defaultGlyphIndex, CodePoint nextCodePoint)
     {
@@ -176,10 +176,10 @@ internal sealed class Format14SubTable : CMapSubTable
 
     private class VariationSelector
     {
-        public List<int> DefaultStartCodes { get; } = new List<int>();
+        public List<int> DefaultStartCodes { get; } = [];
 
-        public List<int> DefaultEndCodes { get; } = new List<int>();
+        public List<int> DefaultEndCodes { get; } = [];
 
-        public Dictionary<int, ushort> UVSMappings { get; } = new Dictionary<int, ushort>();
+        public Dictionary<int, ushort> UVSMappings { get; } = [];
     }
 }

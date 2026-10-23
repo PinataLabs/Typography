@@ -17,14 +17,14 @@ namespace PinataLabs.Typography;
 /// </summary>
 public sealed class FontCollection : IFontCollection, IFontMetricsCollection
 {
-    private readonly HashSet<string> searchDirectories = new();
-    private readonly HashSet<FontMetrics> metricsCollection = new();
+    private readonly HashSet<string> searchDirectories = [];
+    private readonly HashSet<FontMetrics> metricsCollection = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FontCollection"/> class.
     /// </summary>
     public FontCollection()
-        : this(Array.Empty<string>())
+        : this([])
     {
     }
 
@@ -39,7 +39,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     /// </remarks>
     internal FontCollection(IReadOnlyCollection<string> searchDirectories)
     {
-        Guard.NotNull(searchDirectories, nameof(searchDirectories));
+        ArgumentNullException.ThrowIfNull(searchDirectories, nameof(searchDirectories));
         foreach (string? dir in searchDirectories)
         {
             this.searchDirectories.Add(dir);
@@ -149,7 +149,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     /// <inheritdoc/>
     void IFontMetricsCollection.AddMetrics(FontMetrics metrics)
     {
-        Guard.NotNull(metrics, nameof(metrics));
+        ArgumentNullException.ThrowIfNull(metrics, nameof(metrics));
 
         if (metrics.Description is null)
         {
@@ -174,7 +174,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     /// <inheritdoc/>
     IEnumerable<FontMetrics> IReadOnlyFontMetricsCollection.GetAllMetrics(string name, CultureInfo culture)
     {
-        Guard.NotNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
 
         return this.metricsCollection
@@ -265,7 +265,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
 
     private bool TryGetImpl(string name, CultureInfo culture, out FontFamily family)
     {
-        Guard.NotNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
 
         string? match = this.metricsCollection

@@ -59,7 +59,7 @@ internal class GlyphShapingData
 
         if (!clearFeatures)
         {
-            this.Features = new(data.Features);
+            this.Features = [with(data.Features)];
         }
 
         this.Bounds = data.Bounds;
@@ -118,7 +118,7 @@ internal class GlyphShapingData
     /// <summary>
     /// Gets or sets the collection of features.
     /// </summary>
-    public List<TagEntry> Features { get; set; } = new List<TagEntry>();
+    public List<TagEntry> Features { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the shaping bounds.
