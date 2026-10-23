@@ -5,54 +5,56 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class TrueTypeCollectionTests
     {
         [Test]
-        public void AddViaPathReturnsDescription()
+        public async Task AddViaPathReturnsDescription()
         {
             var suit = new FontCollection();
             IEnumerable<FontFamily> collectionFromPath = suit.AddCollection(TestFonts.SimpleTrueTypeCollection, out IEnumerable<FontDescription> descriptions);
 
-            Assert.Equal(2, descriptions.Count());
-            FontFamily openSans = Assert.Single(collectionFromPath, x => x.Name == "Open Sans");
-            FontFamily abFont = Assert.Single(collectionFromPath, x => x.Name == "SixLaborsSampleAB");
+            await Assert.That(descriptions.Count()).IsEqualTo(2);
+            FontFamily openSans = await Assert.That(collectionFromPath).HasSingleItem(x => x.Name == "Open Sans");
+            FontFamily abFont = await Assert.That(collectionFromPath).HasSingleItem(x => x.Name == "SixLaborsSampleAB");
 
-            Assert.Equal(2, descriptions.Count());
-            FontDescription openSansDescription = Assert.Single(descriptions, x => x.FontNameInvariantCulture == "Open Sans");
-            FontDescription abFontDescription = Assert.Single(descriptions, x => x.FontNameInvariantCulture == "SixLaborsSampleAB regular");
+            await Assert.That(descriptions.Count()).IsEqualTo(2);
+            FontDescription openSansDescription = await Assert.That(descriptions).HasSingleItem(x => x.FontNameInvariantCulture == "Open Sans");
+            FontDescription abFontDescription = await Assert.That(descriptions).HasSingleItem(x => x.FontNameInvariantCulture == "SixLaborsSampleAB regular");
         }
 
         [Test]
-        public void AddViaPathAddFontFileInstances()
+        public async Task AddViaPathAddFontFileInstances()
         {
             var sut = new FontCollection();
             IEnumerable<FontFamily> collectionFromPath = sut.AddCollection(TestFonts.SimpleTrueTypeCollection, out IEnumerable<FontDescription> descriptions);
 
             IEnumerable<FontMetrics> allInstances = sut.Families.SelectMany(x => ((IReadOnlyFontMetricsCollection)sut).GetAllMetrics(x.Name, CultureInfo.InvariantCulture));
 
-            Assert.All(allInstances, i =>
+            foreach (FontMetrics i in allInstances)
             {
-                FileFontMetrics font = Assert.IsType<FileFontMetrics>(i);
-            });
+                await Assert.That(i).IsTypeOf<FileFontMetrics>();
+            }
         }
 
         [Test]
-        public void AddViaStreamReturnsDescription()
+        public async Task AddViaStreamReturnsDescription()
         {
             var suit = new FontCollection();
             IEnumerable<FontFamily> collectionFromPath = suit.AddCollection(TestFonts.SSimpleTrueTypeCollectionData(), out IEnumerable<FontDescription> descriptions);
 
-            Assert.Equal(2, collectionFromPath.Count());
-            FontFamily openSans = Assert.Single(collectionFromPath, x => x.Name == "Open Sans");
-            FontFamily abFont = Assert.Single(collectionFromPath, x => x.Name == "SixLaborsSampleAB");
+            await Assert.That(collectionFromPath.Count()).IsEqualTo(2);
+            FontFamily openSans = await Assert.That(collectionFromPath).HasSingleItem(x => x.Name == "Open Sans");
+            FontFamily abFont = await Assert.That(collectionFromPath).HasSingleItem(x => x.Name == "SixLaborsSampleAB");
 
-            Assert.Equal(2, descriptions.Count());
-            FontDescription openSansDescription = Assert.Single(descriptions, x => x.FontNameInvariantCulture == "Open Sans");
-            FontDescription abFontDescription = Assert.Single(descriptions, x => x.FontNameInvariantCulture == "SixLaborsSampleAB regular");
+            await Assert.That(descriptions.Count()).IsEqualTo(2);
+            FontDescription openSansDescription = await Assert.That(descriptions).HasSingleItem(x => x.FontNameInvariantCulture == "Open Sans");
+            FontDescription abFontDescription = await Assert.That(descriptions).HasSingleItem(x => x.FontNameInvariantCulture == "SixLaborsSampleAB regular");
         }
     }
 }

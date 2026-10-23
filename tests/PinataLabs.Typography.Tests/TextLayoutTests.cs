@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tests.Fakes;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -22,8 +24,10 @@ namespace PinataLabs.Typography.Tests
         [Arguments(LayoutMode.VerticalRightLeft, false)]
         [Arguments(LayoutMode.VerticalMixedLeftRight, false)]
         [Arguments(LayoutMode.VerticalMixedRightLeft, false)]
-        public void CanDetectHorizontalLayoutMode(LayoutMode mode, bool vertical)
-            => Assert.Equal(vertical, mode.IsHorizontal());
+        public async Task CanDetectHorizontalLayoutMode(LayoutMode mode, bool vertical)
+        {
+            await Assert.That(mode.IsHorizontal()).IsEqualTo(vertical);
+        }
 
         [Test]
         [Arguments(LayoutMode.HorizontalTopBottom, false)]
@@ -32,8 +36,10 @@ namespace PinataLabs.Typography.Tests
         [Arguments(LayoutMode.VerticalRightLeft, true)]
         [Arguments(LayoutMode.VerticalMixedLeftRight, false)]
         [Arguments(LayoutMode.VerticalMixedRightLeft, false)]
-        public void CanDetectVerticalLayoutMode(LayoutMode mode, bool vertical)
-            => Assert.Equal(vertical, mode.IsVertical());
+        public async Task CanDetectVerticalLayoutMode(LayoutMode mode, bool vertical)
+        {
+            await Assert.That(mode.IsVertical()).IsEqualTo(vertical);
+        }
 
         [Test]
         [Arguments(LayoutMode.HorizontalTopBottom, false)]
@@ -42,17 +48,19 @@ namespace PinataLabs.Typography.Tests
         [Arguments(LayoutMode.VerticalRightLeft, false)]
         [Arguments(LayoutMode.VerticalMixedLeftRight, true)]
         [Arguments(LayoutMode.VerticalMixedRightLeft, true)]
-        public void CanDetectVerticalMixedLayoutMode(LayoutMode mode, bool vertical)
-            => Assert.Equal(vertical, mode.IsVerticalMixed());
+        public async Task CanDetectVerticalMixedLayoutMode(LayoutMode mode, bool vertical)
+        {
+            await Assert.That(mode.IsVerticalMixed()).IsEqualTo(vertical);
+        }
 
         [Test]
-        public void FakeFontGetGlyph()
+        public async Task FakeFontGetGlyph()
         {
             Font font = CreateFont("hello world");
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('h'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('h'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
             Glyph glyph = glyphs[0];
-            Assert.NotEqual(default, glyph);
+            await Assert.That(glyph).IsNotEqualTo(default);
         }
 
         [Test]
@@ -101,7 +109,7 @@ namespace PinataLabs.Typography.Tests
             HorizontalAlignment.Center,
             -30,
             -155)]
-        public void CanAlignText(
+        public async Task CanAlignText(
             VerticalAlignment vertical,
             HorizontalAlignment horizontal,
             float top,
@@ -120,10 +128,10 @@ namespace PinataLabs.Typography.Tests
             IReadOnlyList<GlyphLayout> glyphsToRender = TextLayout.GenerateLayout(text.AsSpan(), options);
             FontRectangle bound = TextMeasurer.GetBounds(glyphsToRender, options.Dpi);
 
-            Assert.Equal(310, bound.Width, 3);
-            Assert.Equal(40, bound.Height, 3);
-            Assert.Equal(left, bound.Left, 3);
-            Assert.Equal(top, bound.Top, 3);
+            await Assert.That(Math.Round(bound.Width, 3)).IsEqualTo(310);
+            await Assert.That(Math.Round(bound.Height, 3)).IsEqualTo(40);
+            await Assert.That(Math.Round(bound.Left, 3)).IsEqualTo(Math.Round(left, 3));
+            await Assert.That(Math.Round(bound.Top, 3)).IsEqualTo(Math.Round(top, 3));
         }
 
         [Test]
@@ -172,7 +180,7 @@ namespace PinataLabs.Typography.Tests
             HorizontalAlignment.Center,
             -30,
             -70)]
-        public void CanAlignWithWrapping(
+        public async Task CanAlignWithWrapping(
             VerticalAlignment vertical,
             HorizontalAlignment horizontal,
             float top,
@@ -195,31 +203,36 @@ namespace PinataLabs.Typography.Tests
             IReadOnlyList<GlyphLayout> glyphsToRender = TextLayout.GenerateLayout(text.AsSpan(), options);
             FontRectangle bound = TextMeasurer.GetBounds(glyphsToRender, options.Dpi);
 
-            Assert.Equal(310, bound.Width, 3);
-            Assert.Equal(40, bound.Height, 3);
-            Assert.Equal(left, bound.Left, 3);
-            Assert.Equal(top, bound.Top, 3);
+            await Assert.That(Math.Round(bound.Width, 3)).IsEqualTo(310);
+            await Assert.That(Math.Round(bound.Height, 3)).IsEqualTo(40);
+            await Assert.That(Math.Round(bound.Left, 3)).IsEqualTo(Math.Round(left, 3));
+            await Assert.That(Math.Round(bound.Top, 3)).IsEqualTo(Math.Round(top, 3));
         }
 
         [Test]
-        public unsafe void MeasureTextWithSpan()
+        public async Task MeasureTextWithSpan()
         {
             Font font = CreateFont("hello");
 
-            Span<char> text = stackalloc char[]
+            FontRectangle size = Measure(font);
+
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(10);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(130);
+
+            static FontRectangle Measure(Font font)
             {
-                'h',
-                'e',
-                'l',
-                'l',
-                'o'
-            };
+                Span<char> text = stackalloc char[]
+                {
+                    'h',
+                    'e',
+                    'l',
+                    'l',
+                    'o'
+                };
 
-            // 72 * emSize means 1pt = 1px
-            FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
-
-            Assert.Equal(10, size.Height, 4);
-            Assert.Equal(130, size.Width, 4);
+                // 72 * emSize means 1pt = 1px
+                return TextMeasurer.MeasureBounds(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
+            }
         }
 
         [Test]
@@ -230,17 +243,17 @@ namespace PinataLabs.Typography.Tests
         [Arguments("hello world", 10, 310)]
         [Arguments("hello world\nhello world", 40, 310)]
         [Arguments("hello\nworld", 40, 130)]
-        public void MeasureText(string text, float height, float width)
+        public async Task MeasureText(string text, float height, float width)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
 
-            Assert.Equal(height, size.Height, 4);
-            Assert.Equal(width, size.Width, 4);
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
         }
 
         [Test]
-        public void TryMeasureCharacterBounds()
+        public async Task TryMeasureCharacterBounds()
         {
             const string text = "a b\nc";
             GlyphBounds[] expectedGlyphMetrics =
@@ -252,24 +265,26 @@ namespace PinataLabs.Typography.Tests
             };
             Font font = CreateFont(text);
 
-            Assert.True(TextMeasurer.TryMeasureCharacterBounds(
+            bool measuredBounds = TextMeasurer.TryMeasureCharacterBounds(
                 text.AsSpan(),
                 new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor },
-                out ReadOnlySpan<GlyphBounds> bounds));
+                out ReadOnlySpan<GlyphBounds> boundsSpan);
+            GlyphBounds[] bounds = boundsSpan.ToArray();
+            await Assert.That(measuredBounds).IsTrue();
 
             // Newline should not be returned.
-            Assert.Equal(text.Length - 1, bounds.Length);
+            await Assert.That(bounds.Length).IsEqualTo(text.Length - 1);
             for (int i = 0; i < bounds.Length; i++)
             {
                 GlyphBounds expected = expectedGlyphMetrics[i];
                 GlyphBounds actual = bounds[i];
-                Assert.Equal(expected.Codepoint, actual.Codepoint);
+                await Assert.That(actual.Codepoint).IsEqualTo(expected.Codepoint);
 
                 // 4 dp as there is minor offset difference in the float values
-                Assert.Equal(expected.Bounds.X, actual.Bounds.X, 4);
-                Assert.Equal(expected.Bounds.Y, actual.Bounds.Y, 4);
-                Assert.Equal(expected.Bounds.Height, actual.Bounds.Height, 4);
-                Assert.Equal(expected.Bounds.Width, actual.Bounds.Width, 4);
+                await Assert.That(Math.Round(actual.Bounds.X, 4)).IsEqualTo(Math.Round(expected.Bounds.X, 4));
+                await Assert.That(Math.Round(actual.Bounds.Y, 4)).IsEqualTo(Math.Round(expected.Bounds.Y, 4));
+                await Assert.That(Math.Round(actual.Bounds.Height, 4)).IsEqualTo(Math.Round(expected.Bounds.Height, 4));
+                await Assert.That(Math.Round(actual.Bounds.Width, 4)).IsEqualTo(Math.Round(expected.Bounds.Width, 4));
             }
         }
 
@@ -279,11 +294,11 @@ namespace PinataLabs.Typography.Tests
             "hello world hello world hello world",
             70, // 30 actual line height * 2 + 10 actual height
             310)]
-        [Arguments(// issue https://github.com/SixLabors/ImageSharp.Drawing/issues/115
+        [Arguments(// See upstream drawing library issue #115 (pre-fork)
             "这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。",
             160, // 30 actual line height * 2 + 10 actual height
             310)]
-        public void MeasureTextWordWrappingHorizontalTopBottom(string text, float height, float width)
+        public async Task MeasureTextWordWrappingHorizontalTopBottom(string text, float height, float width)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font)
@@ -293,8 +308,8 @@ namespace PinataLabs.Typography.Tests
                 LayoutMode = LayoutMode.HorizontalTopBottom
             });
 
-            Assert.Equal(width, size.Width, 4);
-            Assert.Equal(height, size.Height, 4);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
         }
 
         [Test]
@@ -303,11 +318,11 @@ namespace PinataLabs.Typography.Tests
             "hello world hello world hello world",
             70, // 30 actual line height * 2 + 10 actual height
             310)]
-        [Arguments(// issue https://github.com/SixLabors/ImageSharp.Drawing/issues/115
+        [Arguments(// See upstream drawing library issue #115 (pre-fork)
             "这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。",
             160, // 30 actual line height * 2 + 10 actual height
             310)]
-        public void MeasureTextWordWrappingHorizontalBottomTop(string text, float height, float width)
+        public async Task MeasureTextWordWrappingHorizontalBottomTop(string text, float height, float width)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font)
@@ -317,15 +332,15 @@ namespace PinataLabs.Typography.Tests
                 LayoutMode = LayoutMode.HorizontalBottomTop
             });
 
-            Assert.Equal(width, size.Width, 4);
-            Assert.Equal(height, size.Height, 4);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
         }
 
         [Test]
         [Arguments("hello world", 310, 10)]
         [Arguments("hello world hello world hello world", 310, 70)]
         [Arguments("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
-        public void MeasureTextWordWrappingVerticalLeftRight(string text, float height, float width)
+        public async Task MeasureTextWordWrappingVerticalLeftRight(string text, float height, float width)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font)
@@ -335,15 +350,15 @@ namespace PinataLabs.Typography.Tests
                 LayoutMode = LayoutMode.VerticalLeftRight
             });
 
-            Assert.Equal(width, size.Width, 4);
-            Assert.Equal(height, size.Height, 4);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
         }
 
         [Test]
         [Arguments("hello world", 310, 10)]
         [Arguments("hello world hello world hello world", 310, 70)]
         [Arguments("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
-        public void MeasureTextWordWrappingVerticalRightLeft(string text, float height, float width)
+        public async Task MeasureTextWordWrappingVerticalRightLeft(string text, float height, float width)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font)
@@ -353,15 +368,15 @@ namespace PinataLabs.Typography.Tests
                 LayoutMode = LayoutMode.VerticalRightLeft
             });
 
-            Assert.Equal(width, size.Width, 4);
-            Assert.Equal(height, size.Height, 4);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
         }
 
         [Test]
         [Arguments("hello world", 310, 10)]
         [Arguments("hello world hello world hello world", 310, 70)]
         [Arguments("这是一段长度超出设定的换行宽度的文本，但是没有在设定的宽度处换行。这段文本用于演示问题。希望可以修复。如果有需要可以联系我。", 310, 160)]
-        public void MeasureTextWordWrappingVerticalMixedLeftRight(string text, float height, float width)
+        public async Task MeasureTextWordWrappingVerticalMixedLeftRight(string text, float height, float width)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font)
@@ -371,8 +386,8 @@ namespace PinataLabs.Typography.Tests
                 LayoutMode = LayoutMode.VerticalMixedLeftRight
             });
 
-            Assert.Equal(width, size.Width, 4);
-            Assert.Equal(height, size.Height, 4);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
         }
 
 #if OS_WINDOWS
@@ -385,7 +400,7 @@ namespace PinataLabs.Typography.Tests
         [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.BreakAll, 121, 399)]
         [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious Taumatawhakatangihangakoauauotamateaturipukakapikimaungahoronukupokaiwhenuakitanatahu グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.BreakWord, 121, 400)]
         [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious グレートブリテンおよび北アイルランド連合王国という言葉は本当に長い言葉", LayoutMode.HorizontalBottomTop, WordBreaking.KeepAll, 61, 699)]
-        public void MeasureTextWordBreak(string text, LayoutMode layoutMode, WordBreaking wordBreaking, float height, float width)
+        public async Task MeasureTextWordBreak(string text, LayoutMode layoutMode, WordBreaking wordBreaking, float height, float width)
         {
             // Testing using Windows only to ensure that actual glyphs are rendered
             // against known physically tested values.
@@ -403,8 +418,8 @@ namespace PinataLabs.Typography.Tests
                     FallbackFontFamilies = new[] { jhengHei }
                 });
 
-            Assert.Equal(width, size.Width, 4);
-            Assert.Equal(height, size.Height, 4);
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
         }
 #endif
 
@@ -413,7 +428,7 @@ namespace PinataLabs.Typography.Tests
         [Arguments("ab", 477, 1081, true)]
         [Arguments("AB", 465, 1033, false)] // width changes between kerning enabled or not
         [Arguments("AB", 465, 654, true)]
-        public void MeasureTextWithKerning(string text, float height, float width, bool applyKerning)
+        public async Task MeasureTextWithKerning(string text, float height, float width, bool applyKerning)
         {
             var c = new FontCollection();
             Font font = c.Add(TestFonts.SimpleFontFileData()).CreateFont(12);
@@ -425,13 +440,13 @@ namespace PinataLabs.Typography.Tests
                     KerningMode = applyKerning ? KerningMode.Standard : KerningMode.None,
                 });
 
-            Assert.Equal(height, size.Height, 4);
-            Assert.Equal(width, size.Width, 4);
+            await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(Math.Round(height, 4));
+            await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(Math.Round(width, 4));
         }
 
         [Test]
         [Arguments("a", 100, 100, 125, 396)]
-        public void LayoutWithLocation(string text, float x, float y, float expectedX, float expectedY)
+        public async Task LayoutWithLocation(string text, float x, float y, float expectedX, float expectedY)
         {
             var c = new FontCollection();
             Font font = c.Add(TestFonts.SimpleFontFileData()).CreateFont(12);
@@ -446,52 +461,58 @@ namespace PinataLabs.Typography.Tests
                     Origin = new Vector2(x, y)
                 });
 
-            Assert.Equal(expectedX, glyphRenderer.GlyphRects[0].Location.X, 2);
-            Assert.Equal(expectedY, glyphRenderer.GlyphRects[0].Location.Y, 2);
+            await Assert.That(Math.Round(glyphRenderer.GlyphRects[0].Location.X, 2)).IsEqualTo(Math.Round(expectedX, 2));
+            await Assert.That(Math.Round(glyphRenderer.GlyphRects[0].Location.Y, 2)).IsEqualTo(Math.Round(expectedY, 2));
         }
 
-        // https://github.com/SixLabors/Fonts/issues/244
+        // See upstream issue #244 (pre-fork)
         [Test]
-        public void MeasureTextLeadingFraction()
+        public async Task MeasureTextLeadingFraction()
         {
             FontCollection c = new();
             Font font = c.Add(TestFonts.SimpleFontFileData()).CreateFont(12);
             TextOptions textOptions = new(font);
             FontRectangle measurement = TextMeasurer.MeasureSize("/ This will fail", textOptions);
 
-            Assert.NotEqual(FontRectangle.Empty, measurement);
+            await Assert.That(measurement).IsNotEqualTo(FontRectangle.Empty);
         }
 
         [Test]
         [Arguments("hello world", 1)]
         [Arguments("hello world\nhello world", 2)]
         [Arguments("hello world\nhello world\nhello world", 3)]
-        public void CountLines(string text, int usedLines)
+        public async Task CountLines(string text, int usedLines)
         {
             Font font = CreateFont(text);
             int count = TextMeasurer.CountLines(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
 
-            Assert.Equal(usedLines, count);
+            await Assert.That(count).IsEqualTo(usedLines);
         }
 
         [Test]
-        public void CountLinesWithSpan()
+        public async Task CountLinesWithSpan()
         {
             Font font = CreateFont("hello\n!");
 
-            Span<char> text = stackalloc char[]
-            {
-                'h',
-                'e',
-                'l',
-                'l',
-                'o',
-                '\n',
-                '!'
-            };
-            int count = TextMeasurer.CountLines(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
+            int count = CountLines(font);
 
-            Assert.Equal(2, count);
+            await Assert.That(count).IsEqualTo(2);
+
+            static int CountLines(Font font)
+            {
+                Span<char> text = stackalloc char[]
+                {
+                    'h',
+                    'e',
+                    'l',
+                    'l',
+                    'o',
+                    '\n',
+                    '!'
+                };
+
+                return TextMeasurer.CountLines(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
+            }
         }
 
         [Test]
@@ -499,16 +520,16 @@ namespace PinataLabs.Typography.Tests
         [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 50, 7)]
         [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 6)]
         [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 200, 6)]
-        public void CountLinesWrappingLength(string text, int wrappingLength, int usedLines)
+        public async Task CountLinesWrappingLength(string text, int wrappingLength, int usedLines)
         {
             Font font = CreateFont(text);
             int count = TextMeasurer.CountLines(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor, WrappingLength = wrappingLength });
 
-            Assert.Equal(usedLines, count);
+            await Assert.That(count).IsEqualTo(usedLines);
         }
 
         [Test]
-        public void BuildTextRuns_EmptyReturnsDefaultRun()
+        public async Task BuildTextRuns_EmptyReturnsDefaultRun()
         {
             const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
             Font font = CreateFont(text);
@@ -516,14 +537,14 @@ namespace PinataLabs.Typography.Tests
 
             IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
 
-            Assert.True(runs.Count == 1);
-            Assert.Equal(font, runs[0].Font);
-            Assert.Equal(0, runs[0].Start);
-            Assert.Equal(CodePoint.GetCodePointCount(text.AsSpan()), runs[0].End);
+            await Assert.That(runs.Count == 1).IsTrue();
+            await Assert.That(runs[0].Font).IsEqualTo(font);
+            await Assert.That(runs[0].Start).IsEqualTo(0);
+            await Assert.That(runs[0].End).IsEqualTo(CodePoint.GetCodePointCount(text.AsSpan()));
         }
 
         [Test]
-        public void BuildTextRuns_ReturnsCreatesInterimRuns()
+        public async Task BuildTextRuns_ReturnsCreatesInterimRuns()
         {
             const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
             Font font = CreateFont(text);
@@ -540,46 +561,46 @@ namespace PinataLabs.Typography.Tests
 
             IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
 
-            Assert.True(runs.Count == 7);
+            await Assert.That(runs.Count == 7).IsTrue();
 
-            Assert.Equal(0, runs[0].Start);
-            Assert.Equal(9, runs[0].End);
-            Assert.Equal(font, runs[0].Font);
-            Assert.Equal(9, runs[0].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[0].Start).IsEqualTo(0);
+            await Assert.That(runs[0].End).IsEqualTo(9);
+            await Assert.That(runs[0].Font).IsEqualTo(font);
+            await Assert.That(runs[0].Slice(text.AsSpan()).Length).IsEqualTo(9);
 
-            Assert.Equal(9, runs[1].Start);
-            Assert.Equal(23, runs[1].End);
-            Assert.Equal(font2, runs[1].Font);
-            Assert.Equal(14, runs[1].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[1].Start).IsEqualTo(9);
+            await Assert.That(runs[1].End).IsEqualTo(23);
+            await Assert.That(runs[1].Font).IsEqualTo(font2);
+            await Assert.That(runs[1].Slice(text.AsSpan()).Length).IsEqualTo(14);
 
-            Assert.Equal(23, runs[2].Start);
-            Assert.Equal(35, runs[2].End);
-            Assert.Equal(font, runs[2].Font);
-            Assert.Equal(12, runs[2].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[2].Start).IsEqualTo(23);
+            await Assert.That(runs[2].End).IsEqualTo(35);
+            await Assert.That(runs[2].Font).IsEqualTo(font);
+            await Assert.That(runs[2].Slice(text.AsSpan()).Length).IsEqualTo(12);
 
-            Assert.Equal(35, runs[3].Start);
-            Assert.Equal(54, runs[3].End);
-            Assert.Equal(font2, runs[3].Font);
-            Assert.Equal(19, runs[3].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[3].Start).IsEqualTo(35);
+            await Assert.That(runs[3].End).IsEqualTo(54);
+            await Assert.That(runs[3].Font).IsEqualTo(font2);
+            await Assert.That(runs[3].Slice(text.AsSpan()).Length).IsEqualTo(19);
 
-            Assert.Equal(54, runs[4].Start);
-            Assert.Equal(68, runs[4].End);
-            Assert.Equal(font, runs[4].Font);
-            Assert.Equal(14, runs[4].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[4].Start).IsEqualTo(54);
+            await Assert.That(runs[4].End).IsEqualTo(68);
+            await Assert.That(runs[4].Font).IsEqualTo(font);
+            await Assert.That(runs[4].Slice(text.AsSpan()).Length).IsEqualTo(14);
 
-            Assert.Equal(68, runs[5].Start);
-            Assert.Equal(70, runs[5].End);
-            Assert.Equal(font2, runs[5].Font);
-            Assert.Equal(2, runs[5].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[5].Start).IsEqualTo(68);
+            await Assert.That(runs[5].End).IsEqualTo(70);
+            await Assert.That(runs[5].Font).IsEqualTo(font2);
+            await Assert.That(runs[5].Slice(text.AsSpan()).Length).IsEqualTo(2);
 
-            Assert.Equal(70, runs[6].Start);
-            Assert.Equal(76, runs[6].End);
-            Assert.Equal(font, runs[6].Font);
-            Assert.Equal(6, runs[6].Slice(text.AsSpan()).Length);
+            await Assert.That(runs[6].Start).IsEqualTo(70);
+            await Assert.That(runs[6].End).IsEqualTo(76);
+            await Assert.That(runs[6].Font).IsEqualTo(font);
+            await Assert.That(runs[6].Slice(text.AsSpan()).Length).IsEqualTo(6);
         }
 
         [Test]
-        public void BuildTextRuns_PreventsOverlappingRun()
+        public async Task BuildTextRuns_PreventsOverlappingRun()
         {
             const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
             Font font = CreateFont(text);
@@ -594,20 +615,20 @@ namespace PinataLabs.Typography.Tests
 
             IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
 
-            Assert.Equal(2, runs.Count);
-            Assert.Equal(font, runs[0].Font);
-            Assert.Equal(0, runs[0].Start);
-            Assert.Equal(1, runs[0].End);
+            await Assert.That(runs.Count).IsEqualTo(2);
+            await Assert.That(runs[0].Font).IsEqualTo(font);
+            await Assert.That(runs[0].Start).IsEqualTo(0);
+            await Assert.That(runs[0].End).IsEqualTo(1);
 
-            Assert.Equal(font, runs[1].Font);
-            Assert.Equal(1, runs[1].Start);
-            Assert.Equal(76, runs[1].End);
+            await Assert.That(runs[1].Font).IsEqualTo(font);
+            await Assert.That(runs[1].Start).IsEqualTo(1);
+            await Assert.That(runs[1].End).IsEqualTo(76);
         }
 
         [Test]
         [Arguments(TextDirection.LeftToRight)]
         [Arguments(TextDirection.RightToLeft)]
-        public void TextJustification_InterCharacter_Horizontal(TextDirection direction)
+        public async Task TextJustification_InterCharacter_Horizontal(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
             const float wrappingLength = 400;
@@ -623,15 +644,15 @@ namespace PinataLabs.Typography.Tests
             // Collect the first line so we can compare it to the target wrapping length.
             IReadOnlyList<GlyphLayout> justifiedGlyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> justifiedLine = CollectFirstLine(justifiedGlyphs);
-            TextMeasurer.TryGetCharacterAdvances(justifiedLine, options.Dpi, out ReadOnlySpan<GlyphBounds> justifiedCharacterBounds);
+            GlyphBounds[] justifiedCharacterBounds = GetCharacterAdvances(justifiedLine, options.Dpi);
 
-            Assert.Equal(wrappingLength, justifiedCharacterBounds.ToArray().Sum(x => x.Bounds.Width), 4);
+            await Assert.That(Math.Round(justifiedCharacterBounds.Sum(x => x.Bounds.Width), 4)).IsEqualTo(Math.Round(wrappingLength, 4));
 
             // Now compare character widths.
             options.TextJustification = TextJustification.None;
             IReadOnlyList<GlyphLayout> glyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> line = CollectFirstLine(glyphs);
-            TextMeasurer.TryGetCharacterAdvances(line, options.Dpi, out ReadOnlySpan<GlyphBounds> characterBounds);
+            GlyphBounds[] characterBounds = GetCharacterAdvances(line, options.Dpi);
 
             // All but the last justified character advance should be greater than the
             // corresponding character advance.
@@ -639,11 +660,11 @@ namespace PinataLabs.Typography.Tests
             {
                 if (i == characterBounds.Length - 1)
                 {
-                    Assert.Equal(justifiedCharacterBounds[i].Bounds.Width, characterBounds[i].Bounds.Width);
+                    await Assert.That(characterBounds[i].Bounds.Width).IsEqualTo(justifiedCharacterBounds[i].Bounds.Width);
                 }
                 else
                 {
-                    Assert.True(justifiedCharacterBounds[i].Bounds.Width > characterBounds[i].Bounds.Width);
+                    await Assert.That(justifiedCharacterBounds[i].Bounds.Width > characterBounds[i].Bounds.Width).IsTrue();
                 }
             }
         }
@@ -651,7 +672,7 @@ namespace PinataLabs.Typography.Tests
         [Test]
         [Arguments(TextDirection.LeftToRight)]
         [Arguments(TextDirection.RightToLeft)]
-        public void TextJustification_InterWord_Horizontal(TextDirection direction)
+        public async Task TextJustification_InterWord_Horizontal(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
             const float wrappingLength = 400;
@@ -667,15 +688,15 @@ namespace PinataLabs.Typography.Tests
             // Collect the first line so we can compare it to the target wrapping length.
             IReadOnlyList<GlyphLayout> justifiedGlyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> justifiedLine = CollectFirstLine(justifiedGlyphs);
-            TextMeasurer.TryGetCharacterAdvances(justifiedLine, options.Dpi, out ReadOnlySpan<GlyphBounds> justifiedCharacterBounds);
+            GlyphBounds[] justifiedCharacterBounds = GetCharacterAdvances(justifiedLine, options.Dpi);
 
-            Assert.Equal(wrappingLength, justifiedCharacterBounds.ToArray().Sum(x => x.Bounds.Width), 4);
+            await Assert.That(Math.Round(justifiedCharacterBounds.Sum(x => x.Bounds.Width), 4)).IsEqualTo(Math.Round(wrappingLength, 4));
 
             // Now compare character widths.
             options.TextJustification = TextJustification.None;
             IReadOnlyList<GlyphLayout> glyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> line = CollectFirstLine(glyphs);
-            TextMeasurer.TryGetCharacterAdvances(line, options.Dpi, out ReadOnlySpan<GlyphBounds> characterBounds);
+            GlyphBounds[] characterBounds = GetCharacterAdvances(line, options.Dpi);
 
             // All but the last justified whitespace character advance should be greater than the
             // corresponding character advance.
@@ -683,11 +704,11 @@ namespace PinataLabs.Typography.Tests
             {
                 if (CodePoint.IsWhiteSpace(characterBounds[i].Codepoint) && i != characterBounds.Length - 1)
                 {
-                    Assert.True(justifiedCharacterBounds[i].Bounds.Width > characterBounds[i].Bounds.Width);
+                    await Assert.That(justifiedCharacterBounds[i].Bounds.Width > characterBounds[i].Bounds.Width).IsTrue();
                 }
                 else
                 {
-                    Assert.Equal(justifiedCharacterBounds[i].Bounds.Width, characterBounds[i].Bounds.Width);
+                    await Assert.That(characterBounds[i].Bounds.Width).IsEqualTo(justifiedCharacterBounds[i].Bounds.Width);
                 }
             }
         }
@@ -695,7 +716,7 @@ namespace PinataLabs.Typography.Tests
         [Test]
         [Arguments(TextDirection.LeftToRight)]
         [Arguments(TextDirection.RightToLeft)]
-        public void TextJustification_InterCharacter_Vertical(TextDirection direction)
+        public async Task TextJustification_InterCharacter_Vertical(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
             const float wrappingLength = 400;
@@ -712,15 +733,15 @@ namespace PinataLabs.Typography.Tests
             // Collect the first line so we can compare it to the target wrapping length.
             IReadOnlyList<GlyphLayout> justifiedGlyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> justifiedLine = CollectFirstLine(justifiedGlyphs);
-            TextMeasurer.TryGetCharacterAdvances(justifiedLine, options.Dpi, out ReadOnlySpan<GlyphBounds> justifiedCharacterBounds);
+            GlyphBounds[] justifiedCharacterBounds = GetCharacterAdvances(justifiedLine, options.Dpi);
 
-            Assert.Equal(wrappingLength, justifiedCharacterBounds.ToArray().Sum(x => x.Bounds.Height), 4);
+            await Assert.That(Math.Round(justifiedCharacterBounds.Sum(x => x.Bounds.Height), 4)).IsEqualTo(Math.Round(wrappingLength, 4));
 
             // Now compare character widths.
             options.TextJustification = TextJustification.None;
             IReadOnlyList<GlyphLayout> glyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> line = CollectFirstLine(glyphs);
-            TextMeasurer.TryGetCharacterAdvances(line, options.Dpi, out ReadOnlySpan<GlyphBounds> characterBounds);
+            GlyphBounds[] characterBounds = GetCharacterAdvances(line, options.Dpi);
 
             // All but the last justified character advance should be greater than the
             // corresponding character advance.
@@ -728,11 +749,11 @@ namespace PinataLabs.Typography.Tests
             {
                 if (i == characterBounds.Length - 1)
                 {
-                    Assert.Equal(justifiedCharacterBounds[i].Bounds.Height, characterBounds[i].Bounds.Height);
+                    await Assert.That(characterBounds[i].Bounds.Height).IsEqualTo(justifiedCharacterBounds[i].Bounds.Height);
                 }
                 else
                 {
-                    Assert.True(justifiedCharacterBounds[i].Bounds.Height > characterBounds[i].Bounds.Height);
+                    await Assert.That(justifiedCharacterBounds[i].Bounds.Height > characterBounds[i].Bounds.Height).IsTrue();
                 }
             }
         }
@@ -740,7 +761,7 @@ namespace PinataLabs.Typography.Tests
         [Test]
         [Arguments(TextDirection.LeftToRight)]
         [Arguments(TextDirection.RightToLeft)]
-        public void TextJustification_InterWord_Vertical(TextDirection direction)
+        public async Task TextJustification_InterWord_Vertical(TextDirection direction)
         {
             const string text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ornare maximus vehicula. Duis nisi velit, dictum id mauris vitae, lobortis pretium quam. Quisque sed nisi pulvinar, consequat justo id, feugiat leo. Cras eu elementum dui.";
             const float wrappingLength = 400;
@@ -757,15 +778,15 @@ namespace PinataLabs.Typography.Tests
             // Collect the first line so we can compare it to the target wrapping length.
             IReadOnlyList<GlyphLayout> justifiedGlyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> justifiedLine = CollectFirstLine(justifiedGlyphs);
-            TextMeasurer.TryGetCharacterAdvances(justifiedLine, options.Dpi, out ReadOnlySpan<GlyphBounds> justifiedCharacterBounds);
+            GlyphBounds[] justifiedCharacterBounds = GetCharacterAdvances(justifiedLine, options.Dpi);
 
-            Assert.Equal(wrappingLength, justifiedCharacterBounds.ToArray().Sum(x => x.Bounds.Height), 4);
+            await Assert.That(Math.Round(justifiedCharacterBounds.Sum(x => x.Bounds.Height), 4)).IsEqualTo(Math.Round(wrappingLength, 4));
 
             // Now compare character widths.
             options.TextJustification = TextJustification.None;
             IReadOnlyList<GlyphLayout> glyphs = TextLayout.GenerateLayout(text.AsSpan(), options);
             IReadOnlyList<GlyphLayout> line = CollectFirstLine(glyphs);
-            TextMeasurer.TryGetCharacterAdvances(line, options.Dpi, out ReadOnlySpan<GlyphBounds> characterBounds);
+            GlyphBounds[] characterBounds = GetCharacterAdvances(line, options.Dpi);
 
             // All but the last justified whitespace character advance should be greater than the
             // corresponding character advance.
@@ -773,11 +794,11 @@ namespace PinataLabs.Typography.Tests
             {
                 if (CodePoint.IsWhiteSpace(characterBounds[i].Codepoint) && i != characterBounds.Length - 1)
                 {
-                    Assert.True(justifiedCharacterBounds[i].Bounds.Height > characterBounds[i].Bounds.Height);
+                    await Assert.That(justifiedCharacterBounds[i].Bounds.Height > characterBounds[i].Bounds.Height).IsTrue();
                 }
                 else
                 {
-                    Assert.Equal(justifiedCharacterBounds[i].Bounds.Height, characterBounds[i].Bounds.Height);
+                    await Assert.That(characterBounds[i].Bounds.Height).IsEqualTo(justifiedCharacterBounds[i].Bounds.Height);
                 }
             }
         }
@@ -883,7 +904,7 @@ namespace PinataLabs.Typography.Tests
 
         [Test]
         [MethodDataSource(nameof(OpenSans_Data))]
-        public void TrueTypeHinting_CanHintSmallOpenSans(char c, FontRectangle expected)
+        public async Task TrueTypeHinting_CanHintSmallOpenSans(char c, FontRectangle expected)
         {
             TextOptions options = new(OpenSansTTF)
             {
@@ -892,7 +913,7 @@ namespace PinataLabs.Typography.Tests
             };
 
             FontRectangle actual = TextMeasurer.MeasureSize(c.ToString(), options);
-            Assert.Equal(expected, actual);
+            await Assert.That(actual).IsEqualTo(expected);
 
             options = new(OpenSansWoff)
             {
@@ -901,11 +922,11 @@ namespace PinataLabs.Typography.Tests
             };
 
             actual = TextMeasurer.MeasureSize(c.ToString(), options);
-            Assert.Equal(expected, actual);
+            await Assert.That(actual).IsEqualTo(expected);
         }
 
         [Test]
-        public void CanMeasureTextAdvance()
+        public async Task CanMeasureTextAdvance()
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
             family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
@@ -919,15 +940,15 @@ namespace PinataLabs.Typography.Tests
             FontRectangle first = TextMeasurer.MeasureAdvance(text, options);
 
             // TODO: We should probably drop the 32bit test runner.
-            Assert.Equal(new FontRectangle(0, 0, 11729, 2049), first);
+            await Assert.That(first).IsEqualTo(new FontRectangle(0, 0, 11729, 2049));
 
             options.LineSpacing = 2F;
             FontRectangle second = TextMeasurer.MeasureAdvance(text, options);
-            Assert.Equal(new FontRectangle(0, 0, 11729, 4096), second);
+            await Assert.That(second).IsEqualTo(new FontRectangle(0, 0, 11729, 4096));
         }
 
         [Test]
-        public void CanMeasureCharacterLayouts()
+        public async Task CanMeasureCharacterLayouts()
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
             family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
@@ -939,12 +960,20 @@ namespace PinataLabs.Typography.Tests
 
             const string text = "Hello World!";
 
-            Assert.True(TextMeasurer.TryMeasureCharacterAdvances(text, options, out ReadOnlySpan<GlyphBounds> advances));
-            Assert.True(TextMeasurer.TryMeasureCharacterSizes(text, options, out ReadOnlySpan<GlyphBounds> sizes));
-            Assert.True(TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds));
+            bool measuredAdvances = TextMeasurer.TryMeasureCharacterAdvances(text, options, out ReadOnlySpan<GlyphBounds> advancesSpan);
+            GlyphBounds[] advances = advancesSpan.ToArray();
+            await Assert.That(measuredAdvances).IsTrue();
 
-            Assert.Equal(advances.Length, sizes.Length);
-            Assert.Equal(advances.Length, bounds.Length);
+            bool measuredSizes = TextMeasurer.TryMeasureCharacterSizes(text, options, out ReadOnlySpan<GlyphBounds> sizesSpan);
+            GlyphBounds[] sizes = sizesSpan.ToArray();
+            await Assert.That(measuredSizes).IsTrue();
+
+            bool measuredBounds = TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> boundsSpan);
+            GlyphBounds[] bounds = boundsSpan.ToArray();
+            await Assert.That(measuredBounds).IsTrue();
+
+            await Assert.That(sizes.Length).IsEqualTo(advances.Length);
+            await Assert.That(bounds.Length).IsEqualTo(advances.Length);
 
             for (int i = 0; i < advances.Length; i++)
             {
@@ -952,17 +981,17 @@ namespace PinataLabs.Typography.Tests
                 GlyphBounds size = sizes[i];
                 GlyphBounds bound = bounds[i];
 
-                Assert.Equal(advance.Codepoint, size.Codepoint);
-                Assert.Equal(advance.Codepoint, bound.Codepoint);
+                await Assert.That(size.Codepoint).IsEqualTo(advance.Codepoint);
+                await Assert.That(bound.Codepoint).IsEqualTo(advance.Codepoint);
 
                 // Since this is a single line starting at 0,0 the following should be predictable.
-                Assert.Equal(advance.Bounds.X, size.Bounds.X);
-                Assert.Equal(size.Bounds.Bottom, bound.Bounds.Bottom);
+                await Assert.That(size.Bounds.X).IsEqualTo(advance.Bounds.X);
+                await Assert.That(bound.Bounds.Bottom).IsEqualTo(size.Bounds.Bottom);
             }
         }
 
         [Test]
-        public void CanMeasureMultilineCharacterLayouts()
+        public async Task CanMeasureMultilineCharacterLayouts()
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
             family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
@@ -974,10 +1003,15 @@ namespace PinataLabs.Typography.Tests
 
             const string text = "A\nA\nA\nA";
 
-            Assert.True(TextMeasurer.TryMeasureCharacterAdvances(text, options, out ReadOnlySpan<GlyphBounds> advances));
-            Assert.True(TextMeasurer.TryMeasureCharacterSizes(text, options, out ReadOnlySpan<GlyphBounds> sizes));
+            bool measuredAdvances = TextMeasurer.TryMeasureCharacterAdvances(text, options, out ReadOnlySpan<GlyphBounds> advancesSpan);
+            GlyphBounds[] advances = advancesSpan.ToArray();
+            await Assert.That(measuredAdvances).IsTrue();
 
-            Assert.Equal(advances.Length, sizes.Length);
+            bool measuredSizes = TextMeasurer.TryMeasureCharacterSizes(text, options, out ReadOnlySpan<GlyphBounds> sizesSpan);
+            GlyphBounds[] sizes = sizesSpan.ToArray();
+            await Assert.That(measuredSizes).IsTrue();
+
+            await Assert.That(sizes.Length).IsEqualTo(advances.Length);
 
             GlyphBounds? lastAdvance = null;
             GlyphBounds? lastSize = null;
@@ -986,13 +1020,13 @@ namespace PinataLabs.Typography.Tests
                 GlyphBounds advance = advances[i];
                 GlyphBounds size = sizes[i];
 
-                Assert.Equal(advance.Codepoint, size.Codepoint);
+                await Assert.That(size.Codepoint).IsEqualTo(advance.Codepoint);
 
                 if (lastAdvance.HasValue)
                 {
-                    Assert.Equal(lastAdvance.Value.Bounds, advance.Bounds);
-                    Assert.Equal(lastSize.Value.Bounds.Width, size.Bounds.Width, 2);
-                    Assert.Equal(lastSize.Value.Bounds.Height, size.Bounds.Height, 2);
+                    await Assert.That(advance.Bounds).IsEqualTo(lastAdvance.Value.Bounds);
+                    await Assert.That(Math.Round(size.Bounds.Width, 2)).IsEqualTo(Math.Round(lastSize.Value.Bounds.Width, 2));
+                    await Assert.That(Math.Round(size.Bounds.Height, 2)).IsEqualTo(Math.Round(lastSize.Value.Bounds.Height, 2));
                 }
 
                 lastAdvance = advance;
@@ -1105,7 +1139,7 @@ namespace PinataLabs.Typography.Tests
 
         [Test]
         [MethodDataSource(nameof(SegoeUi_Data))]
-        public void TrueTypeHinting_CanHintSmallSegoeUi(char c, FontRectangle expected)
+        public async Task TrueTypeHinting_CanHintSmallSegoeUi(char c, FontRectangle expected)
         {
             TextOptions options = new(SegoeUi)
             {
@@ -1114,11 +1148,17 @@ namespace PinataLabs.Typography.Tests
             };
 
             FontRectangle actual = TextMeasurer.MeasureSize(c.ToString(), options);
-            Assert.Equal(expected, actual);
+            await Assert.That(actual).IsEqualTo(expected);
         }
 
         private static readonly Font SegoeUi = SystemFonts.CreateFont("Segoe Ui", 10);
 #endif
+
+        private static GlyphBounds[] GetCharacterAdvances(IReadOnlyList<GlyphLayout> glyphLayouts, float dpi)
+        {
+            TextMeasurer.TryGetCharacterAdvances(glyphLayouts, dpi, out ReadOnlySpan<GlyphBounds> characterBounds);
+            return characterBounds.ToArray();
+        }
 
         private static IReadOnlyList<GlyphLayout> CollectFirstLine(IReadOnlyList<GlyphLayout> glyphs)
         {

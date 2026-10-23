@@ -4,7 +4,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -13,67 +15,73 @@ namespace PinataLabs.Typography.Tests
         private readonly FontFamily[] families = SystemFonts.Families.ToArray();
 
         [Test]
-        public void EqualNullTests()
+        public async Task EqualNullTests()
         {
             FontFamily fontFamily = default;
-            Assert.True(fontFamily == default);
-            Assert.False(fontFamily != default);
+            await Assert.That(fontFamily == default).IsTrue();
+            await Assert.That(fontFamily != default).IsFalse();
 
             fontFamily = this.families[0];
-            Assert.True(fontFamily != default);
-            Assert.False(fontFamily == default);
-            Assert.False(fontFamily.Equals(default));
+            await Assert.That(fontFamily != default).IsTrue();
+            await Assert.That(fontFamily == default).IsFalse();
+            await Assert.That(fontFamily.Equals(default)).IsFalse();
         }
 
         [Test]
-        public void EqualTests()
+        public async Task EqualTests()
         {
             FontFamily fontFamily = this.families[0];
             FontFamily fontFamily2 = this.families[0];
 
-            Assert.True(fontFamily == fontFamily2);
-            Assert.False(fontFamily != fontFamily2);
-            Assert.True(fontFamily.Equals(fontFamily2));
+            await Assert.That(fontFamily == fontFamily2).IsTrue();
+            await Assert.That(fontFamily != fontFamily2).IsFalse();
+            await Assert.That(fontFamily.Equals(fontFamily2)).IsTrue();
         }
 
         [Test]
-        public void NotEqualTests()
+        public async Task NotEqualTests()
         {
             FontFamily fontFamily = this.families[0];
             FontFamily fontFamily2 = this.families[1];
 
-            Assert.False(fontFamily == fontFamily2);
-            Assert.True(fontFamily != fontFamily2);
-            Assert.False(fontFamily.Equals(fontFamily2));
+            await Assert.That(fontFamily == fontFamily2).IsFalse();
+            await Assert.That(fontFamily != fontFamily2).IsTrue();
+            await Assert.That(fontFamily.Equals(fontFamily2)).IsFalse();
         }
 
         [Test]
         [MethodDataSource(nameof(SystemFontFamilies))]
-        public void HasPathTests(FontFamily family)
+        public async Task HasPathTests(FontFamily family)
         {
-            Assert.True(family.TryGetPaths(out IEnumerable<string> familyPaths));
-            Assert.NotNull(familyPaths);
-            Assert.True(familyPaths.Any());
+            await Assert.That(family.TryGetPaths(out IEnumerable<string> familyPaths)).IsTrue();
+            await Assert.That(familyPaths).IsNotNull();
+            await Assert.That(familyPaths.Any()).IsTrue();
 
             foreach (FontStyle style in family.GetAvailableStyles())
             {
                 Font font = family.CreateFont(12, style);
-                Assert.True(font.TryGetPath(out string fontPath));
-                Assert.Contains(fontPath, familyPaths);
+                await Assert.That(font.TryGetPath(out string fontPath)).IsTrue();
+                await Assert.That(familyPaths).Contains(fontPath);
             }
         }
 
         [Test]
-        public void Throws_FontException_CreateFont_WhenDefault()
-            => Assert.Throws<FontException>(() => default(FontFamily).CreateFont(12F));
+        public async Task Throws_FontException_CreateFont_WhenDefault()
+        {
+            await Assert.That(() => default(FontFamily).CreateFont(12F)).ThrowsExactly<FontException>();
+        }
 
         [Test]
-        public void Throws_FontException_TryGetPath_WhenDefault()
-            => Assert.Throws<FontException>(() => default(FontFamily).TryGetPaths(out IEnumerable<string> _));
+        public async Task Throws_FontException_TryGetPath_WhenDefault()
+        {
+            await Assert.That(() => default(FontFamily).TryGetPaths(out IEnumerable<string> _)).ThrowsExactly<FontException>();
+        }
 
         [Test]
-        public void Throws_FontException_TryGetMetrics_WhenDefault()
-            => Assert.Throws<FontException>(() => default(FontFamily).TryGetMetrics(FontStyle.Regular, out FontMetrics _));
+        public async Task Throws_FontException_TryGetMetrics_WhenDefault()
+        {
+            await Assert.That(() => default(FontFamily).TryGetMetrics(FontStyle.Regular, out FontMetrics _)).ThrowsExactly<FontException>();
+        }
 
         public static IEnumerable<FontFamily> SystemFontFamilies() => SystemFonts.Families;
     }

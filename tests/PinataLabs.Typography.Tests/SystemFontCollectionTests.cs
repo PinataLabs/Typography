@@ -6,7 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Enums;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -15,64 +18,64 @@ namespace PinataLabs.Typography.Tests
         private static readonly SystemFontCollection SysFontCollection = new();
 
         [Test]
-        public void SystemFonts_IsPopulated()
+        public async Task SystemFonts_IsPopulated()
         {
-            Assert.True(SystemFonts.Collection.Families.Any());
-            Assert.Equal(SystemFonts.Collection.Families, SystemFonts.Families);
+            await Assert.That(SystemFonts.Collection.Families.Any()).IsTrue();
+            await Assert.That(SystemFonts.Families).IsEquivalentTo(SystemFonts.Collection.Families, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void SystemFonts_CanGetFont()
+        public async Task SystemFonts_CanGetFont()
         {
             FontFamily family = SystemFonts.Families.First();
 
-            Assert.False(family == default);
-            Assert.Equal(family, SystemFonts.Get(family.Name));
+            await Assert.That(family == default).IsFalse();
+            await Assert.That(SystemFonts.Get(family.Name)).IsEqualTo(family);
 
             SystemFonts.TryGet(family.Name, out FontFamily family2);
-            Assert.Equal(family, family2);
+            await Assert.That(family2).IsEqualTo(family);
         }
 
         [Test]
-        public void SystemFonts_CanGetFont_ByCulture()
+        public async Task SystemFonts_CanGetFont_ByCulture()
         {
             FontFamily family = SystemFonts.Families.First();
 
-            Assert.False(family == default);
-            Assert.Equal(family, SystemFonts.Get(family.Name, family.Culture));
+            await Assert.That(family == default).IsFalse();
+            await Assert.That(SystemFonts.Get(family.Name, family.Culture)).IsEqualTo(family);
 
             SystemFonts.TryGet(family.Name, family.Culture, out FontFamily family2);
 
-            Assert.Equal(family, family2);
-            Assert.Contains(family, SystemFonts.GetByCulture(family.Culture));
+            await Assert.That(family2).IsEqualTo(family);
+            await Assert.That(SystemFonts.GetByCulture(family.Culture)).Contains(family);
         }
 
         [Test]
-        public void SystemFonts_CanCreateFont()
+        public async Task SystemFonts_CanCreateFont()
         {
             FontFamily family = SystemFonts.Families.First();
             Font font = SystemFonts.CreateFont(family.Name, 12F);
 
-            Assert.NotNull(font);
+            await Assert.That(font).IsNotNull();
 
             font = SystemFonts.CreateFont(family.Name, 12F, FontStyle.Regular);
-            Assert.NotNull(font);
+            await Assert.That(font).IsNotNull();
         }
 
         [Test]
-        public void SystemFonts_CanCreateFont_WithCulture()
+        public async Task SystemFonts_CanCreateFont_WithCulture()
         {
             FontFamily family = SystemFonts.Families.First();
             Font font = SystemFonts.CreateFont(family.Name, family.Culture, 12F);
 
-            Assert.NotNull(font);
+            await Assert.That(font).IsNotNull();
 
             font = SystemFonts.CreateFont(family.Name, family.Culture, 12F, FontStyle.Regular);
-            Assert.NotNull(font);
+            await Assert.That(font).IsNotNull();
         }
 
         [Test]
-        public void CanEnumerateSystemFontMetrics()
+        public async Task CanEnumerateSystemFontMetrics()
         {
             IEnumerator<FontMetrics> enumerator = ((IReadOnlyFontMetricsCollection)SysFontCollection).GetEnumerator();
 
@@ -80,14 +83,14 @@ namespace PinataLabs.Typography.Tests
             while (enumerator.MoveNext())
             {
                 count++;
-                Assert.NotNull(enumerator.Current);
+                await Assert.That(enumerator.Current).IsNotNull();
             }
 
-            Assert.True(count > 0);
+            await Assert.That(count > 0).IsTrue();
         }
 
         [Test]
-        public void CanEnumerateNonGenericSystemFontMetrics()
+        public async Task CanEnumerateNonGenericSystemFontMetrics()
         {
             System.Collections.IEnumerator enumerator = ((IReadOnlyFontMetricsCollection)SysFontCollection).GetEnumerator();
 
@@ -95,102 +98,102 @@ namespace PinataLabs.Typography.Tests
             while (enumerator.MoveNext())
             {
                 count++;
-                Assert.NotNull(enumerator.Current);
+                await Assert.That(enumerator.Current).IsNotNull();
             }
 
-            Assert.True(count > 0);
+            await Assert.That(count > 0).IsTrue();
         }
 
         [Test]
-        public void CanGetAllMetricsByCulture()
+        public async Task CanGetAllMetricsByCulture()
         {
             var collection = (IReadOnlyFontMetricsCollection)SysFontCollection;
             FontFamily family = SysFontCollection.Families.First();
             IEnumerable<FontMetrics> metrics = collection.GetAllMetrics(family.Name, family.Culture);
 
-            Assert.True(metrics.Any());
+            await Assert.That(metrics.Any()).IsTrue();
 
             foreach (FontMetrics item in metrics)
             {
-                Assert.True(family.TryGetMetrics(item.Description.Style, out FontMetrics familyMetrics));
-                Assert.True(collection.TryGetMetrics(
+                await Assert.That(family.TryGetMetrics(item.Description.Style, out FontMetrics familyMetrics)).IsTrue();
+                await Assert.That(collection.TryGetMetrics(
                     family.Name,
                     family.Culture,
                     item.Description.Style,
-                    out FontMetrics fontMetrics));
+                    out FontMetrics fontMetrics)).IsTrue();
 
-                Assert.Equal(familyMetrics, fontMetrics);
+                await Assert.That(fontMetrics).IsEqualTo(familyMetrics);
             }
         }
 
         [Test]
-        public void CanGetAllStylesByCulture()
+        public async Task CanGetAllStylesByCulture()
         {
             FontFamily family = SysFontCollection.Families.First();
             IEnumerable<FontStyle> styles = ((IReadOnlyFontMetricsCollection)SysFontCollection).GetAllStyles(family.Name, family.Culture);
 
-            Assert.True(styles.Any());
-            Assert.Equal(family.GetAvailableStyles(), styles);
+            await Assert.That(styles.Any()).IsTrue();
+            await Assert.That(styles).IsEquivalentTo(family.GetAvailableStyles(), CollectionOrdering.Matching);
         }
 
         [Test]
         [AppContextSwitch("Switch.PinataLabs.Typography.DoNotUseNativeSystemFontsEnumeration", true)]
         [NotInParallel]
-        public void SystemFonts_FontFamilyNotFound_ThrowsWithSearchDirectories()
+        public async Task SystemFonts_FontFamilyNotFound_ThrowsWithSearchDirectories()
         {
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
-            FontFamilyNotFoundException exception = Assert.Throws<FontFamilyNotFoundException>(Action);
-            Assert.Equal("AFontThatDoesNotExist", exception.FontFamily);
-            Assert.Contains("AFontThatDoesNotExist", exception.Message);
+            FontFamilyNotFoundException exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
+            await Assert.That(exception.FontFamily).IsEqualTo("AFontThatDoesNotExist");
+            await Assert.That(exception.Message).Contains("AFontThatDoesNotExist");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Assert.Contains(@"Windows\Fonts", exception.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains(exception.SearchDirectories, e => e.IndexOf(@"Windows\Fonts", StringComparison.OrdinalIgnoreCase) != -1);
+                await Assert.That(exception.Message).Contains(@"Windows\Fonts", StringComparison.OrdinalIgnoreCase);
+                await Assert.That(exception.SearchDirectories).Contains(e => e.IndexOf(@"Windows\Fonts", StringComparison.OrdinalIgnoreCase) != -1);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Assert.Contains(@"/share/fonts/", exception.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains(exception.SearchDirectories, e => e.IndexOf("share/fonts", StringComparison.OrdinalIgnoreCase) != -1);
+                await Assert.That(exception.Message).Contains(@"/share/fonts/", StringComparison.OrdinalIgnoreCase);
+                await Assert.That(exception.SearchDirectories).Contains(e => e.IndexOf("share/fonts", StringComparison.OrdinalIgnoreCase) != -1);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Assert.Contains(@"/Library/Fonts/", exception.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains(exception.SearchDirectories, e => e.IndexOf("Library/Fonts", StringComparison.OrdinalIgnoreCase) != -1);
+                await Assert.That(exception.Message).Contains(@"/Library/Fonts/", StringComparison.OrdinalIgnoreCase);
+                await Assert.That(exception.SearchDirectories).Contains(e => e.IndexOf("Library/Fonts", StringComparison.OrdinalIgnoreCase) != -1);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("Android")))
             {
-                Assert.Contains(@"/system/fonts/", exception.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains(exception.SearchDirectories, e => e.IndexOf("/system/fonts/", StringComparison.OrdinalIgnoreCase) != -1);
+                await Assert.That(exception.Message).Contains(@"/system/fonts/", StringComparison.OrdinalIgnoreCase);
+                await Assert.That(exception.SearchDirectories).Contains(e => e.IndexOf("/system/fonts/", StringComparison.OrdinalIgnoreCase) != -1);
             }
         }
 
         [Test]
-        public void SystemFonts_FontFamilyNotFound_ThrowsWithoutSearchDirectories()
+        public async Task SystemFonts_FontFamilyNotFound_ThrowsWithoutSearchDirectories()
         {
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
-            FontFamilyNotFoundException exception = Assert.Throws<FontFamilyNotFoundException>(Action);
+            FontFamilyNotFoundException exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Assert.DoesNotContain("/Library/Fonts/", exception.Message);
-                Assert.Empty(exception.SearchDirectories);
+                await Assert.That(exception.Message).DoesNotContain("/Library/Fonts/");
+                await Assert.That(exception.SearchDirectories).IsEmpty();
             }
         }
 
         [Test]
         [AppContextSwitch("Switch.SixLabors.Fonts.DoNotUseNativeSystemFontsEnumeration", true)]
         [NotInParallel]
-        public void SystemFonts_LegacySwitchName_IsIgnored()
+        public async Task SystemFonts_LegacySwitchName_IsIgnored()
         {
             // The pre-rebrand switch name is not honoured: native enumeration stays in use on macOS.
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
-            FontFamilyNotFoundException exception = Assert.Throws<FontFamilyNotFoundException>(Action);
+            FontFamilyNotFoundException exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Assert.DoesNotContain("/Library/Fonts/", exception.Message);
-                Assert.Empty(exception.SearchDirectories);
+                await Assert.That(exception.Message).DoesNotContain("/Library/Fonts/");
+                await Assert.That(exception.SearchDirectories).IsEmpty();
             }
         }
     }
