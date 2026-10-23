@@ -54,9 +54,9 @@ public class FontCollectionTests
     public async Task NotFoundThrowsCorrectException()
     {
         const string invalid = "qwerty";
-        FontFamilyNotFoundException ex = await Assert.That(() => new FontCollection().Get(invalid)).ThrowsExactly<FontFamilyNotFoundException>();
+        FontFamilyNotFoundException? ex = await Assert.That(() => new FontCollection().Get(invalid)).ThrowsExactly<FontFamilyNotFoundException>();
 
-        await Assert.That(ex.FontFamily).IsEqualTo(invalid);
+        await Assert.That(ex!.FontFamily).IsEqualTo(invalid);
         await Assert.That(ex.SearchDirectories).IsEmpty();
     }
 

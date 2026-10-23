@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
     <!--Used to hide test project from dotnet test-->
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>

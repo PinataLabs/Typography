@@ -19,7 +19,7 @@ public class TextRunTests
     [Arguments(3, 2)]
     public async Task ThrowsZeroValue(int start, int end)
     {
-        Exception ex = await Assert.That(() => { _ = new TextRun() { Start = start, End = end }.Slice(Text.AsSpan()); }).Throws<Exception>();
+        Exception? ex = await Assert.That(() => { _ = new TextRun() { Start = start, End = end }.Slice(Text.AsSpan()); }).Throws<Exception>();
         await Assert.That(ex).IsNotNull();
     }
 

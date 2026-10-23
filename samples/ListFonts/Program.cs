@@ -23,7 +23,7 @@ public static class Program
             foreach (FontStyle style in styles)
             {
                 Font font = family.CreateFont(0F, style);
-                font.TryGetPath(out string path);
+                font.TryGetPath(out string? path);
                 pairings.Add(new Pairing(font.Name, path));
             }
         }
@@ -46,7 +46,7 @@ public static class Program
 
     public struct Pairing
     {
-        public Pairing(string name, string path)
+        public Pairing(string name, string? path)
         {
             this.Name = name;
             this.Path = path;
@@ -54,6 +54,6 @@ public static class Program
 
         public string Name { get; }
 
-        public string Path { get; }
+        public string? Path { get; }
     }
 }

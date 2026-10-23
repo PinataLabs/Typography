@@ -56,8 +56,8 @@ public class TextLayoutTests
     {
         Font font = CreateFont("hello world");
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('h'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-        Glyph glyph = glyphs[0];
+        await Assert.That(font.TryGetGlyphs(new CodePoint('h'), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+        Glyph glyph = glyphs![0];
         await Assert.That(glyph).IsNotEqualTo(default);
     }
 
@@ -927,9 +927,9 @@ public class TextLayoutTests
     public async Task CanMeasureTextAdvance()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
-        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
             LineSpacing = 1F
         };
@@ -949,9 +949,9 @@ public class TextLayoutTests
     public async Task CanMeasureCharacterLayouts()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
-        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
             LineSpacing = 1.5F
         };
@@ -992,9 +992,9 @@ public class TextLayoutTests
     public async Task CanMeasureMultilineCharacterLayouts()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
-        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
             LineSpacing = 1.5F
         };
@@ -1023,8 +1023,8 @@ public class TextLayoutTests
             if (lastAdvance.HasValue)
             {
                 await Assert.That(advance.Bounds).IsEqualTo(lastAdvance.Value.Bounds);
-                await Assert.That(Math.Round(size.Bounds.Width, 2)).IsEqualTo(Math.Round(lastSize.Value.Bounds.Width, 2));
-                await Assert.That(Math.Round(size.Bounds.Height, 2)).IsEqualTo(Math.Round(lastSize.Value.Bounds.Height, 2));
+                await Assert.That(Math.Round(size.Bounds.Width, 2)).IsEqualTo(Math.Round(lastSize!.Value.Bounds.Width, 2));
+                await Assert.That(Math.Round(size.Bounds.Height, 2)).IsEqualTo(Math.Round(lastSize!.Value.Bounds.Height, 2));
             }
 
             lastAdvance = advance;

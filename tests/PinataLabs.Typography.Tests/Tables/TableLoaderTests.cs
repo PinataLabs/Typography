@@ -23,7 +23,7 @@ public class TableLoaderTests
                 typeof(Table).GetTypeInfo()
                     .Assembly.DefinedTypes
                     .Where(x => tableTypeInfo.IsAssignableFrom(x))
-                    .Select(x => new object[] { x.AsType(), x.GetField("TableName", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)?.GetValue(null) })
+                    .Select(x => new object[] { x.AsType(), x.GetField("TableName", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)?.GetValue(null)! })
                     .Where(x => x[1] != null);
         }
     }
@@ -46,17 +46,17 @@ public class TableLoaderTests
         var loader = new TableLoader();
 
         string tag = Guid.NewGuid().ToString();
-        Table result = loader.Load(tag, null);
+        Table? result = loader.Load(tag, null!);
 
-        UnknownTable table = await Assert.That(result).IsTypeOf<UnknownTable>();
-        await Assert.That(table.Name).IsEqualTo(tag);
+        UnknownTable? table = await Assert.That(result).IsTypeOf<UnknownTable>();
+        await Assert.That(table!.Name).IsEqualTo(tag);
     }
 
     [Test]
     public async Task NullForUnknownTypes()
     {
         var loader = new TableLoader();
-        string tag = loader.GetTag(typeof(TableLoaderTests));
+        string? tag = loader.GetTag(typeof(TableLoaderTests));
         await Assert.That(tag).IsNull();
     }
 }

@@ -161,8 +161,8 @@ public class FontMetricsTests
             TextDecorations.None,
             LayoutMode.HorizontalTopBottom,
             ColorFontSupport.None,
-            out IReadOnlyList<GlyphMetrics> metrics)).IsTrue();
-        GlyphMetrics glyphMetrics = metrics[0];
+            out IReadOnlyList<GlyphMetrics>? metrics)).IsTrue();
+        GlyphMetrics glyphMetrics = metrics![0];
 
         await Assert.That(glyphMetrics.CodePoint).IsEqualTo(codePoint);
         await Assert.That(glyphMetrics.UnitsPerEm).IsEqualTo(font.FontMetrics.UnitsPerEm);
@@ -193,8 +193,8 @@ public class FontMetricsTests
             TextDecorations.None,
             LayoutMode.HorizontalTopBottom,
             ColorFontSupport.None,
-            out IReadOnlyList<GlyphMetrics> metrics)).IsTrue();
-        GlyphMetrics glyphMetrics = metrics[0];
+            out IReadOnlyList<GlyphMetrics>? metrics)).IsTrue();
+        GlyphMetrics glyphMetrics = metrics![0];
 
         await Assert.That(glyphMetrics.CodePoint).IsEqualTo(codePoint);
         await Assert.That(glyphMetrics.UnitsPerEm).IsEqualTo(font.FontMetrics.UnitsPerEm);
@@ -225,8 +225,8 @@ public class FontMetricsTests
             TextDecorations.None,
             LayoutMode.HorizontalTopBottom,
             ColorFontSupport.None,
-            out IReadOnlyList<GlyphMetrics> metrics)).IsTrue();
-        GlyphMetrics glyphMetrics = metrics[0];
+            out IReadOnlyList<GlyphMetrics>? metrics)).IsTrue();
+        GlyphMetrics glyphMetrics = metrics![0];
 
         await Assert.That(glyphMetrics.CodePoint).IsEqualTo(codePoint);
         await Assert.That(glyphMetrics.UnitsPerEm).IsEqualTo(font.FontMetrics.UnitsPerEm);
@@ -257,8 +257,8 @@ public class FontMetricsTests
             TextDecorations.None,
             LayoutMode.HorizontalTopBottom,
             ColorFontSupport.None,
-            out IReadOnlyList<GlyphMetrics> metrics)).IsTrue();
-        GlyphMetrics glyphMetrics = metrics[0];
+            out IReadOnlyList<GlyphMetrics>? metrics)).IsTrue();
+        GlyphMetrics glyphMetrics = metrics![0];
 
         // Position 0.
         await Assert.That(glyphMetrics.CodePoint).IsEqualTo(codePoint);

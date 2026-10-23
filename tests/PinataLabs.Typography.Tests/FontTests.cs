@@ -13,33 +13,33 @@ public class FontTests
     [Test]
     public async Task FontClass_DefaultFontFamilyThrowsException()
     {
-        ArgumentException ex = await Assert.That(() => new Font(default(FontFamily), 0F)).ThrowsExactly<ArgumentException>();
+        ArgumentException? ex = await Assert.That(() => new Font(default(FontFamily), 0F)).ThrowsExactly<ArgumentException>();
 
-        await Assert.That(ex.ParamName).IsEqualTo("family");
+        await Assert.That(ex!.ParamName).IsEqualTo("family");
     }
 
     [Test]
     public async Task FontClass_DefaultFontFamilyWithSizeThrowsException()
     {
-        ArgumentException ex = await Assert.That(() => new Font(default(FontFamily), 0F, FontStyle.Regular)).ThrowsExactly<ArgumentException>();
+        ArgumentException? ex = await Assert.That(() => new Font(default(FontFamily), 0F, FontStyle.Regular)).ThrowsExactly<ArgumentException>();
 
-        await Assert.That(ex.ParamName).IsEqualTo("family");
+        await Assert.That(ex!.ParamName).IsEqualTo("family");
     }
 
     [Test]
     public async Task FontClass_NullFontThrowsException()
     {
-        ArgumentNullException ex = await Assert.That(() => new Font(null, FontStyle.Regular)).ThrowsExactly<ArgumentNullException>();
+        ArgumentNullException? ex = await Assert.That(() => new Font(null!, FontStyle.Regular)).ThrowsExactly<ArgumentNullException>();
 
-        await Assert.That(ex.ParamName).IsEqualTo("prototype");
+        await Assert.That(ex!.ParamName).IsEqualTo("prototype");
     }
 
     [Test]
     public async Task FontClass_NullWithSizeFontThrowsException()
     {
-        ArgumentNullException ex = await Assert.That(() => new Font(null, 0f, FontStyle.Regular)).ThrowsExactly<ArgumentNullException>();
+        ArgumentNullException? ex = await Assert.That(() => new Font(null!, 0f, FontStyle.Regular)).ThrowsExactly<ArgumentNullException>();
 
-        await Assert.That(ex.ParamName).IsEqualTo("prototype");
+        await Assert.That(ex!.ParamName).IsEqualTo("prototype");
     }
 
     [Test]
@@ -54,7 +54,7 @@ public class FontTests
         await Assert.That(font.RequestedStyle).IsEqualTo(FontStyle.Regular);
         await Assert.That(font.IsBold).IsFalse();
         await Assert.That(font.IsItalic).IsFalse();
-        await Assert.That(font.TryGetPath(out string path)).IsTrue();
+        await Assert.That(font.TryGetPath(out string? path)).IsTrue();
         await Assert.That(path).IsNotNull();
     }
 
@@ -71,7 +71,7 @@ public class FontTests
         await Assert.That(font.RequestedStyle).IsEqualTo(FontStyle.Regular);
         await Assert.That(font.IsBold).IsFalse();
         await Assert.That(font.IsItalic).IsFalse();
-        await Assert.That(font.TryGetPath(out string path)).IsFalse();
+        await Assert.That(font.TryGetPath(out string? path)).IsFalse();
         await Assert.That(path).IsNull();
     }
 }

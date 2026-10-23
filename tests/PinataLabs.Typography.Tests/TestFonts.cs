@@ -286,7 +286,8 @@ public static class TestFonts
 
     private static string GetFullPath(string path)
     {
-        string root = Path.GetDirectoryName(typeof(TestFonts).GetTypeInfo().Assembly.Location);
+        string root = Path.GetDirectoryName(typeof(TestFonts).GetTypeInfo().Assembly.Location)
+            ?? throw new DirectoryNotFoundException("could not find the test assembly directory");
 
         string[] paths = new[]
         {
@@ -297,7 +298,7 @@ public static class TestFonts
         };
 
         IEnumerable<string> fullPaths = paths.Select(x => Path.GetFullPath(Path.Combine(root, x)));
-        string rootPath = fullPaths.FirstOrDefault(Directory.Exists);
+        string? rootPath = fullPaths.FirstOrDefault(Directory.Exists);
 
         if (rootPath == null)
         {

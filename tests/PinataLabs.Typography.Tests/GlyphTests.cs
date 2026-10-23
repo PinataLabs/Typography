@@ -104,8 +104,8 @@ public class GlyphTests
         Font font = new FontCollection().Add(TestFonts.SimpleFontFileData()).CreateFont(12);
 
         // Get letter A
-        await Assert.That(font.TryGetGlyphs(new CodePoint(41), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-        Glyph g = glyphs[0];
+        await Assert.That(font.TryGetGlyphs(new CodePoint(41), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+        Glyph g = glyphs![0];
         GlyphVector instance = ((TrueTypeGlyphMetrics)g.GlyphMetrics).GetOutline();
 
         await Assert.That(instance.ControlPoints.Count).IsEqualTo(20);
@@ -117,7 +117,7 @@ public class GlyphTests
         Font font = new FontCollection().Add(TestFonts.TwemojiMozillaData()).CreateFont(12);
 
         // Get letter Grinning Face emoji
-        var instance = font.FontMetrics as StreamFontMetrics;
+        var instance = (StreamFontMetrics)font.FontMetrics;
         CodePoint codePoint = this.AsCodePoint("😀");
         await Assert.That(instance.TryGetGlyphId(codePoint, out ushort idx)).IsTrue();
         IEnumerable<GlyphMetrics> vectors = instance.GetGlyphMetrics(

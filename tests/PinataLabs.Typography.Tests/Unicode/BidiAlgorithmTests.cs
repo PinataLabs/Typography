@@ -168,7 +168,7 @@ public class BidiAlgorithmTests
         var tests = new List<Test>();
 
         // Process each line
-        int[] levels = null;
+        int[]? levels = null;
         for (int lineNumber = 1; lineNumber < lines.Length + 1; lineNumber++)
         {
             // Get the line, remove comments
@@ -243,7 +243,7 @@ public class BidiAlgorithmTests
                         throw new NotSupportedException();
                 }
 
-                tests.Add(new Test(directions, paragraphEmbeddingLevel, levels, lineNumber));
+                tests.Add(new Test(directions, paragraphEmbeddingLevel, levels!, lineNumber));
             }
         }
 

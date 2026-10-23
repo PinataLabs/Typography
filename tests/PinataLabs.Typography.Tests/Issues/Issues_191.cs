@@ -20,11 +20,11 @@ public class Issues_191
 
         const ColorFontSupport support = ColorFontSupport.None;
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), support, out IReadOnlyList<Glyph> glyphsA)).IsTrue();
-        Glyph[] a = glyphsA.ToArray();
+        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), support, out IReadOnlyList<Glyph>? glyphsA)).IsTrue();
+        Glyph[] a = glyphsA!.ToArray();
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('x'), support, out IReadOnlyList<Glyph> glyphsX)).IsTrue();
-        Glyph[] x = glyphsX.ToArray();
+        await Assert.That(font.TryGetGlyphs(new CodePoint('x'), support, out IReadOnlyList<Glyph>? glyphsX)).IsTrue();
+        Glyph[] x = glyphsX!.ToArray();
 
         Glyph ga = await Assert.That(a).HasSingleItem();
         Glyph gx = await Assert.That(x).HasSingleItem();

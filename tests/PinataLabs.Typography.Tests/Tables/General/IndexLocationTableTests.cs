@@ -20,10 +20,10 @@ public class IndexLocationTableTests
 
         using (System.IO.MemoryStream stream = writer.GetStream())
         {
-            MissingFontTableException exception = await Assert.That(
+            MissingFontTableException? exception = await Assert.That(
                     () => IndexLocationTable.Load(new FontReader(stream))).ThrowsExactly<MissingFontTableException>();
 
-            await Assert.That(exception.Table).IsEqualTo("head");
+            await Assert.That(exception!.Table).IsEqualTo("head");
         }
     }
 
@@ -45,10 +45,10 @@ public class IndexLocationTableTests
 
         using (System.IO.MemoryStream stream = writer.GetStream())
         {
-            InvalidFontTableException exception = await Assert.That(
+            InvalidFontTableException? exception = await Assert.That(
                 () => IndexLocationTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-            await Assert.That(exception.Table).IsEqualTo("maxp");
+            await Assert.That(exception!.Table).IsEqualTo("maxp");
         }
     }
 

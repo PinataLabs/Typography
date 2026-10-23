@@ -58,8 +58,8 @@ public class FontFamilyTests
         foreach (FontStyle style in family.GetAvailableStyles())
         {
             Font font = family.CreateFont(12, style);
-            await Assert.That(font.TryGetPath(out string fontPath)).IsTrue();
-            await Assert.That(familyPaths).Contains(fontPath);
+            await Assert.That(font.TryGetPath(out string? fontPath)).IsTrue();
+            await Assert.That(familyPaths).Contains(fontPath!);
         }
     }
 
@@ -78,7 +78,7 @@ public class FontFamilyTests
     [Test]
     public async Task Throws_FontException_TryGetMetrics_WhenDefault()
     {
-        await Assert.That(() => default(FontFamily).TryGetMetrics(FontStyle.Regular, out FontMetrics _)).ThrowsExactly<FontException>();
+        await Assert.That(() => default(FontFamily).TryGetMetrics(FontStyle.Regular, out FontMetrics? _)).ThrowsExactly<FontException>();
     }
 
     public static IEnumerable<FontFamily> SystemFontFamilies() => SystemFonts.Families;

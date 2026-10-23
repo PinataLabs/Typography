@@ -28,7 +28,7 @@ public class Issues_104
             WellKnownIds.PlatformIDs.Windows,
             0,
             segments,
-            null);
+            null!);
 
         const int delta = short.MaxValue + 2; // extra 2 to handle the difference between ushort and short when offsettings
 

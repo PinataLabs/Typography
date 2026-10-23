@@ -23,7 +23,7 @@ public class FontLoaderTests
             TextDecorations.None,
             LayoutMode.HorizontalTopBottom,
             ColorFontSupport.None,
-            out IReadOnlyList<GlyphMetrics> _)).IsTrue();
+            out IReadOnlyList<GlyphMetrics>? _)).IsTrue();
     }
 
     [Test]
@@ -49,9 +49,9 @@ public class FontLoaderTests
     {
         Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
+        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
 
-        Glyph glyph = glyphs[0];
+        Glyph glyph = glyphs![0];
         GlyphRenderer r = new();
         glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
@@ -65,8 +65,8 @@ public class FontLoaderTests
     {
         Font font = new FontCollection().Add(TestFonts.OpenSansFileWoff1).CreateFont(12);
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-        Glyph glyph = glyphs[0];
+        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+        Glyph glyph = glyphs![0];
         GlyphRenderer r = new();
         glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
@@ -98,8 +98,8 @@ public class FontLoaderTests
     {
         Font font = new FontCollection().Add(TestFonts.OpensSansWoff2Data()).CreateFont(12);
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-        Glyph glyph = glyphs[0];
+        await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+        Glyph glyph = glyphs![0];
         GlyphRenderer r = new();
         glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
@@ -116,8 +116,8 @@ public class FontLoaderTests
         await Assert.That(font.FontMetrics.Description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
         await Assert.That(font.FontMetrics.Description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-        Glyph glyph = glyphs[0];
+        await Assert.That(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+        Glyph glyph = glyphs![0];
         GlyphRenderer r = new();
         glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
@@ -133,8 +133,8 @@ public class FontLoaderTests
         await Assert.That(font.FontMetrics.Description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
         await Assert.That(font.FontMetrics.Description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
 
-        await Assert.That(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-        Glyph glyph = glyphs[0];
+        await Assert.That(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+        Glyph glyph = glyphs![0];
         GlyphRenderer r = new();
         glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 

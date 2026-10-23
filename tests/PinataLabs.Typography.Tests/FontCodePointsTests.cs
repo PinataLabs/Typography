@@ -37,8 +37,8 @@ public class FontCodePointsTests
         HashSet<int> glyphIds = new();
         foreach (CodePoint codePoint in codePoints)
         {
-            await Assert.That(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-            foreach (Glyph glyph in glyphs)
+            await Assert.That(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+            foreach (Glyph glyph in glyphs!)
             {
                 glyphIds.Add(glyph.GlyphMetrics.GlyphId);
             }
@@ -74,8 +74,8 @@ public class FontCodePointsTests
         HashSet<int> glyphIds = new();
         foreach (CodePoint codePoint in codePoints)
         {
-            await Assert.That(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph> glyphs)).IsTrue();
-            foreach (Glyph glyph in glyphs)
+            await Assert.That(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
+            foreach (Glyph glyph in glyphs!)
             {
                 glyphIds.Add(glyph.GlyphMetrics.GlyphId);
             }

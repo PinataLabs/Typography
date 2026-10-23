@@ -73,7 +73,8 @@
     <OverwriteReadOnlyFiles>true</OverwriteReadOnlyFiles>
     <DebugType>portable</DebugType>
     <DebugType Condition="'$(IsCodeCoverage)'=='true'">full</DebugType>
-    <NullableContextOptions>disable</NullableContextOptions>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <UseSharedCompilation>true</UseSharedCompilation>

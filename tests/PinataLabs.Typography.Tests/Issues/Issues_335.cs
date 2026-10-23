@@ -15,9 +15,9 @@ public class Issues_335
     public async Task HorizontalAlignmentWorksForSingleLineText(TextAlignment alignment)
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
-        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
             LineSpacing = 1.5F,
             WrappingLength = 10000,
@@ -42,9 +42,9 @@ public class Issues_335
     public async Task VerticalAlignmentWorksForSingleLineText(TextAlignment alignment)
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
-        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
             LineSpacing = 1.5F,
             WrappingLength = 10000,

@@ -98,13 +98,13 @@ internal static class WriterExtensions
         writer.WriteUInt16(rangeShift);
     }
 
-    public static void WriteNameTable(this BigEndianBinaryWriter writer, Dictionary<KnownNameIds, string> names, List<string> languages = null)
+    public static void WriteNameTable(this BigEndianBinaryWriter writer, Dictionary<KnownNameIds, string> names, List<string>? languages = null)
         => writer.WriteNameTable(names.Select(x => (x.Key, x.Value, CultureInfo.InvariantCulture)).ToList(), languages);
 
     public static void WriteNameTable(this BigEndianBinaryWriter writer, params (KnownNameIds NameId, string Value, CultureInfo Culture)[] names)
         => writer.WriteNameTable(names.ToList());
 
-    public static void WriteNameTable(this BigEndianBinaryWriter writer, List<(KnownNameIds NameId, string Value, CultureInfo Culture)> names, List<string> languages = null)
+    public static void WriteNameTable(this BigEndianBinaryWriter writer, List<(KnownNameIds NameId, string Value, CultureInfo Culture)> names, List<string>? languages = null)
     {
         // Type          | Name                        | Description
         // --------------|-----------------------------|--------------------------------------------------------
@@ -237,7 +237,7 @@ internal static class WriterExtensions
         writer.WriteCMapSubTable(subtable as Format4SubTable);
     }
 
-    public static void WriteCMapSubTable(this BigEndianBinaryWriter writer, Format0SubTable subtable)
+    public static void WriteCMapSubTable(this BigEndianBinaryWriter writer, Format0SubTable? subtable)
     {
         if (subtable == null)
         {
@@ -261,7 +261,7 @@ internal static class WriterExtensions
         }
     }
 
-    public static void WriteCMapSubTable(this BigEndianBinaryWriter writer, Format4SubTable subtable)
+    public static void WriteCMapSubTable(this BigEndianBinaryWriter writer, Format4SubTable? subtable)
     {
         if (subtable == null)
         {

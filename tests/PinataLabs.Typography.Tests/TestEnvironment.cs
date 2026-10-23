@@ -26,11 +26,13 @@ internal static class TestEnvironment
 
     private static string GetSolutionDirectoryFullPathImpl()
     {
-        string assemblyLocation = Path.GetDirectoryName(typeof(TestEnvironment).GetTypeInfo().Assembly.Location);
+        string assemblyLocation = Path.GetDirectoryName(typeof(TestEnvironment).GetTypeInfo().Assembly.Location)
+            ?? throw new Exception("Unable to find the test assembly directory!");
 
         var assemblyFile = new FileInfo(assemblyLocation);
 
-        DirectoryInfo directory = assemblyFile.Directory;
+        DirectoryInfo? directory = assemblyFile.Directory
+            ?? throw new Exception($"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!");
 
         while (!directory.EnumerateFiles(SolutionFileName).Any())
         {

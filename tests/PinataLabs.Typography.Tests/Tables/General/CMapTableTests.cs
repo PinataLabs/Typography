@@ -38,9 +38,9 @@ public class CMapTableTests
 
         using (System.IO.MemoryStream stream = writer.GetStream())
         {
-            InvalidFontTableException exception = await Assert.That(() => CMapTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
+            InvalidFontTableException? exception = await Assert.That(() => CMapTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-            await Assert.That(exception.Table).IsEqualTo("cmap");
+            await Assert.That(exception!.Table).IsEqualTo("cmap");
         }
     }
 }

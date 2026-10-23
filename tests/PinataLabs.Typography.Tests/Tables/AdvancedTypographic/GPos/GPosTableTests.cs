@@ -571,7 +571,7 @@ public class GPosTableTests
     {
         // TODO: is there an easier way to read the UPEM? Maybe this is overcomplicated.
         FontFamily fontFamily = new FontCollection().Add(fileName);
-        fontFamily.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+        fontFamily.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
         // If no valid head table found, assume 1000, which matches typical Type1 usage.
         return metrics?.UnitsPerEm ?? 1000;

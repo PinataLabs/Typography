@@ -113,12 +113,12 @@ public class SystemFontCollectionTests
 
         foreach (FontMetrics item in metrics)
         {
-            await Assert.That(family.TryGetMetrics(item.Description.Style, out FontMetrics familyMetrics)).IsTrue();
+            await Assert.That(family.TryGetMetrics(item.Description.Style, out FontMetrics? familyMetrics)).IsTrue();
             await Assert.That(collection.TryGetMetrics(
                 family.Name,
                 family.Culture,
                 item.Description.Style,
-                out FontMetrics fontMetrics)).IsTrue();
+                out FontMetrics? fontMetrics)).IsTrue();
 
             await Assert.That(fontMetrics).IsEqualTo(familyMetrics);
         }
@@ -141,8 +141,8 @@ public class SystemFontCollectionTests
     {
         static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
-        FontFamilyNotFoundException exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
-        await Assert.That(exception.FontFamily).IsEqualTo("AFontThatDoesNotExist");
+        FontFamilyNotFoundException? exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
+        await Assert.That(exception!.FontFamily).IsEqualTo("AFontThatDoesNotExist");
         await Assert.That(exception.Message).Contains("AFontThatDoesNotExist");
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -171,10 +171,10 @@ public class SystemFontCollectionTests
     {
         static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
-        FontFamilyNotFoundException exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
+        FontFamilyNotFoundException? exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            await Assert.That(exception.Message).DoesNotContain("/Library/Fonts/");
+            await Assert.That(exception!.Message).DoesNotContain("/Library/Fonts/");
             await Assert.That(exception.SearchDirectories).IsEmpty();
         }
     }
@@ -187,10 +187,10 @@ public class SystemFontCollectionTests
         // The pre-rebrand switch name is not honoured: native enumeration stays in use on macOS.
         static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
-        FontFamilyNotFoundException exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
+        FontFamilyNotFoundException? exception = await Assert.That(Action).ThrowsExactly<FontFamilyNotFoundException>();
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            await Assert.That(exception.Message).DoesNotContain("/Library/Fonts/");
+            await Assert.That(exception!.Message).DoesNotContain("/Library/Fonts/");
             await Assert.That(exception.SearchDirectories).IsEmpty();
         }
     }

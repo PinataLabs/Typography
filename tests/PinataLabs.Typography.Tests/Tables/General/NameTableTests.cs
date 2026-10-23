@@ -81,10 +81,10 @@ public class NameTableTests
 
         using (System.IO.MemoryStream stream = writer.GetStream())
         {
-            InvalidFontTableException exception = await Assert.That(
+            InvalidFontTableException? exception = await Assert.That(
                 () => NameTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-            await Assert.That(exception.Table).IsEqualTo("name");
+            await Assert.That(exception!.Table).IsEqualTo("name");
         }
     }
 }
