@@ -28,9 +28,6 @@
     <Project Path="src/PinataLabs.Typography.UnicodeTrieGenerator/PinataLabs.Typography.UnicodeTrieGenerator.csproj" />
   </Folder>
   <Folder Name="/_root/">
-    <File Path="ci-build.ps1" />
-    <File Path="ci-pack.ps1" />
-    <File Path="ci-test.ps1" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
