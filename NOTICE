@@ -1,0 +1,32 @@
+PinataLabs.Typography
+Copyright (c) PinataLabs.
+
+This product is derived from SixLabors.Fonts
+(https://github.com/SixLabors/Fonts), Copyright (c) Six Labors,
+licensed under the Apache License, Version 2.0.
+
+PinataLabs.Typography was forked from SixLabors.Fonts at commit
+32bef42997adb10268369ca149777f00e4241ce9 (32bef429) and has been modified
+by PinataLabs. Source files that existed at that commit keep the
+"Copyright (c) Six Labors." line in their headers.
+
+This product also includes files from SharedInfrastructure
+(https://github.com/SixLabors/SharedInfrastructure), Copyright (c) Six Labors,
+licensed under the Apache License, Version 2.0, at commit
+33cb12ca77f919b44de56f344d2627cc2a108c3a (33cb12ca). The vendored files are:
+
+  Upstream path                             Path in this repository
+  ----------------------------------------  ------------------------------------------------
+  msbuild/props/SixLabors.Global.props      build/msbuild/props/PinataLabs.Global.props (modified)
+  msbuild/props/SixLabors.Src.props         build/msbuild/props/PinataLabs.Src.props (modified)
+  msbuild/props/SixLabors.Tests.props       build/msbuild/props/PinataLabs.Tests.props (modified)
+  msbuild/targets/SixLabors.Global.targets  build/msbuild/targets/PinataLabs.Global.targets (modified)
+  msbuild/targets/SixLabors.Src.targets     build/msbuild/targets/PinataLabs.Src.targets (modified)
+  sixlabors.ruleset                         .editorconfig (rule severities, modified)
+  sixlabors.tests.ruleset                   .editorconfig (rule severities, modified)
+  stylecop.json                             build/stylecop.json (modified)
+  src/SharedInfrastructure/DebugGuard.cs    src/SharedInfrastructure/DebugGuard.cs (modified)
+  src/SharedInfrastructure/SharedInfrastructure.projitems
+                                            src/SharedInfrastructure/SharedInfrastructure.projitems (modified)
+
+The full text of the Apache License, Version 2.0 is in the LICENSE file.

@@ -1,0 +1,50 @@
+<Solution>
+  <Folder Name="/samples/">
+    <File Path="samples/Directory.Build.props" />
+    <File Path="samples/Directory.Build.targets" />
+    <File Path="samples/.globalconfig" />
+    <Project Path="samples/ListFonts/ListFonts.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/Directory.Build.targets" />
+    <Project Path="src/PinataLabs.Typography/PinataLabs.Typography.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <File Path="tests/Directory.Build.targets" />
+    <File Path="tests/.globalconfig" />
+    <Project Path="tests/PinataLabs.Typography.Benchmarks/PinataLabs.Typography.Benchmarks.csproj" />
+    <Project Path="tests/PinataLabs.Typography.Tests/PinataLabs.Typography.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnicodeTestData/">
+    <File Path="tests/UnicodeTestData/BidiCharacterTest.txt" />
+    <File Path="tests/UnicodeTestData/BidiTest.txt" />
+    <File Path="tests/UnicodeTestData/GraphemeBreakTest.txt" />
+    <File Path="tests/UnicodeTestData/LineBreakTest.txt" />
+    <File Path="tests/UnicodeTestData/README.md" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="src/PinataLabs.Typography.UnicodeTrieGenerator/PinataLabs.Typography.UnicodeTrieGenerator.csproj" />
+  </Folder>
+  <Folder Name="/_root/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+    <File Path=".editorconfig" />
+  </Folder>
+  <Folder Name="/_root/.github/">
+    <File Path=".github/CONTRIBUTING.md" />
+    <File Path=".github/PULL_REQUEST_TEMPLATE.md" />
+  </Folder>
+  <Folder Name="/_root/.github/ISSUE_TEMPLATE/">
+    <File Path=".github/ISSUE_TEMPLATE/config.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/oss-bug-report.md" />
+  </Folder>
+  <Folder Name="/_root/.github/workflows/">
+    <File Path=".github/workflows/build-and-test.yml" />
+  </Folder>
+</Solution>

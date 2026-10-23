@@ -1,33 +1,35 @@
-﻿# How to contribute to SixLabors.Fonts
+﻿# How to contribute to PinataLabs.Typography
 
-#### **Did you find a bug?**
+## Did you find a bug?
 
-- Please **ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/SixLabors/Fonts/issues).
+- Make sure that nobody has reported the bug before. Search the [issues](https://github.com/PinataLabs/Typography/issues) on GitHub.
+- If you do not find an open issue for the problem, [open a new one](https://github.com/PinataLabs/Typography/issues/new/choose). Include a **title, the version you use, a clear description**, and a **code sample** or a **test case** that shows the expected behavior. Do not reuse an existing issue for a different problem.
 
-- If you're unable to find an open issue addressing the problem, please [open a new one](https://github.com/SixLabors/Fonts/issues/new). Be sure to include a **title, the applicable version, a clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring. Please do not hijack existing issues.
+## Did you write a patch that fixes a bug?
 
-#### **Did you write a patch that fixes a bug?**
+- Open a pull request on [PinataLabs/Typography](https://github.com/PinataLabs/Typography/pulls) with the patch.
+- In the pull request description, describe the problem and the solution. Include the issue number if there is one.
+- Make sure that your code follows the coding patterns in the repository. The build enforces StyleCop and `.editorconfig` rules, and it treats warnings as errors.
+- Add or update tests for your change, and make sure that `dotnet test PinataLabs.Typography.slnx` passes.
+- New `.cs` files start with this header:
 
-* Open a new GitHub pull request with the patch.
+  ```csharp
+  // Copyright (c) PinataLabs.
+  // Licensed under the Apache License, Version 2.0.
+  ```
 
-* Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
+  Do not remove the upstream copyright line from files that already have it. See [NOTICE](../NOTICE).
 
-* Before submitting, please ensure that your code matches the existing coding patterns and practice as demonstrated in the repository. These follow strict Stylecop rules :cop:.
+## Do you want to add a feature or change the public API?
 
-#### **Do you intend to add a new feature or change an existing one?**
+- Open an [issue](https://github.com/PinataLabs/Typography/issues/new/choose) that describes the change before you write the code. A maintainer must approve each public API addition or breaking change.
 
-* Suggest your change in the [Ideas Discussions Channel](https://github.com/SixLabors/Fonts/discussions?discussions_q=category%3AIdeas) and start writing code.
+## Do you have a question about the library or the source code?
 
-* Do not open an issue on GitHub until you have collected positive feedback about the change. GitHub issues are primarily intended for bug reports and fixes.
+- Open an [issue](https://github.com/PinataLabs/Typography/issues) with your question.
 
-#### **Do you have questions about consuming the library or the source code?**
+## Code of Conduct
 
-* Ask any question about how to use SixLabors.Fonts in the [Help Discussions Channel](https://github.com/SixLabors/Fonts/discussions?discussions_q=category%3AHelp).
+This project follows the [Code of Conduct](../CODE_OF_CONDUCT.md).
 
-#### Code of Conduct  
-This project has adopted the code of conduct defined by the [Contributor Covenant](https://contributor-covenant.org/) to clarify expected behavior in our community.
-For more information, see the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
-
-And please remember. SixLabors.Fonts is the work of a very, very, small number of developers who struggle balancing time to contribute to the project with family time and work commitments. We encourage you to pitch in and help make our vision of simple accessible image processing available to all. Open Source can only exist with your help.
-
-Thanks for reading!
+Thank you for your help!

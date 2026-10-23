@@ -1,0 +1,57 @@
+// Copyright (c) Six Labors.
+// Copyright (c) PinataLabs.
+// Licensed under the Apache License, Version 2.0.
+
+using System.Numerics;
+
+namespace PinataLabs.Typography.Tables.Cff;
+
+internal struct CffGlyphData
+{
+    private readonly byte[][] globalSubrBuffers;
+    private readonly byte[][] localSubrBuffers;
+    private readonly byte[] charStrings;
+    private readonly int nominalWidthX;
+
+    public CffGlyphData(
+        ushort glyphIndex,
+        byte[][] globalSubrBuffers,
+        byte[][] localSubrBuffers,
+        int nominalWidthX,
+        byte[] charStrings)
+    {
+        this.GlyphIndex = glyphIndex;
+        this.globalSubrBuffers = globalSubrBuffers;
+        this.localSubrBuffers = localSubrBuffers;
+        this.nominalWidthX = nominalWidthX;
+        this.charStrings = charStrings;
+
+        this.GlyphName = null;
+    }
+
+    public readonly ushort GlyphIndex { get; }
+
+    public string? GlyphName { get; set; }
+
+    public Bounds GetBounds()
+    {
+        using var engine = new CffEvaluationEngine(
+            this.charStrings,
+            this.globalSubrBuffers,
+            this.localSubrBuffers,
+            this.nominalWidthX);
+
+        return engine.GetBounds();
+    }
+
+    public void RenderTo(IGlyphRenderer renderer, Vector2 origin, Vector2 scale, Vector2 offset, Matrix3x2 transform)
+    {
+        using var engine = new CffEvaluationEngine(
+             this.charStrings,
+             this.globalSubrBuffers,
+             this.localSubrBuffers,
+             this.nominalWidthX);
+
+        engine.RenderTo(renderer, origin, scale, offset, transform);
+    }
+}

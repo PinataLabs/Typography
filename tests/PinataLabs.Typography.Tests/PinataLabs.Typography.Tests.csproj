@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
+    <DebugSymbols>True</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Fonts\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pegasus" PrivateAssets="all" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\DeterministicFiniteAutomata.cs" Link="Unicode\StateAutomation\DeterministicFiniteAutomata.cs" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\Compile.cs" Link="Unicode\StateAutomation\Compile.cs" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\State.cs" Link="Unicode\StateAutomation\State.cs" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\GeneratorPaths.cs" Link="Unicode\GeneratorPaths.cs" />
+    <PegGrammar Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\Grammar.peg" Link="Unicode\StateAutomation\Grammar.peg" />
+  </ItemGroup>
+
+</Project>

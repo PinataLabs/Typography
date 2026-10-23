@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    Vendored (Apache-2.0) from SharedInfrastructure at commit 33cb12ca and modified
+    by PinataLabs. NOTICE lists the upstream repository and file path.
+  -->
+
+  <!-- Compilation and build location settings. -->
+  <PropertyGroup>
+    <PinataLabsProjectCategory>src</PinataLabsProjectCategory>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Common NuGet package settings. -->
+  <PropertyGroup>
+    <Copyright>Copyright (c) Six Labors. Copyright (c) PinataLabs.</Copyright>
+    <Authors>PinataLabs</Authors>
+    <Company>PinataLabs</Company>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix Condition="'$(packageversion)' != ''">$(PackageVersion)</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
+  <!--
+    True when the CI environment variable is 'true', as it is on GitHub Actions.
+    This file is imported before PinataLabs.Global.props, so the property is
+    defined here, before the CI-only settings below use it.
+  -->
+  <PropertyGroup>
+    <IsContinuousIntegration Condition="'$(CI)' == 'true'">true</IsContinuousIntegration>
+  </PropertyGroup>
+
+  <!-- Deterministic settings. CI only .-->
+  <PropertyGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <!-- Ensure deterministic builds work when triggered against individual projects. -->
+  <!-- https://github.com/dotnet/roslyn/issues/37379#issuecomment-513371985 -->
+  <ItemGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+
+  <!--MinVer Properties for versioning. CI only-->
+  <PropertyGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerVerbosity>normal</MinVerVerbosity>
+  </PropertyGroup>
+
+  <!--
+    Package references and additional files which are consumed by src projects. CI Only.
+    Versions are declared centrally in Directory.Packages.props.
+  -->
+  <ItemGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <PackageReference Include="MinVer" PrivateAssets="All"/>
+  </ItemGroup>
+
+</Project>

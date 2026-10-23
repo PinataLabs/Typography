@@ -1,0 +1,18 @@
+// Copyright (c) Six Labors.
+// Copyright (c) PinataLabs.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
+
+namespace UnicodeTrieGenerator;
+
+internal static class Program
+{
+    private static void Main()
+    {
+        Console.WriteLine("Generating Trie Data");
+        Generator.GenerateUnicodeTries();
+        Console.WriteLine("Done");
+        Console.ReadLine();
+    }
+}

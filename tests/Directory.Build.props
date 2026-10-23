@@ -11,13 +11,13 @@
   -->
 
   <!-- Import the shared tests .props file -->
-  <Import Project="$(MSBuildThisFileDirectory)..\shared-infrastructure\msbuild\props\SixLabors.Tests.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\build\msbuild\props\PinataLabs.Tests.props" />
 
   <!-- Import the solution .props file. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
 
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\SixLabors.Fonts\SixLabors.Fonts.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\PinataLabs.Typography\PinataLabs.Typography.csproj" />
   </ItemGroup>
 
 </Project>
