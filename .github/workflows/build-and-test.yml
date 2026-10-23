@@ -40,7 +40,7 @@ jobs:
       # global.json pins the .NET 11 SDK, which carries only the net11.0 runtime.
       # The 8.0 and 10.0 entries install the runtimes the net8.0 and net10.0 tests need.
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
           dotnet-version: |
