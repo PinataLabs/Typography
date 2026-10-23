@@ -21,7 +21,6 @@ namespace SixLabors.Fonts.Benchmarks
         private readonly TextOptions textOptions;
         private readonly SKTypeface arialTypeface;
         private readonly SKFont font;
-        private readonly SKPaint paint;
 
         public MeasureTextBenchmark()
         {
@@ -32,14 +31,12 @@ namespace SixLabors.Fonts.Benchmarks
 
             this.arialTypeface = SKTypeface.FromFamilyName(fontFamilyName, SKFontStyle.Normal);
             this.font = new SKFont(this.arialTypeface, fontSize);
-            this.paint = new SKPaint(this.font);
         }
 
         public void Dispose()
         {
             this.arialTypeface.Dispose();
             this.font.Dispose();
-            this.paint.Dispose();
         }
 
         [Params("a", "Hello world", "The quick brown fox jumps over the lazy dog")]
@@ -49,6 +46,6 @@ namespace SixLabors.Fonts.Benchmarks
         public void SixLaborsFonts() => TextMeasurer.MeasureSize(this.Text, this.textOptions);
 
         [Benchmark]
-        public void SkiaSharp() => this.paint.MeasureText(this.Text);
+        public void SkiaSharp() => this.font.MeasureText(this.Text);
     }
 }

@@ -3,7 +3,9 @@
     <File Path="samples/Directory.Build.props" />
     <File Path="samples/Directory.Build.targets" />
     <File Path="samples/Fonts.Samples.ruleset" />
-    <Project Path="samples/DrawWithImageSharp/DrawWithImageSharp.csproj" />
+    <Project Path="samples/DrawWithImageSharp/DrawWithImageSharp.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="samples/ListFonts/ListFonts.csproj" />
   </Folder>
   <Folder Name="/src/">
@@ -34,6 +36,7 @@
     <File Path="ci-test.ps1" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
     <File Path="NuGet.config" />
     <File Path="README.md" />
     <File Path="standards/.editorconfig" />

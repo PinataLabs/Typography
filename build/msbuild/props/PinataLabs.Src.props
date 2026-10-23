@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    Vendored from SixLabors/SharedInfrastructure (Apache-2.0) at commit 33cb12ca,
+    msbuild/props/SixLabors.Src.props, and modified by PinataLabs.
+  -->
+
+  <!-- Compilation and build location settings. -->
+  <PropertyGroup>
+    <PinataLabsProjectCategory>src</PinataLabsProjectCategory>
+    <CodeAnalysisRuleSet Condition="'$(CodeAnalysisRuleSet)' == ''">$(MSBuildThisFileDirectory)..\..\PinataLabs.ruleset</CodeAnalysisRuleSet>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Common NuGet package settings. -->
+  <PropertyGroup>
+    <Copyright>Copyright © Six Labors</Copyright>
+    <Authors>Six Labors and contributors</Authors>
+    <Company>Six Labors</Company>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix Condition="'$(packageversion)' != ''">$(PackageVersion)</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
+  <!--
+    Define Environmental conditionals. Determined by environmental settings set in build-and-test.yml
+    These proeprties are defined 2X to ensure both MSBuild and Visual Studio (preprocessor directives)
+    can correctly detect them.
+    -->
+  <PropertyGroup>
+    <IsContinuousIntegration Condition="'$(CI)' == 'true'">true</IsContinuousIntegration>
+    <IsCodeCoverage Condition="'$(codecov)' == 'true'">true</IsCodeCoverage>
+  </PropertyGroup>
+
+  <!-- Deterministic settings. CI only .-->
+  <PropertyGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <!--MinVer Properties for versioning. CI only-->
+  <PropertyGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerVerbosity>normal</MinVerVerbosity>
+  </PropertyGroup>
+
+  <!--
+    Package references and additional files which are consumed by src projects. CI Only.
+    Versions are declared centrally in Directory.Packages.props.
+  -->
+  <ItemGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <PackageReference Include="MinVer" PrivateAssets="All"/>
+  </ItemGroup>
+
+</Project>

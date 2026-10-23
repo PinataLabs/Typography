@@ -12,7 +12,7 @@
 
   <!--Set product category-->
   <PropertyGroup>
-    <SixLaborsProjectCategory>samples</SixLaborsProjectCategory>
+    <PinataLabsProjectCategory>samples</PinataLabsProjectCategory>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

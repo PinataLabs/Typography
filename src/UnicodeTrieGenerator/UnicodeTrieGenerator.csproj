@@ -34,15 +34,15 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Pegasus" Version="4.1.0" PrivateAssets="all" />
+    <PackageReference Include="Pegasus" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="StateAutomation\Grammar.peg" />
     <PegGrammar Include="StateAutomation\Grammar.peg" />
-    <InternalsVisibleTo Include="SixLabors.Fonts.Tests" Key="$(SixLaborsPublicKey)" />
+    <InternalsVisibleTo Include="SixLabors.Fonts.Tests" />
   </ItemGroup>
 
-  <Import Project="..\..\shared-infrastructure\src\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
+  <Import Project="..\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
 
 </Project>
