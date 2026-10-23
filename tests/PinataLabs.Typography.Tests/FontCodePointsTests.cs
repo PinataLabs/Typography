@@ -4,15 +4,17 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class FontCodePointsTests
     {
         [Test]
-        public void TtfTest()
+        public async Task TtfTest()
         {
             var collection = new FontCollection();
             FontFamily family = collection.Add(TestFonts.SimpleFontFile);
@@ -22,22 +24,22 @@ namespace PinataLabs.Typography.Tests
             IEnumerable<int> codePointValues = codePoints.Select(x => x.Value);
 
             // Compare with https://everythingfonts.com/ttfdump
-            Assert.Equal(257, codePoints.Count);
+            await Assert.That(codePoints.Count).IsEqualTo(257);
 
             // Compare with https://fontdrop.info/
-            Assert.Contains(0x0000, codePointValues);
-            Assert.Contains(0x000D, codePointValues);
-            Assert.Contains(0x0020, codePointValues);
-            Assert.Contains(0x0041, codePointValues);
-            Assert.Contains(0x0042, codePointValues);
-            Assert.Contains(0x0061, codePointValues);
-            Assert.Contains(0x0062, codePointValues);
-            Assert.Contains(0xFFFF, codePointValues);
+            await Assert.That(codePointValues).Contains(0x0000);
+            await Assert.That(codePointValues).Contains(0x000D);
+            await Assert.That(codePointValues).Contains(0x0020);
+            await Assert.That(codePointValues).Contains(0x0041);
+            await Assert.That(codePointValues).Contains(0x0042);
+            await Assert.That(codePointValues).Contains(0x0061);
+            await Assert.That(codePointValues).Contains(0x0062);
+            await Assert.That(codePointValues).Contains(0xFFFF);
 
             HashSet<int> glyphIds = new();
             foreach (CodePoint codePoint in codePoints)
             {
-                Assert.True(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph> glyphs));
+                await Assert.That(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph> glyphs)).IsTrue();
                 foreach (Glyph glyph in glyphs)
                 {
                     glyphIds.Add(glyph.GlyphMetrics.GlyphId);
@@ -45,11 +47,11 @@ namespace PinataLabs.Typography.Tests
             }
 
             // Compare with https://fontdrop.info/
-            Assert.Equal(8, glyphIds.Count);
+            await Assert.That(glyphIds.Count).IsEqualTo(8);
         }
 
         [Test]
-        public void WoffTest()
+        public async Task WoffTest()
         {
             var collection = new FontCollection();
             FontFamily family = collection.Add(TestFonts.SimpleFontFileWoff);
@@ -59,22 +61,22 @@ namespace PinataLabs.Typography.Tests
             IEnumerable<int> codePointValues = codePoints.Select(x => x.Value);
 
             // Compare with https://everythingfonts.com/ttfdump
-            Assert.Equal(257, codePoints.Count);
+            await Assert.That(codePoints.Count).IsEqualTo(257);
 
             // Compare with https://fontdrop.info/
-            Assert.Contains(0x0000, codePointValues);
-            Assert.Contains(0x000D, codePointValues);
-            Assert.Contains(0x0020, codePointValues);
-            Assert.Contains(0x0041, codePointValues);
-            Assert.Contains(0x0042, codePointValues);
-            Assert.Contains(0x0061, codePointValues);
-            Assert.Contains(0x0062, codePointValues);
-            Assert.Contains(0xFFFF, codePointValues);
+            await Assert.That(codePointValues).Contains(0x0000);
+            await Assert.That(codePointValues).Contains(0x000D);
+            await Assert.That(codePointValues).Contains(0x0020);
+            await Assert.That(codePointValues).Contains(0x0041);
+            await Assert.That(codePointValues).Contains(0x0042);
+            await Assert.That(codePointValues).Contains(0x0061);
+            await Assert.That(codePointValues).Contains(0x0062);
+            await Assert.That(codePointValues).Contains(0xFFFF);
 
             HashSet<int> glyphIds = new();
             foreach (CodePoint codePoint in codePoints)
             {
-                Assert.True(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph> glyphs));
+                await Assert.That(font.TryGetGlyphs(codePoint, out IReadOnlyList<Glyph> glyphs)).IsTrue();
                 foreach (Glyph glyph in glyphs)
                 {
                     glyphIds.Add(glyph.GlyphMetrics.GlyphId);
@@ -82,7 +84,7 @@ namespace PinataLabs.Typography.Tests
             }
 
             // Compare with https://fontdrop.info/
-            Assert.Equal(8, glyphIds.Count);
+            await Assert.That(glyphIds.Count).IsEqualTo(8);
         }
     }
 }

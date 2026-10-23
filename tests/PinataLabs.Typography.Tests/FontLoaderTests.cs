@@ -5,141 +5,143 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class FontLoaderTests
     {
         [Test]
-        public void Issue21_LoopDetectedLoadingGlyphs()
+        public async Task Issue21_LoopDetectedLoadingGlyphs()
         {
             Font font = new FontCollection().Add(TestFonts.CarterOneFileData()).CreateFont(12);
 
-            Assert.True(font.FontMetrics.TryGetGlyphMetrics(
+            await Assert.That(font.FontMetrics.TryGetGlyphMetrics(
                 new CodePoint('\0'),
                 TextAttributes.None,
                 TextDecorations.None,
                 LayoutMode.HorizontalTopBottom,
                 ColorFontSupport.None,
-                out IReadOnlyList<GlyphMetrics> _));
+                out IReadOnlyList<GlyphMetrics> _)).IsTrue();
         }
 
         [Test]
-        public void LoadFontMetadata()
+        public async Task LoadFontMetadata()
         {
             var description = FontDescription.LoadDescription(TestFonts.SimpleFontFileData());
 
-            Assert.Equal("SixLaborsSampleAB regular", description.FontNameInvariantCulture);
-            Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
+            await Assert.That(description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
+            await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
         }
 
         [Test]
-        public void LoadFontMetadataWoff()
+        public async Task LoadFontMetadataWoff()
         {
             var description = FontDescription.LoadDescription(TestFonts.SimpleFontFileWoffData());
 
-            Assert.Equal("SixLaborsSampleAB regular", description.FontNameInvariantCulture);
-            Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
+            await Assert.That(description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
+            await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
         }
 
         [Test]
-        public void LoadFont_WithTtfFormat()
+        public async Task LoadFont_WithTtfFormat()
         {
             Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
 
             Glyph glyph = glyphs[0];
             GlyphRenderer r = new();
             glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
-            Assert.Equal(37, r.ControlPoints.Count);
-            Assert.Single(r.GlyphKeys);
-            Assert.Single(r.GlyphRects);
+            await Assert.That(r.ControlPoints.Count).IsEqualTo(37);
+            await Assert.That(r.GlyphKeys).HasSingleItem();
+            await Assert.That(r.GlyphRects).HasSingleItem();
         }
 
         [Test]
-        public void LoadFont_WithWoff1Format()
+        public async Task LoadFont_WithWoff1Format()
         {
             Font font = new FontCollection().Add(TestFonts.OpenSansFileWoff1).CreateFont(12);
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
             Glyph glyph = glyphs[0];
             GlyphRenderer r = new();
             glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
-            Assert.Equal(37, r.ControlPoints.Count);
-            Assert.Single(r.GlyphKeys);
-            Assert.Single(r.GlyphRects);
+            await Assert.That(r.ControlPoints.Count).IsEqualTo(37);
+            await Assert.That(r.GlyphKeys).HasSingleItem();
+            await Assert.That(r.GlyphRects).HasSingleItem();
         }
 
         [Test]
-        public void LoadFontMetadata_WithWoff1Format()
+        public async Task LoadFontMetadata_WithWoff1Format()
         {
             var description = FontDescription.LoadDescription(TestFonts.OpensSansWoff1Data());
 
-            Assert.Equal("Open Sans Regular", description.FontNameInvariantCulture);
-            Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
+            await Assert.That(description.FontNameInvariantCulture).IsEqualTo("Open Sans Regular");
+            await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
         }
 
         [Test]
-        public void LoadFontMetadata_WithWoff2Format()
+        public async Task LoadFontMetadata_WithWoff2Format()
         {
             var description = FontDescription.LoadDescription(TestFonts.OpensSansWoff2Data());
 
-            Assert.Equal("Open Sans Regular", description.FontNameInvariantCulture);
-            Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
+            await Assert.That(description.FontNameInvariantCulture).IsEqualTo("Open Sans Regular");
+            await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
         }
 
         [Test]
-        public void LoadFont_WithWoff2Format()
+        public async Task LoadFont_WithWoff2Format()
         {
             Font font = new FontCollection().Add(TestFonts.OpensSansWoff2Data()).CreateFont(12);
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('A'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
             Glyph glyph = glyphs[0];
             GlyphRenderer r = new();
             glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
-            Assert.Equal(37, r.ControlPoints.Count);
-            Assert.Single(r.GlyphKeys);
-            Assert.Single(r.GlyphRects);
+            await Assert.That(r.ControlPoints.Count).IsEqualTo(37);
+            await Assert.That(r.GlyphKeys).HasSingleItem();
+            await Assert.That(r.GlyphRects).HasSingleItem();
         }
 
         [Test]
-        public void LoadFont()
+        public async Task LoadFont()
         {
             Font font = new FontCollection().Add(TestFonts.SimpleFontFileData()).CreateFont(12);
 
-            Assert.Equal("SixLaborsSampleAB regular", font.FontMetrics.Description.FontNameInvariantCulture);
-            Assert.Equal("Regular", font.FontMetrics.Description.FontSubFamilyNameInvariantCulture);
+            await Assert.That(font.FontMetrics.Description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
+            await Assert.That(font.FontMetrics.Description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
             Glyph glyph = glyphs[0];
             GlyphRenderer r = new();
             glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
             // the test font only has characters .notdef, 'a' & 'b' defined
-            Assert.Equal(6, r.ControlPoints.Distinct().Count());
+            await Assert.That(r.ControlPoints.Distinct().Count()).IsEqualTo(6);
         }
 
         [Test]
-        public void LoadFontWoff()
+        public async Task LoadFontWoff()
         {
             Font font = new FontCollection().Add(TestFonts.SimpleFontFileWoffData()).CreateFont(12);
 
-            Assert.Equal("SixLaborsSampleAB regular", font.FontMetrics.Description.FontNameInvariantCulture);
-            Assert.Equal("Regular", font.FontMetrics.Description.FontSubFamilyNameInvariantCulture);
+            await Assert.That(font.FontMetrics.Description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
+            await Assert.That(font.FontMetrics.Description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('a'), ColorFontSupport.None, out IReadOnlyList<Glyph> glyphs)).IsTrue();
             Glyph glyph = glyphs[0];
             GlyphRenderer r = new();
             glyph.RenderTo(r, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, new TextOptions(font));
 
             // the test font only has characters .notdef, 'a' & 'b' defined
-            Assert.Equal(6, r.ControlPoints.Distinct().Count());
+            await Assert.That(r.ControlPoints.Distinct().Count()).IsEqualTo(6);
         }
     }
 }

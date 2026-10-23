@@ -2,7 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -13,7 +15,7 @@ namespace PinataLabs.Typography.Tests
         [Arguments("\u0041", 66)]
         [Arguments("\u211D", 30)]
         [Arguments("\u24EA", 235)]
-        public void FDSelectFormat0_Works(string testStr, int expectedGlyphIndex)
+        public async Task FDSelectFormat0_Works(string testStr, int expectedGlyphIndex)
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.FDArrayTest257File).CreateFont(8);
@@ -23,8 +25,8 @@ namespace PinataLabs.Typography.Tests
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            GlyphRendererParameters glyphKey = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
+            GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
         }
     }
 }
