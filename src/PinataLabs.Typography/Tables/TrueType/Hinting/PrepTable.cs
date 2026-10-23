@@ -2,39 +2,38 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tables.TrueType.Hinting
+namespace PinataLabs.Typography.Tables.TrueType.Hinting;
+
+internal class PrepTable : Table
 {
-    internal class PrepTable : Table
+    internal const string TableName = "prep";
+
+    public PrepTable(byte[] instructions) => this.Instructions = instructions;
+
+    public byte[] Instructions { get; }
+
+    public static PrepTable? Load(FontReader fontReader)
     {
-        internal const string TableName = "prep";
-
-        public PrepTable(byte[] instructions) => this.Instructions = instructions;
-
-        public byte[] Instructions { get; }
-
-        public static PrepTable? Load(FontReader fontReader)
+        if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader, out TableHeader? header))
         {
-            if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader, out TableHeader? header))
-            {
-                return null;
-            }
-
-            using (binaryReader)
-            {
-                return Load(binaryReader, header.Length);
-            }
+            return null;
         }
 
-        public static PrepTable Load(BigEndianBinaryReader reader, uint tableLength)
+        using (binaryReader)
         {
-            // HEADER
-
-            // Type     | Description
-            // ---------| ------------
-            // uint8[n] | Set of instructions executed whenever point size or font or transformation change. n is the number of uint8 items that fit in the size of the table.
-            byte[]? instructions = reader.ReadUInt8Array((int)tableLength);
-
-            return new PrepTable(instructions);
+            return Load(binaryReader, header.Length);
         }
+    }
+
+    public static PrepTable Load(BigEndianBinaryReader reader, uint tableLength)
+    {
+        // HEADER
+
+        // Type     | Description
+        // ---------| ------------
+        // uint8[n] | Set of instructions executed whenever point size or font or transformation change. n is the number of uint8 items that fit in the size of the table.
+        byte[]? instructions = reader.ReadUInt8Array((int)tableLength);
+
+        return new PrepTable(instructions);
     }
 }

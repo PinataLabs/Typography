@@ -4,14 +4,13 @@
 
 using System.Threading.Tasks;
 
-namespace PinataLabs.Typography.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues;
+
+public class Issues_97
 {
-    public class Issues_97
+    [Test]
+    public async Task ShouldNotThrowNullReferenceExceptionWhenReaderCannotBeCreatedForTable()
     {
-        [Test]
-        public async Task ShouldNotThrowNullReferenceExceptionWhenReaderCannotBeCreatedForTable()
-        {
-            await Assert.That(() => FontDescription.LoadDescription(TestFonts.Issues.Issue97File)).ThrowsExactly<InvalidFontTableException>();
-        }
+        await Assert.That(() => FontDescription.LoadDescription(TestFonts.Issues.Issue97File)).ThrowsExactly<InvalidFontTableException>();
     }
 }

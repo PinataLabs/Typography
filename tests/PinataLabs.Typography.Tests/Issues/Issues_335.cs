@@ -4,63 +4,62 @@
 
 using System.Threading.Tasks;
 
-namespace PinataLabs.Typography.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues;
+
+public class Issues_335
 {
-    public class Issues_335
+    [Test]
+    [Arguments(TextAlignment.Start)]
+    [Arguments(TextAlignment.Center)]
+    [Arguments(TextAlignment.End)]
+    public async Task HorizontalAlignmentWorksForSingleLineText(TextAlignment alignment)
     {
-        [Test]
-        [Arguments(TextAlignment.Start)]
-        [Arguments(TextAlignment.Center)]
-        [Arguments(TextAlignment.End)]
-        public async Task HorizontalAlignmentWorksForSingleLineText(TextAlignment alignment)
+        FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
-            FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-            family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+            LineSpacing = 1.5F,
+            WrappingLength = 10000,
+            TextAlignment = alignment,
+        };
 
-            TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
-            {
-                LineSpacing = 1.5F,
-                WrappingLength = 10000,
-                TextAlignment = alignment,
-            };
+        string text = "abc123";
 
-            string text = "abc123";
+        FontRectangle singleBounds = TextMeasurer.MeasureBounds(text, options);
 
-            FontRectangle singleBounds = TextMeasurer.MeasureBounds(text, options);
+        text = "abc123\nabc123";
 
-            text = "abc123\nabc123";
+        FontRectangle multipleBounds = TextMeasurer.MeasureBounds(text, options);
 
-            FontRectangle multipleBounds = TextMeasurer.MeasureBounds(text, options);
+        await Assert.That(singleBounds.Location).IsEqualTo(multipleBounds.Location);
+    }
 
-            await Assert.That(singleBounds.Location).IsEqualTo(multipleBounds.Location);
-        }
+    [Test]
+    [Arguments(TextAlignment.Start)]
+    [Arguments(TextAlignment.Center)]
+    [Arguments(TextAlignment.End)]
+    public async Task VerticalAlignmentWorksForSingleLineText(TextAlignment alignment)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
+        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
 
-        [Test]
-        [Arguments(TextAlignment.Start)]
-        [Arguments(TextAlignment.Center)]
-        [Arguments(TextAlignment.End)]
-        public async Task VerticalAlignmentWorksForSingleLineText(TextAlignment alignment)
+        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
         {
-            FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-            family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
+            LineSpacing = 1.5F,
+            WrappingLength = 10000,
+            TextAlignment = alignment,
+            LayoutMode = LayoutMode.VerticalLeftRight
+        };
 
-            TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
-            {
-                LineSpacing = 1.5F,
-                WrappingLength = 10000,
-                TextAlignment = alignment,
-                LayoutMode = LayoutMode.VerticalLeftRight
-            };
+        string text = "abc123";
 
-            string text = "abc123";
+        FontRectangle singleBounds = TextMeasurer.MeasureBounds(text, options);
 
-            FontRectangle singleBounds = TextMeasurer.MeasureBounds(text, options);
+        text = "abc123\nabc123";
 
-            text = "abc123\nabc123";
+        FontRectangle multipleBounds = TextMeasurer.MeasureBounds(text, options);
 
-            FontRectangle multipleBounds = TextMeasurer.MeasureBounds(text, options);
-
-            await Assert.That(singleBounds.Location).IsEqualTo(multipleBounds.Location);
-        }
+        await Assert.That(singleBounds.Location).IsEqualTo(multipleBounds.Location);
     }
 }

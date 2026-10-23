@@ -4,22 +4,21 @@
 
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
-namespace PinataLabs.Typography.Tables.Woff
+namespace PinataLabs.Typography.Tables.Woff;
+
+internal sealed class Woff2GlyphLoader : GlyphLoader
 {
-    internal sealed class Woff2GlyphLoader : GlyphLoader
+    private GlyphVector glyphVector;
+
+    public Woff2GlyphLoader(GlyphVector glyphVector) => this.glyphVector = glyphVector;
+
+    public override GlyphVector CreateGlyph(GlyphTable table)
     {
-        private GlyphVector glyphVector;
-
-        public Woff2GlyphLoader(GlyphVector glyphVector) => this.glyphVector = glyphVector;
-
-        public override GlyphVector CreateGlyph(GlyphTable table)
+        if (this.glyphVector.Bounds == default)
         {
-            if (this.glyphVector.Bounds == default)
-            {
-                this.glyphVector.Bounds = Bounds.Load(this.glyphVector.ControlPoints);
-            }
-
-            return this.glyphVector;
+            this.glyphVector.Bounds = Bounds.Load(this.glyphVector.ControlPoints);
         }
+
+        return this.glyphVector;
     }
 }

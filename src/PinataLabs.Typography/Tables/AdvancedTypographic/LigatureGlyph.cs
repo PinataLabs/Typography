@@ -4,23 +4,22 @@
 
 using System.IO;
 
-namespace PinataLabs.Typography.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic;
+
+internal sealed class LigatureGlyph
 {
-    internal sealed class LigatureGlyph
+    public ushort[]? CaretValueOffsets { get; internal set; }
+
+    public static LigatureGlyph Load(BigEndianBinaryReader reader, long offset)
     {
-        public ushort[]? CaretValueOffsets { get; internal set; }
+        reader.Seek(offset, SeekOrigin.Begin);
 
-        public static LigatureGlyph Load(BigEndianBinaryReader reader, long offset)
+        ushort caretCount = reader.ReadUInt16();
+        var ligatureGlyph = new LigatureGlyph()
         {
-            reader.Seek(offset, SeekOrigin.Begin);
+            CaretValueOffsets = reader.ReadUInt16Array(caretCount)
+        };
 
-            ushort caretCount = reader.ReadUInt16();
-            var ligatureGlyph = new LigatureGlyph()
-            {
-                CaretValueOffsets = reader.ReadUInt16Array(caretCount)
-            };
-
-            return ligatureGlyph;
-        }
+        return ligatureGlyph;
     }
 }

@@ -2,28 +2,27 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Unicode
+namespace PinataLabs.Typography.Unicode;
+
+/// <summary>
+/// Provides enumeration for classifying characters into opening and closing paired brackets
+/// for the purposes of the Unicode Bidirectional Algorithm.
+/// <see href="https://www.unicode.org/Public/UCD/latest/ucd/BidiBrackets.txt"/>.
+/// </summary>
+public enum BidiPairedBracketType
 {
     /// <summary>
-    /// Provides enumeration for classifying characters into opening and closing paired brackets
-    /// for the purposes of the Unicode Bidirectional Algorithm.
-    /// <see href="https://www.unicode.org/Public/UCD/latest/ucd/BidiBrackets.txt"/>.
+    /// None.
     /// </summary>
-    public enum BidiPairedBracketType
-    {
-        /// <summary>
-        /// None.
-        /// </summary>
-        None = 0,
+    None = 0,
 
-        /// <summary>
-        /// Open.
-        /// </summary>
-        Open = 1,
+    /// <summary>
+    /// Open.
+    /// </summary>
+    Open = 1,
 
-        /// <summary>
-        /// Close.
-        /// </summary>
-        Close = 2
-    }
+    /// <summary>
+    /// Close.
+    /// </summary>
+    Close = 2
 }

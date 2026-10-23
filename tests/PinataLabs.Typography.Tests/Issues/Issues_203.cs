@@ -4,15 +4,14 @@
 
 using System.Threading.Tasks;
 
-namespace PinataLabs.Typography.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues;
+
+public class Issues_203
 {
-    public class Issues_203
+    [Test]
+    public async Task CanParseVersion1Font()
     {
-        [Test]
-        public async Task CanParseVersion1Font()
-        {
-            var font = FontDescription.LoadDescription(TestFonts.Version1Font);
-            await Assert.That(font).IsNotNull();
-        }
+        var font = FontDescription.LoadDescription(TestFonts.Version1Font);
+        await Assert.That(font).IsNotNull();
     }
 }

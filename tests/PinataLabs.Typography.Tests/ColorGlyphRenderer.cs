@@ -4,12 +4,11 @@
 
 using System.Collections.Generic;
 
-namespace PinataLabs.Typography.Tests
-{
-    public class ColorGlyphRenderer : GlyphRenderer, IColorGlyphRenderer
-    {
-        public List<GlyphColor> Colors { get; } = new List<GlyphColor>();
+namespace PinataLabs.Typography.Tests;
 
-        public void SetColor(GlyphColor color) => this.Colors.Add(color);
-    }
+public class ColorGlyphRenderer : GlyphRenderer, IColorGlyphRenderer
+{
+    public List<GlyphColor> Colors { get; } = new List<GlyphColor>();
+
+    public void SetColor(GlyphColor color) => this.Colors.Add(color);
 }

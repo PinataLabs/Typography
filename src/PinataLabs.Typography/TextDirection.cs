@@ -2,26 +2,25 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography
+namespace PinataLabs.Typography;
+
+/// <summary>
+/// Specifies the writing direction for text.
+/// </summary>
+public enum TextDirection
 {
     /// <summary>
-    /// Specifies the writing direction for text.
+    /// Left to right.
     /// </summary>
-    public enum TextDirection
-    {
-        /// <summary>
-        /// Left to right.
-        /// </summary>
-        LeftToRight = 0,
+    LeftToRight = 0,
 
-        /// <summary>
-        /// Right to left.
-        /// </summary>
-        RightToLeft = 1,
+    /// <summary>
+    /// Right to left.
+    /// </summary>
+    RightToLeft = 1,
 
-        /// <summary>
-        /// Automatically determined.
-        /// </summary>
-        Auto = 2,
-    }
+    /// <summary>
+    /// Automatically determined.
+    /// </summary>
+    Auto = 2,
 }

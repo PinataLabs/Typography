@@ -2,10 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic;
+
+internal struct AttachPoint
 {
-    internal struct AttachPoint
-    {
-        public ushort[] PointIndices;
-    }
+    public ushort[] PointIndices;
 }

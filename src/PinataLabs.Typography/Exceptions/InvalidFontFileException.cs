@@ -4,21 +4,20 @@
 
 using System;
 
-namespace PinataLabs.Typography
+namespace PinataLabs.Typography;
+
+/// <summary>
+/// Exception font loading can throw if it encounters invalid data during font loading.
+/// </summary>
+/// <seealso cref="Exception" />
+public class InvalidFontFileException : Exception
 {
     /// <summary>
-    /// Exception font loading can throw if it encounters invalid data during font loading.
+    /// Initializes a new instance of the <see cref="InvalidFontFileException"/> class.
     /// </summary>
-    /// <seealso cref="Exception" />
-    public class InvalidFontFileException : Exception
+    /// <param name="message">The message that describes the error.</param>
+    public InvalidFontFileException(string message)
+        : base(message)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="InvalidFontFileException"/> class.
-        /// </summary>
-        /// <param name="message">The message that describes the error.</param>
-        public InvalidFontFileException(string message)
-            : base(message)
-        {
-        }
     }
 }

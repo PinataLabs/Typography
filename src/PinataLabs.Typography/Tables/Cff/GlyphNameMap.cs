@@ -2,18 +2,17 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-namespace PinataLabs.Typography.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff;
+
+internal readonly struct GlyphNameMap
 {
-    internal readonly struct GlyphNameMap
+    public readonly ushort GlyphIndex;
+
+    public readonly string GlyphName;
+
+    public GlyphNameMap(ushort glyphIndex, string glyphName)
     {
-        public readonly ushort GlyphIndex;
-
-        public readonly string GlyphName;
-
-        public GlyphNameMap(ushort glyphIndex, string glyphName)
-        {
-            this.GlyphIndex = glyphIndex;
-            this.GlyphName = glyphName;
-        }
+        this.GlyphIndex = glyphIndex;
+        this.GlyphName = glyphName;
     }
 }

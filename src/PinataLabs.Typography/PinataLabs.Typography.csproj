@@ -11,7 +11,6 @@
     <PackageTags>font;truetype;opentype;woff;woff2</PackageTags>
     <Description>A cross-platform library for loading and laying out fonts for processing and measuring; written in C#</Description>
     <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
     <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 

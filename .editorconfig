@@ -173,6 +173,8 @@ dotnet_diagnostic.IDE0063.severity = suggestion
 csharp_using_directive_placement = outside_namespace:warning
 # Modifier preferences
 csharp_prefer_static_local_function = true:warning
+# Namespace declaration preferences
+csharp_style_namespace_declarations = file_scoped:warning
 
 ##########################################
 # Unnecessary Code Rules
@@ -416,6 +418,81 @@ dotnet_naming_symbols.parameters_group.applicable_kinds = parameter
 dotnet_naming_rule.parameters_rule.symbols              = parameters_group
 dotnet_naming_rule.parameters_rule.style                = camel_case_style
 dotnet_naming_rule.parameters_rule.severity             = warning
+
+##########################################
+# Analyzer Severities
+# These replace the old .ruleset files at the same severities
+# (ruleset "None" = none, "Info" = suggestion). Rules not listed keep
+# their default severity; TreatWarningsAsErrors makes warnings fail the build.
+# Later sections override earlier ones, so the folder sections refine the
+# all-code section.
+##########################################
+
+# All C# code (was build/PinataLabs.ruleset)
+[*.cs]
+dotnet_diagnostic.IDE0056.severity = none
+dotnet_diagnostic.IDE0057.severity = none
+# Roslynator is not referenced; kept so the rule stays off if it is added.
+dotnet_diagnostic.RCS1090.severity = none
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1402.severity = none
+dotnet_diagnostic.SA1413.severity = none
+# SA1519 was None in the ruleset, but the effect must stay the same: every braceless
+# child statement is reported. StyleCop's SA1503 skips multi-line child statements
+# unless SA1519 is suppressed in the compilation options, which only a ruleset or
+# NoWarn can do (an .editorconfig severity does not count). With SA1519 at warning,
+# SA1519 reports the multi-line cases that SA1503 reported before.
+dotnet_diagnostic.SA1519.severity = warning
+dotnet_diagnostic.SA1629.severity = none
+
+# Library and Unicode trie generator (was src/Fonts.ruleset)
+[src/**.cs]
+dotnet_diagnostic.IDE0010.severity = none
+dotnet_diagnostic.IDE0072.severity = none
+dotnet_diagnostic.IDE0240.severity = none
+dotnet_diagnostic.SA1011.severity = suggestion
+
+# Tests and benchmarks (was build/PinataLabs.Tests.ruleset)
+# The samples section below repeats these, because the samples ruleset included the tests ruleset.
+[tests/**.cs]
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.IDE0058.severity = none
+dotnet_diagnostic.CA1707.severity = none
+# SA0001 has no source location, so tests/.globalconfig turns it off (see that file).
+dotnet_diagnostic.SA1115.severity = none
+dotnet_diagnostic.SA1201.severity = none
+dotnet_diagnostic.SA1202.severity = none
+dotnet_diagnostic.SA1203.severity = none
+dotnet_diagnostic.SA1204.severity = none
+dotnet_diagnostic.SA1310.severity = none
+dotnet_diagnostic.SA1401.severity = none
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1602.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1618.severity = none
+dotnet_diagnostic.SA1642.severity = none
+
+# Samples (was samples/Fonts.Samples.ruleset: the tests rules plus IDE0060)
+[samples/**.cs]
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.IDE0058.severity = none
+dotnet_diagnostic.CA1707.severity = none
+# SA0001 has no source location, so samples/.globalconfig turns it off (see that file).
+dotnet_diagnostic.SA1115.severity = none
+dotnet_diagnostic.SA1201.severity = none
+dotnet_diagnostic.SA1202.severity = none
+dotnet_diagnostic.SA1203.severity = none
+dotnet_diagnostic.SA1204.severity = none
+dotnet_diagnostic.SA1310.severity = none
+dotnet_diagnostic.SA1401.severity = none
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1602.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1618.severity = none
+dotnet_diagnostic.SA1642.severity = none
+dotnet_diagnostic.IDE0060.severity = none
 
 ##########################################
 # License

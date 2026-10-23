@@ -65,7 +65,7 @@
 
   <!-- Compilation settings that explicitly differ from the Sdk.props/targets defaults  -->
   <PropertyGroup>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Features>strict;IOperation</Features>
     <HighEntropyVA>true</HighEntropyVA>
@@ -73,7 +73,8 @@
     <OverwriteReadOnlyFiles>true</OverwriteReadOnlyFiles>
     <DebugType>portable</DebugType>
     <DebugType Condition="'$(IsCodeCoverage)'=='true'">full</DebugType>
-    <NullableContextOptions>disable</NullableContextOptions>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <UseSharedCompilation>true</UseSharedCompilation>

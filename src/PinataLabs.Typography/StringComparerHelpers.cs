@@ -5,18 +5,17 @@
 using System;
 using System.Globalization;
 
-namespace PinataLabs.Typography
-{
-    internal static class StringComparerHelpers
-    {
-        public static StringComparer GetCaseInsensitiveStringComparer(CultureInfo culture)
-        {
-            if (culture != null)
-            {
-                return StringComparer.Create(culture, true);
-            }
+namespace PinataLabs.Typography;
 
-            return StringComparer.OrdinalIgnoreCase;
+internal static class StringComparerHelpers
+{
+    public static StringComparer GetCaseInsensitiveStringComparer(CultureInfo culture)
+    {
+        if (culture != null)
+        {
+            return StringComparer.Create(culture, true);
         }
+
+        return StringComparer.OrdinalIgnoreCase;
     }
 }
