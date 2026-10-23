@@ -3,15 +3,17 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class HeadTableTests
     {
         [Test]
-        public void LoadHead()
+        public async Task LoadHead()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -27,17 +29,17 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             var head = HeadTable.Load(writer.GetReader());
 
-            Assert.Equal(HeadTable.HeadFlags.None, head.Flags);
-            Assert.Equal(HeadTable.HeadMacStyle.Italic | HeadTable.HeadMacStyle.Bold, head.MacStyle);
-            Assert.Equal(1024, head.UnitsPerEm);
-            Assert.Equal(new DateTime(2017, 02, 06, 07, 47, 00), head.Created);
-            Assert.Equal(new DateTime(2017, 02, 07, 07, 47, 00), head.Modified);
-            Assert.Equal(0, head.Bounds.Min.X);
-            Assert.Equal(0, head.Bounds.Min.Y);
-            Assert.Equal(1024, head.Bounds.Max.X);
-            Assert.Equal(1022, head.Bounds.Max.Y);
-            Assert.Equal(0, head.LowestRecPPEM);
-            Assert.Equal(HeadTable.IndexLocationFormats.Offset16, head.IndexLocationFormat);
+            await Assert.That(head.Flags).IsEqualTo(HeadTable.HeadFlags.None);
+            await Assert.That(head.MacStyle).IsEqualTo(HeadTable.HeadMacStyle.Italic | HeadTable.HeadMacStyle.Bold);
+            await Assert.That(head.UnitsPerEm).IsEqualTo(1024);
+            await Assert.That(head.Created).IsEqualTo(new DateTime(2017, 02, 06, 07, 47, 00));
+            await Assert.That(head.Modified).IsEqualTo(new DateTime(2017, 02, 07, 07, 47, 00));
+            await Assert.That(head.Bounds.Min.X).IsEqualTo(0);
+            await Assert.That(head.Bounds.Min.Y).IsEqualTo(0);
+            await Assert.That(head.Bounds.Max.X).IsEqualTo(1024);
+            await Assert.That(head.Bounds.Max.Y).IsEqualTo(1022);
+            await Assert.That(head.LowestRecPPEM).IsEqualTo(0);
+            await Assert.That(head.IndexLocationFormat).IsEqualTo(HeadTable.IndexLocationFormats.Offset16);
         }
     }
 }

@@ -3,32 +3,34 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.TrueType;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class IndexLocationTableTests
     {
         [Test]
-        public void ShouldThrowExceptionWhenHeadTableCouldNotBeFound()
+        public async Task ShouldThrowExceptionWhenHeadTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                MissingFontTableException exception = Assert.Throws<MissingFontTableException>(
-                        () => IndexLocationTable.Load(new FontReader(stream)));
+                MissingFontTableException exception = await Assert.That(
+                        () => IndexLocationTable.Load(new FontReader(stream))).ThrowsExactly<MissingFontTableException>();
 
-                Assert.Equal("head", exception.Table);
+                await Assert.That(exception.Table).IsEqualTo("head");
             }
         }
 
         [Test]
-        public void ShouldThrowExceptionWhenMaximumProfileTableCouldNotBeFound()
+        public async Task ShouldThrowExceptionWhenMaximumProfileTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader(new TableHeader("head", 0, 0, 0));
@@ -45,15 +47,15 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                InvalidFontTableException exception = Assert.Throws<InvalidFontTableException>(
-                    () => IndexLocationTable.Load(new FontReader(stream)));
+                InvalidFontTableException exception = await Assert.That(
+                    () => IndexLocationTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-                Assert.Equal("maxp", exception.Table);
+                await Assert.That(exception.Table).IsEqualTo("maxp");
             }
         }
 
         [Test]
-        public void ShouldReturnNullWhenTableCouldNotBeFound()
+        public async Task ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader(new TableHeader("head", 0, 0, 0), new TableHeader("maxp", 0, 0, 0));
@@ -70,7 +72,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                Assert.Null(IndexLocationTable.Load(new FontReader(stream)));
+                await Assert.That(IndexLocationTable.Load(new FontReader(stream))).IsNull();
             }
         }
     }

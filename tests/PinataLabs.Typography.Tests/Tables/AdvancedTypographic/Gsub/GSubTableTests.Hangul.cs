@@ -2,7 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
@@ -22,7 +24,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         }
 
         [Test]
-        public void ShouldUseComposedSyllablesCFF()
+        public async Task ShouldUseComposedSyllablesCFF()
         {
             // arrange
             const string input = "\uD734\uAC00\u0020\uAC00\u002D\u002D\u0020\u0028\uC624\u002D\u002D\u0029";
@@ -33,15 +35,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldComposeDecomposedSyllablesCFF()
+        public async Task ShouldComposeDecomposedSyllablesCFF()
         {
             // arrange
             const string input = "\u1112\u1172\u1100\u1161\u0020\u1100\u1161\u002D\u002D\u0020\u0028\u110B\u1169\u002D\u002D\u0029";
@@ -52,15 +54,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldUseOTFeaturesForNonCombining_L_V_T_CFF()
+        public async Task ShouldUseOTFeaturesForNonCombining_L_V_T_CFF()
         {
             // arrange
             const string input = "\ua960\ud7b0\ud7cb";
@@ -71,15 +73,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldDecompose_LV_T_To_L_V_T_If_LVT_IsNotSupportedCFF()
+        public async Task ShouldDecompose_LV_T_To_L_V_T_If_LVT_IsNotSupportedCFF()
         {
             // <L,V> combine at first, but the T is non-combining, so this
             // tests that the <LV> gets decomposed again in this case.
@@ -93,15 +95,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldReorderToneMarksToBeginningOf_L_V_SyllablesCFF()
+        public async Task ShouldReorderToneMarksToBeginningOf_L_V_SyllablesCFF()
         {
             // arrange
             const string input = "\ua960\ud7b0\u302f";
@@ -112,10 +114,10 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -123,7 +125,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         private readonly Font hangulFontTTF = SystemFonts.CreateFont("Malgun Gothic", 12);
 
         [Test]
-        public void ShouldUseComposedSyllablesTTF()
+        public async Task ShouldUseComposedSyllablesTTF()
         {
             // arrange
             const string input = "\uD734\uAC00\u0020\uAC00\u002D\u002D\u0020\u0028\uC624\u002D\u002D\u0029";
@@ -134,15 +136,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldComposeDecomposedSyllablesTTF()
+        public async Task ShouldComposeDecomposedSyllablesTTF()
         {
             // arrange
             const string input = "\u1112\u1172\u1100\u1161\u0020\u1100\u1161\u002D\u002D\u0020\u0028\u110B\u1169\u002D\u002D\u0029";
@@ -153,15 +155,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldUseOTFeaturesForNonCombining_L_V_T_TTF()
+        public async Task ShouldUseOTFeaturesForNonCombining_L_V_T_TTF()
         {
             // arrange
             const string input = "\ua960\ud7b0\ud7cb";
@@ -172,15 +174,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldDecompose_LV_T_To_L_V_T_If_LVT_IsNotSupportedTTF()
+        public async Task ShouldDecompose_LV_T_To_L_V_T_If_LVT_IsNotSupportedTTF()
         {
             // <L,V> combine at first, but the T is non-combining, so this
             // tests that the <LV> gets decomposed again in this case.
@@ -194,15 +196,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldReorderToneMarksToBeginningOf_L_V_SyllablesTTF()
+        public async Task ShouldReorderToneMarksToBeginningOf_L_V_SyllablesTTF()
         {
             // arrange
             const string input = "\ua960\ud7b0\u302f";
@@ -213,15 +215,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldReorderToneMarksToBeginningOf_L_V_T_Syllables()
+        public async Task ShouldReorderToneMarksToBeginningOf_L_V_T_Syllables()
         {
             // arrange
             const string input = "\ua960\ud7b0\ud7cb\u302f";
@@ -232,15 +234,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldReorderToneMarksToBeginningOf_LV_Syllables()
+        public async Task ShouldReorderToneMarksToBeginningOf_LV_Syllables()
         {
             // arrange
             const string input = "\uac00\u302f";
@@ -251,15 +253,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldReorderToneMarksToBeginningOf_LVT_Syllables()
+        public async Task ShouldReorderToneMarksToBeginningOf_LVT_Syllables()
         {
             // arrange
             const string input = "\uac01\u302f";
@@ -270,15 +272,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ShouldInsertDottedCircleForInvalidToneMarks()
+        public async Task ShouldInsertDottedCircleForInvalidToneMarks()
         {
             // arrange
             const string input = "\u1100\u302f\u1161";
@@ -289,10 +291,10 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontTTF));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 #endif

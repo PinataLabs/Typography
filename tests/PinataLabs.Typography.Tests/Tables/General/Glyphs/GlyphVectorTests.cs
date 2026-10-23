@@ -5,15 +5,17 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 {
     public class GlyphVectorTests
     {
         [Test]
-        public void CloneIsDeep()
+        public async Task CloneIsDeep()
         {
             // arrange
             ControlPoint[] controlPoints = { new(new Vector2(1.0f), true), new(new Vector2(2.0f), false) };
@@ -25,14 +27,14 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             var clone = GlyphVector.DeepClone(outline);
 
             // assert
-            Assert.False(outline.ControlPoints.Equals(clone.ControlPoints));
-            Assert.True(outline.ControlPoints.SequenceEqual(clone.ControlPoints));
-            Assert.False(outline.EndPoints.Equals(clone.EndPoints));
-            Assert.True(outline.EndPoints.SequenceEqual(clone.EndPoints));
+            await Assert.That(outline.ControlPoints.Equals(clone.ControlPoints)).IsFalse();
+            await Assert.That(outline.ControlPoints.SequenceEqual(clone.ControlPoints)).IsTrue();
+            await Assert.That(outline.EndPoints.Equals(clone.EndPoints)).IsFalse();
+            await Assert.That(outline.EndPoints.SequenceEqual(clone.EndPoints)).IsTrue();
         }
 
         [Test]
-        public void TtfOffsetXy_Works()
+        public async Task TtfOffsetXy_Works()
         {
             // arrange
             ControlPoint[] controlPoints = { new(new Vector2(1.0f), true), new(new Vector2(2.0f), false) };
@@ -47,11 +49,11 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
             GlyphVector.TransformInPlace(ref glyphVector, matrix);
 
             // assert
-            Assert.Equal(expectedBounds, glyphVector.Bounds);
+            await Assert.That(glyphVector.Bounds).IsEqualTo(expectedBounds);
         }
 
         [Test]
-        public void TtfTransformWith2x2Matrix_Works()
+        public async Task TtfTransformWith2x2Matrix_Works()
         {
             // arrange
             int precision = 2;
@@ -90,10 +92,10 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 
             // assert
             Bounds transformedBounds = glyphVector.Bounds;
-            Assert.Equal(expectedBounds.Min.X, transformedBounds.Min.X, precision);
-            Assert.Equal(expectedBounds.Min.Y, transformedBounds.Min.Y, precision);
-            Assert.Equal(expectedBounds.Max.X, transformedBounds.Max.X, precision);
-            Assert.Equal(expectedBounds.Max.Y, transformedBounds.Max.Y, precision);
+            await Assert.That(Math.Round(transformedBounds.Min.X, precision)).IsEqualTo(Math.Round(expectedBounds.Min.X, precision));
+            await Assert.That(Math.Round(transformedBounds.Min.Y, precision)).IsEqualTo(Math.Round(expectedBounds.Min.Y, precision));
+            await Assert.That(Math.Round(transformedBounds.Max.X, precision)).IsEqualTo(Math.Round(expectedBounds.Max.X, precision));
+            await Assert.That(Math.Round(transformedBounds.Max.Y, precision)).IsEqualTo(Math.Round(expectedBounds.Max.Y, precision));
         }
     }
 }

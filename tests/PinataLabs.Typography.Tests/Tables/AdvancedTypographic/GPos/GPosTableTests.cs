@@ -2,7 +2,10 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 {
@@ -11,7 +14,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
         // LookupType1SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-1-single-adjustment-positioning-subtable
         [Test]
-        public void SingleAdjustmentPositioning_Format1_Works()
+        public async Task SingleAdjustmentPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType1Format1;
@@ -30,23 +33,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType1SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-1-single-adjustment-positioning-subtable
         [Test]
-        public void SingleAdjustmentPositioning_Format2_Works()
+        public async Task SingleAdjustmentPositioning_Format2_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType1Format2;
@@ -65,23 +68,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType2SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-2-pair-adjustment-positioning-subtable
         [Test]
-        public void PairAdjustmentPositioning_Format1_Works()
+        public async Task PairAdjustmentPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType2Format1;
@@ -101,23 +104,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType3SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-3-cursive-attachment-positioning-subtable
         [Test]
-        public void CursiveAttachmentPositioning_Format1_Works()
+        public async Task CursiveAttachmentPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType3Format1;
@@ -136,23 +139,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType4SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-4-mark-to-base-attachment-positioning-subtable
         [Test]
-        public void MarkToBaseAttachmentPositioning_Format1_Works()
+        public async Task MarkToBaseAttachmentPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType4Format1;
@@ -171,23 +174,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType5SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-5-mark-to-ligature-attachment-positioning-subtable
         [Test]
-        public void MarkToLigatureAttachmentPositioning_Format1_Works()
+        public async Task MarkToLigatureAttachmentPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType5Format1;
@@ -206,23 +209,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType6SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-6-mark-to-mark-attachment-positioning-subtable
         [Test]
-        public void MarkToMarkAttachmentPositioning_Format1_Works()
+        public async Task MarkToMarkAttachmentPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType6Format1;
@@ -241,23 +244,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType7SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-7-contextual-positioning-subtables
         [Test]
-        public void ContextualPositioning_Format1_Works()
+        public async Task ContextualPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType7Format1;
@@ -277,23 +280,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType7SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-7-contextual-positioning-subtables
         [Test]
-        public void ContextualPositioning_Format2_Works()
+        public async Task ContextualPositioning_Format2_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType7Format2;
@@ -313,23 +316,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType7SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-7-contextual-positioning-subtables
         [Test]
-        public void ContextualPositioning_Format3_Works()
+        public async Task ContextualPositioning_Format3_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType7Format3;
@@ -350,23 +353,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType8SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookuptype-8-chained-contexts-positioning-subtable
         [Test]
-        public void ChainedContextsPositioning_Format1_Works()
+        public async Task ChainedContextsPositioning_Format1_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType8Format1;
@@ -389,23 +392,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType8SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookuptype-8-chained-contexts-positioning-subtable
         [Test]
-        public void ChainedContextsPositioning_Format2_Works()
+        public async Task ChainedContextsPositioning_Format2_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType8Format2;
@@ -428,23 +431,23 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         // LookupType8SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookuptype-8-chained-contexts-positioning-subtable
         [Test]
-        public void ChainedContextsPositioning_Format3_Works()
+        public async Task ChainedContextsPositioning_Format3_Works()
         {
             // arrange
             string fontFile = TestFonts.GposLookupType8Format3;
@@ -467,21 +470,21 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
         [Test]
-        public void MarkAnchoring_Works()
+        public async Task MarkAnchoring_Works()
         {
             // arrange
             string fontFile = TestFonts.TimesNewRomanFile;
@@ -501,22 +504,22 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
                 // NET FX requires lower precision
-                CompareRectangle(expectedFontRectangles[i], renderer.GlyphRects[i], 3);
+                await CompareRectangle(expectedFontRectangles[i], renderer.GlyphRects[i], 3);
             }
         }
 
         [Test]
-        public void MarkToMarkAttachment_Works()
+        public async Task MarkToMarkAttachment_Works()
         {
             // arrange
             string fontFile = TestFonts.MeQuranFile;
@@ -537,33 +540,33 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
-            Assert.Equal(expectedFontRectangles.Length, renderer.GlyphRects.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
+            await Assert.That(renderer.GlyphRects.Count).IsEqualTo(expectedFontRectangles.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
 
             for (int i = 0; i < expectedFontRectangles.Length; i++)
             {
-                CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
+                await CompareRectangleExact(expectedFontRectangles[i], renderer.GlyphRects[i]);
             }
         }
 
-        private static void CompareRectangle(FontRectangle expected, FontRectangle actual, int precision = 4)
+        private static async Task CompareRectangle(FontRectangle expected, FontRectangle actual, int precision = 4)
         {
-            Assert.Equal(expected.X, actual.X, precision);
-            Assert.Equal(expected.Y, actual.Y, precision);
-            Assert.Equal(expected.Width, actual.Width, precision);
-            Assert.Equal(expected.Height, actual.Height, precision);
+            await Assert.That(Math.Round(actual.X, precision)).IsEqualTo(Math.Round(expected.X, precision));
+            await Assert.That(Math.Round(actual.Y, precision)).IsEqualTo(Math.Round(expected.Y, precision));
+            await Assert.That(Math.Round(actual.Width, precision)).IsEqualTo(Math.Round(expected.Width, precision));
+            await Assert.That(Math.Round(actual.Height, precision)).IsEqualTo(Math.Round(expected.Height, precision));
         }
 
-        private static void CompareRectangleExact(FontRectangle expected, FontRectangle actual)
+        private static async Task CompareRectangleExact(FontRectangle expected, FontRectangle actual)
         {
-            Assert.Equal(expected.X, actual.X);
-            Assert.Equal(expected.Y, actual.Y);
-            Assert.Equal(expected.Width, actual.Width);
-            Assert.Equal(expected.Height, actual.Height);
+            await Assert.That(actual.X).IsEqualTo(expected.X);
+            await Assert.That(actual.Y).IsEqualTo(expected.Y);
+            await Assert.That(actual.Width).IsEqualTo(expected.Width);
+            await Assert.That(actual.Height).IsEqualTo(expected.Height);
         }
 
         private static ushort ReadFontUpem(string fileName)

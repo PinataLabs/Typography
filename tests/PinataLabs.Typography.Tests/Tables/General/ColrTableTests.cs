@@ -2,8 +2,10 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.Colr;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 using static PinataLabs.Typography.Tests.WriterExtensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
@@ -11,19 +13,19 @@ namespace PinataLabs.Typography.Tests.Tables.General
     public class ColrTableTests
     {
         [Test]
-        public void ShouldReturnNullWhenTableCouldNotBeFound()
+        public async Task ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                Assert.Null(ColrTable.Load(new FontReader(stream)));
+                await Assert.That(ColrTable.Load(new FontReader(stream))).IsNull();
             }
         }
 
         [Test]
-        public void ShouldReturnTableValues()
+        public async Task ShouldReturnTableValues()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
@@ -55,7 +57,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
                 ColrTable tbl = reader.GetTable<ColrTable>();
 
                 System.Span<LayerRecord> layers = tbl.GetLayers(15);
-                Assert.Equal(2, layers.Length);
+                await Assert.That(layers.Length).IsEqualTo(2);
             }
         }
     }

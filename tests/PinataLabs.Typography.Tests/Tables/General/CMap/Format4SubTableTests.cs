@@ -3,18 +3,20 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Linq;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.CMap;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.WellKnownIds;
-
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Enums;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General.CMap
 {
     public class Format4SubTableTests
     {
         [Test]
-        public void LoadFormat4()
+        public async Task LoadFormat4()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -29,24 +31,24 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
 
             BigEndianBinaryReader reader = writer.GetReader();
             ushort format = reader.ReadUInt16(); // read format before we pass along as that's what the cmap table does
-            Assert.Equal(4, format);
+            await Assert.That(format).IsEqualTo(4);
 
             Format4SubTable table = Format4SubTable.Load(
                 new[] { new EncodingRecord(PlatformIDs.Windows, 2, 0) },
                 reader).Single();
 
-            Assert.Equal(0, table.Language);
-            Assert.Equal(PlatformIDs.Windows, table.Platform);
-            Assert.Equal(2, table.Encoding);
-            Assert.Equal(new ushort[] { 1, 2, 3, 4, 5, 6, 7, 8 }, table.GlyphIds);
+            await Assert.That(table.Language).IsEqualTo(0);
+            await Assert.That(table.Platform).IsEqualTo(PlatformIDs.Windows);
+            await Assert.That(table.Encoding).IsEqualTo(2);
+            await Assert.That(table.GlyphIds).IsEquivalentTo(new ushort[] { 1, 2, 3, 4, 5, 6, 7, 8 }, CollectionOrdering.Matching);
 
-            Assert.Single(table.Segments);
+            await Assert.That(table.Segments).HasSingleItem();
             Format4SubTable.Segment seg = table.Segments[0];
-            Assert.Equal(0, seg.Index);
-            Assert.Equal(1, seg.End);
-            Assert.Equal(2, seg.Start);
-            Assert.Equal(3, seg.Delta);
-            Assert.Equal(4, seg.Offset);
+            await Assert.That(seg.Index).IsEqualTo(0);
+            await Assert.That(seg.End).IsEqualTo(1);
+            await Assert.That(seg.Start).IsEqualTo(2);
+            await Assert.That(seg.Delta).IsEqualTo(3);
+            await Assert.That(seg.Offset).IsEqualTo(4);
         }
 
         [Test]
@@ -55,7 +57,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
         [Arguments(30, 12, true)]
         [Arguments(90, 72, true)]
         [Arguments(500, 0, false)] // not in range
-        public void GetCharacter(int src, int expected, bool expectedFound)
+        public async Task GetCharacter(int src, int expected, bool expectedFound)
         {
             // segCountX2:    8
             // searchRange:   8
@@ -85,8 +87,8 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
             // ushort id = table.GetGlyphId(src);
             bool found = table.TryGetGlyphId(new CodePoint(src), out ushort id);
 
-            Assert.Equal(expected, id);
-            Assert.Equal(expectedFound, found);
+            await Assert.That(id).IsEqualTo(expected);
+            await Assert.That(found).IsEqualTo(expectedFound);
         }
     }
 }

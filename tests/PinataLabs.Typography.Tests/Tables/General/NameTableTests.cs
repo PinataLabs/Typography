@@ -4,16 +4,18 @@
 
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.WellKnownIds;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class NameTableTests
     {
         [Test]
-        public void LoadFormat0()
+        public async Task LoadFormat0()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -31,17 +33,17 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             var table = NameTable.Load(writer.GetReader());
 
-            Assert.Equal("fullname", table.FontName(CultureInfo.InvariantCulture));
-            Assert.Equal("family", table.FontFamilyName(CultureInfo.InvariantCulture));
-            Assert.Equal("subfamily", table.FontSubFamilyName(CultureInfo.InvariantCulture));
-            Assert.Equal("id", table.Id(CultureInfo.InvariantCulture));
-            Assert.Equal("copyright", table.GetNameById(CultureInfo.InvariantCulture, KnownNameIds.CopyrightNotice));
-            Assert.Equal("other1", table.GetNameById(CultureInfo.InvariantCulture, 90));
-            Assert.Equal("other2", table.GetNameById(CultureInfo.InvariantCulture, 91));
+            await Assert.That(table.FontName(CultureInfo.InvariantCulture)).IsEqualTo("fullname");
+            await Assert.That(table.FontFamilyName(CultureInfo.InvariantCulture)).IsEqualTo("family");
+            await Assert.That(table.FontSubFamilyName(CultureInfo.InvariantCulture)).IsEqualTo("subfamily");
+            await Assert.That(table.Id(CultureInfo.InvariantCulture)).IsEqualTo("id");
+            await Assert.That(table.GetNameById(CultureInfo.InvariantCulture, KnownNameIds.CopyrightNotice)).IsEqualTo("copyright");
+            await Assert.That(table.GetNameById(CultureInfo.InvariantCulture, 90)).IsEqualTo("other1");
+            await Assert.That(table.GetNameById(CultureInfo.InvariantCulture, 91)).IsEqualTo("other2");
         }
 
         [Test]
-        public void LoadFormat1()
+        public async Task LoadFormat1()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -64,27 +66,27 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             var table = NameTable.Load(writer.GetReader());
 
-            Assert.Equal("fullname", table.FontName(CultureInfo.InvariantCulture));
-            Assert.Equal("family", table.FontFamilyName(CultureInfo.InvariantCulture));
-            Assert.Equal("subfamily", table.FontSubFamilyName(CultureInfo.InvariantCulture));
-            Assert.Equal("id", table.Id(CultureInfo.InvariantCulture));
-            Assert.Equal("copyright", table.GetNameById(CultureInfo.InvariantCulture, KnownNameIds.CopyrightNotice));
-            Assert.Equal("other1", table.GetNameById(CultureInfo.InvariantCulture, 90));
-            Assert.Equal("other2", table.GetNameById(CultureInfo.InvariantCulture, 91));
+            await Assert.That(table.FontName(CultureInfo.InvariantCulture)).IsEqualTo("fullname");
+            await Assert.That(table.FontFamilyName(CultureInfo.InvariantCulture)).IsEqualTo("family");
+            await Assert.That(table.FontSubFamilyName(CultureInfo.InvariantCulture)).IsEqualTo("subfamily");
+            await Assert.That(table.Id(CultureInfo.InvariantCulture)).IsEqualTo("id");
+            await Assert.That(table.GetNameById(CultureInfo.InvariantCulture, KnownNameIds.CopyrightNotice)).IsEqualTo("copyright");
+            await Assert.That(table.GetNameById(CultureInfo.InvariantCulture, 90)).IsEqualTo("other1");
+            await Assert.That(table.GetNameById(CultureInfo.InvariantCulture, 91)).IsEqualTo("other2");
         }
 
         [Test]
-        public void ShouldThrowExceptionWhenTableCouldNotBeFound()
+        public async Task ShouldThrowExceptionWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                InvalidFontTableException exception = Assert.Throws<InvalidFontTableException>(
-                    () => NameTable.Load(new FontReader(stream)));
+                InvalidFontTableException exception = await Assert.That(
+                    () => NameTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-                Assert.Equal("name", exception.Table);
+                await Assert.That(exception.Table).IsEqualTo("name");
             }
         }
     }

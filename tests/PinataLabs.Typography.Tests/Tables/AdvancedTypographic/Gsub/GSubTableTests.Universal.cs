@@ -2,7 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
@@ -51,15 +53,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u1b13\u1b44\u1b1b\u1b39", new int[] { 23, 137, 61 })]
         [Arguments("\u1b13\u1b44\u1b31\u1b3a", new int[] { 23, 159, 62 })]
         [Arguments("\u1b13\u1b44\u1b45\u1b38", new int[] { 23, 162, 60 })]
-        public void CanShapeBalineseText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeBalineseText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(BalineseFontTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
     }

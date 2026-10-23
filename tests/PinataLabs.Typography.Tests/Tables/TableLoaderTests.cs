@@ -6,9 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables;
-
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables
 {
@@ -31,34 +32,34 @@ namespace PinataLabs.Typography.Tests.Tables
 
         [Test]
         [MethodDataSource(nameof(RegisterableTableTypes))]
-        public void AllNamedTablesAreRegistered(Type type, string name)
+        public async Task AllNamedTablesAreRegistered(Type type, string name)
         {
             var tl = new TableLoader();
-            Assert.Contains(type, tl.RegisteredTypes());
-            Assert.Equal(name, tl.GetTag(type));
+            await Assert.That(tl.RegisteredTypes()).Contains(type);
+            await Assert.That(tl.GetTag(type)).IsEqualTo(name);
         }
 
         [Test]
-        public void DefaultIsNotNull() => Assert.NotNull(TableLoader.Default);
+        public async Task DefaultIsNotNull() => await Assert.That(TableLoader.Default).IsNotNull();
 
         [Test]
-        public void TryingToLoadUnregisteredTagReturnsUnknownTable()
+        public async Task TryingToLoadUnregisteredTagReturnsUnknownTable()
         {
             var loader = new TableLoader();
 
             string tag = Guid.NewGuid().ToString();
             Table result = loader.Load(tag, null);
 
-            UnknownTable table = Assert.IsType<UnknownTable>(result);
-            Assert.Equal(tag, table.Name);
+            UnknownTable table = await Assert.That(result).IsTypeOf<UnknownTable>();
+            await Assert.That(table.Name).IsEqualTo(tag);
         }
 
         [Test]
-        public void NullForUnknownTypes()
+        public async Task NullForUnknownTypes()
         {
             var loader = new TableLoader();
             string tag = loader.GetTag(typeof(TableLoaderTests));
-            Assert.Null(tag);
+            await Assert.That(tag).IsNull();
         }
     }
 }

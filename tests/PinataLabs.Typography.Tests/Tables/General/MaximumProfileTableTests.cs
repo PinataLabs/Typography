@@ -3,25 +3,27 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.IO;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class MaximumProfileTableTests
     {
         [Test]
-        public void ShouldThrowExceptionWhenTableCouldNotBeFound()
+        public async Task ShouldThrowExceptionWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
 
             using (MemoryStream stream = writer.GetStream())
             {
-                InvalidFontTableException exception = Assert.Throws<InvalidFontTableException>(
-                    () => MaximumProfileTable.Load(new FontReader(stream)));
+                InvalidFontTableException exception = await Assert.That(
+                    () => MaximumProfileTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-                Assert.Equal("maxp", exception.Table);
+                await Assert.That(exception.Table).IsEqualTo("maxp");
             }
         }
     }
