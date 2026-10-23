@@ -12,7 +12,7 @@ Issues and specs for this repo live as GitHub issues in **`PinataLabs/Typography
 - **Apply / remove labels**: `gh issue edit -R PinataLabs/Typography <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close -R PinataLabs/Typography <number> --comment "..."`
 
-**Always pass `-R PinataLabs/Typography`** (or use `repos/PinataLabs/Typography/...` with `gh api`). Do not infer the repo from `git remote -v`: this clone's remotes (`origin` = jafin/Fonts, `upstream` = SixLabors/Fonts) are not where issues are tracked.
+**Always pass `-R PinataLabs/Typography`** (or use `repos/PinataLabs/Typography/...` with `gh api`). Do not infer the repo from `git remote -v`: a clone may have other remotes (personal forks, the pre-fork upstream), and those are not where issues are tracked.
 
 ## Pull requests as a triage surface
 
