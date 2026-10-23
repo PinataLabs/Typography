@@ -4,8 +4,6 @@
 
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables
 {

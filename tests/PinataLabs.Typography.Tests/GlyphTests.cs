@@ -13,8 +13,6 @@ using PinataLabs.Typography.Tables.TrueType;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Tests.Fakes;
 using PinataLabs.Typography.Unicode;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {

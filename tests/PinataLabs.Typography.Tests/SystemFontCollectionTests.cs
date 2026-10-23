@@ -7,9 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using TUnit.Assertions;
 using TUnit.Assertions.Enums;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {

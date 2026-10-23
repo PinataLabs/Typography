@@ -8,8 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core.Interfaces;
 
 namespace PinataLabs.Typography.Tests.Unicode

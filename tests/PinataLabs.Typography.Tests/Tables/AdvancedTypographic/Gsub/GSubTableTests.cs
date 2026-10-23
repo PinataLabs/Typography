@@ -5,8 +5,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {

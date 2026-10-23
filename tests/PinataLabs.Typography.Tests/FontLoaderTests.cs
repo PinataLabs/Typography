@@ -7,8 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {

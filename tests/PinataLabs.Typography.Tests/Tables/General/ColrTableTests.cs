@@ -4,8 +4,6 @@
 
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.Colr;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 using static PinataLabs.Typography.Tests.WriterExtensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General

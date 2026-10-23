@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {

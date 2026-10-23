@@ -28,12 +28,6 @@
     <PackageVersion Include="Pegasus" Version="4.1.0" />
     <PackageVersion Include="SkiaSharp" Version="4.153.1" />
     <PackageVersion Include="TUnit" Version="1.76.0" />
-    <!--
-      The standalone xUnit assertion library (no xUnit framework or runner).
-      Temporary: the test assertions still use it until they move to TUnit
-      assertions (#13, #14, #15). Remove it then.
-    -->
-    <PackageVersion Include="xunit.assert" Version="2.9.3" />
   </ItemGroup>
 
 </Project>

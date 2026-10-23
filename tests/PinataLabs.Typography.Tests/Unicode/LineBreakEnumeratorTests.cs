@@ -10,8 +10,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core.Interfaces;
 
 namespace PinataLabs.Typography.Tests.Unicode

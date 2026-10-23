@@ -7,8 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 {

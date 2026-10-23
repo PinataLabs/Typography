@@ -5,8 +5,6 @@
 using System.Globalization;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tests.Fakes;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
