@@ -2,8 +2,8 @@
 <Project>
 
   <!--
-    Vendored from SixLabors/SharedInfrastructure (Apache-2.0) at commit 33cb12ca,
-    msbuild/targets/SixLabors.Src.targets, and modified by PinataLabs.
+    Vendored (Apache-2.0) from SharedInfrastructure at commit 33cb12ca and modified
+    by PinataLabs. NOTICE lists the upstream repository and file path.
 
     The upstream target that copied .editorconfig, .gitattributes and codecov.yml
     from the submodule to the repository root is gone: those files now live in

@@ -1,139 +1,97 @@
-<h1 align="center">
+# PinataLabs.Typography
 
-<img src="https://raw.githubusercontent.com/SixLabors/Branding/main/icons/fonts/sixlabors.fonts.512.png" alt="SixLabors.Fonts" width="256"/>
-<br/>
-SixLabors.Fonts
-</h1>
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-<div align="center">
+PinataLabs.Typography is a cross-platform .NET library that loads fonts and lays out and measures text. It is written in C# and has no native dependencies.
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/SixLabors/Fonts/build-and-test.yml?branch=main)](https://github.com/SixLabors/Fonts/actions)
-[![codecov](https://codecov.io/gh/SixLabors/Fonts/branch/main/graph/badge.svg)](https://codecov.io/gh/SixLabors/Fonts)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+## Features
 
-[![GitHub issues](https://img.shields.io/github/issues/SixLabors/Fonts.svg)](https://github.com/SixLabors/Fonts/issues)
-[![GitHub stars](https://img.shields.io/github/stars/SixLabors/Fonts.svg)](https://github.com/SixLabors/Fonts/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/SixLabors/Fonts.svg)](https://github.com/SixLabors/Fonts/network)
+- Read font descriptions: name, family, subfamily and other string metadata.
+- Load OpenType fonts with CFF1, CFF2 and TrueType outlines.
+- Load TrueType fonts and TrueType collections (`.ttc`).
+- Load [WOFF](https://www.w3.org/Submission/WOFF/) and [WOFF2](https://www.w3.org/TR/WOFF2) fonts.
+- Load all compatible fonts installed on the machine (Windows, Linux and macOS).
+- Line breaking based on [UAX #14](https://www.unicode.org/reports/tr14/).
+- Left-to-right, right-to-left and bidirectional text.
+- Ligatures, and the OpenType glyph substitution ([GSUB](https://learn.microsoft.com/typography/opentype/spec/gsub)) and glyph positioning ([GPOS](https://learn.microsoft.com/typography/opentype/spec/gpos)) features.
+- Measure the size, advance and bounds of laid-out text.
 
-</div>
+## Requirements
 
-**SixLabors.Fonts** is a new cross-platform font loading and drawing library.
+- The library targets `net8.0`, `net10.0` and `net11.0`.
+- To build the repository, you must install the **.NET 11 SDK, RC2 or later** (`11.0.100-rc.2`). `global.json` pins this SDK. If it is not installed, `dotnet build` stops with an SDK-not-found error.
 
-## License
+## Install
 
-- Fonts is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0)
-- An alternative Commercial Support License can be purchased **for projects and applications requiring support**.
-Please visit https://sixlabors.com/pricing for details.
-
-## Support Six Labors
-
-Support the efforts of the development of the Six Labors projects. 
- - [Purchase a Commercial Support License :heart:](https://sixlabors.com/pricing/)
- - [Become a sponsor via GitHub Sponsors :heart:]( https://github.com/sponsors/SixLabors)
- - [Become a sponsor via Open Collective :heart:](https://opencollective.com/sixlabors)
-
-## Documentation
-
-- [Detailed documentation](https://sixlabors.github.io/docs/) for the Fonts API is available. This includes additional conceptual documentation to help you get started.
-- Our [Samples Repository](https://github.com/SixLabors/Samples/tree/main/ImageSharp) is also available containing buildable code samples demonstrating common activities.
-
-## Questions
-
-- Do you have questions? We are happy to help! Please [join our Discussions Forum](https://github.com/SixLabors/Fonts/discussions/category_choices).
-- Please read our [Contribution Guide](https://github.com/SixLabors/Fonts/blob/main/.github/CONTRIBUTING.md) before opening issues or pull requests!
-
-## Code of Conduct
-This project has adopted the code of conduct defined by the [Contributor Covenant](https://contributor-covenant.org/) to clarify expected behavior in our community.
-For more information, see the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
-
-## Installation
-
-Install stable releases via Nuget; development releases are available via Feedz.io.
-
-| Package Name                   | Release (NuGet) | Nightly (Feedz.io) |
-|--------------------------------|-----------------|-----------------|
-| `SixLabors.Fonts`         | [![NuGet](https://img.shields.io/nuget/v/SixLabors.Fonts.svg)](https://www.nuget.org/packages/SixLabors.Fonts/) | [![feedz.io](https://img.shields.io/badge/endpoint.svg?url=https%3A%2F%2Ff.feedz.io%2Fsixlabors%2Fsixlabors%2Fshield%2FSixLabors.Fonts%2Flatest)](https://f.feedz.io/sixlabors/sixlabors/nuget/index.json) |
-
-## Manual build
-
-If you prefer, you can compile Fonts yourself (please do and help!)
-
-- Using [Visual Studio 2019](https://visualstudio.microsoft.com/vs/)
-  - Make sure you have the latest version installed
-  - Make sure you have [the .NET Core 3.1 SDK](https://www.microsoft.com/net/core#windows) installed
-
-Alternatively, you can work from command line and/or with a lightweight editor on **both Linux/Unix and Windows**:
-
-- [Visual Studio Code](https://code.visualstudio.com/) with [C# Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.csharp)
-- [.NET Core](https://www.microsoft.com/net/core#linuxubuntu)
-
-To clone Fonts locally, click the "Clone in [YOUR_OS]" button above or run the following git commands:
+The package is not yet published to NuGet. To use the library, build it from source:
 
 ```bash
-git clone https://github.com/SixLabors/Fonts
+git clone https://github.com/PinataLabs/Typography
+cd Typography
+dotnet build PinataLabs.Typography.slnx -c Release
 ```
 
-If working with Windows please ensure that you have enabled log file paths in git (run as Administrator).
+Then add a project reference to `src/PinataLabs.Typography/PinataLabs.Typography.csproj`, or create a local package with `dotnet pack src/PinataLabs.Typography -c Release` and install `PinataLabs.Typography` from that folder.
 
-```bash
-git config --system core.longpaths true
-```
+## Quick start
 
-### Submodules
+### Read a font description
 
-This repository contains [git submodules](https://blog.github.com/2016-02-01-working-with-submodules/). To add the submodules to the project, navigate to the repository root and type:
+```csharp
+using System.Globalization;
+using PinataLabs.Typography;
 
-``` bash
-git submodule update --init --recursive
-```
-
-### Features
-- Reading font description (name, family, subname etc plus other string metadata).
-- Loading OpenType fonts with with CFF1 and True Type outlines.
-- Loading True Type fonts.
-- Loading [WOFF fonts](https://www.w3.org/Submission/WOFF/).
-- Loading [WOFF2 fonts](https://www.w3.org/TR/WOFF2).
-- Load all compatible fonts from local machine store.
-- Suppord for line breaking based on [UAX 14](https://www.unicode.org/reports/tr14/)
-- Support for rendering left to right, right to left and bidirectional text.
-- Support for ligatures.
-- Support for advanced OpenType features glyph substitution ([GSUB](https://docs.microsoft.com/en-us/typography/opentype/spec/gsub)) and glyph positioning ([GPOS](https://docs.microsoft.com/en-us/typography/opentype/spec/gpos))
-
-## API Examples
-
-### Read font description
-
-```c#
-FontDescription description = null;
-using(var fs = File.OpenRead("Font.ttf")){
-    description = FontDescription.Load(fs); // once it has loaded the data the stream is no longer required and can be disposed of
-}
-
+FontDescription description = FontDescription.LoadDescription("path/to/font.ttf");
 string name = description.FontName(CultureInfo.InvariantCulture);
-
 ```
 
-### Populating a font collection
+### Load fonts into a collection
 
-```c#
-FontCollection fonts = new FontCollection();
-FontFamily font1 = fonts.Add("./path/to/font1.ttf");
-FontFamily font2 = fonts.Add("./path/to/font2.woff");
+```csharp
+using PinataLabs.Typography;
 
+FontCollection fonts = new();
+FontFamily family = fonts.Add("path/to/font.ttf");
+fonts.Add("path/to/other-font.woff2");
+
+Font font = family.CreateFont(12);
 ```
 
-### How can you help?
+### Use a system font
 
-Please... Spread the word, contribute algorithms, submit performance improvements, unit tests.
+```csharp
+using PinataLabs.Typography;
 
-### Projects using SixLabors.Fonts
+if (SystemFonts.TryGet("Arial", out FontFamily arial))
+{
+    Font font = arial.CreateFont(16);
+}
+```
 
-* [SixLabors.ImageSharp](https://github.com/jimBobSquarePants/ImageSharp) - cross platform, fully managed, image manipulation and drawing library.
+### Measure text
 
-### The SixLabors.Fonts Team
+```csharp
+using PinataLabs.Typography;
 
-- [Scott Williams](https://github.com/tocsoft)
-- [Dirk Lemstra](https://github.com/dlemstra)
-- [Anton Firsov](https://github.com/antonfirsov)
-- [James Jackson-South](https://github.com/jimbobsquarepants)
-- [Brian Popow](https://github.com/brianpopow)
+TextOptions options = new(font);
+FontRectangle size = TextMeasurer.MeasureSize("Hello, world!", options);
+```
+
+## Build and test
+
+```bash
+dotnet build PinataLabs.Typography.slnx -c Release
+dotnet test PinataLabs.Typography.slnx -c Release
+```
+
+The tests run on `net8.0`, `net10.0` and `net11.0`, so you must install those runtimes.
+
+## Contributing
+
+Read the [contribution guide](.github/CONTRIBUTING.md) before you open an issue or a pull request. Report bugs and suggest changes in [GitHub Issues](https://github.com/PinataLabs/Typography/issues). This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License and attribution
+
+PinataLabs.Typography is licensed under the [Apache License, Version 2.0](LICENSE).
+
+This project is derived from [SixLabors.Fonts](https://github.com/SixLabors/Fonts), Copyright (c) Six Labors, licensed under the Apache License, Version 2.0. It was forked at commit `32bef429` and has been modified by PinataLabs. It also includes build files from SixLabors SharedInfrastructure. PinataLabs.Typography is not affiliated with or endorsed by Six Labors. See [NOTICE](NOTICE) for the full attribution.
