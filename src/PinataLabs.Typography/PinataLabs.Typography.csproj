@@ -21,5 +21,15 @@
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
   </ItemGroup>
 
+  <!--
+    Public API baseline. The build fails (RS0016/RS0017) when the public surface differs from these files.
+    A public API change needs an approved proposal, its own commit, a PublicAPI.Unshipped.txt change and a CHANGELOG.md entry.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
   <Import Project="..\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
 </Project>
