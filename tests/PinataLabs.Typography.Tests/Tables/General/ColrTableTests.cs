@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class ColrTableTests
     {
-        [Fact]
+        [Test]
         public void ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
@@ -21,7 +21,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReturnTableValues()
         {
             var writer = new BigEndianBinaryWriter();

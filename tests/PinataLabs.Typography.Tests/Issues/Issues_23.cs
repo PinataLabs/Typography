@@ -7,7 +7,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_23
     {
-        [Fact]
+        [Test]
         public void BleadingFonts()
         {
             // wendy one returns wrong points for 'o'

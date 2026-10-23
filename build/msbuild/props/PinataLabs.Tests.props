@@ -19,10 +19,11 @@
     Versions are declared centrally in Directory.Packages.props.
   -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageReference Include="xunit" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="coverlet.collector" PrivateAssets="All" Condition="'$(IsCodeCoverage)'=='true'"/>
+    <!--
+      TUnit runs on Microsoft.Testing.Platform (selected in global.json under "test").
+      It brings its own code coverage and TRX report extensions.
+    -->
+    <PackageReference Include="TUnit" />
   </ItemGroup>
 
 </Project>

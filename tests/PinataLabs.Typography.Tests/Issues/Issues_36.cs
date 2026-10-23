@@ -9,12 +9,12 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_36
     {
-        [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(3)]
-        [InlineData(4)]
-        [InlineData(5)]
+        [Test]
+        [Arguments(1)]
+        [Arguments(2)]
+        [Arguments(3)]
+        [Arguments(4)]
+        [Arguments(5)]
         public void TextWidthForTabOnlyTextShouldBeSingleTabWidthMultipliedByTabCount(int tabCount)
         {
             Font font = CreateFont("\t x");
@@ -26,12 +26,12 @@ namespace PinataLabs.Typography.Tests.Issues
             Assert.Equal(tabWidth.Width * tabCount, tabCountWidth.Width, 2);
         }
 
-        [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(3)]
-        [InlineData(4)]
-        [InlineData(5)]
+        [Test]
+        [Arguments(1)]
+        [Arguments(2)]
+        [Arguments(3)]
+        [Arguments(4)]
+        [Arguments(5)]
         public void TextWidthForTabOnlyTextShouldBeSingleTabWidthMultipliedByTabCountMinusX(int tabCount)
         {
             Font font = CreateFont("\t x");

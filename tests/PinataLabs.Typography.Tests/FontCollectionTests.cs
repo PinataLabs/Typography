@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontCollectionTests
     {
-        [Fact]
+        [Test]
         public void AddViaPathReturnsDescription()
         {
             var sut = new FontCollection();
@@ -23,7 +23,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(FontStyle.Regular, description.Style);
         }
 
-        [Fact]
+        [Test]
         public void AddViaPathAddFontFileInstances()
         {
             var sut = new FontCollection();
@@ -37,7 +37,7 @@ namespace PinataLabs.Typography.Tests
             });
         }
 
-        [Fact]
+        [Test]
         public void AddViaStreamReturnsDescription()
         {
             var sut = new FontCollection();
@@ -49,7 +49,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(FontStyle.Regular, description.Style);
         }
 
-        [Fact]
+        [Test]
         public void NotFoundThrowsCorrectException()
         {
             const string invalid = "qwerty";
@@ -60,7 +60,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Empty(ex.SearchDirectories);
         }
 
-        [Fact]
+        [Test]
         public void CanAddSystemFonts()
         {
             var collection = new FontCollection();
@@ -73,7 +73,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(collection.Families.Count(), SystemFonts.Families.Count());
         }
 
-        [Fact]
+        [Test]
         public void CanAddSystemFontsWithFilter()
         {
             var collection = new FontCollection();

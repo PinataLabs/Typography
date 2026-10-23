@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
 {
     public class Format4SubTableTests
     {
-        [Fact]
+        [Test]
         public void LoadFormat4()
         {
             var writer = new BigEndianBinaryWriter();
@@ -48,12 +48,12 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
             Assert.Equal(4, seg.Offset);
         }
 
-        [Theory]
-        [InlineData(10, 1, true)]
-        [InlineData(20, 11, true)]
-        [InlineData(30, 12, true)]
-        [InlineData(90, 72, true)]
-        [InlineData(500, 0, false)] // not in range
+        [Test]
+        [Arguments(10, 1, true)]
+        [Arguments(20, 11, true)]
+        [Arguments(30, 12, true)]
+        [Arguments(90, 72, true)]
+        [Arguments(500, 0, false)] // not in range
         public void GetCharacter(int src, int expected, bool expectedFound)
         {
             // segCountX2:    8

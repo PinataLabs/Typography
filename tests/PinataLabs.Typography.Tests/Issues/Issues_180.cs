@@ -7,7 +7,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_180
     {
-        [Fact]
+        [Test]
         public void CorrectlySetsHeightMetrics()
         {
             // Whitney-book has invalid hhea values.

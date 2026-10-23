@@ -7,15 +7,15 @@ namespace PinataLabs.Typography.Tests
 {
     public class Accents
     {
-        [Theory]
-        [InlineData('á')]
-        [InlineData('é')]
-        [InlineData('í')]
-        [InlineData('ó')]
-        [InlineData('ú')]
-        [InlineData('ç')]
-        [InlineData('ã')]
-        [InlineData('õ')]
+        [Test]
+        [Arguments('á')]
+        [Arguments('é')]
+        [Arguments('í')]
+        [Arguments('ó')]
+        [Arguments('ú')]
+        [Arguments('ç')]
+        [Arguments('ã')]
+        [Arguments('õ')]
         public void MeasuringAccentedCharacterDoesNotThrow(char c)
         {
             FontFamily sans = new FontCollection().Add(TestFonts.OpenSansFile);
@@ -24,15 +24,15 @@ namespace PinataLabs.Typography.Tests
             FontRectangle size = TextMeasurer.MeasureSize(c.ToString(), new TextOptions(font));
         }
 
-        [Theory]
-        [InlineData('á')]
-        [InlineData('é')]
-        [InlineData('í')]
-        [InlineData('ó')]
-        [InlineData('ú')]
-        [InlineData('ç')]
-        [InlineData('ã')]
-        [InlineData('õ')]
+        [Test]
+        [Arguments('á')]
+        [Arguments('é')]
+        [Arguments('í')]
+        [Arguments('ó')]
+        [Arguments('ú')]
+        [Arguments('ç')]
+        [Arguments('ã')]
+        [Arguments('õ')]
         public void MeasuringWordWithAccentedCharacterDoesNotThrow(char c)
         {
             FontFamily sans = new FontCollection().Add(TestFonts.OpenSansFile);

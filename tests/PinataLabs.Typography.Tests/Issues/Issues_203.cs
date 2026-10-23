@@ -7,7 +7,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_203
     {
-        [Fact]
+        [Test]
         public void CanParseVersion1Font()
         {
             var font = FontDescription.LoadDescription(TestFonts.Version1Font);

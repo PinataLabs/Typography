@@ -13,14 +13,14 @@ namespace PinataLabs.Typography.Tests
     {
         private static readonly SystemFontCollection SysFontCollection = new();
 
-        [Fact]
+        [Test]
         public void SystemFonts_IsPopulated()
         {
             Assert.True(SystemFonts.Collection.Families.Any());
             Assert.Equal(SystemFonts.Collection.Families, SystemFonts.Families);
         }
 
-        [Fact]
+        [Test]
         public void SystemFonts_CanGetFont()
         {
             FontFamily family = SystemFonts.Families.First();
@@ -32,7 +32,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(family, family2);
         }
 
-        [Fact]
+        [Test]
         public void SystemFonts_CanGetFont_ByCulture()
         {
             FontFamily family = SystemFonts.Families.First();
@@ -46,7 +46,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Contains(family, SystemFonts.GetByCulture(family.Culture));
         }
 
-        [Fact]
+        [Test]
         public void SystemFonts_CanCreateFont()
         {
             FontFamily family = SystemFonts.Families.First();
@@ -58,7 +58,7 @@ namespace PinataLabs.Typography.Tests
             Assert.NotNull(font);
         }
 
-        [Fact]
+        [Test]
         public void SystemFonts_CanCreateFont_WithCulture()
         {
             FontFamily family = SystemFonts.Families.First();
@@ -70,7 +70,7 @@ namespace PinataLabs.Typography.Tests
             Assert.NotNull(font);
         }
 
-        [Fact]
+        [Test]
         public void CanEnumerateSystemFontMetrics()
         {
             IEnumerator<FontMetrics> enumerator = ((IReadOnlyFontMetricsCollection)SysFontCollection).GetEnumerator();
@@ -85,7 +85,7 @@ namespace PinataLabs.Typography.Tests
             Assert.True(count > 0);
         }
 
-        [Fact]
+        [Test]
         public void CanEnumerateNonGenericSystemFontMetrics()
         {
             System.Collections.IEnumerator enumerator = ((IReadOnlyFontMetricsCollection)SysFontCollection).GetEnumerator();
@@ -100,7 +100,7 @@ namespace PinataLabs.Typography.Tests
             Assert.True(count > 0);
         }
 
-        [Fact]
+        [Test]
         public void CanGetAllMetricsByCulture()
         {
             var collection = (IReadOnlyFontMetricsCollection)SysFontCollection;
@@ -122,7 +122,7 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void CanGetAllStylesByCulture()
         {
             FontFamily family = SysFontCollection.Families.First();
@@ -132,8 +132,9 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(family.GetAvailableStyles(), styles);
         }
 
-        [Fact]
+        [Test]
         [AppContextSwitch("Switch.PinataLabs.Typography.DoNotUseNativeSystemFontsEnumeration", true)]
+        [NotInParallel]
         public void SystemFonts_FontFamilyNotFound_ThrowsWithSearchDirectories()
         {
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
@@ -163,7 +164,7 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void SystemFonts_FontFamilyNotFound_ThrowsWithoutSearchDirectories()
         {
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
@@ -176,8 +177,9 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         [AppContextSwitch("Switch.SixLabors.Fonts.DoNotUseNativeSystemFontsEnumeration", true)]
+        [NotInParallel]
         public void SystemFonts_LegacySwitchName_IsIgnored()
         {
             // The pre-rebrand switch name is not honoured: native enumeration stays in use on macOS.

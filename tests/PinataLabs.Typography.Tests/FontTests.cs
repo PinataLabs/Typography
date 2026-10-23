@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontTests
     {
-        [Fact]
+        [Test]
         public void FontClass_DefaultFontFamilyThrowsException()
         {
             ArgumentException ex = Assert.Throws<ArgumentException>(
@@ -18,7 +18,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("family", ex.ParamName);
         }
 
-        [Fact]
+        [Test]
         public void FontClass_DefaultFontFamilyWithSizeThrowsException()
         {
             ArgumentException ex = Assert.Throws<ArgumentException>(
@@ -27,7 +27,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("family", ex.ParamName);
         }
 
-        [Fact]
+        [Test]
         public void FontClass_NullFontThrowsException()
         {
             ArgumentNullException ex = Assert.Throws<ArgumentNullException>(
@@ -36,7 +36,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("prototype", ex.ParamName);
         }
 
-        [Fact]
+        [Test]
         public void FontClass_NullWithSizeFontThrowsException()
         {
             ArgumentNullException ex = Assert.Throws<ArgumentNullException>(
@@ -45,7 +45,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("prototype", ex.ParamName);
         }
 
-        [Fact]
+        [Test]
         public void FontClassWithPath_SetProperties()
         {
             var collection = new FontCollection();
@@ -61,7 +61,7 @@ namespace PinataLabs.Typography.Tests
             Assert.NotNull(path);
         }
 
-        [Fact]
+        [Test]
         public void FontClassNoPath_SetProperties()
         {
             var collection = new FontCollection();

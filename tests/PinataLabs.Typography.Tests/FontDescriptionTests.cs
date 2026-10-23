@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FontDescriptionTests
     {
-        [Fact]
+        [Test]
         public void LoadFontDescription()
         {
             var writer = new BigEndianBinaryWriter();
@@ -30,7 +30,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("fam", description.FontFamilyInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontDescription_CultureNamePriority_FirstWindows()
         {
             var usCulture = new CultureInfo(0x0409);
@@ -56,7 +56,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("fam_c1", description.FontFamilyInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontDescription_CultureNamePriority_US()
         {
             var usCulture = new CultureInfo(0x0409);
@@ -85,7 +85,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("fam_us", description.FontFamilyInvariantCulture);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontDescription_CultureNamePriority_ExactMatch()
         {
             var usCulture = new CultureInfo(0x0409);
@@ -114,7 +114,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("fam_c2", description.FontFamily(c2));
         }
 
-        [Fact]
+        [Test]
         public void CanLoadFontCollectionDescriptionsFromPath()
         {
             FontDescription[] descriptions = FontDescription.LoadFontCollectionDescriptions(TestFonts.SimpleTrueTypeCollection);
@@ -134,7 +134,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal(FontStyle.Regular, description.Style);
         }
 
-        [Fact]
+        [Test]
         public void LoadFontDescription_GetNameById()
         {
             var c1 = new CultureInfo(1034); // spanish - international
@@ -162,7 +162,7 @@ namespace PinataLabs.Typography.Tests
             Assert.Equal("fam_c2", description.GetNameById(c2, KnownNameIds.FontFamilyName));
         }
 
-        [Fact]
+        [Test]
         public void ThrowsCorrectExceptionWhenDecodingCollectionFromNonTTCFiles()
             => Assert.Throws<InvalidFontTableException>(() => FontDescription.LoadFontCollectionDescriptions(TestFonts.TwemojiMozillaFile));
     }

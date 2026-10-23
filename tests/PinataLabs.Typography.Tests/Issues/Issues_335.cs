@@ -7,10 +7,10 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_335
     {
-        [Theory]
-        [InlineData(TextAlignment.Start)]
-        [InlineData(TextAlignment.Center)]
-        [InlineData(TextAlignment.End)]
+        [Test]
+        [Arguments(TextAlignment.Start)]
+        [Arguments(TextAlignment.Center)]
+        [Arguments(TextAlignment.End)]
         public void HorizontalAlignmentWorksForSingleLineText(TextAlignment alignment)
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
@@ -34,10 +34,10 @@ namespace PinataLabs.Typography.Tests.Issues
             Assert.Equal(multipleBounds.Location, singleBounds.Location);
         }
 
-        [Theory]
-        [InlineData(TextAlignment.Start)]
-        [InlineData(TextAlignment.Center)]
-        [InlineData(TextAlignment.End)]
+        [Test]
+        [Arguments(TextAlignment.Start)]
+        [Arguments(TextAlignment.Center)]
+        [Arguments(TextAlignment.End)]
         public void VerticalAlignmentWorksForSingleLineText(TextAlignment alignment)
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);

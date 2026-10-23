@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_298
     {
-        [Fact]
+        [Test]
         public void DoesNotThrowOutOfBounds()
         {
             const string content = "Please enter the text";

@@ -144,7 +144,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             new CheckValue(0x110000, 5),
         };
 
-        [Fact]
+        [Test]
         public void Set()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
@@ -156,7 +156,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(666u, builder.Get(0x110000));
         }
 
-        [Fact]
+        [Test]
         public void SetRange()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
@@ -172,7 +172,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(666u, builder.Get(0x110000));
         }
 
-        [Fact]
+        [Test]
         public void SetRangeCompacted()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
@@ -189,7 +189,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(666u, trie.Get(0x110000));
         }
 
-        [Fact]
+        [Test]
         public void SetRangeSerialized()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
@@ -251,8 +251,8 @@ namespace PinataLabs.Typography.Tests.Unicode
             yield return new object[] { TestRanges5, CheckValues5 };
         }
 
-        [Theory]
-        [MemberData(nameof(TestData))]
+        [Test]
+        [MethodDataSource(nameof(TestData))]
         public void RunRangeChecks(TestRange[] testRanges, CheckValue[] checkValues)
         {
             uint initialValue = testRanges[0].Value;

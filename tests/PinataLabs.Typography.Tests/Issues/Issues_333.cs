@@ -7,7 +7,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_333
     {
-        [Fact]
+        [Test]
         public void DoesNotThrowMissingTableException()
         {
             const string text = "文字測試文字測試文字測試文字測試文字測試";

@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class IndexLocationTableTests
     {
-        [Fact]
+        [Test]
         public void ShouldThrowExceptionWhenHeadTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
@@ -26,7 +26,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldThrowExceptionWhenMaximumProfileTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
@@ -51,7 +51,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             }
         }
 
-        [Fact]
+        [Test]
         public void ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

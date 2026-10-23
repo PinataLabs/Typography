@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class OS2TableTests
     {
-        [Fact]
+        [Test]
         public void ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

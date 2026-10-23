@@ -9,36 +9,36 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
     public partial class GSubTableTests
     {
-        [Theory]
-        [InlineData("ا", 139)]
-        [InlineData("ب", 157)]
-        [InlineData("پ", 162)]
-        [InlineData("ت", 167)]
-        [InlineData("ث", 172)]
-        [InlineData("ج", 181)]
-        [InlineData("چ", 185)]
-        [InlineData("ح", 189)]
-        [InlineData("خ", 193)]
-        [InlineData("د", 197)]
-        [InlineData("ز", 207)]
-        [InlineData("ر", 203)]
-        [InlineData("س", 215)]
-        [InlineData("ش", 219)]
-        [InlineData("ص", 223)]
-        [InlineData("ض", 227)]
-        [InlineData("ط", 231)]
-        [InlineData("ع", 239)]
-        [InlineData("غ", 243)]
-        [InlineData("ف", 247)]
-        [InlineData("ق", 264)]
-        [InlineData("ک", 273)]
-        [InlineData("گ", 277)]
-        [InlineData("ل", 281)]
-        [InlineData("م", 287)]
-        [InlineData("ن", 291)]
-        [InlineData("و", 316)]
-        [InlineData("ه", 298)]
-        [InlineData("ی", 335)]
+        [Test]
+        [Arguments("ا", 139)]
+        [Arguments("ب", 157)]
+        [Arguments("پ", 162)]
+        [Arguments("ت", 167)]
+        [Arguments("ث", 172)]
+        [Arguments("ج", 181)]
+        [Arguments("چ", 185)]
+        [Arguments("ح", 189)]
+        [Arguments("خ", 193)]
+        [Arguments("د", 197)]
+        [Arguments("ز", 207)]
+        [Arguments("ر", 203)]
+        [Arguments("س", 215)]
+        [Arguments("ش", 219)]
+        [Arguments("ص", 223)]
+        [Arguments("ض", 227)]
+        [Arguments("ط", 231)]
+        [Arguments("ع", 239)]
+        [Arguments("غ", 243)]
+        [Arguments("ف", 247)]
+        [Arguments("ق", 264)]
+        [Arguments("ک", 273)]
+        [Arguments("گ", 277)]
+        [Arguments("ل", 281)]
+        [Arguments("م", 287)]
+        [Arguments("ن", 291)]
+        [Arguments("و", 316)]
+        [Arguments("ه", 298)]
+        [Arguments("ی", 335)]
         public void RenderArabicCharacters_WithIsolatedForm_Works(string testStr, int expectedGlyphIndex)
         {
             // arrange
@@ -55,7 +55,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType1SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#11-single-substitution-format-1
-        [Fact]
+        [Test]
         public void SingleSubstitution_Works()
         {
             // arrange
@@ -72,7 +72,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
         }
 
-        [Fact]
+        [Test]
         public void ContextualFractions_WithFractionSlash_Works()
         {
             // arrange
@@ -92,7 +92,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void ContextualFractions_WithSlash_Works()
         {
             // arrange
@@ -114,7 +114,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType2SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#21-multiple-substitution-format-1
-        [Fact]
+        [Test]
         public void MultipleSubstitution_Works()
         {
             // arrange
@@ -133,7 +133,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType3SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-3-alternate-substitution-subtable
-        [Fact]
+        [Test]
         public void AlternateSubstitution_Works()
         {
             // arrange
@@ -152,7 +152,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType4SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-3-alternate-substitution-subtable
-        [Fact]
+        [Test]
         public void LigatureSubstitution_Works()
         {
             // arrange
@@ -171,7 +171,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType5SubTable, Format 1.
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-5-contextual-substitution-subtable
-        [Fact]
+        [Test]
         public void ContextualSubstitution_Format1_Works()
         {
             // arrange
@@ -193,7 +193,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType5SubTable, Format 2.
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-5-contextual-substitution-subtable
-        [Fact]
+        [Test]
         public void ContextualSubstitution_Format2_Works()
         {
             // arrange
@@ -215,7 +215,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType5SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-5-contextual-substitution-subtable
-        [Fact]
+        [Test]
         public void ContextualSubstitution_Format3_Works()
         {
             // arrange
@@ -237,7 +237,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType6SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#62-chained-contexts-substitution-format-1-class-based-glyph-contexts
-        [Fact]
+        [Test]
         public void ChainedContextsSubstitution_Format1_Works()
         {
             // arrange
@@ -259,7 +259,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType6SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#62-chained-contexts-substitution-format-2-class-based-glyph-contexts
-        [Fact]
+        [Test]
         public void ChainedContextsSubstitution_Format2_Works()
         {
             // arrange
@@ -281,7 +281,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType6SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#63-chained-contexts-substitution-format-3-coverage-based-glyph-contexts
-        [Fact]
+        [Test]
         public void ChainedContextsSubstitution_Format3_Works()
         {
             // arrange
@@ -303,7 +303,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType6SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#63-chained-contexts-substitution-format-3-coverage-based-glyph-contexts
-        [Fact]
+        [Test]
         public void ChainedContextsSubstitution_Format3_WithCursiveScript_Works()
         {
             // arrange
@@ -325,7 +325,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // LookupType8SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-8-reverse-chaining-contextual-single-substitution-subtable
-        [Fact]
+        [Test]
         public void ReverseChainingContextualSingleSubstitution_Works()
         {
             // arrange
@@ -346,7 +346,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         }
 
         // Related PR: https://github.com/SixLabors/Fonts/pull/248
-        [Fact]
+        [Test]
         public void OldStyleFiguresFeature_Works()
         {
             // arrange
@@ -369,7 +369,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             }
         }
 
-        [Fact]
+        [Test]
         public void BillionLaughsAttackDoesNotThrowException()
         {
             // Arrange

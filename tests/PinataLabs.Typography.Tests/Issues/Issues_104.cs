@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_104
     {
-        [Fact]
+        [Test]
         public void Format4SubTableWithSegmentsHasOffByOneWhenOverflowing()
         {
             Segment[] segments = new[]

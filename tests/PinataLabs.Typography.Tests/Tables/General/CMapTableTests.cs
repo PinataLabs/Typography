@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class CMapTableTests
     {
-        [Fact]
+        [Test]
         public void LoadFormat0()
         {
             var writer = new BigEndianBinaryWriter();
@@ -30,7 +30,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             Assert.Single(format0Tables);
         }
 
-        [Fact]
+        [Test]
         public void ShouldThrowExceptionWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

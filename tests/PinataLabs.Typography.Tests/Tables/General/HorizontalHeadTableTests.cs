@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class HorizontalHeadTableTests
     {
-        [Fact]
+        [Test]
         public void LoadHorizontalHeadTable()
         {
             var writer = new BigEndianBinaryWriter();
@@ -30,7 +30,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
             Assert.Equal(11, tbl.NumberOfHMetrics);
         }
 
-        [Fact]
+        [Test]
         public void ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();

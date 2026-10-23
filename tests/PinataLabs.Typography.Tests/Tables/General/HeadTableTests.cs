@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class HeadTableTests
     {
-        [Fact]
+        [Test]
         public void LoadHead()
         {
             var writer = new BigEndianBinaryWriter();

@@ -17,7 +17,7 @@ namespace PinataLabs.Typography.Tests.Tables
         {
             get
             {
-                TypeInfo tableTypeInfo = typeof(Table).GetTypeInfo();
+                System.Reflection.TypeInfo tableTypeInfo = typeof(Table).GetTypeInfo();
 
                 return
                     typeof(Table).GetTypeInfo()
@@ -28,8 +28,8 @@ namespace PinataLabs.Typography.Tests.Tables
             }
         }
 
-        [Theory]
-        [MemberData(nameof(RegisterableTableTypes))]
+        [Test]
+        [MethodDataSource(nameof(RegisterableTableTypes))]
         public void AllNamedTablesAreRegistered(Type type, string name)
         {
             var tl = new TableLoader();
@@ -37,10 +37,10 @@ namespace PinataLabs.Typography.Tests.Tables
             Assert.Equal(name, tl.GetTag(type));
         }
 
-        [Fact]
+        [Test]
         public void DefaultIsNotNull() => Assert.NotNull(TableLoader.Default);
 
-        [Fact]
+        [Test]
         public void TryingToLoadUnregisteredTagReturnsUnknownTable()
         {
             var loader = new TableLoader();
@@ -52,7 +52,7 @@ namespace PinataLabs.Typography.Tests.Tables
             Assert.Equal(tag, table.Name);
         }
 
-        [Fact]
+        [Test]
         public void NullForUnknownTypes()
         {
             var loader = new TableLoader();

@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_191
     {
-        [Fact]
+        [Test]
         public void CanLoadMacintoshGlyphs()
         {
             Font font = new FontCollection()

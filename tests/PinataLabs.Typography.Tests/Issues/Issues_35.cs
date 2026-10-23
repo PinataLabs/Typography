@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_35
     {
-        [Fact]
+        [Test]
         public void RenderingTabAtStartOrLineTooShort()
         {
             Font font = CreateFont("\t x");
@@ -20,7 +20,7 @@ namespace PinataLabs.Typography.Tests.Issues
             Assert.Equal(tabWidth.Width + xWidth.Width, tabWithXWidth.Width, 2);
         }
 
-        [Fact]
+        [Test]
         public void Rendering2TabsAtStartOfLineTooShort()
         {
             Font font = CreateFont("\t x");
@@ -31,7 +31,7 @@ namespace PinataLabs.Typography.Tests.Issues
             Assert.Equal(tabWidth.Width + xWidth.Width, tabWithXWidth.Width, 2);
         }
 
-        [Fact]
+        [Test]
         public void TwoTabsAreDoubleWidthOfOneTab()
         {
             Font font = CreateFont("\t x");
@@ -42,7 +42,7 @@ namespace PinataLabs.Typography.Tests.Issues
             Assert.Equal(twoTabWidth.Width, tabWidth.Width * 2, 2);
         }
 
-        [Fact]
+        [Test]
         public void TwoTabsAreDoubleWidthOfOneTabMinusXWidth()
         {
             Font font = CreateFont("\t x");

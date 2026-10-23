@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests
     {
         private readonly FontFamily[] families = SystemFonts.Families.ToArray();
 
-        [Fact]
+        [Test]
         public void EqualNullTests()
         {
             FontFamily fontFamily = default;
@@ -24,7 +24,7 @@ namespace PinataLabs.Typography.Tests
             Assert.False(fontFamily.Equals(default));
         }
 
-        [Fact]
+        [Test]
         public void EqualTests()
         {
             FontFamily fontFamily = this.families[0];
@@ -35,7 +35,7 @@ namespace PinataLabs.Typography.Tests
             Assert.True(fontFamily.Equals(fontFamily2));
         }
 
-        [Fact]
+        [Test]
         public void NotEqualTests()
         {
             FontFamily fontFamily = this.families[0];
@@ -46,8 +46,8 @@ namespace PinataLabs.Typography.Tests
             Assert.False(fontFamily.Equals(fontFamily2));
         }
 
-        [Theory]
-        [ClassData(typeof(SystemFontFamiliesTheoryData))]
+        [Test]
+        [MethodDataSource(nameof(SystemFontFamilies))]
         public void HasPathTests(FontFamily family)
         {
             Assert.True(family.TryGetPaths(out IEnumerable<string> familyPaths));
@@ -62,27 +62,18 @@ namespace PinataLabs.Typography.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void Throws_FontException_CreateFont_WhenDefault()
             => Assert.Throws<FontException>(() => default(FontFamily).CreateFont(12F));
 
-        [Fact]
+        [Test]
         public void Throws_FontException_TryGetPath_WhenDefault()
             => Assert.Throws<FontException>(() => default(FontFamily).TryGetPaths(out IEnumerable<string> _));
 
-        [Fact]
+        [Test]
         public void Throws_FontException_TryGetMetrics_WhenDefault()
             => Assert.Throws<FontException>(() => default(FontFamily).TryGetMetrics(FontStyle.Regular, out FontMetrics _));
 
-        private class SystemFontFamiliesTheoryData : TheoryData<FontFamily>
-        {
-            public SystemFontFamiliesTheoryData()
-            {
-                foreach (FontFamily family in SystemFonts.Families)
-                {
-                    this.Add(family);
-                }
-            }
-        }
+        public static IEnumerable<FontFamily> SystemFontFamilies() => SystemFonts.Families;
     }
 }

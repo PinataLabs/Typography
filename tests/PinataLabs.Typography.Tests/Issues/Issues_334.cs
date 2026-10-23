@@ -7,7 +7,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_334
     {
-        [Fact]
+        [Test]
         public void DoesNotSkewCompositeGlyph()
         {
             FontFamily family = new FontCollection().Add(TestFonts.SumanaRegularFile);

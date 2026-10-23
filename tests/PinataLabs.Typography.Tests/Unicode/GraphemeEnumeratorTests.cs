@@ -8,18 +8,16 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using PinataLabs.Typography.Unicode;
+using TUnit.Core.Interfaces;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
     public class GraphemeEnumeratorTests
     {
-        private readonly ITestOutputHelper output;
+        private ITestOutput Output => TestContext.Current!.Output;
 
-        public GraphemeEnumeratorTests(ITestOutputHelper output) => this.output = output;
-
-        [Fact]
+        [Test]
         public void CanEnumerateSpan()
         {
             // Test example taken from.
@@ -36,7 +34,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(9, count);
         }
 
-        [Fact]
+        [Test]
         public void CanEnumerateReadonlySpan()
         {
             // Test example taken from.
@@ -53,7 +51,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(9, count);
         }
 
-        [Fact]
+        [Test]
         public void CanEnumerateInvalidReadonlySpan()
         {
             // The string below contains 2 combining characters then
@@ -70,7 +68,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(4, count);
         }
 
-        [Fact]
+        [Test]
         public void Should_Enumerate_Emoji()
         {
             // https://docs.microsoft.com/en-us/dotnet/standard/base-types/character-encoding-introduction#example-count-char-rune-and-text-element-instances
@@ -87,7 +85,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(1, count);
         }
 
-        [Fact]
+        [Test]
         public void Should_Enumerate_Alpha()
         {
             const string text = "ABCDEFGHIJ";
@@ -103,13 +101,13 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.Equal(10, count);
         }
 
-        [Fact]
+        [Test]
         public void ICUTests() => Assert.True(this.ICUTestsImpl());
 
-        public bool ICUTestsImpl()
+        private bool ICUTestsImpl()
         {
-            this.output.WriteLine("Grapheme Cluster Tests");
-            this.output.WriteLine("----------------------");
+            this.Output.WriteLine("Grapheme Cluster Tests");
+            this.Output.WriteLine("----------------------");
 
             // Read the test file
             string[] lines = File.ReadAllLines(Path.Combine(TestEnvironment.UnicodeTestDataFullPath, "GraphemeBreakTest.txt"));
@@ -212,11 +210,11 @@ namespace PinataLabs.Typography.Tests.Unicode
 
                 if (!pass)
                 {
-                    this.output.WriteLine($"Failed test on line {t.LineNumber}");
-                    this.output.WriteLine($"    Code Points: {string.Join(" ", t.CodePoints)}");
-                    this.output.WriteLine($"Expected Breaks: {string.Join(" ", t.BreakPoints)}");
-                    this.output.WriteLine($"  Actual Breaks: {string.Join(" ", foundBreaks)}");
-                    this.output.WriteLine($"     Char Props: {string.Join(" ", t.CodePoints.Select(x => UnicodeData.GetGraphemeClusterClass(x)))}");
+                    this.Output.WriteLine($"Failed test on line {t.LineNumber}");
+                    this.Output.WriteLine($"    Code Points: {string.Join(" ", t.CodePoints)}");
+                    this.Output.WriteLine($"Expected Breaks: {string.Join(" ", t.BreakPoints)}");
+                    this.Output.WriteLine($"  Actual Breaks: {string.Join(" ", foundBreaks)}");
+                    this.Output.WriteLine($"     Char Props: {string.Join(" ", t.CodePoints.Select(x => UnicodeData.GetGraphemeClusterClass(x)))}");
                     return false;
                 }
             }

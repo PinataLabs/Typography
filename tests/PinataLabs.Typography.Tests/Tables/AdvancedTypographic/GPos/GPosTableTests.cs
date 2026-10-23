@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
     {
         // LookupType1SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-1-single-adjustment-positioning-subtable
-        [Fact]
+        [Test]
         public void SingleAdjustmentPositioning_Format1_Works()
         {
             // arrange
@@ -44,7 +44,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType1SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-1-single-adjustment-positioning-subtable
-        [Fact]
+        [Test]
         public void SingleAdjustmentPositioning_Format2_Works()
         {
             // arrange
@@ -79,7 +79,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType2SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-2-pair-adjustment-positioning-subtable
-        [Fact]
+        [Test]
         public void PairAdjustmentPositioning_Format1_Works()
         {
             // arrange
@@ -115,7 +115,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType3SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-3-cursive-attachment-positioning-subtable
-        [Fact]
+        [Test]
         public void CursiveAttachmentPositioning_Format1_Works()
         {
             // arrange
@@ -150,7 +150,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType4SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-4-mark-to-base-attachment-positioning-subtable
-        [Fact]
+        [Test]
         public void MarkToBaseAttachmentPositioning_Format1_Works()
         {
             // arrange
@@ -185,7 +185,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType5SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-5-mark-to-ligature-attachment-positioning-subtable
-        [Fact]
+        [Test]
         public void MarkToLigatureAttachmentPositioning_Format1_Works()
         {
             // arrange
@@ -220,7 +220,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType6SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-6-mark-to-mark-attachment-positioning-subtable
-        [Fact]
+        [Test]
         public void MarkToMarkAttachmentPositioning_Format1_Works()
         {
             // arrange
@@ -255,7 +255,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType7SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-7-contextual-positioning-subtables
-        [Fact]
+        [Test]
         public void ContextualPositioning_Format1_Works()
         {
             // arrange
@@ -291,7 +291,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType7SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-7-contextual-positioning-subtables
-        [Fact]
+        [Test]
         public void ContextualPositioning_Format2_Works()
         {
             // arrange
@@ -327,7 +327,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType7SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-7-contextual-positioning-subtables
-        [Fact]
+        [Test]
         public void ContextualPositioning_Format3_Works()
         {
             // arrange
@@ -364,7 +364,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType8SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookuptype-8-chained-contexts-positioning-subtable
-        [Fact]
+        [Test]
         public void ChainedContextsPositioning_Format1_Works()
         {
             // arrange
@@ -403,7 +403,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType8SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookuptype-8-chained-contexts-positioning-subtable
-        [Fact]
+        [Test]
         public void ChainedContextsPositioning_Format2_Works()
         {
             // arrange
@@ -442,7 +442,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 
         // LookupType8SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookuptype-8-chained-contexts-positioning-subtable
-        [Fact]
+        [Test]
         public void ChainedContextsPositioning_Format3_Works()
         {
             // arrange
@@ -479,7 +479,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             }
         }
 
-        [Fact]
+        [Test]
         public void MarkAnchoring_Works()
         {
             // arrange
@@ -514,7 +514,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
             }
         }
 
-        [Fact]
+        [Test]
         public void MarkToMarkAttachment_Works()
         {
             // arrange

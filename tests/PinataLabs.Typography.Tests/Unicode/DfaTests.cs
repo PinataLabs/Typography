@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tests.Unicode
 {
     public class DfaTests
     {
-        [Fact]
+        [Test]
         public void CanCompileWithSingleLiteral()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a;");
@@ -27,7 +27,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithConcatenation()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a b;");
@@ -42,7 +42,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithAlternation()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = (a b) | (b a);");
@@ -58,7 +58,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithRepeat()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = (a b)+;");
@@ -73,7 +73,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithOptionalRepeat()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = b a (a b)*;");
@@ -88,7 +88,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithExactRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{3} b;");
@@ -102,7 +102,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithMinimumRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{3,} b;");
@@ -117,7 +117,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithMaximumRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{,3} b;");
@@ -134,7 +134,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithMinimumAndMaximumRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{3,5} b;");
@@ -149,7 +149,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             Assert.True(expected.SequenceEqual(matches));
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithTags()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = x:(b a) | y:(a b);");
@@ -198,7 +198,7 @@ namespace PinataLabs.Typography.Tests.Unicode
             }
         }
 
-        [Fact]
+        [Test]
         public void CanCompileWithExternalSymbols()
         {
             var externalSymbols = new Dictionary<string, int>() { { "a", 0 }, { "b", 1 } };

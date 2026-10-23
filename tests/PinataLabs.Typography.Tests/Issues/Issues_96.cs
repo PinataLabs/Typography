@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_96
     {
-        [Fact]
+        [Test]
         public void ShouldNotThrowArgumentExceptionWhenFontContainsDuplicateTables()
             => Assert.Throws<EndOfStreamException>(() => FontDescription.LoadDescription(TestFonts.Issues.Issue96File));
     }

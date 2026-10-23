@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class TrueTypeCollectionTests
     {
-        [Fact]
+        [Test]
         public void AddViaPathReturnsDescription()
         {
             var suit = new FontCollection();
@@ -25,7 +25,7 @@ namespace PinataLabs.Typography.Tests
             FontDescription abFontDescription = Assert.Single(descriptions, x => x.FontNameInvariantCulture == "SixLaborsSampleAB regular");
         }
 
-        [Fact]
+        [Test]
         public void AddViaPathAddFontFileInstances()
         {
             var sut = new FontCollection();
@@ -39,7 +39,7 @@ namespace PinataLabs.Typography.Tests
             });
         }
 
-        [Fact]
+        [Test]
         public void AddViaStreamReturnsDescription()
         {
             var suit = new FontCollection();

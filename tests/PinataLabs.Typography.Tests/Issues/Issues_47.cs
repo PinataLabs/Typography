@@ -11,8 +11,8 @@ namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_47
     {
-        [Theory]
-        [InlineData("hello world hello world hello world hello world")]
+        [Test]
+        [Arguments("hello world hello world hello world hello world")]
         public void LeftAlignedTextNewLineShouldNotStartWithWhiteSpace(string text)
         {
             Font font = CreateFont("\t x");
@@ -36,11 +36,11 @@ namespace PinataLabs.Typography.Tests.Issues
             }
         }
 
-        [Theory]
-        [InlineData("hello world hello world hello world hello world", HorizontalAlignment.Left)]
-        [InlineData("hello world hello world hello world hello world", HorizontalAlignment.Right)]
-        [InlineData("hello world hello world hello world hello world", HorizontalAlignment.Center)]
-        [InlineData("hello   world   hello   world   hello   hello   world", HorizontalAlignment.Left)]
+        [Test]
+        [Arguments("hello world hello world hello world hello world", HorizontalAlignment.Left)]
+        [Arguments("hello world hello world hello world hello world", HorizontalAlignment.Right)]
+        [Arguments("hello world hello world hello world hello world", HorizontalAlignment.Center)]
+        [Arguments("hello   world   hello   world   hello   hello   world", HorizontalAlignment.Left)]
         public void NewWrappedLinesShouldNotStartOrEndWithWhiteSpace(string text, HorizontalAlignment horizontalAlignment)
         {
             Font font = CreateFont("\t x");
@@ -66,7 +66,7 @@ namespace PinataLabs.Typography.Tests.Issues
             }
         }
 
-        [Fact]
+        [Test]
         public void WhiteSpaceAtStartOfTextShouldNotBeTrimmed()
         {
             Font font = CreateFont("\t x");
@@ -84,7 +84,7 @@ namespace PinataLabs.Typography.Tests.Issues
             Assert.True(layout[2].IsWhiteSpace());
         }
 
-        [Fact]
+        [Test]
         public void WhiteSpaceAtTheEndOfTextShouldBeTrimmed()
         {
             Font font = CreateFont("\t x");

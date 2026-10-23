@@ -9,7 +9,7 @@ namespace PinataLabs.Typography.Tests
 {
     public class FakeFont
     {
-        [Fact]
+        [Test]
         public void TestFontMetricProperties()
         {
             Font fakeFont = CreateFont("A");
