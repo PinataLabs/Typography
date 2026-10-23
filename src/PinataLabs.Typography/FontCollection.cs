@@ -39,7 +39,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     /// </remarks>
     internal FontCollection(IReadOnlyCollection<string> searchDirectories)
     {
-        ArgumentNullException.ThrowIfNull(searchDirectories, nameof(searchDirectories));
+        ArgumentNullException.ThrowIfNull(searchDirectories);
         foreach (string? dir in searchDirectories)
         {
             this.searchDirectories.Add(dir);
@@ -149,7 +149,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     /// <inheritdoc/>
     void IFontMetricsCollection.AddMetrics(FontMetrics metrics)
     {
-        ArgumentNullException.ThrowIfNull(metrics, nameof(metrics));
+        ArgumentNullException.ThrowIfNull(metrics);
 
         if (metrics.Description is null)
         {
@@ -174,7 +174,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     /// <inheritdoc/>
     IEnumerable<FontMetrics> IReadOnlyFontMetricsCollection.GetAllMetrics(string name, CultureInfo culture)
     {
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(name);
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
 
         return this.metricsCollection
@@ -265,7 +265,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
 
     private bool TryGetImpl(string name, CultureInfo culture, out FontFamily family)
     {
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(name);
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
 
         string? match = this.metricsCollection
