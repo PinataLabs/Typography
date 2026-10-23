@@ -225,6 +225,7 @@ namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
             int max = index + count;
             int start = index;
             int end = NextSyllable(substitutionCollection, index, max);
+            Span<ushort> glyphs = stackalloc ushort[2];
             while (start < max)
             {
                 GlyphShapingData data = substitutionCollection[start];
@@ -253,7 +254,6 @@ namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
                         current = substitutionCollection[i];
                     }
 
-                    Span<ushort> glyphs = stackalloc ushort[2];
                     glyphs[0] = current.GlyphId;
                     glyphs[1] = id;
 

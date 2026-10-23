@@ -10,7 +10,7 @@
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageTags>font;truetype;opentype;woff;woff2</PackageTags>
     <Description>A cross-platform library for loading and laying out fonts for processing and measuring; written in C#</Description>
-    <TargetFrameworks>netcoreapp3.1;netstandard2.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <!--Prevent version conflicts in DrawWithImageSharp-->
     <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
@@ -20,14 +20,6 @@
     <Compile Include="..\UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="Unicode\StateAutomation\StateMachine.cs" />
     <Compile Include="..\UnicodeTrieGenerator\StateAutomation\INode.cs" Link="Unicode\StateAutomation\INode.cs" />
     <Compile Include="..\UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.Memory" />
   </ItemGroup>
 
   <Import Project="..\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />

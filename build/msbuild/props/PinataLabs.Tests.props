@@ -12,8 +12,6 @@
     <IsTestProject Condition="'$(IsTestProject)' == ''">true</IsTestProject>
     <IsPackable>false</IsPackable>
     <CodeAnalysisRuleSet Condition="'$(CodeAnalysisRuleSet)' == ''">$(MSBuildThisFileDirectory)..\..\PinataLabs.Tests.ruleset</CodeAnalysisRuleSet>
-    <!-- The latest Microsoft.NET.Test.Sdk rejects netcoreapp2.1/3.1. Remove once the tests are retargeted (spec 001, scope item 3). -->
-    <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
   </PropertyGroup>
 
   <!--
