@@ -58,6 +58,7 @@ jobs:
 
       # global.json selects Microsoft.Testing.Platform, so dotnet test runs TUnit natively.
       - name: Test net8.0
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net8.0 --no-build
 
       - name: Test net10.0

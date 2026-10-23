@@ -92,7 +92,7 @@ public class FontDescription
     /// <returns>a <see cref="FontDescription"/>.</returns>
     public static FontDescription LoadDescription(string path)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
         using FileStream fs = File.OpenRead(path);
         var reader = new FontReader(fs);
@@ -106,7 +106,7 @@ public class FontDescription
     /// <returns>a <see cref="FontDescription"/>.</returns>
     public static FontDescription LoadDescription(Stream stream)
     {
-        ArgumentNullException.ThrowIfNull(stream, nameof(stream));
+        ArgumentNullException.ThrowIfNull(stream);
 
         // Only read the name tables.
         var reader = new FontReader(stream);
@@ -141,7 +141,7 @@ public class FontDescription
     /// <returns>a <see cref="FontDescription"/>.</returns>
     public static FontDescription[] LoadFontCollectionDescriptions(string path)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
         using FileStream fs = File.OpenRead(path);
         return LoadFontCollectionDescriptions(fs);

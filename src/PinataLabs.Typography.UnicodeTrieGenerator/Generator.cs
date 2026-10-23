@@ -445,8 +445,6 @@ public static partial class Generator
         };
 
     private const string SolutionFileName = "PinataLabs.Typography.slnx";
-    private const string InputRulesRelativePath = @"src\PinataLabs.Typography.UnicodeTrieGenerator\Rules";
-    private const string OutputResourcesRelativePath = @"src\PinataLabs.Typography\Unicode\Resources";
 
     private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new(GetSolutionDirectoryFullPathImpl);
     private static readonly Dictionary<int, int> Bidi = new();
@@ -938,24 +936,25 @@ public static partial class Generator
 
     private static StreamReader GetStreamReader(string path)
     {
-        string filename = GetFullPath(Path.Combine(InputRulesRelativePath, path));
+        string filename = Path.Combine(GeneratorPaths.GetRulesDirectory(SolutionDirectoryFullPath), path);
         return File.OpenText(filename);
     }
 
     private static FileStream GetStreamWriter(string path)
     {
-        string filename = GetFullPath(Path.Combine(OutputResourcesRelativePath, path));
+        string filename = Path.Combine(GeneratorPaths.GetResourcesDirectory(SolutionDirectoryFullPath), path);
         return File.Create(filename);
     }
 
     private static string GetSolutionDirectoryFullPathImpl()
     {
         string assemblyLocation = typeof(Generator).Assembly.Location;
+        string notFoundMessage = $"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!";
 
         var assemblyFile = new FileInfo(assemblyLocation);
 
         DirectoryInfo directory = assemblyFile.Directory
-            ?? throw new Exception($"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!");
+            ?? throw new DirectoryNotFoundException(notFoundMessage);
 
         while (!directory.EnumerateFiles(SolutionFileName).Any())
         {
@@ -966,12 +965,12 @@ public static partial class Generator
             }
             catch (Exception ex)
             {
-                throw new Exception(
+                throw new DirectoryNotFoundException(
                     $"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation} because of {ex.GetType().Name}!",
                     ex);
             }
 
-            directory = parent ?? throw new Exception($"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!");
+            directory = parent ?? throw new DirectoryNotFoundException(notFoundMessage);
         }
 
         return directory.FullName;
@@ -979,7 +978,4 @@ public static partial class Generator
 
     private static int ParseHexInt(string value)
         => int.Parse(value, NumberStyles.HexNumber);
-
-    private static string GetFullPath(string relativePath)
-        => Path.Combine(SolutionDirectoryFullPath, relativePath).Replace('\\', Path.DirectorySeparatorChar);
 }
