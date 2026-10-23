@@ -2,8 +2,8 @@
 <Project>
 
   <!--
-    Vendored from SixLabors/SharedInfrastructure (Apache-2.0) at commit 33cb12ca,
-    msbuild/props/SixLabors.Src.props, and modified by PinataLabs.
+    Vendored (Apache-2.0) from SharedInfrastructure at commit 33cb12ca and modified
+    by PinataLabs. NOTICE lists the upstream repository and file path.
   -->
 
   <!-- Compilation and build location settings. -->
@@ -15,9 +15,9 @@
 
   <!-- Common NuGet package settings. -->
   <PropertyGroup>
-    <Copyright>Copyright © Six Labors</Copyright>
-    <Authors>Six Labors and contributors</Authors>
-    <Company>Six Labors</Company>
+    <Copyright>Copyright (c) Six Labors. Copyright (c) PinataLabs.</Copyright>
+    <Authors>PinataLabs</Authors>
+    <Company>PinataLabs</Company>
     <VersionPrefix>0.0.1</VersionPrefix>
     <VersionPrefix Condition="'$(packageversion)' != ''">$(PackageVersion)</VersionPrefix>
     <VersionSuffix></VersionSuffix>

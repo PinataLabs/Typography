@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!--
-    Vendored from SixLabors/SharedInfrastructure (Apache-2.0) at commit 33cb12ca,
-    src/SharedInfrastructure, and modified by PinataLabs.
+    Vendored (Apache-2.0) from SharedInfrastructure at commit 33cb12ca and modified
+    by PinataLabs. NOTICE lists the upstream repository and file path.
   -->
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
