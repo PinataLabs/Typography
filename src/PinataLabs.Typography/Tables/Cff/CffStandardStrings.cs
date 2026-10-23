@@ -12,7 +12,7 @@ namespace PinataLabs.Typography.Tables.Cff;
 internal static class CffStandardStrings
 {
     private static readonly string[] StringIdentifierToString =
-    {
+    [
         ".notdef",
         "space",
         "exclam",
@@ -404,7 +404,7 @@ internal static class CffStandardStrings
         "Regular",
         "Roman",
         "Semibold"
-    };
+    ];
 
     public static int Count { get; } = StringIdentifierToString.Length;
 

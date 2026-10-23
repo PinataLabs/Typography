@@ -19,9 +19,9 @@ namespace PinataLabs.Typography.Tables;
 
 internal class TableLoader
 {
-    private readonly Dictionary<string, Func<FontReader, Table?>> loaders = new();
-    private readonly Dictionary<Type, string> types = new();
-    private readonly Dictionary<Type, Func<FontReader, Table?>> typesLoaders = new();
+    private readonly Dictionary<string, Func<FontReader, Table?>> loaders = [];
+    private readonly Dictionary<Type, string> types = [];
+    private readonly Dictionary<Type, Func<FontReader, Table?>> typesLoaders = [];
 
     public TableLoader()
     {

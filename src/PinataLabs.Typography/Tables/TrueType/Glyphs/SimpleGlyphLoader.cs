@@ -24,9 +24,9 @@ internal class SimpleGlyphLoader : GlyphLoader
 
     public SimpleGlyphLoader(Bounds bounds)
     {
-        this.controlPoints = Array.Empty<ControlPoint>();
-        this.endPoints = Array.Empty<ushort>();
-        this.instructions = Array.Empty<byte>();
+        this.controlPoints = [];
+        this.endPoints = [];
+        this.instructions = [];
         this.bounds = bounds;
     }
 

@@ -101,7 +101,7 @@ internal sealed class BidiAlgorithm
     /// <summary>
     /// Re-usable list of level runs
     /// </summary>
-    private readonly List<LevelRun> levelRuns = new();
+    private readonly List<LevelRun> levelRuns = [];
 
     /// <summary>
     /// Mapping for the current isolating sequence, built
@@ -168,12 +168,12 @@ internal sealed class BidiAlgorithm
     /// Reusable list of pending opening brackets used by the
     /// LocatePairedBrackets method
     /// </summary>
-    private readonly List<int> pendingOpeningBrackets = new();
+    private readonly List<int> pendingOpeningBrackets = [];
 
     /// <summary>
     /// Resolved list of paired brackets
     /// </summary>
-    private readonly List<BracketPair> pairedBrackets = new();
+    private readonly List<BracketPair> pairedBrackets = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BidiAlgorithm"/> class.

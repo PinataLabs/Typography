@@ -41,7 +41,7 @@ internal class ColrTable : Table
             }
         }
 
-        return Span<LayerRecord>.Empty;
+        return [];
     }
 
     public static ColrTable Load(BigEndianBinaryReader reader)

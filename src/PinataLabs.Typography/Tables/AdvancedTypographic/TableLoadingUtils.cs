@@ -200,7 +200,7 @@ internal static class TableLoadingUtils
         ushort inputClassDefOffset = reader.ReadOffset16();
         ushort lookaheadClassDefOffset = reader.ReadOffset16();
         ushort chainedClassSeqRuleSetCount = reader.ReadUInt16();
-        ChainedClassSequenceRuleSetTable[] seqRuleSets = Array.Empty<ChainedClassSequenceRuleSetTable>();
+        ChainedClassSequenceRuleSetTable[] seqRuleSets = [];
         if (chainedClassSeqRuleSetCount != 0)
         {
             ushort[] chainedClassSeqRuleSetOffsets = new ushort[chainedClassSeqRuleSetCount];

@@ -53,7 +53,7 @@ internal class StateMachine
         int? startRun = null;
         int? lastAccepting = null;
 
-        List<StateMatch> matches = new(input.Length);
+        List<StateMatch> matches = [with(input.Length)];
 
         for (int i = 0; i < input.Length; i++)
         {

@@ -48,7 +48,7 @@ internal class TrueTypeInterpreter
     private const int MaxCallStack = 128;
     private const float Epsilon = 0.000001F;
 
-    private readonly List<OpCode> debugList = new();
+    private readonly List<OpCode> debugList = [];
 
     public TrueTypeInterpreter(int maxStack, int maxStorage, int maxFunctions, int maxInstructionDefs, int maxTwilightPoints)
     {
@@ -59,8 +59,8 @@ internal class TrueTypeInterpreter
         this.state = default;
         this.cvtState = default;
         this.twilight = new Zone(maxTwilightPoints, isTwilight: true);
-        this.controlValueTable = Array.Empty<float>();
-        this.contours = Array.Empty<ushort>();
+        this.controlValueTable = [];
+        this.contours = [];
     }
 
     public void InitializeFunctionDefs(byte[] instructions)

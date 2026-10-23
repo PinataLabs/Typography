@@ -19,7 +19,7 @@ internal class BidiData
     private ArrayBuilder<BidiCharacterType> savedTypes;
     private ArrayBuilder<BidiPairedBracketType> savedPairedBracketTypes;
     private ArrayBuilder<sbyte> tempLevelBuffer;
-    private readonly List<int> paragraphPositions = new();
+    private readonly List<int> paragraphPositions = [];
 
     public sbyte ParagraphEmbeddingLevel { get; private set; }
 

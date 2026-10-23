@@ -34,7 +34,7 @@ internal sealed class CFFOperator
 
     private static Dictionary<int, CFFOperator> CreateDictionary()
     {
-        Dictionary<int, CFFOperator> dictionary = new();
+        Dictionary<int, CFFOperator> dictionary = [];
 
         // Table 9: Top DICT Operator Entries
         Register(dictionary, 0, "version", OperatorOperandKind.SID);

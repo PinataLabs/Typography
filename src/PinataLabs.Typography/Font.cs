@@ -241,7 +241,7 @@ public sealed class Font
         TextRun textRun = new() { Start = 0, End = 1, Font = this, TextAttributes = textAttributes, TextDecorations = textDecorations };
         if (this.FontMetrics.TryGetGlyphMetrics(codePoint, textAttributes, textDecorations, layoutMode, support, out IReadOnlyList<GlyphMetrics>? metrics))
         {
-            List<Glyph> g = new();
+            List<Glyph> g = [];
             foreach (GlyphMetrics metric in metrics)
             {
                 g.Add(new(metric.CloneForRendering(textRun), this.Size));

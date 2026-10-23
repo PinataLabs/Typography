@@ -17,14 +17,14 @@ namespace PinataLabs.Typography;
 /// </summary>
 public sealed class FontCollection : IFontCollection, IFontMetricsCollection
 {
-    private readonly HashSet<string> searchDirectories = new();
-    private readonly HashSet<FontMetrics> metricsCollection = new();
+    private readonly HashSet<string> searchDirectories = [];
+    private readonly HashSet<FontMetrics> metricsCollection = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FontCollection"/> class.
     /// </summary>
     public FontCollection()
-        : this(Array.Empty<string>())
+        : this([])
     {
     }
 

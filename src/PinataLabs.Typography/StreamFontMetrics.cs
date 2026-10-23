@@ -228,8 +228,8 @@ internal partial class StreamFontMetrics : FontMetrics
         // We overwrite the cache entry for this type should the attributes change.
         return this.glyphCache.GetOrAdd(
               CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode),
-              key => new[]
-              {
+              key =>
+              [
                 this.CreateGlyphMetrics(
                 codePoint,
                 key.Id,
@@ -237,7 +237,7 @@ internal partial class StreamFontMetrics : FontMetrics
                 key.Attributes,
                 textDecorations,
                 key.IsVerticalLayout)
-              });
+              ]);
     }
 
     /// <inheritdoc />
@@ -562,7 +562,7 @@ internal partial class StreamFontMetrics : FontMetrics
         // We overwrite the cache entry for this type should the attributes change.
         metrics = this.colorGlyphCache.GetOrAdd(CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode), key =>
         {
-            GlyphMetrics[] m = Array.Empty<GlyphMetrics>();
+            GlyphMetrics[] m = [];
             Span<LayerRecord> indexes = colr.GetLayers(key.Id);
             if (indexes.Length > 0)
             {

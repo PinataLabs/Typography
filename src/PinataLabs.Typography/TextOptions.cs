@@ -69,7 +69,7 @@ public class TextOptions
     /// Gets or sets the collection of fallback font families to use when
     /// a specific glyph is missing from <see cref="Font"/>.
     /// </summary>
-    public IReadOnlyList<FontFamily> FallbackFontFamilies { get; set; } = Array.Empty<FontFamily>();
+    public IReadOnlyList<FontFamily> FallbackFontFamilies { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the DPI (Dots Per Inch) to render/measure the text at.
@@ -185,10 +185,10 @@ public class TextOptions
     /// <summary>
     /// Gets or sets the collection of additional feature tags to apply during glyph shaping.
     /// </summary>
-    public IReadOnlyList<Tag> FeatureTags { get; set; } = Array.Empty<Tag>();
+    public IReadOnlyList<Tag> FeatureTags { get; set; } = [];
 
     /// <summary>
     /// Gets or sets an optional collection of text runs to apply to the body of text.
     /// </summary>
-    public IReadOnlyList<TextRun> TextRuns { get; set; } = Array.Empty<TextRun>();
+    public IReadOnlyList<TextRun> TextRuns { get; set; } = [];
 }

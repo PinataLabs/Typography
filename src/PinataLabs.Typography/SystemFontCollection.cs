@@ -67,7 +67,7 @@ internal sealed class SystemFontCollection : IReadOnlySystemFontCollection, IRea
         }
         else
         {
-            StandardFontLocations = Array.Empty<string>();
+            StandardFontLocations = [];
         }
     }
 
@@ -84,7 +84,7 @@ internal sealed class SystemFontCollection : IReadOnlySystemFontCollection, IRea
             // The CTFontManagerCopyAvailableFontURLs method might return duplicate paths, hence the call to Distinct()
             paths = nativeEnumerator.Distinct();
 
-            this.searchDirectories = Array.Empty<string>();
+            this.searchDirectories = [];
         }
         else
         {

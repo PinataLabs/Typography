@@ -110,7 +110,7 @@ internal sealed class Format4SubTable : CMapSubTable
 
         Segment[] segments = Segment.Create(endCounts, startCounts, idDelta, idRangeOffset);
 
-        List<Format4SubTable> table = new();
+        List<Format4SubTable> table = [];
         foreach (EncodingRecord encoding in encodings)
         {
             table.Add(new Format4SubTable(language, encoding.PlatformID, encoding.EncodingID, segments, glyphIds));

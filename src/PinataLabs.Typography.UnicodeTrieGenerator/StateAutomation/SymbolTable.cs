@@ -16,9 +16,9 @@ internal class SymbolTable
         this.Process(statements);
     }
 
-    public Dictionary<string, ILogicalNode> Variables { get; set; } = new();
+    public Dictionary<string, ILogicalNode> Variables { get; set; } = [];
 
-    public Dictionary<string, int> Symbols { get; set; } = new();
+    public Dictionary<string, int> Symbols { get; set; } = [];
 
     public int Size { get; set; }
 

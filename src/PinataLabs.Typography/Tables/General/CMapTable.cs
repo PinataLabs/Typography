@@ -16,7 +16,7 @@ internal sealed class CMapTable : Table
 {
     internal const string TableName = "cmap";
 
-    private readonly Format14SubTable[] format14SubTables = Array.Empty<Format14SubTable>();
+    private readonly Format14SubTable[] format14SubTables = [];
     private CodePoint[]? codepoints;
 
     public CMapTable(IEnumerable<CMapSubTable> tables)
@@ -96,12 +96,7 @@ internal sealed class CMapTable : Table
             return this.codepoints;
         }
 
-        HashSet<int> values = new();
-
-        foreach (int v in this.Tables.SelectMany(subtable => subtable.GetAvailableCodePoints()))
-        {
-            values.Add(v);
-        }
+        HashSet<int> values = [.. this.Tables.SelectMany(subtable => subtable.GetAvailableCodePoints())];
 
         return this.codepoints = values.OrderBy(v => v).Select(v => new CodePoint(v)).ToArray();
     }

@@ -274,7 +274,7 @@ internal class GPosTable : Table
 
     private List<(Tag Feature, ushort Index, LookupTable LookupTable)> GetFeatureLookups(in Tag stageFeature, params LangSysTable[] langSysTables)
     {
-        List<(Tag Feature, ushort Index, LookupTable LookupTable)> lookups = new();
+        List<(Tag Feature, ushort Index, LookupTable LookupTable)> lookups = [];
         for (int i = 0; i < langSysTables.Length; i++)
         {
             ushort[] featureIndices = langSysTables[i].FeatureIndices;

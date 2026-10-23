@@ -20,7 +20,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <summary>
     /// Contains a map the index of a map within the collection, non-sequential codepoint offsets, and their glyph ids, point size, and mtrics.
     /// </summary>
-    private readonly List<GlyphPositioningData> glyphs = new();
+    private readonly List<GlyphPositioningData> glyphs = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphPositioningCollection"/> class.
@@ -91,7 +91,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <returns>The metrics.</returns>
     public bool TryGetGlyphMetricsAtOffset(int offset, out float pointSize, out bool isDecomposed, [NotNullWhen(true)] out IReadOnlyList<GlyphMetrics>? metrics)
     {
-        List<GlyphMetrics> match = new();
+        List<GlyphMetrics> match = [];
         pointSize = 0;
         isDecomposed = false;
         for (int i = 0; i < this.glyphs.Count; i++)
@@ -127,7 +127,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         ColorFontSupport colorFontSupport = this.TextOptions.ColorFontSupport;
         bool hasFallBacks = false;
-        List<int> orphans = new();
+        List<int> orphans = [];
         for (int i = 0; i < this.glyphs.Count; i++)
         {
             GlyphPositioningData current = this.glyphs[i];
@@ -224,7 +224,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             GlyphShapingData data = collection.GetGlyphShapingData(i, out int offset);
             CodePoint codePoint = data.CodePoint;
             ushort id = data.GlyphId;
-            List<GlyphMetrics> metrics = new();
+            List<GlyphMetrics> metrics = [];
 
             // Perform a semi-deep clone (FontMetrics is not cloned) so we can continue to
             // cache the original in the font metrics and only update our collection.

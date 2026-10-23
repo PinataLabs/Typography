@@ -159,7 +159,7 @@ internal sealed class LangSysTable
 
     public ushort RequiredFeatureIndex { get; }
 
-    public ushort[] FeatureIndices { get; } = Array.Empty<ushort>();
+    public ushort[] FeatureIndices { get; } = [];
 
     public static LangSysTable Load(uint langSysTag, BigEndianBinaryReader reader, long offset)
     {
