@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 
-namespace SixLabors.Fonts.IO
+namespace PinataLabs.Typography.IO
 {
     internal sealed class ZlibInflateStream : Stream
     {

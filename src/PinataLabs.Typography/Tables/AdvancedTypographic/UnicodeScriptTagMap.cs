@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     /// <summary>
     /// Provides a map from Unicode <see cref="ScriptClass"/> to OTF <see cref="Tag"/>.

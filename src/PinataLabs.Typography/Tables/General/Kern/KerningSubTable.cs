@@ -3,7 +3,7 @@
 
 using System.Numerics;
 
-namespace SixLabors.Fonts.Tables.General.Kern
+namespace PinataLabs.Typography.Tables.General.Kern
 {
     internal abstract class KerningSubTable
     {

@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class TextOptionsTests
     {

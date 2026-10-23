@@ -1,9 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Defines the contract for glyph shaping collections.

@@ -3,7 +3,7 @@
 
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     /// <summary>
     /// The LigatureArray table contains a count (ligatureCount) and an array of offsets (ligatureAttachOffsets) to LigatureAttach tables.

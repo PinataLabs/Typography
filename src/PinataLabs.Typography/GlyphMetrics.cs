@@ -4,10 +4,10 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents a glyph metric from a particular font face.

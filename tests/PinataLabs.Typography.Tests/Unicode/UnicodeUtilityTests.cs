@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Unicode
+namespace PinataLabs.Typography.Tests.Unicode
 {
     public class UnicodeUtilityTests
     {

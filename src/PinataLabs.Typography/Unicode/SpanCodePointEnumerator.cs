@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// An enumerator for retrieving <see cref="CodePoint"/> instances from a <see cref="ReadOnlySpan{Char}"/>.

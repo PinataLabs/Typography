@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// A readable and writable collection of fonts.

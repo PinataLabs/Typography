@@ -8,17 +8,17 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
-using SixLabors.Fonts.Tables.Cff;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.General.Colr;
-using SixLabors.Fonts.Tables.General.Kern;
-using SixLabors.Fonts.Tables.General.Post;
-using SixLabors.Fonts.Tables.TrueType;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.Cff;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.General.Colr;
+using PinataLabs.Typography.Tables.General.Kern;
+using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// <para>

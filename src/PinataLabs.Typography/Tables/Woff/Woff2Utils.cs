@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
-namespace SixLabors.Fonts.Tables.Woff
+namespace PinataLabs.Typography.Tables.Woff
 {
     // Source code is based on https://github.com/LayoutFarm/Typography
     // see https://github.com/LayoutFarm/Typography/blob/master/Typography.OpenFont/WebFont/Woff2Reader.cs

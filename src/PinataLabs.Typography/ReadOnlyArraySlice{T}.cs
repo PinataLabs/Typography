@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// ReadOnlyArraySlice represents a contiguous region of arbitrary memory similar

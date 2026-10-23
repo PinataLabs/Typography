@@ -3,7 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     /// <summary>
     /// The GDEF table contains three kinds of information in subtables:

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class SystemFontCollectionTests
     {
@@ -133,7 +133,7 @@ namespace SixLabors.Fonts.Tests
         }
 
         [Fact]
-        [AppContextSwitch("Switch.SixLabors.Fonts.DoNotUseNativeSystemFontsEnumeration", true)]
+        [AppContextSwitch("Switch.PinataLabs.Typography.DoNotUseNativeSystemFontsEnumeration", true)]
         public void SystemFonts_FontFamilyNotFound_ThrowsWithSearchDirectories()
         {
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
@@ -166,6 +166,21 @@ namespace SixLabors.Fonts.Tests
         [Fact]
         public void SystemFonts_FontFamilyNotFound_ThrowsWithoutSearchDirectories()
         {
+            static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
+
+            FontFamilyNotFoundException exception = Assert.Throws<FontFamilyNotFoundException>(Action);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Assert.DoesNotContain("/Library/Fonts/", exception.Message);
+                Assert.Empty(exception.SearchDirectories);
+            }
+        }
+
+        [Fact]
+        [AppContextSwitch("Switch.SixLabors.Fonts.DoNotUseNativeSystemFontsEnumeration", true)]
+        public void SystemFonts_LegacySwitchName_IsIgnored()
+        {
+            // The pre-rebrand switch name is not honoured: native enumeration stays in use on macOS.
             static void Action() => new SystemFontCollection().Get("AFontThatDoesNotExist");
 
             FontFamilyNotFoundException exception = Assert.Throws<FontFamilyNotFoundException>(Action);

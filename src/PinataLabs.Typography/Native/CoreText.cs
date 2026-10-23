@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SixLabors.Fonts.Native
+namespace PinataLabs.Typography.Native
 {
     internal static class CoreText
     {

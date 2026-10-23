@@ -7,9 +7,9 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using static SixLabors.Fonts.Unicode.UnicodeTrieBuilder;
+using static PinataLabs.Typography.Unicode.UnicodeTrieBuilder;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// A read-only Trie, holding 32 bit data values.

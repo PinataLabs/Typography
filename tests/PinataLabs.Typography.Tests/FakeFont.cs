@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Globalization;
-using SixLabors.Fonts.Tests.Fakes;
+using PinataLabs.Typography.Tests.Fakes;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class FakeFont
     {

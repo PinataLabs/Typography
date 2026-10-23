@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Numerics;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class FontRectangleTests
     {

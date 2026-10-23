@@ -4,7 +4,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     /// <summary>
     /// Defines a mark record used in a mark array table:

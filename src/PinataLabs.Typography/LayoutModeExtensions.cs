@@ -3,7 +3,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Extensions to <see cref="LayoutMode"/>.

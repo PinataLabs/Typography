@@ -3,7 +3,7 @@
 
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     /// <summary>
     /// Mark-to-Base Attachment Positioning Subtable. The MarkToBase attachment (MarkBasePos) subtable is used to position combining mark glyphs with respect to base glyphs.

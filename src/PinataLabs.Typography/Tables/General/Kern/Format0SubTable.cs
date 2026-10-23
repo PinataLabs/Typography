@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Tables.General.Kern
+namespace PinataLabs.Typography.Tables.General.Kern
 {
     internal sealed class Format0SubTable : KerningSubTable
     {

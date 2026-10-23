@@ -5,7 +5,7 @@ using System;
 using System.Reflection;
 using Xunit.Sdk;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     /// <summary>
     /// Sets the AppContext switch <see cref="SwitchName"/> to <see cref="IsEnabled"/> before the test execution

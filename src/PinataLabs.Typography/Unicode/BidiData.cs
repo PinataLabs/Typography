@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Represents a unicode string and all associated attributes

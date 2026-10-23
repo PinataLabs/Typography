@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     /// <summary>
     /// A ValueFormat flags field defines the types of positioning adjustment data that ValueRecords specify.

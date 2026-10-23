@@ -5,7 +5,7 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// An disposable buffer that is backed by an array pool.

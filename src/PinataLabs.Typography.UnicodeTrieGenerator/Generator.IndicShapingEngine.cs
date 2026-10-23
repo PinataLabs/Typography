@@ -6,13 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.Unicode.Resources;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.Unicode.Resources;
 using UnicodeTrieGenerator.StateAutomation;
-using Categories = SixLabors.Fonts.Unicode.Resources.IndicShapingData.Categories;
-using IPC = SixLabors.Fonts.Unicode.IndicPositionalCategory;
-using ISC = SixLabors.Fonts.Unicode.IndicSyllabicCategory;
-using Positions = SixLabors.Fonts.Unicode.Resources.IndicShapingData.Positions;
+using Categories = PinataLabs.Typography.Unicode.Resources.IndicShapingData.Categories;
+using IPC = PinataLabs.Typography.Unicode.IndicPositionalCategory;
+using ISC = PinataLabs.Typography.Unicode.IndicSyllabicCategory;
+using Positions = PinataLabs.Typography.Unicode.Resources.IndicShapingData.Positions;
 
 namespace UnicodeTrieGenerator
 {

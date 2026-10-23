@@ -3,7 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace SixLabors.Fonts.Native
+namespace PinataLabs.Typography.Native
 {
     /// <summary>
     /// An integer type for constants used to specify supported string encodings in various CFString functions.

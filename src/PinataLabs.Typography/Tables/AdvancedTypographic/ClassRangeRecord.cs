@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     [DebuggerDisplay("StartGlyphId: {StartGlyphId}, EndGlyphId: {EndGlyphId}, Class: {Class}")]
     internal readonly struct ClassRangeRecord

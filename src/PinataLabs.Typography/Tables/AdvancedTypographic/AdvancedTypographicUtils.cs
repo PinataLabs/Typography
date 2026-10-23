@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using SixLabors.Fonts.Tables.AdvancedTypographic.GPos;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     internal static class AdvancedTypographicUtils
     {

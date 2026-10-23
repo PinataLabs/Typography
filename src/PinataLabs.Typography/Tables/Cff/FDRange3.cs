@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     /// <summary>
     /// Represents an element in an font dictionary array.

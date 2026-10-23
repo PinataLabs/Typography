@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts.Tables
+namespace PinataLabs.Typography.Tables
 {
     // Source code is based on https://github.com/LayoutFarm/Typography
     // see https://github.com/LayoutFarm/Typography/blob/master/Typography.OpenFont/WebFont/Woff2Reader.cs

@@ -3,7 +3,7 @@
 
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GSub
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub
 {
     /// <summary>
     /// A Chained Contexts Substitution subtable describes glyph substitutions in context

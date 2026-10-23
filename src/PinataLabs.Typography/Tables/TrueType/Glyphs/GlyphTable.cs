@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.IO;
-using SixLabors.Fonts.Tables.Woff;
+using PinataLabs.Typography.Tables.Woff;
 
-namespace SixLabors.Fonts.Tables.TrueType.Glyphs
+namespace PinataLabs.Typography.Tables.TrueType.Glyphs
 {
     internal class GlyphTable : Table
     {

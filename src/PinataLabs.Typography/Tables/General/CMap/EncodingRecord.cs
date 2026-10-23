@@ -1,9 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General.CMap
+namespace PinataLabs.Typography.Tables.General.CMap
 {
     internal readonly struct EncodingRecord
     {

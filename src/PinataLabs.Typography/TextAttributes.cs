@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Provides enumeration of various text attributes.

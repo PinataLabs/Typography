@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Contains extensions methods for memory types.

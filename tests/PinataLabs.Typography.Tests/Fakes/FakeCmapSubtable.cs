@@ -3,10 +3,10 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using SixLabors.Fonts.Tables.General.CMap;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.General.CMap;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tests.Fakes
+namespace PinataLabs.Typography.Tests.Fakes
 {
     internal class FakeCmapSubtable : CMapSubTable
     {

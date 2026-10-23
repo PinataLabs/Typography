@@ -3,11 +3,11 @@
 
 using System;
 using System.Linq;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.Unicode.Resources;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.Unicode.Resources;
 using UnicodeTrieGenerator.StateAutomation;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers
 {
     /// <summary>
     /// This shaper is an implementation of the Universal Shaping Engine, which

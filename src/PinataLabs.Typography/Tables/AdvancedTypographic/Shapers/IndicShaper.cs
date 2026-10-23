@@ -3,12 +3,12 @@
 
 using System;
 using System.Globalization;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.Unicode.Resources;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.Unicode.Resources;
 using UnicodeTrieGenerator.StateAutomation;
-using static SixLabors.Fonts.Unicode.Resources.IndicShapingData;
+using static PinataLabs.Typography.Unicode.Resources.IndicShapingData;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers
 {
     /// <summary>
     /// The IndicShaper supports Indic scripts e.g. Devanagari, Kannada, etc.

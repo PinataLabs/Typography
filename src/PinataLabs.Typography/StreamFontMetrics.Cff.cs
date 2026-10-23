@@ -1,16 +1,16 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Tables.AdvancedTypographic;
-using SixLabors.Fonts.Tables.Cff;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.General.Colr;
-using SixLabors.Fonts.Tables.General.Kern;
-using SixLabors.Fonts.Tables.General.Name;
-using SixLabors.Fonts.Tables.General.Post;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.Cff;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.General.Colr;
+using PinataLabs.Typography.Tables.General.Kern;
+using PinataLabs.Typography.Tables.General.Name;
+using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <content>
     /// Contains CFF specific methods.

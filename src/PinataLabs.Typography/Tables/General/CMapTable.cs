@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SixLabors.Fonts.Tables.General.CMap;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Tables.General.CMap;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General
+namespace PinataLabs.Typography.Tables.General
 {
     internal sealed class CMapTable : Table
     {

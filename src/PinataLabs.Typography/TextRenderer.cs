@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Encapsulated logic for laying out and then rendering text to a <see cref="IGlyphRenderer"/> surface.

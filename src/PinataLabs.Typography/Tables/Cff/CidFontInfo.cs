@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     internal class CidFontInfo
     {

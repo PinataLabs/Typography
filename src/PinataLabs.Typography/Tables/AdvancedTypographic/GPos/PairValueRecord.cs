@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     /// <summary>
     /// PairValueRecords are used in pair adjustment positioning subtables to adjust the placement or advances of two glyphs in relation to one another.

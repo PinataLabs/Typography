@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     /// <summary>
     /// For all formats for both contextual and chained contextual lookups, a common record format

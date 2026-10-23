@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Linq;
-using SixLabors.Fonts.Tables.General.CMap;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Tables.General.CMap;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.WellKnownIds;
 
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.General.CMap
+namespace PinataLabs.Typography.Tests.Tables.General.CMap
 {
     public class Format4SubTableTests
     {

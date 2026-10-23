@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GSub
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub
 {
     /// <summary>
     /// The headers of the GSUB and GPOS tables contain offsets to Lookup List tables (LookupList) for

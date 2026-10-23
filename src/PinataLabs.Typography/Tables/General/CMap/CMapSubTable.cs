@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General.CMap
+namespace PinataLabs.Typography.Tables.General.CMap
 {
     internal abstract class CMapSubTable
     {

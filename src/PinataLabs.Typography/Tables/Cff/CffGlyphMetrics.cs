@@ -3,9 +3,9 @@
 
 using System;
 using System.Numerics;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     /// <summary>
     /// Represents a glyph metric from a particular Compact Font Face.

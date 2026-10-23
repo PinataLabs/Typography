@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 using UnicodeTrieGenerator.StateAutomation;
 using GC = System.Globalization.UnicodeCategory;
-using IPC = SixLabors.Fonts.Unicode.IndicPositionalCategory;
-using ISC = SixLabors.Fonts.Unicode.IndicSyllabicCategory;
+using IPC = PinataLabs.Typography.Unicode.IndicPositionalCategory;
+using ISC = PinataLabs.Typography.Unicode.IndicSyllabicCategory;
 
 namespace UnicodeTrieGenerator
 {
@@ -697,7 +697,7 @@ namespace UnicodeTrieGenerator
             writer.WriteLine("using System;");
             writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine();
-            writer.WriteLine("namespace SixLabors.Fonts.Unicode.Resources");
+            writer.WriteLine("namespace PinataLabs.Typography.Unicode.Resources");
             writer.WriteLine("{");
             writer.WriteLine($"    internal static{partialKeyword}class {name}Data");
             writer.WriteLine("    {");

@@ -4,10 +4,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class FontLoaderTests
     {

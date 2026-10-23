@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class GlyphRenderer : IGlyphRenderer
     {

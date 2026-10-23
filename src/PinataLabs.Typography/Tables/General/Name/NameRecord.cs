@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Text;
-using SixLabors.Fonts.Utilities;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Utilities;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General.Name
+namespace PinataLabs.Typography.Tables.General.Name
 {
     internal class NameRecord
     {

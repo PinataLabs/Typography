@@ -4,7 +4,7 @@
 using System;
 using System.Globalization;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Supports a simple iteration over a linebreak collection.

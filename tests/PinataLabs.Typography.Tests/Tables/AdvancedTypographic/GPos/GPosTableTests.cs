@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos
 {
     public class GPosTableTests
     {

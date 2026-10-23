@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Information about a potential line break position.

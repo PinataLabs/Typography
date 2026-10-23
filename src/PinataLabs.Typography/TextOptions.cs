@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Provides configuration options for rendering and shaping text.

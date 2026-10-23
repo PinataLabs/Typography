@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using SixLabors.Fonts.Tests.Fakes;
+using PinataLabs.Typography.Tests.Fakes;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_47
     {

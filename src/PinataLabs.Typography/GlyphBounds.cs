@@ -1,9 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents the bounds of a <see cref="Glyph"/> for a given <see cref="CodePoint"/>.

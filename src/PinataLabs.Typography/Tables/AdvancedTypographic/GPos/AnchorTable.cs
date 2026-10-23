@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     [DebuggerDisplay("X: {XCoordinate}, Y: {YCoordinate}")]
     internal abstract class AnchorTable

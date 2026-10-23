@@ -3,10 +3,10 @@
 
 using System.Collections.Generic;
 using System.IO;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Unicode
+namespace PinataLabs.Typography.Tests.Unicode
 {
     /// <summary>
     /// Tests adapted from:

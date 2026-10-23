@@ -4,7 +4,7 @@
 using System;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_298
     {

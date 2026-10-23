@@ -3,11 +3,11 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using SixLabors.Fonts.Tables.AdvancedTypographic.GSub;
-using SixLabors.Fonts.Tables.AdvancedTypographic.Shapers;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     /// <summary>
     /// The Glyph Substitution (GSUB) table provides data for substitution of glyphs for appropriate rendering of scripts,

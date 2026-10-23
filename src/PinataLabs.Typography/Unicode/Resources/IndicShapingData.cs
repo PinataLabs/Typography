@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts.Unicode.Resources
+namespace PinataLabs.Typography.Unicode.Resources
 {
     internal static partial class IndicShapingData
     {

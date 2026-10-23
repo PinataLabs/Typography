@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GSub
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub
 {
     /// <summary>
     /// A Multiple Substitution (MultipleSubst) subtable replaces a single glyph with more than one glyph,

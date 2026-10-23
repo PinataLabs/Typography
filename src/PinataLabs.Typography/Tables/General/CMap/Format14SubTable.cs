@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General.CMap
+namespace PinataLabs.Typography.Tables.General.CMap
 {
     /// <summary>
     /// Subtable format 14 specifies the Unicode Variation Sequences (UVSes) supported by the font.

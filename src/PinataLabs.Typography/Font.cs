@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Defines a particular format for text, including font face, size, and style attributes.

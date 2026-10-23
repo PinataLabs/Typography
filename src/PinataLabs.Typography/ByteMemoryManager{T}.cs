@@ -6,7 +6,7 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// A custom <see cref="MemoryManager{T}"/> that can wrap <see cref="Memory{T}"/> of <see cref="byte"/> instances

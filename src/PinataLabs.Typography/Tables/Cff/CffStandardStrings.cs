@@ -3,7 +3,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     /// <summary>
     /// Appendix A: Standard Strings

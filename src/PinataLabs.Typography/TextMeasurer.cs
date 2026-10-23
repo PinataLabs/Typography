@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Encapsulated logic for laying out and then measuring text properties.

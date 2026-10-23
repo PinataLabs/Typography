@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
-namespace SixLabors.Fonts.Tables.TrueType.Hinting
+namespace PinataLabs.Typography.Tables.TrueType.Hinting
 {
     /// <summary>
     /// Code adapted from <see href="https://github.com/MikePopoloski/SharpFont/blob/b28555e8fae94c57f1b5ccd809cdd1260f0eb55f/SharpFont/FontFace.cs"/>

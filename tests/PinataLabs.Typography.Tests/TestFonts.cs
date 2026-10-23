@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public static class TestFonts
     {

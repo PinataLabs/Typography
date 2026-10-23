@@ -3,10 +3,10 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General.CMap
+namespace PinataLabs.Typography.Tables.General.CMap
 {
     internal sealed class Format0SubTable : CMapSubTable
     {

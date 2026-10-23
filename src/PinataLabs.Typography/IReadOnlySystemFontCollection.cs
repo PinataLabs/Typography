@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents a readonly collection of Operating System fonts.

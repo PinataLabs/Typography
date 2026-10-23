@@ -3,10 +3,10 @@
 
 using System;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.General.Glyphs
+namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 {
     public class CompositeGlyphLoaderTests
     {

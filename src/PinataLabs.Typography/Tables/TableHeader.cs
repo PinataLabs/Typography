@@ -3,7 +3,7 @@
 
 using System.IO;
 
-namespace SixLabors.Fonts.Tables
+namespace PinataLabs.Typography.Tables
 {
     internal class TableHeader
     {

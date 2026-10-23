@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Tables.General
+namespace PinataLabs.Typography.Tables.General
 {
     internal class HeadTable : Table
     {

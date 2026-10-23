@@ -1,9 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers
 {
     /// <summary>
     /// This is a shaper for Arabic, and other cursive scripts.

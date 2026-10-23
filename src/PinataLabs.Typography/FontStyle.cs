@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// The font styles

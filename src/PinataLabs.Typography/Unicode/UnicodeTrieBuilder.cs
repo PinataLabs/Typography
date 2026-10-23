@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Builder class to manipulate and generate a trie.

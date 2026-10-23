@@ -3,11 +3,11 @@
 
 using System.Collections.Generic;
 using System.Globalization;
-using SixLabors.Fonts.Tables.General.Name;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Tables.General.Name;
+using PinataLabs.Typography.WellKnownIds;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.General
+namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class NameTableTests
     {

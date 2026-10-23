@@ -8,13 +8,13 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Moq;
-using SixLabors.Fonts.Tables.TrueType;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
-using SixLabors.Fonts.Tests.Fakes;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tests.Fakes;
+using PinataLabs.Typography.Unicode;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class GlyphTests
     {

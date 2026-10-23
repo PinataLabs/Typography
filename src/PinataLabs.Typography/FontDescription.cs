@@ -3,12 +3,12 @@
 
 using System.Globalization;
 using System.IO;
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.General.Name;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.General.Name;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Provides basic descriptive metadata for the font.

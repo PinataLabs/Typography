@@ -4,11 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
-using SixLabors.Fonts.Unicode;
-using SixLabors.Fonts.Unicode.Resources;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.Unicode.Resources;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Contains supplementary data that allows the shaping of glyphs.

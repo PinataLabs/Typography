@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers
 {
     /// <summary>
     /// Default shaper, which will be applied to all glyphs.

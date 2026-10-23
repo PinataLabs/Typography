@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.TrueType;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.TrueType;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.General
+namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class IndexLocationTableTests
     {

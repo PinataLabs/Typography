@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using SixLabors.Fonts.Utilities;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Utilities;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tables.General.Name
+namespace PinataLabs.Typography.Tables.General.Name
 {
     internal class NameTable : Table
     {

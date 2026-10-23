@@ -4,7 +4,7 @@
 using System;
 using System.Text;
 
-namespace SixLabors.Fonts.Tables.General.Post
+namespace PinataLabs.Typography.Tables.General.Post
 {
     internal class PostTable : Table
     {

@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// A simple bi-directional dictionary.

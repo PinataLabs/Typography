@@ -6,13 +6,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.General.CMap;
-using SixLabors.Fonts.Tables.General.Post;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.General.CMap;
+using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.WellKnownIds;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     internal static class WriterExtensions
     {

@@ -3,7 +3,7 @@
 
 using System.Globalization;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents a collection of <see cref="FontMetrics"/>

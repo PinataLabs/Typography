@@ -8,7 +8,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// BinaryReader using big-endian encoding.

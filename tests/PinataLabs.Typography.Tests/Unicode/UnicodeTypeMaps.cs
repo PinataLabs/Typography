@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tests.Unicode
+namespace PinataLabs.Typography.Tests.Unicode
 {
     internal static class UnicodeTypeMaps
     {

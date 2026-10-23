@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 // Reordering these enum properties will require the regeneration of the Grapheme.trie.
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Unicode Grapheme Cluster classes.

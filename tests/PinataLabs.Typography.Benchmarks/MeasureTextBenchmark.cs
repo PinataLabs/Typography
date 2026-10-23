@@ -5,7 +5,7 @@ using System;
 using BenchmarkDotNet.Attributes;
 using SkiaSharp;
 
-namespace SixLabors.Fonts.Benchmarks
+namespace PinataLabs.Typography.Benchmarks
 {
     /// <summary>
     /// <para>
@@ -43,7 +43,7 @@ namespace SixLabors.Fonts.Benchmarks
         public string Text { get; set; } = string.Empty;
 
         [Benchmark]
-        public void SixLaborsFonts() => TextMeasurer.MeasureSize(this.Text, this.textOptions);
+        public void PinataLabsTypography() => TextMeasurer.MeasureSize(this.Text, this.textOptions);
 
         [Benchmark]
         public void SkiaSharp() => this.font.MeasureText(this.Text);

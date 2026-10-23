@@ -4,7 +4,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     /// <summary>
     /// Used to apply a transform against any glyphs rendered by the engine.

@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Represents the Unicode Arabic Joining value of a given <see cref="CodePoint"/>.

@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// <para>

@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.AdvancedTypographic.GSub
+namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
     public partial class GSubTableTests
     {

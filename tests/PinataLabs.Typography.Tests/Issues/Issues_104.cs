@@ -1,12 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Tables.General.CMap;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.General.CMap;
+using PinataLabs.Typography.Unicode;
 using Xunit;
-using static SixLabors.Fonts.Tables.General.CMap.Format4SubTable;
+using static PinataLabs.Typography.Tables.General.CMap.Format4SubTable;
 
-namespace SixLabors.Fonts.Tests.Issues
+namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_104
     {

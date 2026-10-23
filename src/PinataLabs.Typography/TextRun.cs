@@ -3,9 +3,9 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents a run of text spanning a series of graphemes within a string.

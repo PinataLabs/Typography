@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Extension methods for <see cref="IFontCollection"/>.

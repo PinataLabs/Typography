@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Provides a collection of fonts.
@@ -75,7 +75,7 @@ namespace SixLabors.Fonts
             IEnumerable<string> paths;
             Native.MacSystemFontsEnumerator? nativeEnumerator = null;
 
-            bool forceDirectoryEnumeration = AppContext.TryGetSwitch("Switch.SixLabors.Fonts.DoNotUseNativeSystemFontsEnumeration", out bool isEnabled) && isEnabled;
+            bool forceDirectoryEnumeration = AppContext.TryGetSwitch("Switch.PinataLabs.Typography.DoNotUseNativeSystemFontsEnumeration", out bool isEnabled) && isEnabled;
             if (!forceDirectoryEnumeration && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 nativeEnumerator = new Native.MacSystemFontsEnumerator();

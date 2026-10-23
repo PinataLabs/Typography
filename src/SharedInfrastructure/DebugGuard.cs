@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace SixLabors
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Provides methods to protect against invalid parameters for a DEBUG build.

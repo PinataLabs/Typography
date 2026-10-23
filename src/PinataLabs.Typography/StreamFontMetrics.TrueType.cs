@@ -3,18 +3,18 @@
 
 using System;
 using System.Numerics;
-using SixLabors.Fonts.Tables.AdvancedTypographic;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.General.Colr;
-using SixLabors.Fonts.Tables.General.Kern;
-using SixLabors.Fonts.Tables.General.Name;
-using SixLabors.Fonts.Tables.General.Post;
-using SixLabors.Fonts.Tables.TrueType;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
-using SixLabors.Fonts.Tables.TrueType.Hinting;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.General.Colr;
+using PinataLabs.Typography.Tables.General.Kern;
+using PinataLabs.Typography.Tables.General.Name;
+using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType.Hinting;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <content>
     /// Contains TrueType specific methods.

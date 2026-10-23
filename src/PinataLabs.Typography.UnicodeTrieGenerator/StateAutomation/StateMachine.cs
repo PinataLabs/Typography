@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SixLabors.Fonts;
+using PinataLabs.Typography;
 
 namespace UnicodeTrieGenerator.StateAutomation
 {

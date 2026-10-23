@@ -8,10 +8,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using static SixLabors.Fonts.Native.CoreFoundation;
-using static SixLabors.Fonts.Native.CoreText;
+using static PinataLabs.Typography.Native.CoreFoundation;
+using static PinataLabs.Typography.Native.CoreText;
 
-namespace SixLabors.Fonts.Native
+namespace PinataLabs.Typography.Native
 {
     /// <summary>
     /// An enumerator that enumerates over available macOS system fonts.

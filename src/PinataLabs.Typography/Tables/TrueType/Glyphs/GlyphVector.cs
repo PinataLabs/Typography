@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Hinting;
+using PinataLabs.Typography.Tables.TrueType.Hinting;
 
-namespace SixLabors.Fonts.Tables.TrueType.Glyphs
+namespace PinataLabs.Typography.Tables.TrueType.Glyphs
 {
     /// <summary>
     /// Represents the raw glyph outlines for a given glyph comprised of a collection of glyph table entries.

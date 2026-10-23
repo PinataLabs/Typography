@@ -7,7 +7,7 @@ using System.Linq;
 using UnicodeTrieGenerator.StateAutomation;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Unicode
+namespace PinataLabs.Typography.Tests.Unicode
 {
     public class DfaTests
     {

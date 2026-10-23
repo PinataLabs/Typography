@@ -3,7 +3,7 @@
 
 using System.Numerics;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// A glyph from a particular font face.

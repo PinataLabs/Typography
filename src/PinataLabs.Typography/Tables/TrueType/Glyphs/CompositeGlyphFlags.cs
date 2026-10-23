@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Tables.TrueType.Glyphs
+namespace PinataLabs.Typography.Tables.TrueType.Glyphs
 {
     /*
      ## Composite Glyph Flags

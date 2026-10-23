@@ -3,10 +3,10 @@
 
 using System;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tests.Fakes
+namespace PinataLabs.Typography.Tests.Fakes
 {
     internal class FakeGlyphSource
     {

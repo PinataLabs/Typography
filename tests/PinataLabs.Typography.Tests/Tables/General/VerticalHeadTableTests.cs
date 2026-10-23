@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.IO;
-using SixLabors.Fonts.Tables.General;
+using PinataLabs.Typography.Tables.General;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.General
+namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class VerticalHeadTableTests
     {

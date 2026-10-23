@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
-namespace SixLabors.Fonts.Tests.Fakes
+namespace PinataLabs.Typography.Tests.Fakes
 {
     internal class FakeGlyphTable : GlyphTable
     {

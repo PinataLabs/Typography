@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     internal readonly struct Bounds : IEquatable<Bounds>
     {

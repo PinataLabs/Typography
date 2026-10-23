@@ -4,10 +4,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using SixLabors.Fonts.Native;
+using PinataLabs.Typography.Native;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Native
+namespace PinataLabs.Typography.Tests.Native
 {
     public class MacSystemFontsEnumeratorTests
     {

@@ -19,10 +19,10 @@
 
   <ItemGroup>
     <PackageReference Include="Pegasus" PrivateAssets="all" />
-    <Compile Include="..\..\src\UnicodeTrieGenerator\StateAutomation\DeterministicFiniteAutomata.cs" Link="Unicode\StateAutomation\DeterministicFiniteAutomata.cs" />
-    <Compile Include="..\..\src\UnicodeTrieGenerator\StateAutomation\Compile.cs" Link="Unicode\StateAutomation\Compile.cs" />
-    <Compile Include="..\..\src\UnicodeTrieGenerator\StateAutomation\State.cs" Link="Unicode\StateAutomation\State.cs" />
-    <PegGrammar Include="..\..\src\UnicodeTrieGenerator\StateAutomation\Grammar.peg" Link="Unicode\StateAutomation\Grammar.peg" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\DeterministicFiniteAutomata.cs" Link="Unicode\StateAutomation\DeterministicFiniteAutomata.cs" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\Compile.cs" Link="Unicode\StateAutomation\Compile.cs" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\State.cs" Link="Unicode\StateAutomation\State.cs" />
+    <PegGrammar Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\Grammar.peg" Link="Unicode\StateAutomation\Grammar.peg" />
   </ItemGroup>
 
 </Project>

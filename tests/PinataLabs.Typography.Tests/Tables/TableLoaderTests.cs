@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SixLabors.Fonts.Tables;
+using PinataLabs.Typography.Tables;
 
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables
+namespace PinataLabs.Typography.Tests.Tables
 {
     public class TableLoaderTests
     {

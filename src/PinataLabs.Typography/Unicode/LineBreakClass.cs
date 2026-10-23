@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 // Reordering these enum properties will require the regeneration of the LineBreak.trie.
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Unicode line break classes.

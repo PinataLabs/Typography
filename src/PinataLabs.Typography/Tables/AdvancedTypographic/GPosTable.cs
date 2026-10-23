@@ -3,11 +3,11 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using SixLabors.Fonts.Tables.AdvancedTypographic.GPos;
-using SixLabors.Fonts.Tables.AdvancedTypographic.Shapers;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic
+namespace PinataLabs.Typography.Tables.AdvancedTypographic
 {
     /// <summary>
     /// The Glyph Positioning table (GPOS) provides precise control over glyph placement for

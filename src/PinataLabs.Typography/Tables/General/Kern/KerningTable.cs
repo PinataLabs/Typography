@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace SixLabors.Fonts.Tables.General.Kern
+namespace PinataLabs.Typography.Tables.General.Kern
 {
     internal sealed class KerningTable : Table
     {

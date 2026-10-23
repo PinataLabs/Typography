@@ -3,9 +3,9 @@
 
 using System;
 using System.Diagnostics;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// The combined set of properties that uniquely identify the glyph that is to be rendered

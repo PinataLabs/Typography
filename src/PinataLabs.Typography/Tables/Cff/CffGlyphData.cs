@@ -3,7 +3,7 @@
 
 using System.Numerics;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     internal struct CffGlyphData
     {

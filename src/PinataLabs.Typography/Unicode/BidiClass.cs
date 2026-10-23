@@ -3,7 +3,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     /// <summary>
     /// Represents the Unicode Bidi value of a given <see cref="CodePoint"/>.

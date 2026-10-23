@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.GPos
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos
 {
     /// <summary>
     /// This lookup provides a mechanism whereby any other lookup type’s subtables are stored at a 32-bit offset location in the GPOS table.

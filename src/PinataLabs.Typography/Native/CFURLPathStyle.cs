@@ -3,7 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace SixLabors.Fonts.Native
+namespace PinataLabs.Typography.Native
 {
     /// <summary>
     /// Options you can use to determine how CFURL functions parse a file system path name.

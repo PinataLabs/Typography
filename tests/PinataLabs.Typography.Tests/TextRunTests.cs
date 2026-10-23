@@ -4,7 +4,7 @@
 using System;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class TextRunTests
     {

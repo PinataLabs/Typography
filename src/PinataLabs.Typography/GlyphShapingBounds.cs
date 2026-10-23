@@ -4,7 +4,7 @@
 using System;
 using System.Diagnostics;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents the shaped bounds of a glyph.

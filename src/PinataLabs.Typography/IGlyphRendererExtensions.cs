@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// A surface that can have a glyph rendered to it as a series of actions.

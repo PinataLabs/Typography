@@ -3,7 +3,7 @@
 
 using BenchmarkDotNet.Running;
 
-namespace SixLabors.Fonts.Benchmarks
+namespace PinataLabs.Typography.Benchmarks
 {
     internal class Program
     {

@@ -1,11 +1,11 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Tables.General.Colr;
+using PinataLabs.Typography.Tables.General.Colr;
 using Xunit;
-using static SixLabors.Fonts.Tests.WriterExtensions;
+using static PinataLabs.Typography.Tests.WriterExtensions;
 
-namespace SixLabors.Fonts.Tests.Tables.General
+namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class ColrTableTests
     {

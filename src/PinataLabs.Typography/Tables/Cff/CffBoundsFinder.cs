@@ -4,7 +4,7 @@
 using System;
 using System.Numerics;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     internal class CffBoundsFinder : IGlyphRenderer
     {

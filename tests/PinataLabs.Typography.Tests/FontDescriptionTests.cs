@@ -3,10 +3,10 @@
 
 using System.Collections.Generic;
 using System.Globalization;
-using SixLabors.Fonts.WellKnownIds;
+using PinataLabs.Typography.WellKnownIds;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class FontDescriptionTests
     {

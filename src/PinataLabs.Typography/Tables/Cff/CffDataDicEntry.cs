@@ -3,7 +3,7 @@
 
 using System.Text;
 
-namespace SixLabors.Fonts.Tables.Cff
+namespace PinataLabs.Typography.Tables.Cff
 {
     internal class CffDataDicEntry
     {

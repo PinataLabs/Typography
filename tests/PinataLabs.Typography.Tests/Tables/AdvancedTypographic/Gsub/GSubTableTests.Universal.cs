@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Tables.AdvancedTypographic.GSub
+namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
     /// <content>
     /// Tests adapted from <see href="https://github.com/foliojs/fontkit/blob/417af0c79c5664271a07a783574ec7fac7ebad0c/test/shaping.js"/>

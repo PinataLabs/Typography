@@ -7,9 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using SixLabors.Fonts.Tables;
+using PinataLabs.Typography.Tables;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Represents a collection of font families.

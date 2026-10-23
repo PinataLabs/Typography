@@ -1,12 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.General;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class FontReaderTests
     {
@@ -53,7 +53,7 @@ namespace SixLabors.Fonts.Tests
             writer.WriteCMapTable(
                 new[]
                 {
-                    new Fonts.Tables.General.CMap.Format0SubTable(
+                    new Typography.Tables.General.CMap.Format0SubTable(
                         0,
                         WellKnownIds.PlatformIDs.Macintosh,
                         1,

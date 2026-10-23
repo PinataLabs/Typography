@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Tables.AdvancedTypographic.Shapers
+namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers
 {
     /// <summary>
     /// An individual shaping stage.

@@ -4,7 +4,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace SixLabors.Fonts.Utilities
+namespace PinataLabs.Typography.Utilities
 {
     [DebuggerDisplay("Offset: {Offset}, Length: {Length}, Value: {Value}")]
     internal class StringLoader

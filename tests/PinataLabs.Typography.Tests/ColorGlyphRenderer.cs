@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class ColorGlyphRenderer : GlyphRenderer, IColorGlyphRenderer
     {

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     /// <summary>
     /// Defines modes to determine the layout direction of text.

@@ -4,7 +4,7 @@
 using System;
 using System.Numerics;
 
-namespace SixLabors.Fonts.Tables.TrueType.Glyphs
+namespace PinataLabs.Typography.Tables.TrueType.Glyphs
 {
     internal class SimpleGlyphLoader : GlyphLoader
     {

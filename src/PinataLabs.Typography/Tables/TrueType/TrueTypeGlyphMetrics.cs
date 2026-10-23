@@ -4,10 +4,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Fonts.Tables.TrueType.Glyphs;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Unicode;
 
-namespace SixLabors.Fonts.Tables.TrueType
+namespace PinataLabs.Typography.Tables.TrueType
 {
     /// <summary>
     /// Represents a glyph metric from a particular TrueType font face.

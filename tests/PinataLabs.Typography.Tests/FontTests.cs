@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class FontTests
     {

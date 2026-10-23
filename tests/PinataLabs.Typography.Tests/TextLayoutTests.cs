@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
-using SixLabors.Fonts.Tests.Fakes;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Tests.Fakes;
+using PinataLabs.Typography.Unicode;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     public class TextLayoutTests
     {

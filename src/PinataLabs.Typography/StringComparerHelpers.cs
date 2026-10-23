@@ -4,7 +4,7 @@
 using System;
 using System.Globalization;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     internal static class StringComparerHelpers
     {

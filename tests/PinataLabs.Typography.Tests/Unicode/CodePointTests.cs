@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using SixLabors.Fonts.Unicode;
+using PinataLabs.Typography.Unicode;
 using Xunit;
 
-namespace SixLabors.Fonts.Tests.Unicode
+namespace PinataLabs.Typography.Tests.Unicode
 {
     public partial class CodePointTests
     {

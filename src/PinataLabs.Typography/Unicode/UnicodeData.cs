@@ -4,9 +4,9 @@
 using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using SixLabors.Fonts.Unicode.Resources;
+using PinataLabs.Typography.Unicode.Resources;
 
-namespace SixLabors.Fonts.Unicode
+namespace PinataLabs.Typography.Unicode
 {
     internal static class UnicodeData
     {

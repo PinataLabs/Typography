@@ -7,10 +7,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
-using SixLabors.Fonts.Tables;
-using SixLabors.Fonts.Tables.Woff;
+using PinataLabs.Typography.Tables;
+using PinataLabs.Typography.Tables.Woff;
 
-namespace SixLabors.Fonts
+namespace PinataLabs.Typography
 {
     internal sealed class FontReader
     {

@@ -6,7 +6,7 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     internal class BigEndianBinaryWriter
     {

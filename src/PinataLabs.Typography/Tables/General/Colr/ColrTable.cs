@@ -3,7 +3,7 @@
 
 using System;
 
-namespace SixLabors.Fonts.Tables.General.Colr
+namespace PinataLabs.Typography.Tables.General.Colr
 {
     internal class ColrTable : Table
     {

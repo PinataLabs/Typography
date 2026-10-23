@@ -6,11 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace SixLabors.Fonts.Tests
+namespace PinataLabs.Typography.Tests
 {
     internal static class TestEnvironment
     {
-        private const string SixLaborsSolutionFileName = "SixLabors.Fonts.slnx";
+        private const string SolutionFileName = "PinataLabs.Typography.slnx";
 
         private const string UnicodeTestDataRelativePath = @"tests\UnicodeTestData\";
 
@@ -31,7 +31,7 @@ namespace SixLabors.Fonts.Tests
 
             DirectoryInfo directory = assemblyFile.Directory;
 
-            while (!directory.EnumerateFiles(SixLaborsSolutionFileName).Any())
+            while (!directory.EnumerateFiles(SolutionFileName).Any())
             {
                 try
                 {
@@ -40,13 +40,13 @@ namespace SixLabors.Fonts.Tests
                 catch (Exception ex)
                 {
                     throw new Exception(
-                        $"Unable to find SixLabors solution directory from {assemblyLocation} because of {ex.GetType().Name}!",
+                        $"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation} because of {ex.GetType().Name}!",
                         ex);
                 }
 
                 if (directory == null)
                 {
-                    throw new Exception($"Unable to find SixLabors solution directory from {assemblyLocation}!");
+                    throw new Exception($"Unable to find the PinataLabs.Typography solution directory from {assemblyLocation}!");
                 }
             }
 
