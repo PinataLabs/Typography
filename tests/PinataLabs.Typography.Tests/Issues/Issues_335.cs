@@ -2,7 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
@@ -12,7 +14,7 @@ namespace PinataLabs.Typography.Tests.Issues
         [Arguments(TextAlignment.Start)]
         [Arguments(TextAlignment.Center)]
         [Arguments(TextAlignment.End)]
-        public void HorizontalAlignmentWorksForSingleLineText(TextAlignment alignment)
+        public async Task HorizontalAlignmentWorksForSingleLineText(TextAlignment alignment)
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
             family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
@@ -32,14 +34,14 @@ namespace PinataLabs.Typography.Tests.Issues
 
             FontRectangle multipleBounds = TextMeasurer.MeasureBounds(text, options);
 
-            Assert.Equal(multipleBounds.Location, singleBounds.Location);
+            await Assert.That(singleBounds.Location).IsEqualTo(multipleBounds.Location);
         }
 
         [Test]
         [Arguments(TextAlignment.Start)]
         [Arguments(TextAlignment.Center)]
         [Arguments(TextAlignment.End)]
-        public void VerticalAlignmentWorksForSingleLineText(TextAlignment alignment)
+        public async Task VerticalAlignmentWorksForSingleLineText(TextAlignment alignment)
         {
             FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
             family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
@@ -60,7 +62,7 @@ namespace PinataLabs.Typography.Tests.Issues
 
             FontRectangle multipleBounds = TextMeasurer.MeasureBounds(text, options);
 
-            Assert.Equal(multipleBounds.Location, singleBounds.Location);
+            await Assert.That(singleBounds.Location).IsEqualTo(multipleBounds.Location);
         }
     }
 }

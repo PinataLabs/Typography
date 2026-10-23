@@ -2,14 +2,18 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_97
     {
         [Test]
-        public void ShouldNotThrowNullReferenceExceptionWhenReaderCannotBeCreatedForTable()
-            => Assert.Throws<InvalidFontTableException>(() => FontDescription.LoadDescription(TestFonts.Issues.Issue97File));
+        public async Task ShouldNotThrowNullReferenceExceptionWhenReaderCannotBeCreatedForTable()
+        {
+            await Assert.That(() => FontDescription.LoadDescription(TestFonts.Issues.Issue97File)).ThrowsExactly<InvalidFontTableException>();
+        }
     }
 }

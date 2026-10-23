@@ -3,8 +3,11 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -12,87 +15,89 @@ namespace PinataLabs.Typography.Tests.Unicode
     {
         [Test]
         [MethodDataSource(nameof(GeneralTestData_BmpCodePoints_NoSurrogates))]
-        public void Ctor_Cast_Char_Valid(GeneralTestData testData)
+        public async Task Ctor_Cast_Char_Valid(GeneralTestData testData)
         {
             var codePoint = new CodePoint(checked((char)testData.ScalarValue));
             var codePointFromCast = (CodePoint)(char)testData.ScalarValue;
 
-            Assert.Equal(codePoint, codePointFromCast);
-            Assert.Equal(testData.ScalarValue, codePoint.Value);
-            Assert.Equal(testData.IsAscii, codePoint.IsAscii);
-            Assert.Equal(testData.IsBmp, codePoint.IsBmp);
-            Assert.Equal(testData.Plane, codePoint.Plane);
+            await Assert.That(codePointFromCast).IsEqualTo(codePoint);
+            await Assert.That(codePoint.Value).IsEqualTo(testData.ScalarValue);
+            await Assert.That(codePoint.IsAscii).IsEqualTo(testData.IsAscii);
+            await Assert.That(codePoint.IsBmp).IsEqualTo(testData.IsBmp);
+            await Assert.That(codePoint.Plane).IsEqualTo(testData.Plane);
         }
 
         [Test]
         [MethodDataSource(nameof(BmpCodePoints_SurrogatesOnly))]
-        public void Ctor_Cast_Char_Invalid_Throws(char value)
+        public async Task Ctor_Cast_Char_Invalid_Throws(char value)
         {
-            Assert.Throws<ArgumentOutOfRangeException>(nameof(value), () => new CodePoint(value));
-            Assert.Throws<ArgumentOutOfRangeException>(nameof(value), () => (CodePoint)value);
+            await Assert.That(() => new CodePoint(value)).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(nameof(value));
+            await Assert.That(() => (CodePoint)value).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(nameof(value));
         }
 
         [Test]
         [MethodDataSource(nameof(GeneralTestData_BmpCodePoints_NoSurrogates))]
         [MethodDataSource(nameof(GeneralTestData_SupplementaryCodePoints_ValidOnly))]
-        public void Ctor_Cast_Int32_Valid(GeneralTestData testData)
+        public async Task Ctor_Cast_Int32_Valid(GeneralTestData testData)
         {
             var codePoint = new CodePoint(testData.ScalarValue);
             var codePointFromCast = (CodePoint)testData.ScalarValue;
 
-            Assert.Equal(codePoint, codePointFromCast);
-            Assert.Equal(testData.ScalarValue, codePoint.Value);
-            Assert.Equal(testData.IsAscii, codePoint.IsAscii);
-            Assert.Equal(testData.IsBmp, codePoint.IsBmp);
-            Assert.Equal(testData.Plane, codePoint.Plane);
+            await Assert.That(codePointFromCast).IsEqualTo(codePoint);
+            await Assert.That(codePoint.Value).IsEqualTo(testData.ScalarValue);
+            await Assert.That(codePoint.IsAscii).IsEqualTo(testData.IsAscii);
+            await Assert.That(codePoint.IsBmp).IsEqualTo(testData.IsBmp);
+            await Assert.That(codePoint.Plane).IsEqualTo(testData.Plane);
         }
 
         [Test]
         [MethodDataSource(nameof(SupplementaryCodePoints_InvalidOnly))]
-        public void Ctor_Cast_Int32_Invalid_Throws(int value)
+        public async Task Ctor_Cast_Int32_Invalid_Throws(int value)
         {
-            Assert.Throws<ArgumentOutOfRangeException>(nameof(value), () => new CodePoint(value));
-            Assert.Throws<ArgumentOutOfRangeException>(nameof(value), () => (CodePoint)value);
+            await Assert.That(() => new CodePoint(value)).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(nameof(value));
+            await Assert.That(() => (CodePoint)value).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(nameof(value));
         }
 
         [Test]
         [MethodDataSource(nameof(GeneralTestData_BmpCodePoints_NoSurrogates))]
         [MethodDataSource(nameof(GeneralTestData_SupplementaryCodePoints_ValidOnly))]
-        public void Ctor_Cast_UInt32_Valid(GeneralTestData testData)
+        public async Task Ctor_Cast_UInt32_Valid(GeneralTestData testData)
         {
             var codePoint = new CodePoint((uint)testData.ScalarValue);
             var codePointFromCast = (CodePoint)(uint)testData.ScalarValue;
 
-            Assert.Equal(codePoint, codePointFromCast);
-            Assert.Equal(testData.ScalarValue, codePoint.Value);
-            Assert.Equal(testData.IsAscii, codePoint.IsAscii);
-            Assert.Equal(testData.IsBmp, codePoint.IsBmp);
-            Assert.Equal(testData.Plane, codePoint.Plane);
+            await Assert.That(codePointFromCast).IsEqualTo(codePoint);
+            await Assert.That(codePoint.Value).IsEqualTo(testData.ScalarValue);
+            await Assert.That(codePoint.IsAscii).IsEqualTo(testData.IsAscii);
+            await Assert.That(codePoint.IsBmp).IsEqualTo(testData.IsBmp);
+            await Assert.That(codePoint.Plane).IsEqualTo(testData.Plane);
         }
 
         [Test]
         [MethodDataSource(nameof(SupplementaryCodePoints_InvalidOnly))]
-        public void Ctor_Cast_UInt32_Invalid_Throws(int value)
+        public async Task Ctor_Cast_UInt32_Invalid_Throws(int value)
         {
-            Assert.Throws<ArgumentOutOfRangeException>(nameof(value), () => new CodePoint((uint)value));
-            Assert.Throws<ArgumentOutOfRangeException>(nameof(value), () => (CodePoint)(uint)value);
+            await Assert.That(() => new CodePoint((uint)value)).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(nameof(value));
+            await Assert.That(() => (CodePoint)(uint)value).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(nameof(value));
         }
 
         [Test]
         [MethodDataSource(nameof(SurrogatePairTestData_ValidOnly))]
-        public void Ctor_SurrogatePair_Valid(char highSurrogate, char lowSurrogate, int expectedValue)
-            => Assert.Equal(expectedValue, new CodePoint(highSurrogate, lowSurrogate).Value);
-
-        [Test]
-        [MethodDataSource(nameof(SurrogatePairTestData_InvalidOnly))]
-        public void Ctor_SurrogatePair_Invalid(char highSurrogate, char lowSurrogate)
+        public async Task Ctor_SurrogatePair_Valid(char highSurrogate, char lowSurrogate, int expectedValue)
         {
-            string expectedParamName = !char.IsHighSurrogate(highSurrogate) ? nameof(highSurrogate) : nameof(lowSurrogate);
-            Assert.Throws<ArgumentOutOfRangeException>(expectedParamName, () => new CodePoint(highSurrogate, lowSurrogate));
+            await Assert.That(new CodePoint(highSurrogate, lowSurrogate).Value).IsEqualTo(expectedValue);
         }
 
         [Test]
-        public void CanEnumerateSpan()
+        [MethodDataSource(nameof(SurrogatePairTestData_InvalidOnly))]
+        public async Task Ctor_SurrogatePair_Invalid(char highSurrogate, char lowSurrogate)
+        {
+            string expectedParamName = !char.IsHighSurrogate(highSurrogate) ? nameof(highSurrogate) : nameof(lowSurrogate);
+            await Assert.That(() => new CodePoint(highSurrogate, lowSurrogate)).ThrowsExactly<ArgumentOutOfRangeException>().WithParameterName(expectedParamName);
+        }
+
+        [Test]
+        public async Task CanEnumerateSpan()
         {
             // Test example taken from.
             // https://docs.microsoft.com/en-us/dotnet/api/system.text.rune?view=net-5.0#when-to-use-the-rune-type
@@ -108,11 +113,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 }
             }
 
-            Assert.Equal(8, letterCount);
+            await Assert.That(letterCount).IsEqualTo(8);
         }
 
         [Test]
-        public void CanEnumerateReadonlySpan()
+        public async Task CanEnumerateReadonlySpan()
         {
             // Test example taken from.
             // https://docs.microsoft.com/en-us/dotnet/api/system.text.rune?view=net-5.0#when-to-use-the-rune-type
@@ -127,11 +132,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 }
             }
 
-            Assert.Equal(8, letterCount);
+            await Assert.That(letterCount).IsEqualTo(8);
         }
 
         [Test]
-        public void CanEnumerateInvalidReadonlySpan()
+        public async Task CanEnumerateInvalidReadonlySpan()
         {
             // The string below contains 2 combining characters then
             // a single high surrogate code unit, then 2 more sets or combining characters.
@@ -149,115 +154,145 @@ namespace PinataLabs.Typography.Tests.Unicode
                 codePointCount++;
             }
 
-            Assert.Equal(3, letterCount);
-            Assert.Equal(7, codePointCount);
+            await Assert.That(letterCount).IsEqualTo(3);
+            await Assert.That(codePointCount).IsEqualTo(7);
         }
 
         [Test]
-        public void CodePointIsValid()
+        public async Task CodePointIsValid()
         {
+            // Collect the failures first; awaiting an assertion per code point is slow.
+            var invalid = new List<uint>();
             uint i;
             for (i = 0; i <= 0x10FFFFu; i++)
             {
-                Assert.True(CodePoint.IsValid(i));
+                if (!CodePoint.IsValid(i))
+                {
+                    invalid.Add(i);
+                }
             }
 
+            await Assert.That(invalid).IsEmpty();
+
             i++;
-            Assert.False(CodePoint.IsValid(i));
+            await Assert.That(CodePoint.IsValid(i)).IsFalse();
         }
 
         [Test]
         [MethodDataSource(nameof(GeneralTestData_BmpCodePoints_NoSurrogates))]
         [MethodDataSource(nameof(GeneralTestData_SupplementaryCodePoints_ValidOnly))]
-        public void Utf16SequenceLengthIsCorrect(GeneralTestData testData)
+        public async Task Utf16SequenceLengthIsCorrect(GeneralTestData testData)
         {
             var codePoint = new CodePoint(testData.ScalarValue);
-            Assert.Equal(testData.Utf16Sequence.Length, codePoint.Utf16SequenceLength);
+            await Assert.That(codePoint.Utf16SequenceLength).IsEqualTo(testData.Utf16Sequence.Length);
         }
 
         [Test]
         [MethodDataSource(nameof(GeneralTestData_BmpCodePoints_NoSurrogates))]
         [MethodDataSource(nameof(GeneralTestData_SupplementaryCodePoints_ValidOnly))]
-        public void Utf8SequenceLengthIsCorrect(GeneralTestData testData)
+        public async Task Utf8SequenceLengthIsCorrect(GeneralTestData testData)
         {
             var codePoint = new CodePoint(testData.ScalarValue);
-            Assert.Equal(testData.Utf8Sequence.Length, codePoint.Utf8SequenceLength);
+            await Assert.That(codePoint.Utf8SequenceLength).IsEqualTo(testData.Utf8Sequence.Length);
         }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsDigit(UnicodeInfoTestData testData)
-        => Assert.Equal(testData.IsDigit, CodePoint.IsDigit(testData.ScalarValue));
+        public async Task CodePointIsDigit(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsDigit(testData.ScalarValue)).IsEqualTo(testData.IsDigit);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsLetter(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsLetter, CodePoint.IsLetter(testData.ScalarValue));
+        public async Task CodePointIsLetter(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsLetter(testData.ScalarValue)).IsEqualTo(testData.IsLetter);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsLetterOrDigit(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsLetterOrDigit, CodePoint.IsLetterOrDigit(testData.ScalarValue));
+        public async Task CodePointIsLetterOrDigit(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsLetterOrDigit(testData.ScalarValue)).IsEqualTo(testData.IsLetterOrDigit);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsLower(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsLower, CodePoint.IsLower(testData.ScalarValue));
+        public async Task CodePointIsLower(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsLower(testData.ScalarValue)).IsEqualTo(testData.IsLower);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsNumber(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsNumber, CodePoint.IsNumber(testData.ScalarValue));
+        public async Task CodePointIsNumber(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsNumber(testData.ScalarValue)).IsEqualTo(testData.IsNumber);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsPunctuation(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsPunctuation, CodePoint.IsPunctuation(testData.ScalarValue));
+        public async Task CodePointIsPunctuation(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsPunctuation(testData.ScalarValue)).IsEqualTo(testData.IsPunctuation);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsSeparator(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsSeparator, CodePoint.IsSeparator(testData.ScalarValue));
+        public async Task CodePointIsSeparator(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsSeparator(testData.ScalarValue)).IsEqualTo(testData.IsSeparator);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsSymbol(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsSymbol, CodePoint.IsSymbol(testData.ScalarValue));
+        public async Task CodePointIsSymbol(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsSymbol(testData.ScalarValue)).IsEqualTo(testData.IsSymbol);
+        }
 
         [Test]
         [MethodDataSource(nameof(UnicodeInfoTestData_Latin1AndSelectOthers))]
-        public void CodePointIsUpper(UnicodeInfoTestData testData)
-            => Assert.Equal(testData.IsUpper, CodePoint.IsUpper(testData.ScalarValue));
+        public async Task CodePointIsUpper(UnicodeInfoTestData testData)
+        {
+            await Assert.That(CodePoint.IsUpper(testData.ScalarValue)).IsEqualTo(testData.IsUpper);
+        }
 
         [Test]
-        public void CodePointIsWhiteSpaceAscii()
+        public async Task CodePointIsWhiteSpaceAscii()
         {
             for (uint i = 0; i <= 0x7Fu; i++)
             {
-                Assert.True(UnicodeUtility.IsAsciiCodePoint(i));
-                Assert.Equal(CodePoint.IsWhiteSpace(new CodePoint(i)), char.IsWhiteSpace((char)i));
+                await Assert.That(UnicodeUtility.IsAsciiCodePoint(i)).IsTrue();
+                await Assert.That(CodePoint.IsWhiteSpace(new CodePoint(i))).IsEqualTo(char.IsWhiteSpace((char)i));
             }
         }
 
         [Test]
-        public void CodePointIsWhiteSpaceBmp()
+        public async Task CodePointIsWhiteSpaceBmp()
         {
             for (uint i = 0x7Fu + 1u; i <= 0xFFFFu; i++)
             {
-                Assert.True(UnicodeUtility.IsBmpCodePoint(i));
-                Assert.Equal(CodePoint.IsWhiteSpace(new CodePoint(i)), char.IsWhiteSpace((char)i));
+                await Assert.That(UnicodeUtility.IsBmpCodePoint(i)).IsTrue();
+                await Assert.That(CodePoint.IsWhiteSpace(new CodePoint(i))).IsEqualTo(char.IsWhiteSpace((char)i));
             }
         }
 
         [Test]
-        public void CodePointIsControl()
+        public async Task CodePointIsControl()
         {
+            // Collect the failures first; awaiting an assertion per code point is slow.
+            var mismatches = new List<uint>();
             for (uint i = 0; i <= 0x10FFFFu; i++)
             {
                 var cp = new CodePoint(i);
                 if (cp.IsBmp)
                 {
-                    Assert.Equal(CodePoint.IsControl(new CodePoint(i)), char.IsControl((char)i));
+                    if (CodePoint.IsControl(new CodePoint(i)) != char.IsControl((char)i))
+                    {
+                        mismatches.Add(i);
+                    }
                 }
                 else
                 {
@@ -265,13 +300,18 @@ namespace PinataLabs.Typography.Tests.Unicode
                     // is forever fixed at [ U+0000..U+001F ], [ U+007F..U+009F ]. No
                     // characters will ever be added to or removed from the "control characters"
                     // group. See https://www.unicode.org/policies/stability_policy.html.
-                    Assert.False(CodePoint.IsControl(cp));
+                    if (CodePoint.IsControl(cp))
+                    {
+                        mismatches.Add(i);
+                    }
                 }
             }
+
+            await Assert.That(mismatches).IsEmpty();
         }
 
         [Test]
-        public void CodePointIsMandatoryBreak()
+        public async Task CodePointIsMandatoryBreak()
         {
             static bool IsLineBreakClassBreak(uint value)
             {
@@ -291,10 +331,17 @@ namespace PinataLabs.Typography.Tests.Unicode
                 }
             }
 
+            // Collect the failures first; awaiting an assertion per code point is slow.
+            var mismatches = new List<uint>();
             for (uint i = 0; i <= 0x10FFFFu; i++)
             {
-                Assert.Equal(CodePoint.IsNewLine(new CodePoint(i)), IsLineBreakClassBreak(i));
+                if (CodePoint.IsNewLine(new CodePoint(i)) != IsLineBreakClassBreak(i))
+                {
+                    mismatches.Add(i);
+                }
             }
+
+            await Assert.That(mismatches).IsEmpty();
         }
 
         [Test]
@@ -302,44 +349,48 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0x80, 0x80)]
         [Arguments(0x80, 0x100)]
         [Arguments(0x100, 0x80)]
-        public void Operators_And_CompareTo(uint scalarValueLeft, uint scalarValueRight)
+        public async Task Operators_And_CompareTo(uint scalarValueLeft, uint scalarValueRight)
         {
             var left = new CodePoint(scalarValueLeft);
             var right = new CodePoint(scalarValueRight);
 
-            Assert.Equal(scalarValueLeft == scalarValueRight, left == right);
-            Assert.Equal(scalarValueLeft != scalarValueRight, left != right);
-            Assert.Equal(scalarValueLeft < scalarValueRight, left < right);
-            Assert.Equal(scalarValueLeft <= scalarValueRight, left <= right);
-            Assert.Equal(scalarValueLeft > scalarValueRight, left > right);
-            Assert.Equal(scalarValueLeft >= scalarValueRight, left >= right);
-            Assert.Equal(Math.Sign(scalarValueLeft.CompareTo(scalarValueRight)), Math.Sign(left.CompareTo(right)));
-            Assert.Equal(Math.Sign(((IComparable)scalarValueLeft).CompareTo(scalarValueRight)), Math.Sign(((IComparable)left).CompareTo(right)));
+            await Assert.That(left == right).IsEqualTo(scalarValueLeft == scalarValueRight);
+            await Assert.That(left != right).IsEqualTo(scalarValueLeft != scalarValueRight);
+            await Assert.That(left < right).IsEqualTo(scalarValueLeft < scalarValueRight);
+            await Assert.That(left <= right).IsEqualTo(scalarValueLeft <= scalarValueRight);
+            await Assert.That(left > right).IsEqualTo(scalarValueLeft > scalarValueRight);
+            await Assert.That(left >= right).IsEqualTo(scalarValueLeft >= scalarValueRight);
+            await Assert.That(Math.Sign(left.CompareTo(right))).IsEqualTo(Math.Sign(scalarValueLeft.CompareTo(scalarValueRight)));
+            await Assert.That(Math.Sign(((IComparable)left).CompareTo(right))).IsEqualTo(Math.Sign(((IComparable)scalarValueLeft).CompareTo(scalarValueRight)));
         }
 
         [Test]
         [Arguments(0)]
         [Arguments(0x10FFFF)]
-        public void NonGenericCompareTo_NonNullAlwaysGreaterThanNull(uint scalarValue)
-            => Assert.Equal(1, Math.Sign(((IComparable)new CodePoint(scalarValue)).CompareTo(null)));
-
-        [Test]
-        public void NonGenericCompareTo_GivenNonCodePointArgument_ThrowsArgumentException()
+        public async Task NonGenericCompareTo_NonNullAlwaysGreaterThanNull(uint scalarValue)
         {
-            IComparable codePoint = new CodePoint(0);
-
-            Assert.Throws<ArgumentException>(() => codePoint.CompareTo(0 /* int32 */));
+            await Assert.That(Math.Sign(((IComparable)new CodePoint(scalarValue)).CompareTo(null))).IsEqualTo(1);
         }
 
         [Test]
-        public void ReplacementChar()
-            => Assert.Equal(0xFFFD, CodePoint.ReplacementChar.Value);
+        public async Task NonGenericCompareTo_GivenNonCodePointArgument_ThrowsArgumentException()
+        {
+            IComparable codePoint = new CodePoint(0);
+
+            await Assert.That(() => codePoint.CompareTo(0 /* int32 */)).ThrowsExactly<ArgumentException>();
+        }
 
         [Test]
-        public void CorrectlyIdentifiesTab()
+        public async Task ReplacementChar()
         {
-            Assert.True(CodePoint.IsWhiteSpace(new CodePoint('\t')));
-            Assert.False(CodePoint.IsNewLine(new CodePoint('\t')));
+            await Assert.That(CodePoint.ReplacementChar.Value).IsEqualTo(0xFFFD);
+        }
+
+        [Test]
+        public async Task CorrectlyIdentifiesTab()
+        {
+            await Assert.That(CodePoint.IsWhiteSpace(new CodePoint('\t'))).IsTrue();
+            await Assert.That(CodePoint.IsNewLine(new CodePoint('\t'))).IsFalse();
         }
 
         // TODO: Add more cases from Script.txt
@@ -350,11 +401,11 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0x1D242, 0x1D245, ScriptClass.Greek)]
         [Arguments(0x620, 0x063F, ScriptClass.Arabic)]
         [Arguments(0x1EEF0, 0x1EEF1, ScriptClass.Arabic)]
-        public void CodePointIsScript(uint min, uint max, ScriptClass script)
+        public async Task CodePointIsScript(uint min, uint max, ScriptClass script)
         {
             for (uint i = min; i <= max; i++)
             {
-                Assert.Equal(script, CodePoint.GetScriptClass(new CodePoint(i)));
+                await Assert.That(CodePoint.GetScriptClass(new CodePoint(i))).IsEqualTo(script);
             }
         }
 
@@ -364,12 +415,12 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0x1886, ArabicJoiningType.Transparent, ArabicJoiningGroup.NoJoiningGroup)]
         [Arguments(0x18A6, ArabicJoiningType.DualJoining, ArabicJoiningGroup.NoJoiningGroup)]
         [Arguments(0x200C, ArabicJoiningType.NonJoining, ArabicJoiningGroup.NoJoiningGroup)]
-        public void CodePointIsJoiningClass(uint codePoint, ArabicJoiningType type, ArabicJoiningGroup group)
+        public async Task CodePointIsJoiningClass(uint codePoint, ArabicJoiningType type, ArabicJoiningGroup group)
         {
             ArabicJoiningClass join = CodePoint.GetArabicJoiningClass(new CodePoint(codePoint));
 
-            Assert.Equal(type, join.JoiningType);
-            Assert.Equal(group, join.JoiningGroup);
+            await Assert.That(join.JoiningType).IsEqualTo(type);
+            await Assert.That(join.JoiningGroup).IsEqualTo(group);
         }
 
         [Test]
@@ -379,10 +430,10 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0xFE00, true)]
         [Arguments(0xFF00, false)]
         [Arguments(0xFE10, false)]
-        public void CodePointIsVariationSelector(uint codePoint, bool expectedResult)
+        public async Task CodePointIsVariationSelector(uint codePoint, bool expectedResult)
         {
             bool result = CodePoint.IsVariationSelector(new CodePoint(codePoint));
-            Assert.Equal(expectedResult, result);
+            await Assert.That(result).IsEqualTo(expectedResult);
         }
 
         [Test]
@@ -391,12 +442,12 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0x00A7, 0x00A7, VerticalOrientationType.Upright)]
         [Arguments(0x3001, 0x3002, VerticalOrientationType.TransformUpright)]
         [Arguments(0x300A, 0x300A, VerticalOrientationType.TransformRotate)]
-        public void CodePointIsVerticalOrientation(uint min, uint max, VerticalOrientationType type)
+        public async Task CodePointIsVerticalOrientation(uint min, uint max, VerticalOrientationType type)
         {
             for (uint i = min; i <= max; i++)
             {
                 VerticalOrientationType vertical = CodePoint.GetVerticalOrientationType(new CodePoint(min));
-                Assert.Equal(type, vertical);
+                await Assert.That(vertical).IsEqualTo(type);
             }
         }
 
@@ -406,11 +457,11 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0x111C1, IndicSyllabicCategory.Avagraha, IndicPositionalCategory.NA)]
         [Arguments(0x1C37, IndicSyllabicCategory.Nukta, IndicPositionalCategory.Bottom)]
         [Arguments(0x0C48, IndicSyllabicCategory.VowelDependent, IndicPositionalCategory.TopAndBottom)]
-        public void CodePointIsIndicCategory(uint value, IndicSyllabicCategory syllable, IndicPositionalCategory position)
+        public async Task CodePointIsIndicCategory(uint value, IndicSyllabicCategory syllable, IndicPositionalCategory position)
         {
             CodePoint codePoint = new(value);
-            Assert.Equal(syllable, CodePoint.GetIndicSyllabicCategory(codePoint));
-            Assert.Equal(position, CodePoint.GetIndicPositionalCategory(codePoint));
+            await Assert.That(CodePoint.GetIndicSyllabicCategory(codePoint)).IsEqualTo(syllable);
+            await Assert.That(CodePoint.GetIndicPositionalCategory(codePoint)).IsEqualTo(position);
         }
     }
 }

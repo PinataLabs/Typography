@@ -5,15 +5,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Enums;
+using TUnit.Assertions.Extensions;
 using UnicodeTrieGenerator.StateAutomation;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
     public class DfaTests
     {
         [Test]
-        public void CanCompileWithSingleLiteral()
+        public async Task CanCompileWithSingleLiteral()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0 }).ToArray();
@@ -25,11 +28,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 3, EndIndex = 3 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithConcatenation()
+        public async Task CanCompileWithConcatenation()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a b;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 1, 0, 1, 0 }).ToArray();
@@ -40,11 +43,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 4, EndIndex = 5 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithAlternation()
+        public async Task CanCompileWithAlternation()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = (a b) | (b a);");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 1, 0, 1, 0 }).ToArray();
@@ -56,11 +59,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 5, EndIndex = 6 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithRepeat()
+        public async Task CanCompileWithRepeat()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = (a b)+;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0, 1, 1, 0, 1 }).ToArray();
@@ -71,11 +74,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 6, EndIndex = 7 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithOptionalRepeat()
+        public async Task CanCompileWithOptionalRepeat()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = b a (a b)*;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0 }).ToArray();
@@ -86,11 +89,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 9, EndIndex = 10 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithExactRepetition()
+        public async Task CanCompileWithExactRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{3} b;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1 }).ToArray();
@@ -100,11 +103,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 3, EndIndex = 6 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithMinimumRepetition()
+        public async Task CanCompileWithMinimumRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{3,} b;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1 }).ToArray();
@@ -115,11 +118,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 7, EndIndex = 11 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithMaximumRepetition()
+        public async Task CanCompileWithMaximumRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{,3} b;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1 }).ToArray();
@@ -132,11 +135,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 12, EndIndex = 12 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithMinimumAndMaximumRepetition()
+        public async Task CanCompileWithMinimumAndMaximumRepetition()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = a{3,5} b;");
             StateMatch[] matches = stateMachine.Match(new[] { 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 }).ToArray();
@@ -147,11 +150,11 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 7, EndIndex = 11 }
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CanCompileWithTags()
+        public async Task CanCompileWithTags()
         {
             StateMachine stateMachine = Compile.Build("a = 0; b = 1; Main = x:(b a) | y:(a b);");
 
@@ -166,7 +169,7 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 9, EndIndex = 10, Tags = new string[] { "x" } },
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
 
             List<(string Tag, int Start, int End, ArraySlice<int> Slice)> applied = new();
             Dictionary<string, Action<int, int, ArraySlice<int>>> actions = new()
@@ -177,7 +180,7 @@ namespace PinataLabs.Typography.Tests.Unicode
 
             stateMachine.Apply(input, actions);
 
-            Assert.True(applied.Count == 4);
+            await Assert.That(applied.Count).IsEqualTo(4);
 
             List<(string Tag, int Start, int End, ArraySlice<int> Slice)> expectedApply = new()
             {
@@ -192,15 +195,15 @@ namespace PinataLabs.Typography.Tests.Unicode
                 (string Tag, int Start, int End, ArraySlice<int> Slice) e = expectedApply[i];
                 (string Tag, int Start, int End, ArraySlice<int> Slice) a = applied[i];
 
-                Assert.Equal(e.Tag, a.Tag);
-                Assert.Equal(e.Start, a.Start);
-                Assert.Equal(e.End, a.End);
-                Assert.True(e.Slice.SequenceEqual(a.Slice));
+                await Assert.That(a.Tag).IsEqualTo(e.Tag);
+                await Assert.That(a.Start).IsEqualTo(e.Start);
+                await Assert.That(a.End).IsEqualTo(e.End);
+                await Assert.That(a.Slice.ToArray()).IsEquivalentTo(e.Slice.ToArray(), EqualityComparer<int>.Default, CollectionOrdering.Matching);
             }
         }
 
         [Test]
-        public void CanCompileWithExternalSymbols()
+        public async Task CanCompileWithExternalSymbols()
         {
             var externalSymbols = new Dictionary<string, int>() { { "a", 0 }, { "b", 1 } };
             StateMachine stateMachine = Compile.Build("Main = a b;", externalSymbols);
@@ -213,7 +216,7 @@ namespace PinataLabs.Typography.Tests.Unicode
                 new StateMatch() { StartIndex = 4, EndIndex = 5 },
             };
 
-            Assert.True(expected.SequenceEqual(matches));
+            await Assert.That(matches).IsEquivalentTo(expected, EqualityComparer<StateMatch>.Default, CollectionOrdering.Matching);
         }
     }
 }
