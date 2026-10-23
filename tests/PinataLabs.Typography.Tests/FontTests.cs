@@ -4,79 +4,77 @@
 
 using System;
 using System.IO;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class FontTests
     {
         [Test]
-        public void FontClass_DefaultFontFamilyThrowsException()
+        public async Task FontClass_DefaultFontFamilyThrowsException()
         {
-            ArgumentException ex = Assert.Throws<ArgumentException>(
-                () => new Font(default(FontFamily), 0F));
+            ArgumentException ex = await Assert.That(() => new Font(default(FontFamily), 0F)).ThrowsExactly<ArgumentException>();
 
-            Assert.Equal("family", ex.ParamName);
+            await Assert.That(ex.ParamName).IsEqualTo("family");
         }
 
         [Test]
-        public void FontClass_DefaultFontFamilyWithSizeThrowsException()
+        public async Task FontClass_DefaultFontFamilyWithSizeThrowsException()
         {
-            ArgumentException ex = Assert.Throws<ArgumentException>(
-                () => new Font(default(FontFamily), 0F, FontStyle.Regular));
+            ArgumentException ex = await Assert.That(() => new Font(default(FontFamily), 0F, FontStyle.Regular)).ThrowsExactly<ArgumentException>();
 
-            Assert.Equal("family", ex.ParamName);
+            await Assert.That(ex.ParamName).IsEqualTo("family");
         }
 
         [Test]
-        public void FontClass_NullFontThrowsException()
+        public async Task FontClass_NullFontThrowsException()
         {
-            ArgumentNullException ex = Assert.Throws<ArgumentNullException>(
-                () => new Font(null, FontStyle.Regular));
+            ArgumentNullException ex = await Assert.That(() => new Font(null, FontStyle.Regular)).ThrowsExactly<ArgumentNullException>();
 
-            Assert.Equal("prototype", ex.ParamName);
+            await Assert.That(ex.ParamName).IsEqualTo("prototype");
         }
 
         [Test]
-        public void FontClass_NullWithSizeFontThrowsException()
+        public async Task FontClass_NullWithSizeFontThrowsException()
         {
-            ArgumentNullException ex = Assert.Throws<ArgumentNullException>(
-                () => new Font(null, 0f, FontStyle.Regular));
+            ArgumentNullException ex = await Assert.That(() => new Font(null, 0f, FontStyle.Regular)).ThrowsExactly<ArgumentNullException>();
 
-            Assert.Equal("prototype", ex.ParamName);
+            await Assert.That(ex.ParamName).IsEqualTo("prototype");
         }
 
         [Test]
-        public void FontClassWithPath_SetProperties()
+        public async Task FontClassWithPath_SetProperties()
         {
             var collection = new FontCollection();
             FontFamily family = collection.Add(TestFonts.CarterOneFile);
             var font = new Font(family, 12);
 
-            Assert.Equal("Carter One", font.Name);
-            Assert.Equal(12, font.Size);
-            Assert.Equal(FontStyle.Regular, font.RequestedStyle);
-            Assert.False(font.IsBold);
-            Assert.False(font.IsItalic);
-            Assert.True(font.TryGetPath(out string path));
-            Assert.NotNull(path);
+            await Assert.That(font.Name).IsEqualTo("Carter One");
+            await Assert.That(font.Size).IsEqualTo(12);
+            await Assert.That(font.RequestedStyle).IsEqualTo(FontStyle.Regular);
+            await Assert.That(font.IsBold).IsFalse();
+            await Assert.That(font.IsItalic).IsFalse();
+            await Assert.That(font.TryGetPath(out string path)).IsTrue();
+            await Assert.That(path).IsNotNull();
         }
 
         [Test]
-        public void FontClassNoPath_SetProperties()
+        public async Task FontClassNoPath_SetProperties()
         {
             var collection = new FontCollection();
             using Stream stream = TestFonts.CarterOneFileData();
             FontFamily family = collection.Add(stream);
             var font = new Font(family, 12);
 
-            Assert.Equal("Carter One", font.Name);
-            Assert.Equal(12, font.Size);
-            Assert.Equal(FontStyle.Regular, font.RequestedStyle);
-            Assert.False(font.IsBold);
-            Assert.False(font.IsItalic);
-            Assert.False(font.TryGetPath(out string path));
-            Assert.Null(path);
+            await Assert.That(font.Name).IsEqualTo("Carter One");
+            await Assert.That(font.Size).IsEqualTo(12);
+            await Assert.That(font.RequestedStyle).IsEqualTo(FontStyle.Regular);
+            await Assert.That(font.IsBold).IsFalse();
+            await Assert.That(font.IsItalic).IsFalse();
+            await Assert.That(font.TryGetPath(out string path)).IsFalse();
+            await Assert.That(path).IsNull();
         }
     }
 }

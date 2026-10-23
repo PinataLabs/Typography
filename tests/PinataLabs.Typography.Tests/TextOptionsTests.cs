@@ -5,8 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Enums;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -24,63 +27,63 @@ namespace PinataLabs.Typography.Tests
         }
 
         [Test]
-        public void ConstructorTest_FontOnly()
+        public async Task ConstructorTest_FontOnly()
         {
             Font font = FakeFont.CreateFont("ABC");
             var options = new TextOptions(font);
 
-            Assert.Equal(72, options.Dpi);
-            Assert.Empty(options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(Vector2.Zero, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(72);
+            await Assert.That(options.FallbackFontFamilies).IsEmpty();
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(Vector2.Zero);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontWithSingleDpi()
+        public async Task ConstructorTest_FontWithSingleDpi()
         {
             Font font = FakeFont.CreateFont("ABC");
             const float dpi = 123;
             var options = new TextOptions(font) { Dpi = dpi };
 
-            Assert.Equal(dpi, options.Dpi);
-            Assert.Empty(options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(Vector2.Zero, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(dpi);
+            await Assert.That(options.FallbackFontFamilies).IsEmpty();
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(Vector2.Zero);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontWithOrigin()
+        public async Task ConstructorTest_FontWithOrigin()
         {
             Font font = FakeFont.CreateFont("ABC");
             var origin = new Vector2(123, 345);
             TextOptions options = new(font) { Origin = origin };
 
-            Assert.Equal(72, options.Dpi);
-            Assert.Empty(options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(origin, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(72);
+            await Assert.That(options.FallbackFontFamilies).IsEmpty();
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(origin);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontWithSingleDpiWithOrigin()
+        public async Task ConstructorTest_FontWithSingleDpiWithOrigin()
         {
             Font font = FakeFont.CreateFont("ABC");
             var origin = new Vector2(123, 345);
             const float dpi = 123;
             TextOptions options = new(font) { Dpi = dpi, Origin = origin };
 
-            Assert.Equal(dpi, options.Dpi);
-            Assert.Empty(options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(origin, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(dpi);
+            await Assert.That(options.FallbackFontFamilies).IsEmpty();
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(origin);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontOnly_WithFallbackFonts()
+        public async Task ConstructorTest_FontOnly_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
             FontFamily[] fontFamilies = new[]
@@ -94,15 +97,15 @@ namespace PinataLabs.Typography.Tests
                 FallbackFontFamilies = fontFamilies
             };
 
-            Assert.Equal(72, options.Dpi);
-            Assert.Equal(fontFamilies, options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(Vector2.Zero, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(72);
+            await Assert.That(options.FallbackFontFamilies).IsEqualTo(fontFamilies);
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(Vector2.Zero);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontWithSingleDpi_WithFallbackFonts()
+        public async Task ConstructorTest_FontWithSingleDpi_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
             FontFamily[] fontFamilies = new[]
@@ -118,15 +121,15 @@ namespace PinataLabs.Typography.Tests
                 FallbackFontFamilies = fontFamilies
             };
 
-            Assert.Equal(dpi, options.Dpi);
-            Assert.Equal(fontFamilies, options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(Vector2.Zero, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(dpi);
+            await Assert.That(options.FallbackFontFamilies).IsEqualTo(fontFamilies);
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(Vector2.Zero);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontWithOrigin_WithFallbackFonts()
+        public async Task ConstructorTest_FontWithOrigin_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
             FontFamily[] fontFamilies = new[]
@@ -142,15 +145,15 @@ namespace PinataLabs.Typography.Tests
                 Origin = origin
             };
 
-            Assert.Equal(72, options.Dpi);
-            Assert.Equal(fontFamilies, options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(origin, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(72);
+            await Assert.That(options.FallbackFontFamilies).IsEqualTo(fontFamilies);
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(origin);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void ConstructorTest_FontWithSingleDpiWithOrigin_WithFallbackFonts()
+        public async Task ConstructorTest_FontWithSingleDpiWithOrigin_WithFallbackFonts()
         {
             Font font = FakeFont.CreateFont("ABC");
             FontFamily[] fontFamilies = new[]
@@ -168,15 +171,15 @@ namespace PinataLabs.Typography.Tests
                 Origin = origin
             };
 
-            Assert.Equal(dpi, options.Dpi);
-            Assert.Equal(fontFamilies, options.FallbackFontFamilies);
-            Assert.Equal(font, options.Font);
-            Assert.Equal(origin, options.Origin);
-            VerifyPropertyDefault(options);
+            await Assert.That(options.Dpi).IsEqualTo(dpi);
+            await Assert.That(options.FallbackFontFamilies).IsEqualTo(fontFamilies);
+            await Assert.That(options.Font).IsEqualTo(font);
+            await Assert.That(options.Origin).IsEqualTo(origin);
+            await VerifyPropertyDefault(options);
         }
 
         [Test]
-        public void GetMissingGlyphFromMainFont()
+        public async Task GetMissingGlyphFromMainFont()
         {
             Font font = FakeFont.CreateFontWithInstance("ABC", "ABC", out Fakes.FakeFontInstance abcFontInstance);
             FontFamily[] fontFamilies = new[]
@@ -195,16 +198,16 @@ namespace PinataLabs.Typography.Tests
             var renderer = new GlyphRenderer();
             TextRenderer.RenderTextTo(renderer, text, options);
 
-            GlyphRendererParameters glyph = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(GlyphType.Fallback, glyph.GlyphType);
-            Assert.Equal(abcFontInstance.Description.FontNameInvariantCulture.ToUpper(), glyph.Font);
+            GlyphRendererParameters glyph = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyph.GlyphType).IsEqualTo(GlyphType.Fallback);
+            await Assert.That(glyph.Font).IsEqualTo(abcFontInstance.Description.FontNameInvariantCulture.ToUpper());
         }
 
         [Test]
         [Arguments('A', "abcFontInstance")]
         [Arguments('F', "defFontInstance")]
         [Arguments('H', "efghiFontInstance")]
-        public void GetGlyphFromFirstAvailableInstance(char character, string instance)
+        public async Task GetGlyphFromFirstAvailableInstance(char character, string instance)
         {
             Font font = FakeFont.CreateFontWithInstance("ABC", "ABC", out Fakes.FakeFontInstance abcFontInstance);
             FontFamily[] fontFamilies = new[]
@@ -222,8 +225,8 @@ namespace PinataLabs.Typography.Tests
             ReadOnlySpan<char> text = new[] { character };
             var renderer = new GlyphRenderer();
             TextRenderer.RenderTextTo(renderer, text, options);
-            GlyphRendererParameters glyph = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(GlyphType.Standard, glyph.GlyphType);
+            GlyphRendererParameters glyph = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyph.GlyphType).IsEqualTo(GlyphType.Standard);
             Fakes.FakeFontInstance expectedInstance = instance switch
             {
                 "abcFontInstance" => abcFontInstance,
@@ -232,78 +235,81 @@ namespace PinataLabs.Typography.Tests
                 _ => throw new Exception("does not match")
             };
 
-            Assert.Equal(expectedInstance.Description.FontNameInvariantCulture.ToUpper(), glyph.Font);
+            await Assert.That(glyph.Font).IsEqualTo(expectedInstance.Description.FontNameInvariantCulture.ToUpper());
         }
 
         [Test]
-        public void CloneTextOptionsIsNotNull() => Assert.True(this.clonedTextOptions != null);
+        public async Task CloneTextOptionsIsNotNull()
+        {
+            await Assert.That(this.clonedTextOptions != null).IsTrue();
+        }
 
         [Test]
-        public void DefaultTextOptionsApplyKerning()
+        public async Task DefaultTextOptionsApplyKerning()
         {
             const KerningMode expected = KerningMode.Standard;
-            Assert.Equal(expected, this.newTextOptions.KerningMode);
-            Assert.Equal(expected, this.clonedTextOptions.KerningMode);
+            await Assert.That(this.newTextOptions.KerningMode).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.KerningMode).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsHorizontalAlignment()
+        public async Task DefaultTextOptionsHorizontalAlignment()
         {
             const HorizontalAlignment expected = HorizontalAlignment.Left;
-            Assert.Equal(expected, this.newTextOptions.HorizontalAlignment);
-            Assert.Equal(expected, this.clonedTextOptions.HorizontalAlignment);
+            await Assert.That(this.newTextOptions.HorizontalAlignment).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.HorizontalAlignment).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsVerticalAlignment()
+        public async Task DefaultTextOptionsVerticalAlignment()
         {
             const VerticalAlignment expected = VerticalAlignment.Top;
-            Assert.Equal(expected, this.newTextOptions.VerticalAlignment);
-            Assert.Equal(expected, this.clonedTextOptions.VerticalAlignment);
+            await Assert.That(this.newTextOptions.VerticalAlignment).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.VerticalAlignment).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsDpi()
+        public async Task DefaultTextOptionsDpi()
         {
             const float expected = 72F;
-            Assert.Equal(expected, this.newTextOptions.Dpi);
-            Assert.Equal(expected, this.clonedTextOptions.Dpi);
+            await Assert.That(this.newTextOptions.Dpi).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.Dpi).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsTabWidth()
+        public async Task DefaultTextOptionsTabWidth()
         {
             const float expected = -1F;
-            Assert.Equal(expected, this.newTextOptions.TabWidth);
-            Assert.Equal(expected, this.clonedTextOptions.TabWidth);
+            await Assert.That(this.newTextOptions.TabWidth).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.TabWidth).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsWrappingLength()
+        public async Task DefaultTextOptionsWrappingLength()
         {
             const float expected = -1F;
-            Assert.Equal(expected, this.newTextOptions.WrappingLength);
-            Assert.Equal(expected, this.clonedTextOptions.WrappingLength);
+            await Assert.That(this.newTextOptions.WrappingLength).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.WrappingLength).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsLineSpacing()
+        public async Task DefaultTextOptionsLineSpacing()
         {
             const float expected = 1F;
-            Assert.Equal(expected, this.newTextOptions.LineSpacing);
-            Assert.Equal(expected, this.clonedTextOptions.LineSpacing);
+            await Assert.That(this.newTextOptions.LineSpacing).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.LineSpacing).IsEqualTo(expected);
         }
 
         [Test]
-        public void DefaultTextOptionsTextJustification()
+        public async Task DefaultTextOptionsTextJustification()
         {
             const TextJustification expected = TextJustification.None;
-            Assert.Equal(expected, this.newTextOptions.TextJustification);
-            Assert.Equal(expected, this.clonedTextOptions.TextJustification);
+            await Assert.That(this.newTextOptions.TextJustification).IsEqualTo(expected);
+            await Assert.That(this.clonedTextOptions.TextJustification).IsEqualTo(expected);
         }
 
         [Test]
-        public void NonDefaultClone()
+        public async Task NonDefaultClone()
         {
             TextOptions expected = new(this.fakeFont)
             {
@@ -319,18 +325,18 @@ namespace PinataLabs.Typography.Tests
 
             TextOptions actual = new(expected);
 
-            Assert.Equal(expected.KerningMode, actual.KerningMode);
-            Assert.Equal(expected.Dpi, actual.Dpi);
-            Assert.Equal(expected.LineSpacing, actual.LineSpacing);
-            Assert.Equal(expected.HorizontalAlignment, actual.HorizontalAlignment);
-            Assert.Equal(expected.TabWidth, actual.TabWidth);
-            Assert.Equal(expected.VerticalAlignment, actual.VerticalAlignment);
-            Assert.Equal(expected.WrappingLength, actual.WrappingLength);
-            Assert.Equal(expected.FeatureTags, actual.FeatureTags);
+            await Assert.That(actual.KerningMode).IsEqualTo(expected.KerningMode);
+            await Assert.That(actual.Dpi).IsEqualTo(expected.Dpi);
+            await Assert.That(actual.LineSpacing).IsEqualTo(expected.LineSpacing);
+            await Assert.That(actual.HorizontalAlignment).IsEqualTo(expected.HorizontalAlignment);
+            await Assert.That(actual.TabWidth).IsEqualTo(expected.TabWidth);
+            await Assert.That(actual.VerticalAlignment).IsEqualTo(expected.VerticalAlignment);
+            await Assert.That(actual.WrappingLength).IsEqualTo(expected.WrappingLength);
+            await Assert.That(actual.FeatureTags).IsEquivalentTo(expected.FeatureTags, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void CloneIsDeep()
+        public async Task CloneIsDeep()
         {
             var expected = new TextOptions(this.fakeFont);
             TextOptions actual = new(expected)
@@ -345,28 +351,28 @@ namespace PinataLabs.Typography.Tests
                 WrappingLength = 42F
             };
 
-            Assert.NotEqual(expected.KerningMode, actual.KerningMode);
-            Assert.NotEqual(expected.Dpi, actual.Dpi);
-            Assert.NotEqual(expected.LineSpacing, actual.LineSpacing);
-            Assert.NotEqual(expected.HorizontalAlignment, actual.HorizontalAlignment);
-            Assert.NotEqual(expected.TabWidth, actual.TabWidth);
-            Assert.NotEqual(expected.VerticalAlignment, actual.VerticalAlignment);
-            Assert.NotEqual(expected.WrappingLength, actual.WrappingLength);
-            Assert.NotEqual(expected.TextJustification, actual.TextJustification);
+            await Assert.That(actual.KerningMode).IsNotEqualTo(expected.KerningMode);
+            await Assert.That(actual.Dpi).IsNotEqualTo(expected.Dpi);
+            await Assert.That(actual.LineSpacing).IsNotEqualTo(expected.LineSpacing);
+            await Assert.That(actual.HorizontalAlignment).IsNotEqualTo(expected.HorizontalAlignment);
+            await Assert.That(actual.TabWidth).IsNotEqualTo(expected.TabWidth);
+            await Assert.That(actual.VerticalAlignment).IsNotEqualTo(expected.VerticalAlignment);
+            await Assert.That(actual.WrappingLength).IsNotEqualTo(expected.WrappingLength);
+            await Assert.That(actual.TextJustification).IsNotEqualTo(expected.TextJustification);
         }
 
-        private static void VerifyPropertyDefault(TextOptions options)
+        private static async Task VerifyPropertyDefault(TextOptions options)
         {
-            Assert.Equal(-1, options.TabWidth);
-            Assert.Equal(KerningMode.Standard, options.KerningMode);
-            Assert.Equal(-1, options.WrappingLength);
-            Assert.Equal(HorizontalAlignment.Left, options.HorizontalAlignment);
-            Assert.Equal(VerticalAlignment.Top, options.VerticalAlignment);
-            Assert.Equal(TextAlignment.Start, options.TextAlignment);
-            Assert.Equal(TextJustification.None, options.TextJustification);
-            Assert.Equal(TextDirection.Auto, options.TextDirection);
-            Assert.Equal(LayoutMode.HorizontalTopBottom, options.LayoutMode);
-            Assert.Equal(1, options.LineSpacing);
+            await Assert.That(options.TabWidth).IsEqualTo(-1);
+            await Assert.That(options.KerningMode).IsEqualTo(KerningMode.Standard);
+            await Assert.That(options.WrappingLength).IsEqualTo(-1);
+            await Assert.That(options.HorizontalAlignment).IsEqualTo(HorizontalAlignment.Left);
+            await Assert.That(options.VerticalAlignment).IsEqualTo(VerticalAlignment.Top);
+            await Assert.That(options.TextAlignment).IsEqualTo(TextAlignment.Start);
+            await Assert.That(options.TextJustification).IsEqualTo(TextJustification.None);
+            await Assert.That(options.TextDirection).IsEqualTo(TextDirection.Auto);
+            await Assert.That(options.LayoutMode).IsEqualTo(LayoutMode.HorizontalTopBottom);
+            await Assert.That(options.LineSpacing).IsEqualTo(1);
         }
     }
 }

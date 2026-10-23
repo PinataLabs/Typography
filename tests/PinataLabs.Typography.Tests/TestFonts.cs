@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -313,7 +312,10 @@ namespace PinataLabs.Typography.Tests
             IEnumerable<string> fullPaths = paths.Select(x => Path.GetFullPath(Path.Combine(root, x)));
             string rootPath = fullPaths.FirstOrDefault(Directory.Exists);
 
-            Assert.True(rootPath != null, $"could not find the font folder in any of these location, \n{string.Join("\n", fullPaths)}");
+            if (rootPath == null)
+            {
+                throw new DirectoryNotFoundException($"could not find the font folder in any of these location, \n{string.Join("\n", fullPaths)}");
+            }
 
             return Path.Combine(rootPath, path);
         }

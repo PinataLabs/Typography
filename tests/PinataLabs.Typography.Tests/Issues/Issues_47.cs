@@ -5,8 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tests.Fakes;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
@@ -14,7 +16,7 @@ namespace PinataLabs.Typography.Tests.Issues
     {
         [Test]
         [Arguments("hello world hello world hello world hello world")]
-        public void LeftAlignedTextNewLineShouldNotStartWithWhiteSpace(string text)
+        public async Task LeftAlignedTextNewLineShouldNotStartWithWhiteSpace(string text)
         {
             Font font = CreateFont("\t x");
 
@@ -31,7 +33,7 @@ namespace PinataLabs.Typography.Tests.Issues
             {
                 if (lineYPos != glyph.PenLocation.Y)
                 {
-                    Assert.False(glyph.IsWhiteSpace());
+                    await Assert.That(glyph.IsWhiteSpace()).IsFalse();
                     lineYPos = glyph.PenLocation.Y;
                 }
             }
@@ -42,7 +44,7 @@ namespace PinataLabs.Typography.Tests.Issues
         [Arguments("hello world hello world hello world hello world", HorizontalAlignment.Right)]
         [Arguments("hello world hello world hello world hello world", HorizontalAlignment.Center)]
         [Arguments("hello   world   hello   world   hello   hello   world", HorizontalAlignment.Left)]
-        public void NewWrappedLinesShouldNotStartOrEndWithWhiteSpace(string text, HorizontalAlignment horizontalAlignment)
+        public async Task NewWrappedLinesShouldNotStartOrEndWithWhiteSpace(string text, HorizontalAlignment horizontalAlignment)
         {
             Font font = CreateFont("\t x");
 
@@ -60,15 +62,15 @@ namespace PinataLabs.Typography.Tests.Issues
                 GlyphLayout glyph = layout[i];
                 if (lineYPos != glyph.PenLocation.Y)
                 {
-                    Assert.False(glyph.IsWhiteSpace());
-                    Assert.False(layout[i - 1].IsWhiteSpace());
+                    await Assert.That(glyph.IsWhiteSpace()).IsFalse();
+                    await Assert.That(layout[i - 1].IsWhiteSpace()).IsFalse();
                     lineYPos = glyph.PenLocation.Y;
                 }
             }
         }
 
         [Test]
-        public void WhiteSpaceAtStartOfTextShouldNotBeTrimmed()
+        public async Task WhiteSpaceAtStartOfTextShouldNotBeTrimmed()
         {
             Font font = CreateFont("\t x");
             string text = "   hello world hello world hello world";
@@ -80,13 +82,13 @@ namespace PinataLabs.Typography.Tests.Issues
                 WrappingLength = 350
             });
 
-            Assert.True(layout[0].IsWhiteSpace());
-            Assert.True(layout[1].IsWhiteSpace());
-            Assert.True(layout[2].IsWhiteSpace());
+            await Assert.That(layout[0].IsWhiteSpace()).IsTrue();
+            await Assert.That(layout[1].IsWhiteSpace()).IsTrue();
+            await Assert.That(layout[2].IsWhiteSpace()).IsTrue();
         }
 
         [Test]
-        public void WhiteSpaceAtTheEndOfTextShouldBeTrimmed()
+        public async Task WhiteSpaceAtTheEndOfTextShouldBeTrimmed()
         {
             Font font = CreateFont("\t x");
             string text = "hello world hello world hello world   ";
@@ -98,9 +100,9 @@ namespace PinataLabs.Typography.Tests.Issues
                 WrappingLength = 350
             });
 
-            Assert.False(layout[layout.Count - 1].IsWhiteSpace());
-            Assert.False(layout[layout.Count - 2].IsWhiteSpace());
-            Assert.False(layout[layout.Count - 3].IsWhiteSpace());
+            await Assert.That(layout[layout.Count - 1].IsWhiteSpace()).IsFalse();
+            await Assert.That(layout[layout.Count - 2].IsWhiteSpace()).IsFalse();
+            await Assert.That(layout[layout.Count - 3].IsWhiteSpace()).IsFalse();
         }
 
         public static Font CreateFont(string text)

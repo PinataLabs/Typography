@@ -2,9 +2,12 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Globalization;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tests.Fakes;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
@@ -17,13 +20,13 @@ namespace PinataLabs.Typography.Tests.Issues
         [Arguments("  Helloworld", 340, 10)]
         [Arguments("Hell owor ld\t", 390, 10)]
         [Arguments("Helloworld  ", 360, 10)]
-        public void WhiteSpaceAtStartOfLineNotMeasured(string text, float width, float height)
+        public async Task WhiteSpaceAtStartOfLineNotMeasured(string text, float width, float height)
         {
             Font font = CreateFont(text);
             FontRectangle size = TextMeasurer.MeasureBounds(text, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
 
-            Assert.Equal(height, size.Height, 2);
-            Assert.Equal(width, size.Width, 2);
+            await Assert.That(Math.Round(size.Height, 2)).IsEqualTo(Math.Round(height, 2));
+            await Assert.That(Math.Round(size.Width, 2)).IsEqualTo(Math.Round(width, 2));
         }
 
         public static Font CreateFont(string text)

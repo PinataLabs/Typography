@@ -4,8 +4,10 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -146,52 +148,52 @@ namespace PinataLabs.Typography.Tests.Unicode
         };
 
         [Test]
-        public void Set()
+        public async Task Set()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
             builder.Set(0x4567, 99);
 
-            Assert.Equal(10u, builder.Get(0x4566));
-            Assert.Equal(99u, builder.Get(0x4567));
-            Assert.Equal(666u, builder.Get(-1));
-            Assert.Equal(666u, builder.Get(0x110000));
+            await Assert.That(builder.Get(0x4566)).IsEqualTo(10u);
+            await Assert.That(builder.Get(0x4567)).IsEqualTo(99u);
+            await Assert.That(builder.Get(-1)).IsEqualTo(666u);
+            await Assert.That(builder.Get(0x110000)).IsEqualTo(666u);
         }
 
         [Test]
-        public void SetRange()
+        public async Task SetRange()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
             builder.SetRange(13, 6666, 7788, false);
             builder.SetRange(6000, 7000, 9900, true);
 
-            Assert.Equal(10u, builder.Get(12));
-            Assert.Equal(7788u, builder.Get(13));
-            Assert.Equal(7788u, builder.Get(5999));
-            Assert.Equal(9900u, builder.Get(6000));
-            Assert.Equal(9900u, builder.Get(7000));
-            Assert.Equal(10u, builder.Get(7001));
-            Assert.Equal(666u, builder.Get(0x110000));
+            await Assert.That(builder.Get(12)).IsEqualTo(10u);
+            await Assert.That(builder.Get(13)).IsEqualTo(7788u);
+            await Assert.That(builder.Get(5999)).IsEqualTo(7788u);
+            await Assert.That(builder.Get(6000)).IsEqualTo(9900u);
+            await Assert.That(builder.Get(7000)).IsEqualTo(9900u);
+            await Assert.That(builder.Get(7001)).IsEqualTo(10u);
+            await Assert.That(builder.Get(0x110000)).IsEqualTo(666u);
         }
 
         [Test]
-        public void SetRangeCompacted()
+        public async Task SetRangeCompacted()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
             builder.SetRange(13, 6666, 7788, false);
             builder.SetRange(6000, 7000, 9900, true);
 
             UnicodeTrie trie = builder.Freeze();
-            Assert.Equal(10u, trie.Get(12));
-            Assert.Equal(7788u, trie.Get(13));
-            Assert.Equal(7788u, trie.Get(5999));
-            Assert.Equal(9900u, trie.Get(6000));
-            Assert.Equal(9900u, trie.Get(7000));
-            Assert.Equal(10u, trie.Get(7001));
-            Assert.Equal(666u, trie.Get(0x110000));
+            await Assert.That(trie.Get(12)).IsEqualTo(10u);
+            await Assert.That(trie.Get(13)).IsEqualTo(7788u);
+            await Assert.That(trie.Get(5999)).IsEqualTo(7788u);
+            await Assert.That(trie.Get(6000)).IsEqualTo(9900u);
+            await Assert.That(trie.Get(7000)).IsEqualTo(9900u);
+            await Assert.That(trie.Get(7001)).IsEqualTo(10u);
+            await Assert.That(trie.Get(0x110000)).IsEqualTo(666u);
         }
 
         [Test]
-        public void SetRangeSerialized()
+        public async Task SetRangeSerialized()
         {
             var builder = new UnicodeTrieBuilder(10, 666);
             builder.SetRange(13, 6666, 7788, false);
@@ -202,13 +204,13 @@ namespace PinataLabs.Typography.Tests.Unicode
             ms.Position = 0;
 
             var trie = new UnicodeTrie(ms);
-            Assert.Equal(10u, trie.Get(12));
-            Assert.Equal(7788u, trie.Get(13));
-            Assert.Equal(7788u, trie.Get(5999));
-            Assert.Equal(9900u, trie.Get(6000));
-            Assert.Equal(9900u, trie.Get(7000));
-            Assert.Equal(10u, trie.Get(7001));
-            Assert.Equal(666u, trie.Get(0x110000));
+            await Assert.That(trie.Get(12)).IsEqualTo(10u);
+            await Assert.That(trie.Get(13)).IsEqualTo(7788u);
+            await Assert.That(trie.Get(5999)).IsEqualTo(7788u);
+            await Assert.That(trie.Get(6000)).IsEqualTo(9900u);
+            await Assert.That(trie.Get(7000)).IsEqualTo(9900u);
+            await Assert.That(trie.Get(7001)).IsEqualTo(10u);
+            await Assert.That(trie.Get(0x110000)).IsEqualTo(666u);
         }
 
         public struct TestRange
@@ -254,7 +256,7 @@ namespace PinataLabs.Typography.Tests.Unicode
 
         [Test]
         [MethodDataSource(nameof(TestData))]
-        public void RunRangeChecks(TestRange[] testRanges, CheckValue[] checkValues)
+        public async Task RunRangeChecks(TestRange[] testRanges, CheckValue[] checkValues)
         {
             uint initialValue = testRanges[0].Value;
             const uint errorValue = 0x0bad;
@@ -268,6 +270,8 @@ namespace PinataLabs.Typography.Tests.Unicode
 
             UnicodeTrie frozen = builder.Freeze();
 
+            // Collect the failures first; awaiting an assertion per code point is slow.
+            var mismatches = new List<string>();
             int cp = 0;
             for (int i = 0; i < checkValues.Length; i++)
             {
@@ -275,11 +279,18 @@ namespace PinataLabs.Typography.Tests.Unicode
 
                 while (cp < v.CodePoint)
                 {
-                    Assert.Equal(v.Value, builder.Get(cp));
-                    Assert.Equal(v.Value, frozen.Get((uint)cp));
+                    uint built = builder.Get(cp);
+                    uint frozenValue = frozen.Get((uint)cp);
+                    if (built != v.Value || frozenValue != v.Value)
+                    {
+                        mismatches.Add($"U+{cp:X4}: expected {v.Value}, builder {built}, frozen {frozenValue}");
+                    }
+
                     cp++;
                 }
             }
+
+            await Assert.That(mismatches).IsEmpty();
         }
     }
 }

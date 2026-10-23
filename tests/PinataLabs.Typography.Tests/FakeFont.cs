@@ -3,29 +3,31 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Globalization;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tests.Fakes;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class FakeFont
     {
         [Test]
-        public void TestFontMetricProperties()
+        public async Task TestFontMetricProperties()
         {
             Font fakeFont = CreateFont("A");
             FontMetrics metrics = fakeFont.FontMetrics;
-            Assert.Equal(30, metrics.UnitsPerEm);
-            Assert.Equal(35, metrics.HorizontalMetrics.Ascender);
-            Assert.Equal(8, metrics.HorizontalMetrics.Descender);
-            Assert.Equal(12, metrics.HorizontalMetrics.LineGap);
-            Assert.Equal(35 - 8 + 12, metrics.HorizontalMetrics.LineHeight);
+            await Assert.That(metrics.UnitsPerEm).IsEqualTo(30);
+            await Assert.That(metrics.HorizontalMetrics.Ascender).IsEqualTo(35);
+            await Assert.That(metrics.HorizontalMetrics.Descender).IsEqualTo(8);
+            await Assert.That(metrics.HorizontalMetrics.LineGap).IsEqualTo(12);
+            await Assert.That(metrics.HorizontalMetrics.LineHeight).IsEqualTo(35 - 8 + 12);
 
             // Vertical metrics are all ones. Descender is always negative due to the grid orientation.
-            Assert.Equal(1, metrics.VerticalMetrics.Ascender);
-            Assert.Equal(-1, metrics.VerticalMetrics.Descender);
-            Assert.Equal(1, metrics.VerticalMetrics.LineGap);
-            Assert.Equal(1 - (-1) + 1, metrics.VerticalMetrics.LineHeight);
+            await Assert.That(metrics.VerticalMetrics.Ascender).IsEqualTo(1);
+            await Assert.That(metrics.VerticalMetrics.Descender).IsEqualTo(-1);
+            await Assert.That(metrics.VerticalMetrics.LineGap).IsEqualTo(1);
+            await Assert.That(metrics.VerticalMetrics.LineHeight).IsEqualTo(1 - (-1) + 1);
         }
 
         public static Font CreateFont(string text, string name = "name")

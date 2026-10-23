@@ -2,37 +2,39 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class FontReaderTests
     {
         [Test]
-        public void ReadTrueTypeOutlineType()
+        public async Task ReadTrueTypeOutlineType()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader(0, 0, 0, 0);
 
             var reader = new FontReader(writer.GetStream());
-            Assert.Equal(OutlineType.TrueType, reader.OutlineType);
+            await Assert.That(reader.OutlineType).IsEqualTo(OutlineType.TrueType);
         }
 
         [Test]
-        public void ReadCffOutlineType()
+        public async Task ReadCffOutlineType()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteCffFileHeader(0, 0, 0, 0);
 
             var reader = new FontReader(writer.GetStream());
-            Assert.Equal(OutlineType.CFF, reader.OutlineType);
+            await Assert.That(reader.OutlineType).IsEqualTo(OutlineType.CFF);
         }
 
         [Test]
-        public void ReadTableHeaders()
+        public async Task ReadTableHeaders()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader(2, 0, 0, 0);
@@ -41,11 +43,11 @@ namespace PinataLabs.Typography.Tests
 
             var reader = new FontReader(writer.GetStream());
 
-            Assert.Equal(2, reader.Headers.Count);
+            await Assert.That(reader.Headers.Count).IsEqualTo(2);
         }
 
         [Test]
-        public void ReadCMapTable()
+        public async Task ReadCMapTable()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -63,55 +65,55 @@ namespace PinataLabs.Typography.Tests
 
             var reader = new FontReader(writer.GetStream());
             CMapTable cmap = reader.GetTable<CMapTable>();
-            Assert.NotNull(cmap);
+            await Assert.That(cmap).IsNotNull();
         }
 
         [Test]
-        public void ReadFont_WithWoffFormat_EqualsTtf()
+        public async Task ReadFont_WithWoffFormat_EqualsTtf()
         {
             var fontReaderTtf = new FontReader(TestFonts.OpenSansTtfData());
             var fontReaderWoff = new FontReader(TestFonts.OpensSansWoff1Data());
 
-            Assert.Equal(fontReaderTtf.Headers.Count, fontReaderWoff.Headers.Count);
+            await Assert.That(fontReaderWoff.Headers.Count).IsEqualTo(fontReaderTtf.Headers.Count);
             foreach (string key in fontReaderTtf.Headers.Keys)
             {
-                Assert.True(fontReaderWoff.Headers.ContainsKey(key));
+                await Assert.That(fontReaderWoff.Headers.ContainsKey(key)).IsTrue();
             }
         }
 
         [Test]
-        public void GlyphsCount_WithWoffFormat_EqualsTtf()
+        public async Task GlyphsCount_WithWoffFormat_EqualsTtf()
         {
             var fontReaderWoff = new FontReader(TestFonts.OpensSansWoff1Data());
             GlyphTable glyphsWoff = fontReaderWoff.GetTable<GlyphTable>();
             var fontReaderTtf = new FontReader(TestFonts.OpenSansTtfData());
             GlyphTable glyphsTtf = fontReaderTtf.GetTable<GlyphTable>();
 
-            Assert.Equal(glyphsTtf.GlyphCount, glyphsWoff.GlyphCount);
+            await Assert.That(glyphsWoff.GlyphCount).IsEqualTo(glyphsTtf.GlyphCount);
         }
 
         [Test]
-        public void ReadFont_WithWoff2Format_EqualsTtf()
+        public async Task ReadFont_WithWoff2Format_EqualsTtf()
         {
             var fontReaderTtf = new FontReader(TestFonts.OpenSansTtfData());
             var fontReaderWoff = new FontReader(TestFonts.OpensSansWoff2Data());
 
-            Assert.Equal(fontReaderTtf.Headers.Count, fontReaderWoff.Headers.Count);
+            await Assert.That(fontReaderWoff.Headers.Count).IsEqualTo(fontReaderTtf.Headers.Count);
             foreach (string key in fontReaderTtf.Headers.Keys)
             {
-                Assert.True(fontReaderWoff.Headers.ContainsKey(key));
+                await Assert.That(fontReaderWoff.Headers.ContainsKey(key)).IsTrue();
             }
         }
 
         [Test]
-        public void GlyphsCount_WithWoff2Format_EqualsTtf()
+        public async Task GlyphsCount_WithWoff2Format_EqualsTtf()
         {
             var fontReaderWoff = new FontReader(TestFonts.OpensSansWoff2Data());
             GlyphTable glyphsWoff = fontReaderWoff.GetTable<GlyphTable>();
             var fontReaderTtf = new FontReader(TestFonts.OpenSansTtfData());
             GlyphTable glyphsTtf = fontReaderTtf.GetTable<GlyphTable>();
 
-            Assert.Equal(glyphsTtf.GlyphCount, glyphsWoff.GlyphCount);
+            await Assert.That(glyphsWoff.GlyphCount).IsEqualTo(glyphsTtf.GlyphCount);
         }
     }
 }

@@ -2,9 +2,11 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.CMap;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 using static PinataLabs.Typography.Tables.General.CMap.Format4SubTable;
 
 namespace PinataLabs.Typography.Tests.Issues
@@ -12,7 +14,7 @@ namespace PinataLabs.Typography.Tests.Issues
     public class Issues_104
     {
         [Test]
-        public void Format4SubTableWithSegmentsHasOffByOneWhenOverflowing()
+        public async Task Format4SubTableWithSegmentsHasOffByOneWhenOverflowing()
         {
             Segment[] segments = new[]
             {
@@ -33,9 +35,9 @@ namespace PinataLabs.Typography.Tests.Issues
             const int delta = short.MaxValue + 2; // extra 2 to handle the difference between ushort and short when offsettings
 
             const int codePoint = delta + 5;
-            Assert.True(tbl.TryGetGlyphId(new CodePoint(codePoint), out ushort gid));
+            await Assert.That(tbl.TryGetGlyphId(new CodePoint(codePoint), out ushort gid)).IsTrue();
 
-            Assert.Equal(5, gid);
+            await Assert.That(gid).IsEqualTo(5);
         }
     }
 }

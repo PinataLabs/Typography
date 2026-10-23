@@ -3,7 +3,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
@@ -11,14 +13,14 @@ namespace PinataLabs.Typography.Tests.Issues
     {
 #if OS_WINDOWS
         [Test]
-        public void DoesNotThrowOutOfBounds()
+        public async Task DoesNotThrowOutOfBounds()
         {
             const string content = "فِيلْمٌ";
             FontFamily fontFamily = SystemFonts.Get("Arial");
             Font font = fontFamily.CreateFont(16, FontStyle.Regular);
             TextOptions renderOptions = new(font);
 
-            Assert.True(TextMeasurer.TryMeasureCharacterBounds(content, renderOptions, out ReadOnlySpan<GlyphBounds> _));
+            await Assert.That(TextMeasurer.TryMeasureCharacterBounds(content, renderOptions, out ReadOnlySpan<GlyphBounds> _)).IsTrue();
         }
 #endif
     }

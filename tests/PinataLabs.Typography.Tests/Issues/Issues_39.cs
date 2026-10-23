@@ -4,7 +4,6 @@
 
 using System.Globalization;
 using PinataLabs.Typography.Tests.Fakes;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests.Issues
 {

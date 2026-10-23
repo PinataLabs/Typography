@@ -3,7 +3,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
@@ -17,17 +19,17 @@ namespace PinataLabs.Typography.Tests
         [Arguments(1, 0)]
         [Arguments(1, 1)]
         [Arguments(3, 2)]
-        public void ThrowsZeroValue(int start, int end)
+        public async Task ThrowsZeroValue(int start, int end)
         {
-            Exception ex = Assert.ThrowsAny<Exception>(() => new TextRun() { Start = start, End = end }.Slice(Text.AsSpan()));
-            Assert.NotNull(ex);
+            Exception ex = await Assert.That(() => { _ = new TextRun() { Start = start, End = end }.Slice(Text.AsSpan()); }).Throws<Exception>();
+            await Assert.That(ex).IsNotNull();
         }
 
         [Test]
-        public void SlicesTextCorrectly()
+        public async Task SlicesTextCorrectly()
         {
-            ReadOnlySpan<char> slice = new TextRun() { Start = 19, End = 46 }.Slice(Text.AsSpan());
-            Assert.True("Honorificabilitudinitatibus".AsSpan().SequenceEqual(slice));
+            bool equal = "Honorificabilitudinitatibus".AsSpan().SequenceEqual(new TextRun() { Start = 19, End = 46 }.Slice(Text.AsSpan()));
+            await Assert.That(equal).IsTrue();
         }
     }
 }

@@ -2,8 +2,10 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -23,21 +25,21 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0x30000u, 0x3134Fu)] // CJK Unified Ideographs Extension G
         [Arguments(0xF900u, 0xFAFFu)] // CJK Compatibility Ideographs
         [Arguments(0x2F800u, 0x2FA1Fu)] // CJK Compatibility Ideographs Supplement
-        public void CanDetectCJKCodePoints(uint min, uint max)
+        public async Task CanDetectCJKCodePoints(uint min, uint max)
         {
             for (uint i = min; i <= max; i++)
             {
-                Assert.True(UnicodeUtility.IsCJKCodePoint(i));
+                await Assert.That(UnicodeUtility.IsCJKCodePoint(i)).IsTrue();
             }
         }
 
         [Test]
         [Arguments(0x0u, 0x7Fu)] // ASCII
-        public void NoFalsePositiveCJKCodePoints(uint min, uint max)
+        public async Task NoFalsePositiveCJKCodePoints(uint min, uint max)
         {
             for (uint i = min; i <= max; i++)
             {
-                Assert.False(UnicodeUtility.IsCJKCodePoint(i));
+                await Assert.That(UnicodeUtility.IsCJKCodePoint(i)).IsFalse();
             }
         }
 
@@ -69,21 +71,21 @@ namespace PinataLabs.Typography.Tests.Unicode
         [Arguments(0xE0080, 0xE00FF)]
         [Arguments(0xE0100, 0xE01EF)]
         [Arguments(0xE01F0, 0xE0FFF)]
-        public void CanDetectDefaultIgnorableCodePoint(uint min, uint max)
+        public async Task CanDetectDefaultIgnorableCodePoint(uint min, uint max)
         {
             for (uint i = min; i <= max; i++)
             {
-                Assert.True(UnicodeUtility.IsDefaultIgnorableCodePoint(i));
+                await Assert.That(UnicodeUtility.IsDefaultIgnorableCodePoint(i)).IsTrue();
             }
         }
 
         [Test]
         [Arguments(0x0u, 0x7Fu)] // ASCII
-        public void NoFalsePositiveDefaultIgnorableCodePoint(uint min, uint max)
+        public async Task NoFalsePositiveDefaultIgnorableCodePoint(uint min, uint max)
         {
             for (uint i = min; i <= max; i++)
             {
-                Assert.False(UnicodeUtility.IsDefaultIgnorableCodePoint(i));
+                await Assert.That(UnicodeUtility.IsDefaultIgnorableCodePoint(i)).IsFalse();
             }
         }
     }

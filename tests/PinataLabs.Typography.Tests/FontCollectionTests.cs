@@ -6,86 +6,87 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {
     public class FontCollectionTests
     {
         [Test]
-        public void AddViaPathReturnsDescription()
+        public async Task AddViaPathReturnsDescription()
         {
             var sut = new FontCollection();
             sut.Add(TestFonts.CarterOneFile, out FontDescription description);
 
-            Assert.NotNull(description);
-            Assert.Equal("Carter One", description.FontFamilyInvariantCulture);
-            Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
-            Assert.Equal(FontStyle.Regular, description.Style);
+            await Assert.That(description).IsNotNull();
+            await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("Carter One");
+            await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
+            await Assert.That(description.Style).IsEqualTo(FontStyle.Regular);
         }
 
         [Test]
-        public void AddViaPathAddFontFileInstances()
+        public async Task AddViaPathAddFontFileInstances()
         {
             var sut = new FontCollection();
             FontFamily family = sut.Add(TestFonts.CarterOneFile, out FontDescription descriptions);
 
             IEnumerable<FontMetrics> allInstances = ((IReadOnlyFontMetricsCollection)sut).GetAllMetrics(family.Name, CultureInfo.InvariantCulture);
 
-            Assert.All(allInstances, i =>
+            foreach (FontMetrics i in allInstances)
             {
-                FileFontMetrics font = Assert.IsType<FileFontMetrics>(i);
-            });
+                await Assert.That(i).IsTypeOf<FileFontMetrics>();
+            }
         }
 
         [Test]
-        public void AddViaStreamReturnsDescription()
+        public async Task AddViaStreamReturnsDescription()
         {
             var sut = new FontCollection();
             using Stream s = TestFonts.CarterOneFileData();
             FontFamily family = sut.Add(s, out FontDescription description);
-            Assert.NotNull(description);
-            Assert.Equal("Carter One", description.FontFamilyInvariantCulture);
-            Assert.Equal("Regular", description.FontSubFamilyNameInvariantCulture);
-            Assert.Equal(FontStyle.Regular, description.Style);
+            await Assert.That(description).IsNotNull();
+            await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("Carter One");
+            await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
+            await Assert.That(description.Style).IsEqualTo(FontStyle.Regular);
         }
 
         [Test]
-        public void NotFoundThrowsCorrectException()
+        public async Task NotFoundThrowsCorrectException()
         {
             const string invalid = "qwerty";
-            FontFamilyNotFoundException ex = Assert.Throws<FontFamilyNotFoundException>(
-                () => new FontCollection().Get(invalid));
+            FontFamilyNotFoundException ex = await Assert.That(() => new FontCollection().Get(invalid)).ThrowsExactly<FontFamilyNotFoundException>();
 
-            Assert.Equal(invalid, ex.FontFamily);
-            Assert.Empty(ex.SearchDirectories);
+            await Assert.That(ex.FontFamily).IsEqualTo(invalid);
+            await Assert.That(ex.SearchDirectories).IsEmpty();
         }
 
         [Test]
-        public void CanAddSystemFonts()
+        public async Task CanAddSystemFonts()
         {
             var collection = new FontCollection();
 
-            Assert.False(collection.Families.Any());
+            await Assert.That(collection.Families.Any()).IsFalse();
 
             collection.AddSystemFonts();
 
-            Assert.True(collection.Families.Any());
-            Assert.Equal(collection.Families.Count(), SystemFonts.Families.Count());
+            await Assert.That(collection.Families.Any()).IsTrue();
+            await Assert.That(SystemFonts.Families.Count()).IsEqualTo(collection.Families.Count());
         }
 
         [Test]
-        public void CanAddSystemFontsWithFilter()
+        public async Task CanAddSystemFontsWithFilter()
         {
             var collection = new FontCollection();
             collection.AddSystemFonts(_ => false);
 
-            Assert.False(collection.Families.Any());
+            await Assert.That(collection.Families.Any()).IsFalse();
 
             collection.AddSystemFonts(_ => true);
 
-            Assert.True(collection.Families.Any());
-            Assert.Equal(SystemFonts.Collection.Families.Count(), collection.Families.Count());
+            await Assert.That(collection.Families.Any()).IsTrue();
+            await Assert.That(collection.Families.Count()).IsEqualTo(SystemFonts.Collection.Families.Count());
         }
     }
 }

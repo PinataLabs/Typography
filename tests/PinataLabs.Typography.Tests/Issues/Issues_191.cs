@@ -4,15 +4,17 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_191
     {
         [Test]
-        public void CanLoadMacintoshGlyphs()
+        public async Task CanLoadMacintoshGlyphs()
         {
             Font font = new FontCollection()
                 .AddCollection(TestFonts.HelveticaTTCFile)
@@ -20,21 +22,21 @@ namespace PinataLabs.Typography.Tests.Issues
 
             const ColorFontSupport support = ColorFontSupport.None;
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('A'), support, out IReadOnlyList<Glyph> glyphsA));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('A'), support, out IReadOnlyList<Glyph> glyphsA)).IsTrue();
             Glyph[] a = glyphsA.ToArray();
 
-            Assert.True(font.TryGetGlyphs(new CodePoint('x'), support, out IReadOnlyList<Glyph> glyphsX));
+            await Assert.That(font.TryGetGlyphs(new CodePoint('x'), support, out IReadOnlyList<Glyph> glyphsX)).IsTrue();
             Glyph[] x = glyphsX.ToArray();
 
-            Glyph ga = Assert.Single(a);
-            Glyph gx = Assert.Single(x);
-            Assert.NotEqual(ga, gx);
+            Glyph ga = await Assert.That(a).HasSingleItem();
+            Glyph gx = await Assert.That(x).HasSingleItem();
+            await Assert.That(gx).IsNotEqualTo(ga);
 
-            Assert.Equal(1366, ga.GlyphMetrics.AdvanceWidth);
-            Assert.Equal(2048, ga.GlyphMetrics.AdvanceHeight);
+            await Assert.That(ga.GlyphMetrics.AdvanceWidth).IsEqualTo(1366);
+            await Assert.That(ga.GlyphMetrics.AdvanceHeight).IsEqualTo(2048);
 
-            Assert.Equal(1024, gx.GlyphMetrics.AdvanceWidth);
-            Assert.Equal(2048, gx.GlyphMetrics.AdvanceHeight);
+            await Assert.That(gx.GlyphMetrics.AdvanceWidth).IsEqualTo(1024);
+            await Assert.That(gx.GlyphMetrics.AdvanceHeight).IsEqualTo(2048);
         }
     }
 }
