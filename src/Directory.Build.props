@@ -16,10 +16,6 @@
   <!-- Import the solution .props file. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
 
-  <PropertyGroup>
-    <CodeAnalysisRuleSet>..\Fonts.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
   <ItemGroup>
     <!--
       The assembly is not strong-named, so InternalsVisibleTo carries no public key.

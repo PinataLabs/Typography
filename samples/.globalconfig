@@ -1,0 +1,9 @@
+# Global analyzer config for the projects under samples/ (picked up automatically by the SDK).
+#
+# SA0001 (XML comment analysis is disabled) is reported for the whole compilation,
+# with no source file, so a file section in .editorconfig cannot configure it.
+# The samples ruleset (which included the tests ruleset) turned it off; the samples do not generate XML docs.
+# Every other rule from the old rulesets lives in the root .editorconfig.
+is_global = true
+
+dotnet_diagnostic.SA0001.severity = none

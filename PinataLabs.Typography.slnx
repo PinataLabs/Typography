@@ -2,18 +2,18 @@
   <Folder Name="/samples/">
     <File Path="samples/Directory.Build.props" />
     <File Path="samples/Directory.Build.targets" />
-    <File Path="samples/Fonts.Samples.ruleset" />
+    <File Path="samples/.globalconfig" />
     <Project Path="samples/ListFonts/ListFonts.csproj" />
   </Folder>
   <Folder Name="/src/">
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Build.targets" />
-    <File Path="src/Fonts.ruleset" />
     <Project Path="src/PinataLabs.Typography/PinataLabs.Typography.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
     <File Path="tests/Directory.Build.targets" />
+    <File Path="tests/.globalconfig" />
     <Project Path="tests/PinataLabs.Typography.Benchmarks/PinataLabs.Typography.Benchmarks.csproj" />
     <Project Path="tests/PinataLabs.Typography.Tests/PinataLabs.Typography.Tests.csproj" />
   </Folder>

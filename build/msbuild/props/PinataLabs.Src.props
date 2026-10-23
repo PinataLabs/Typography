@@ -9,7 +9,6 @@
   <!-- Compilation and build location settings. -->
   <PropertyGroup>
     <PinataLabsProjectCategory>src</PinataLabsProjectCategory>
-    <CodeAnalysisRuleSet Condition="'$(CodeAnalysisRuleSet)' == ''">$(MSBuildThisFileDirectory)..\..\PinataLabs.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
