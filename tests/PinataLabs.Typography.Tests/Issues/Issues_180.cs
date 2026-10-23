@@ -2,22 +2,25 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_180
     {
         [Test]
-        public void CorrectlySetsHeightMetrics()
+        public async Task CorrectlySetsHeightMetrics()
         {
             // Whitney-book has invalid hhea values.
             Font font = new FontCollection().Add(TestFonts.WhitneyBookFile).CreateFont(25);
 
             FontRectangle size = TextMeasurer.MeasureSize("H", new TextOptions(font));
 
-            Assert.Equal(16, size.Width, 1);
-            Assert.Equal(21, size.Height, 1);
+            await Assert.That(Math.Round(size.Width, 1)).IsEqualTo(16);
+            await Assert.That(Math.Round(size.Height, 1)).IsEqualTo(21);
         }
     }
 }

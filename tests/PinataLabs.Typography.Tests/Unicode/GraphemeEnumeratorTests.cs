@@ -8,9 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 using TUnit.Core.Interfaces;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -19,91 +21,102 @@ namespace PinataLabs.Typography.Tests.Unicode
         private ITestOutput Output => TestContext.Current!.Output;
 
         [Test]
-        public void CanEnumerateSpan()
+        public async Task CanEnumerateSpan()
         {
             // Test example taken from.
             // https://docs.microsoft.com/en-us/dotnet/api/system.text.rune?view=net-5.0#when-to-use-the-rune-type
             const string text = "𐓏𐓘𐓻𐓘𐓻𐓟 𐒻𐓟";
-            int count = 0;
+            var lengths = new List<int>();
             Span<char> span = text.ToCharArray();
             foreach (ReadOnlySpan<char> grapheme in span.EnumerateGraphemes())
             {
-                Assert.True(grapheme.Length > 0);
-                count++;
+                lengths.Add(grapheme.Length);
             }
 
-            Assert.Equal(9, count);
+            await Assert.That(lengths).All(x => x > 0);
+            await Assert.That(lengths.Count).IsEqualTo(9);
         }
 
         [Test]
-        public void CanEnumerateReadonlySpan()
+        public async Task CanEnumerateReadonlySpan()
         {
             // Test example taken from.
             // https://docs.microsoft.com/en-us/dotnet/api/system.text.rune?view=net-5.0#when-to-use-the-rune-type
             const string text = "𐓏𐓘𐓻𐓘𐓻𐓟 𐒻𐓟";
-            int count = 0;
+            var lengths = new List<int>();
 
             foreach (ReadOnlySpan<char> grapheme in text.AsSpan().EnumerateGraphemes())
             {
-                Assert.True(grapheme.Length > 0);
-                count++;
+                lengths.Add(grapheme.Length);
             }
 
-            Assert.Equal(9, count);
+            await Assert.That(lengths).All(x => x > 0);
+            await Assert.That(lengths.Count).IsEqualTo(9);
         }
 
         [Test]
-        public void CanEnumerateInvalidReadonlySpan()
+        public async Task CanEnumerateInvalidReadonlySpan()
         {
             // The string below contains 2 combining characters then
             // a single high surrogate code unit, then 2 more sets or combining characters.
             // 'ā̈' 'b' '�' 'ç'
             const string text = "a\u0304\u0308b\ud800c\u0327";
-            int count = 0;
+            var lengths = new List<int>();
             foreach (ReadOnlySpan<char> grapheme in text.AsSpan().EnumerateGraphemes())
             {
-                Assert.True(grapheme.Length > 0);
-                count++;
+                lengths.Add(grapheme.Length);
             }
 
-            Assert.Equal(4, count);
+            await Assert.That(lengths).All(x => x > 0);
+            await Assert.That(lengths.Count).IsEqualTo(4);
         }
 
         [Test]
-        public void Should_Enumerate_Emoji()
+        public async Task Should_Enumerate_Emoji()
         {
             // https://docs.microsoft.com/en-us/dotnet/standard/base-types/character-encoding-introduction#example-count-char-rune-and-text-element-instances
             const string text = "👩🏽‍🚒";
 
-            int count = 0;
+            var graphemes = new List<(int CodePointCount, int Length)>();
             foreach (ReadOnlySpan<char> grapheme in new SpanGraphemeEnumerator(text.AsSpan()))
             {
-                Assert.Equal(4, CodePoint.GetCodePointCount(grapheme));
-                Assert.Equal(7, grapheme.Length);
-                count++;
+                graphemes.Add((CodePoint.GetCodePointCount(grapheme), grapheme.Length));
             }
 
-            Assert.Equal(1, count);
+            foreach ((int codePointCount, int length) in graphemes)
+            {
+                await Assert.That(codePointCount).IsEqualTo(4);
+                await Assert.That(length).IsEqualTo(7);
+            }
+
+            await Assert.That(graphemes.Count).IsEqualTo(1);
         }
 
         [Test]
-        public void Should_Enumerate_Alpha()
+        public async Task Should_Enumerate_Alpha()
         {
             const string text = "ABCDEFGHIJ";
-            int count = 0;
+            var graphemes = new List<(int CodePointCount, int Length)>();
 
             foreach (ReadOnlySpan<char> grapheme in new SpanGraphemeEnumerator(text.AsSpan()))
             {
-                Assert.Equal(1, CodePoint.GetCodePointCount(grapheme));
-                Assert.Equal(1, grapheme.Length);
-                count++;
+                graphemes.Add((CodePoint.GetCodePointCount(grapheme), grapheme.Length));
             }
 
-            Assert.Equal(10, count);
+            foreach ((int codePointCount, int length) in graphemes)
+            {
+                await Assert.That(codePointCount).IsEqualTo(1);
+                await Assert.That(length).IsEqualTo(1);
+            }
+
+            await Assert.That(graphemes.Count).IsEqualTo(10);
         }
 
         [Test]
-        public void ICUTests() => Assert.True(this.ICUTestsImpl());
+        public async Task ICUTests()
+        {
+            await Assert.That(this.ICUTestsImpl()).IsTrue();
+        }
 
         private bool ICUTestsImpl()
         {

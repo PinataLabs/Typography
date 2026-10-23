@@ -2,14 +2,16 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_334
     {
         [Test]
-        public void DoesNotSkewCompositeGlyph()
+        public async Task DoesNotSkewCompositeGlyph()
         {
             FontFamily family = new FontCollection().Add(TestFonts.SumanaRegularFile);
             family.TryGetMetrics(FontStyle.Regular, out FontMetrics metrics);
@@ -18,10 +20,10 @@ namespace PinataLabs.Typography.Tests.Issues
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, "(", new TextOptions(font));
 
-            Assert.Single(renderer.GlyphRects);
+            await Assert.That(renderer.GlyphRects).HasSingleItem();
 
             FontRectangle expected = new(31, 190.5F, 264, 1047);
-            Assert.Equal(expected, renderer.GlyphRects[0]);
+            await Assert.That(renderer.GlyphRects[0]).IsEqualTo(expected);
         }
     }
 }

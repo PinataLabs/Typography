@@ -8,9 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 using TUnit.Core.Interfaces;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -19,39 +21,38 @@ namespace PinataLabs.Typography.Tests.Unicode
         private ITestOutput Output => TestContext.Current!.Output;
 
         [Test]
-        public void BasicLatinTest()
+        public async Task BasicLatinTest()
         {
             var lineBreaker = new LineBreakEnumerator("Hello World\r\nThis is a test.".AsSpan());
+            var breaks = new List<LineBreak>();
+            while (lineBreaker.MoveNext())
+            {
+                breaks.Add(lineBreaker.Current);
+            }
 
-            Assert.True(lineBreaker.MoveNext());
-            Assert.Equal(6, lineBreaker.Current.PositionWrap);
-            Assert.False(lineBreaker.Current.Required);
+            await Assert.That(breaks.Count).IsEqualTo(6);
 
-            Assert.True(lineBreaker.MoveNext());
-            Assert.Equal(13, lineBreaker.Current.PositionWrap);
-            Assert.True(lineBreaker.Current.Required);
+            await Assert.That(breaks[0].PositionWrap).IsEqualTo(6);
+            await Assert.That(breaks[0].Required).IsFalse();
 
-            Assert.True(lineBreaker.MoveNext());
-            Assert.Equal(18, lineBreaker.Current.PositionWrap);
-            Assert.False(lineBreaker.Current.Required);
+            await Assert.That(breaks[1].PositionWrap).IsEqualTo(13);
+            await Assert.That(breaks[1].Required).IsTrue();
 
-            Assert.True(lineBreaker.MoveNext());
-            Assert.Equal(21, lineBreaker.Current.PositionWrap);
-            Assert.False(lineBreaker.Current.Required);
+            await Assert.That(breaks[2].PositionWrap).IsEqualTo(18);
+            await Assert.That(breaks[2].Required).IsFalse();
 
-            Assert.True(lineBreaker.MoveNext());
-            Assert.Equal(23, lineBreaker.Current.PositionWrap);
-            Assert.False(lineBreaker.Current.Required);
+            await Assert.That(breaks[3].PositionWrap).IsEqualTo(21);
+            await Assert.That(breaks[3].Required).IsFalse();
 
-            Assert.True(lineBreaker.MoveNext());
-            Assert.Equal(28, lineBreaker.Current.PositionWrap);
-            Assert.False(lineBreaker.Current.Required);
+            await Assert.That(breaks[4].PositionWrap).IsEqualTo(23);
+            await Assert.That(breaks[4].Required).IsFalse();
 
-            Assert.False(lineBreaker.MoveNext());
+            await Assert.That(breaks[5].PositionWrap).IsEqualTo(28);
+            await Assert.That(breaks[5].Required).IsFalse();
         }
 
         [Test]
-        public void ForwardTextWithOuterWhitespace()
+        public async Task ForwardTextWithOuterWhitespace()
         {
             string text = " Apples Pears Bananas   ";
             var breaks = new List<LineBreak>();
@@ -61,18 +62,18 @@ namespace PinataLabs.Typography.Tests.Unicode
                 breaks.Add(lineBreak);
             }
 
-            Assert.Equal(1, breaks[0].PositionWrap);
-            Assert.Equal(0, breaks[0].PositionMeasure);
-            Assert.Equal(8, breaks[1].PositionWrap);
-            Assert.Equal(7, breaks[1].PositionMeasure);
-            Assert.Equal(14, breaks[2].PositionWrap);
-            Assert.Equal(13, breaks[2].PositionMeasure);
-            Assert.Equal(24, breaks[3].PositionWrap);
-            Assert.Equal(21, breaks[3].PositionMeasure);
+            await Assert.That(breaks[0].PositionWrap).IsEqualTo(1);
+            await Assert.That(breaks[0].PositionMeasure).IsEqualTo(0);
+            await Assert.That(breaks[1].PositionWrap).IsEqualTo(8);
+            await Assert.That(breaks[1].PositionMeasure).IsEqualTo(7);
+            await Assert.That(breaks[2].PositionWrap).IsEqualTo(14);
+            await Assert.That(breaks[2].PositionMeasure).IsEqualTo(13);
+            await Assert.That(breaks[3].PositionWrap).IsEqualTo(24);
+            await Assert.That(breaks[3].PositionMeasure).IsEqualTo(21);
         }
 
         [Test]
-        public void ForwardTest()
+        public async Task ForwardTest()
         {
             string text = "Apples Pears Bananas";
             var breaks = new List<LineBreak>();
@@ -82,16 +83,19 @@ namespace PinataLabs.Typography.Tests.Unicode
                 breaks.Add(lineBreak);
             }
 
-            Assert.Equal(7, breaks[0].PositionWrap);
-            Assert.Equal(6, breaks[0].PositionMeasure);
-            Assert.Equal(13, breaks[1].PositionWrap);
-            Assert.Equal(12, breaks[1].PositionMeasure);
-            Assert.Equal(20, breaks[2].PositionWrap);
-            Assert.Equal(20, breaks[2].PositionMeasure);
+            await Assert.That(breaks[0].PositionWrap).IsEqualTo(7);
+            await Assert.That(breaks[0].PositionMeasure).IsEqualTo(6);
+            await Assert.That(breaks[1].PositionWrap).IsEqualTo(13);
+            await Assert.That(breaks[1].PositionMeasure).IsEqualTo(12);
+            await Assert.That(breaks[2].PositionWrap).IsEqualTo(20);
+            await Assert.That(breaks[2].PositionMeasure).IsEqualTo(20);
         }
 
         [Test]
-        public void ICUTests() => Assert.True(this.ICUTestsImpl());
+        public async Task ICUTests()
+        {
+            await Assert.That(this.ICUTestsImpl()).IsTrue();
+        }
 
         // Contains over 7000 tests
         // https://www.unicode.org/Public/13.0.0/ucd/auxiliary/LineBreakTest.html

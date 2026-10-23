@@ -1,165 +1,69 @@
-name: Build
+name: Build and Test
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
   pull_request:
-    branches:
-      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 jobs:
-  Build:
+  build-and-test:
+    name: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        options:
-          - os: ubuntu-latest
-            framework: netcoreapp3.1
-            runtime: -x64
-            codecov: false
-          - os: macos-latest
-            framework: netcoreapp3.1
-            runtime: -x64
-            codecov: false
-          - os: windows-latest
-            framework: netcoreapp3.1
-            runtime: -x64
-            codecov: true
-          - os: windows-latest
-            framework: netcoreapp2.1
-            runtime: -x64
-            codecov: false
-          - os: windows-latest
-            framework: net472
-            runtime: -x64
-            codecov: false
-          - os: windows-latest
-            framework: net472
-            runtime: -x86
-            codecov: false
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
-    runs-on: ${{matrix.options.os}}
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Git Config
+      - name: Git config
         shell: bash
         run: |
           git config --global core.autocrlf false
           git config --global core.longpaths true
 
-      - name: Git Checkout
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # global.json pins the .NET 11 SDK, which carries only the net11.0 runtime.
+      # The 8.0 and 10.0 entries install the runtimes the net8.0 and net10.0 tests need.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         with:
-          fetch-depth: 0
-          submodules: recursive
-
-      # See https://github.com/actions/checkout/issues/165#issuecomment-657673315
-      - name: Git Create LFS file list
-        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
-
-      - name: Git Setup LFS Cache
-        uses: actions/cache@v3
-        id: lfs-cache
-        with:
-          path: .git/lfs
-          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}-v1
-
-      - name: Git Pull LFS
-        run: git lfs pull
-
-      - name: NuGet Install
-        uses: NuGet/setup-nuget@v1
-
-      - name: NuGet Setup Cache
-        uses: actions/cache@v3
-        id: nuget-cache
-        with:
-          path: ~/.nuget
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
-      - name: DotNet Setup
-        uses: actions/setup-dotnet@v3
-        with:
+          global-json-file: global.json
           dotnet-version: |
-            6.0.x
-            5.0.x
-            3.1.x
-            2.1.x
+            8.0.x
+            10.0.x
 
-      - name: DotNet Build
-        shell: pwsh
-        run: ./ci-build.ps1 "${{matrix.options.framework}}"
-        env:
-          SIXLABORS_TESTING: True
+      - name: Show .NET info
+        run: dotnet --info
 
-      - name: DotNet Test
-        shell: pwsh
-        run: ./ci-test.ps1 "${{matrix.options.os}}" "${{matrix.options.framework}}" "${{matrix.options.runtime}}" "${{matrix.options.codecov}}"
-        env:
-          SIXLABORS_TESTING: True
-          XUNIT_PATH: .\tests\PinataLabs.Typography.Tests # Required for xunit
+      - name: Restore
+        run: dotnet restore PinataLabs.Typography.slnx
 
-      - name: Export Failed Output
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: actual_output_${{ runner.os }}_${{ matrix.options.framework }}${{ matrix.options.runtime }}.zip
-          path: tests/Images/ActualOutput/
+      - name: Build
+        id: build
+        run: dotnet build PinataLabs.Typography.slnx -c Release --no-restore
 
-      - name: Codecov Update
-        uses: codecov/codecov-action@v3
-        if: matrix.options.codecov == true && startsWith(github.repository, 'SixLabors')
-        with:
-          flags: unittests
+      # global.json selects Microsoft.Testing.Platform, so dotnet test runs TUnit natively.
+      - name: Test net8.0
+        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net8.0 --no-build
 
-  Publish:
-    needs: [Build]
+      - name: Test net10.0
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net10.0 --no-build
 
-    runs-on: ubuntu-latest
-
-    if: (github.event_name == 'push')
-
-    steps:
-      - name: Git Config
-        shell: bash
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.longpaths true
-
-      - name: Git Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: NuGet Install
-        uses: NuGet/setup-nuget@v1
-
-      - name: NuGet Setup Cache
-        uses: actions/cache@v3
-        id: nuget-cache
-        with:
-          path: ~/.nuget
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
-      - name: DotNet Pack
-        shell: pwsh
-        run: ./ci-pack.ps1
-
-      - name: Feedz Publish
-        shell: pwsh
-        run: |
-          dotnet nuget push .\artifacts\*.nupkg -k ${{secrets.FEEDZ_TOKEN}} -s https://f.feedz.io/sixlabors/sixlabors/nuget/index.json --skip-duplicate
-          dotnet nuget push .\artifacts\*.snupkg -k ${{secrets.FEEDZ_TOKEN}} -s https://f.feedz.io/sixlabors/sixlabors/symbols --skip-duplicate
-
-      - name: NuGet Publish
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        shell: pwsh
-        run: |
-          dotnet nuget push .\artifacts\*.nupkg -k ${{secrets.NUGET_TOKEN}} -s https://api.nuget.org/v3/index.json --skip-duplicate
-          dotnet nuget push .\artifacts\*.snupkg -k ${{secrets.NUGET_TOKEN}} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Test net11.0
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net11.0 --no-build

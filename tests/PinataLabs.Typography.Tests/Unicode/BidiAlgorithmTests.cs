@@ -6,9 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 using TUnit.Core.Interfaces;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -17,7 +19,7 @@ namespace PinataLabs.Typography.Tests.Unicode
         private ITestOutput Output => TestContext.Current!.Output;
 
         [Test]
-        public void RendersKurdishTextCorrect()
+        public async Task RendersKurdishTextCorrect()
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(8);
@@ -33,15 +35,15 @@ namespace PinataLabs.Typography.Tests.Unicode
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void RendersFarsiTextCorrect()
+        public async Task RendersFarsiTextCorrect()
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(8);
@@ -57,15 +59,15 @@ namespace PinataLabs.Typography.Tests.Unicode
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void RendersArabicTextWithPunctuationCorrectly()
+        public async Task RendersArabicTextWithPunctuationCorrectly()
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.TimesNewRomanFile).CreateFont(12);
@@ -82,15 +84,15 @@ namespace PinataLabs.Typography.Tests.Unicode
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void RendersArabicNumbersFromLeftToRight()
+        public async Task RendersArabicNumbersFromLeftToRight()
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(12);
@@ -102,15 +104,15 @@ namespace PinataLabs.Typography.Tests.Unicode
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void MixingArabicWordsWithNumbers_Works()
+        public async Task MixingArabicWordsWithNumbers_Works()
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.SegeouiFontFile).CreateFont(12);
@@ -122,15 +124,15 @@ namespace PinataLabs.Typography.Tests.Unicode
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void MathematicalFormulasWithArabicText_Works()
+        public async Task MathematicalFormulasWithArabicText_Works()
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.SegeouiFontFile).CreateFont(12);
@@ -142,15 +144,18 @@ namespace PinataLabs.Typography.Tests.Unicode
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ICUTests() => Assert.True(this.ICUTestsImpl());
+        public async Task ICUTests()
+        {
+            await Assert.That(this.ICUTestsImpl()).IsTrue();
+        }
 
         private bool ICUTestsImpl()
         {
