@@ -311,23 +311,10 @@ internal class BigEndianBinaryReader : IDisposable
     public byte[] ReadBytes(int count)
     {
         byte[] ret = new byte[count];
-        int index = 0;
-        while (index < count)
-        {
-            int read = this.BaseStream.Read(ret, index, count - index);
+        int read = this.BaseStream.ReadAtLeast(ret, count, throwOnEndOfStream: false);
 
-            // Stream has finished half way through. That's fine, return what we've got.
-            if (read == 0)
-            {
-                byte[] copy = new byte[index];
-                Buffer.BlockCopy(ret, 0, copy, 0, index);
-                return copy;
-            }
-
-            index += read;
-        }
-
-        return ret;
+        // Stream has finished half way through. That's fine, return what we've got.
+        return read < count ? ret.AsSpan(0, read).ToArray() : ret;
     }
 
     /// <summary>
@@ -381,20 +368,7 @@ internal class BigEndianBinaryReader : IDisposable
     /// <param name="data">Buffer to read into.</param>
     /// <param name="size">Number of bytes to read.</param>
     private void ReadInternal(byte[] data, int size)
-    {
-        int index = 0;
-
-        while (index < size)
-        {
-            int read = this.BaseStream.Read(data, index, size - index);
-            if (read == 0)
-            {
-                throw new EndOfStreamException($"End of stream reached with {size - index} byte{(size - index == 1 ? "s" : string.Empty)} left to read.");
-            }
-
-            index += read;
-        }
-    }
+        => this.BaseStream.ReadExactly(data, 0, size);
 
     public void Dispose()
     {
