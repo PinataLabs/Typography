@@ -13,7 +13,7 @@ namespace PinataLabs.Typography.Tests
 {
     public static class TestFonts
     {
-        private static readonly ConcurrentDictionary<string, Stream> Cache = new();
+        private static readonly ConcurrentDictionary<string, byte[]> Cache = new();
 
         public static string TwemojiMozillaFile => GetFullPath("Twemoji Mozilla.ttf");
 
@@ -279,23 +279,10 @@ namespace PinataLabs.Typography.Tests
             public static string Issue298File => GetFullPath("Issues/StyleScript.ttf");
         }
 
-        private static Stream OpenStream(string path) =>
-            Cache.GetOrAdd(
-                path,
-                p =>
-                {
-                    using FileStream fs = File.OpenRead(p);
-                    return fs.Clone();
-                }).Clone();
-
-        private static Stream Clone(this Stream src)
-        {
-            var ms = new MemoryStream();
-            src.Position = 0;
-            src.CopyTo(ms);
-            ms.Position = 0;
-            return ms;
-        }
+        // Each call gets its own read-only stream over a shared byte array that is never
+        // mutated, so tests that run in parallel never share a stream position.
+        private static Stream OpenStream(string path)
+            => new MemoryStream(Cache.GetOrAdd(path, File.ReadAllBytes), writable: false);
 
         private static string GetFullPath(string path)
         {

@@ -5,8 +5,6 @@
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.CMap;
 using PinataLabs.Typography.Unicode;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 using static PinataLabs.Typography.Tables.General.CMap.Format4SubTable;
 
 namespace PinataLabs.Typography.Tests.Issues

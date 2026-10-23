@@ -6,8 +6,6 @@ using System;
 using System.Globalization;
 using System.Numerics;
 using System.Threading.Tasks;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests
 {

@@ -3,8 +3,6 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Threading.Tasks;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {

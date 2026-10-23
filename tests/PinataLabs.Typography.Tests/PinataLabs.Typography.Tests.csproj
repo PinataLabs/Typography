@@ -5,20 +5,10 @@
     <LangVersion>latest</LangVersion>
     <DebugSymbols>True</DebugSymbols>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <!--
-      Temporary, while the assertions move from xUnit to TUnit (#13, #14, #15):
-      TUnit's global usings for its assertions would make `Assert` ambiguous with
-      xUnit's `Assert` in files that still have `using Xunit;`. A converted file
-      adds `using TUnit.Assertions;` (and `using TUnit.Assertions.Extensions;`)
-      itself. Remove this property once no file uses xUnit's Assert.
-    -->
-    <TUnitAssertionsImplicitUsings>false</TUnitAssertionsImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
-    <!-- Temporary: assertions still use xUnit's Assert until #13, #14 and #15 convert them. -->
-    <PackageReference Include="xunit.assert" />
   </ItemGroup>
 
   <ItemGroup>

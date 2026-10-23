@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.General.CMap;
 using PinataLabs.Typography.WellKnownIds;
-using TUnit.Assertions;
-using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
