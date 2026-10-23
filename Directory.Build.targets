@@ -10,7 +10,7 @@
     MSBuildAllProjects, as that is done by the file that imports us.
   -->
 
-  <!-- Import the shared global .props file -->
+  <!-- Import the shared global .targets file -->
   <Import Project="$(MSBuildThisFileDirectory)build\msbuild\targets\PinataLabs.Global.targets"/>
 
 </Project>
