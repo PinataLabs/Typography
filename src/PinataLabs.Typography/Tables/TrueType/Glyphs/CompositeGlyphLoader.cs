@@ -11,6 +11,11 @@ namespace PinataLabs.Typography.Tables.TrueType.Glyphs;
 
 internal sealed class CompositeGlyphLoader : GlyphLoader
 {
+    private const int MaxNestingDepth = 16;
+
+    [ThreadStatic]
+    private static List<CompositeGlyphLoader>? resolving;
+
     private readonly Bounds bounds;
     private readonly Composite[] composites;
     private readonly ReadOnlyMemory<byte> instructions;
@@ -26,17 +31,38 @@ internal sealed class CompositeGlyphLoader : GlyphLoader
     {
         List<ControlPoint> controlPoints = [];
         List<ushort> endPoints = [];
-        for (int i = 0; i < this.composites.Length; i++)
-        {
-            Composite composite = this.composites[i];
-            var clone = GlyphVector.DeepClone(table.GetGlyph(composite.GlyphIndex));
-            GlyphVector.TransformInPlace(ref clone, composite.Transformation);
-            ushort endPointOffset = (ushort)controlPoints.Count;
 
-            controlPoints.AddRange(clone.ControlPoints);
-            foreach (ushort p in clone.EndPoints)
+        // Malformed fonts can contain composites that refer to themselves, directly or through
+        // other composites. Skip a composite that is already being resolved on this thread and
+        // limit the nesting depth.
+        List<CompositeGlyphLoader> active = resolving ??= [];
+        if (active.Count < MaxNestingDepth && !active.Contains(this))
+        {
+            active.Add(this);
+            try
             {
-                endPoints.Add((ushort)(p + endPointOffset));
+                for (int i = 0; i < this.composites.Length; i++)
+                {
+                    Composite composite = this.composites[i];
+                    if (composite.GlyphIndex >= table.GlyphCount)
+                    {
+                        continue;
+                    }
+
+                    var clone = GlyphVector.DeepClone(table.GetGlyph(composite.GlyphIndex));
+                    GlyphVector.TransformInPlace(ref clone, composite.Transformation);
+                    ushort endPointOffset = (ushort)controlPoints.Count;
+
+                    controlPoints.AddRange(clone.ControlPoints);
+                    foreach (ushort p in clone.EndPoints)
+                    {
+                        endPoints.Add((ushort)(p + endPointOffset));
+                    }
+                }
+            }
+            finally
+            {
+                active.RemoveAt(active.Count - 1);
             }
         }
 
