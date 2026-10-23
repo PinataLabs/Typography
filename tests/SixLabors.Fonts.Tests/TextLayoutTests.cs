@@ -1152,10 +1152,10 @@ namespace SixLabors.Fonts.Tests
 
 #if OS_WINDOWS
         [Fact]
-        public FontRectangle BenchmarkTest()
+        public void BenchmarkTest()
         {
             Font font = Arial;
-            return TextMeasurer.MeasureSize("The quick brown fox jumped over the lazy dog", new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
+            _ = TextMeasurer.MeasureSize("The quick brown fox jumped over the lazy dog", new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
         }
 
         private static readonly Font Arial = SystemFonts.CreateFont("Arial", 12);

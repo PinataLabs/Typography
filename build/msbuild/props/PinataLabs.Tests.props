@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    Vendored from SixLabors/SharedInfrastructure (Apache-2.0) at commit 33cb12ca,
+    msbuild/props/SixLabors.Tests.props, and modified by PinataLabs.
+  -->
+
+  <!-- Compilation and build location settings. -->
+  <PropertyGroup>
+    <PinataLabsProjectCategory>tests</PinataLabsProjectCategory>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <CodeAnalysisRuleSet Condition="'$(CodeAnalysisRuleSet)' == ''">$(MSBuildThisFileDirectory)..\..\PinataLabs.Tests.ruleset</CodeAnalysisRuleSet>
+    <!-- The latest Microsoft.NET.Test.Sdk rejects netcoreapp2.1/3.1. Remove once the tests are retargeted (spec 001, scope item 3). -->
+    <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
+  </PropertyGroup>
+
+  <!--
+    Package references and additional files which are consumed by test projects.
+    Versions are declared centrally in Directory.Packages.props.
+  -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="xunit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" PrivateAssets="All" Condition="'$(IsCodeCoverage)'=='true'"/>
+  </ItemGroup>
+
+</Project>
