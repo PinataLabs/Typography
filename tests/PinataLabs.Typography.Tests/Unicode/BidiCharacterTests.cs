@@ -8,9 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 using TUnit.Core.Interfaces;
-using Xunit;
 
 namespace PinataLabs.Typography.Tests.Unicode
 {
@@ -19,7 +21,10 @@ namespace PinataLabs.Typography.Tests.Unicode
         private ITestOutput Output => TestContext.Current!.Output;
 
         [Test]
-        public void ICUTests() => Assert.True(this.ICUTestsImpl());
+        public async Task ICUTests()
+        {
+            await Assert.That(this.ICUTestsImpl()).IsTrue();
+        }
 
         private bool ICUTestsImpl()
         {

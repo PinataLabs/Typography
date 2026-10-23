@@ -2,9 +2,12 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Globalization;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tests.Fakes;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
@@ -16,7 +19,7 @@ namespace PinataLabs.Typography.Tests.Issues
         [Arguments(3)]
         [Arguments(4)]
         [Arguments(5)]
-        public void TextWidthForTabOnlyTextShouldBeSingleTabWidthMultipliedByTabCount(int tabCount)
+        public async Task TextWidthForTabOnlyTextShouldBeSingleTabWidthMultipliedByTabCount(int tabCount)
         {
             Font font = CreateFont("\t x");
 
@@ -24,7 +27,7 @@ namespace PinataLabs.Typography.Tests.Issues
             string tabString = string.Empty.PadRight(tabCount, '\t');
             FontRectangle tabCountWidth = TextMeasurer.MeasureBounds(tabString, new TextOptions(font) { Dpi = font.FontMetrics.ScaleFactor });
 
-            Assert.Equal(tabWidth.Width * tabCount, tabCountWidth.Width, 2);
+            await Assert.That(Math.Round(tabCountWidth.Width, 2)).IsEqualTo(Math.Round(tabWidth.Width * tabCount, 2));
         }
 
         [Test]
@@ -33,7 +36,7 @@ namespace PinataLabs.Typography.Tests.Issues
         [Arguments(3)]
         [Arguments(4)]
         [Arguments(5)]
-        public void TextWidthForTabOnlyTextShouldBeSingleTabWidthMultipliedByTabCountMinusX(int tabCount)
+        public async Task TextWidthForTabOnlyTextShouldBeSingleTabWidthMultipliedByTabCountMinusX(int tabCount)
         {
             Font font = CreateFont("\t x");
 
@@ -44,7 +47,7 @@ namespace PinataLabs.Typography.Tests.Issues
 
             float singleTabWidth = tabWidth.Width - xWidth.Width;
             float finalTabWidth = tabCountWidth.Width - xWidth.Width;
-            Assert.Equal(singleTabWidth * tabCount, finalTabWidth, 2);
+            await Assert.That(Math.Round(finalTabWidth, 2)).IsEqualTo(Math.Round(singleTabWidth * tabCount, 2));
         }
 
         public static Font CreateFont(string text)

@@ -2,14 +2,16 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Issues
 {
     public class Issues_23
     {
         [Test]
-        public void BleadingFonts()
+        public async Task BleadingFonts()
         {
             // wendy one returns wrong points for 'o'
             Font font = new FontCollection().Add(TestFonts.WendyOneFile).CreateFont(12);
@@ -18,7 +20,7 @@ namespace PinataLabs.Typography.Tests.Issues
 
             new TextRenderer(r).RenderText("o", new TextOptions(new Font(font, 30)));
 
-            Assert.DoesNotContain(System.Numerics.Vector2.Zero, r.ControlPoints);
+            await Assert.That(r.ControlPoints).DoesNotContain(System.Numerics.Vector2.Zero);
         }
     }
 }
