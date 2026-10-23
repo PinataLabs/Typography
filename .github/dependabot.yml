@@ -4,3 +4,16 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+
+  # Package versions are declared centrally in /Directory.Packages.props.
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      # Pinned to 1.2.0-beta.556: later betas add rules that fail the build.
+      - dependency-name: "StyleCop.Analyzers"
+    groups:
+      nuget:
+        patterns:
+          - "*"

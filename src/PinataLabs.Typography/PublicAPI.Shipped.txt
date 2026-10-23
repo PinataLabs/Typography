@@ -1,0 +1,1098 @@
+#nullable enable
+PinataLabs.Typography.ColorFontSupport
+PinataLabs.Typography.ColorFontSupport.MicrosoftColrFormat = 1 -> PinataLabs.Typography.ColorFontSupport
+PinataLabs.Typography.ColorFontSupport.None = 0 -> PinataLabs.Typography.ColorFontSupport
+PinataLabs.Typography.Font
+PinataLabs.Typography.Font.Family.get -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, PinataLabs.Typography.FontStyle style) -> void
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, float size) -> void
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, float size, PinataLabs.Typography.FontStyle style) -> void
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size) -> void
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size, PinataLabs.Typography.FontStyle style) -> void
+PinataLabs.Typography.Font.FontMetrics.get -> PinataLabs.Typography.FontMetrics!
+PinataLabs.Typography.Font.IsBold.get -> bool
+PinataLabs.Typography.Font.IsItalic.get -> bool
+PinataLabs.Typography.Font.Name.get -> string!
+PinataLabs.Typography.Font.Size.get -> float
+PinataLabs.Typography.Font.TryGetGlyphs(PinataLabs.Typography.Unicode.CodePoint codePoint, PinataLabs.Typography.ColorFontSupport support, out System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.Glyph>? glyphs) -> bool
+PinataLabs.Typography.Font.TryGetGlyphs(PinataLabs.Typography.Unicode.CodePoint codePoint, PinataLabs.Typography.TextAttributes textAttributes, PinataLabs.Typography.ColorFontSupport support, out System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.Glyph>? glyphs) -> bool
+PinataLabs.Typography.Font.TryGetGlyphs(PinataLabs.Typography.Unicode.CodePoint codePoint, PinataLabs.Typography.TextAttributes textAttributes, PinataLabs.Typography.LayoutMode layoutMode, PinataLabs.Typography.ColorFontSupport support, out System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.Glyph>? glyphs) -> bool
+PinataLabs.Typography.Font.TryGetGlyphs(PinataLabs.Typography.Unicode.CodePoint codePoint, PinataLabs.Typography.TextAttributes textAttributes, PinataLabs.Typography.TextDecorations textDecorations, PinataLabs.Typography.LayoutMode layoutMode, PinataLabs.Typography.ColorFontSupport support, out System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.Glyph>? glyphs) -> bool
+PinataLabs.Typography.Font.TryGetGlyphs(PinataLabs.Typography.Unicode.CodePoint codePoint, out System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.Glyph>? glyphs) -> bool
+PinataLabs.Typography.Font.TryGetKerningOffset(PinataLabs.Typography.Glyph previous, PinataLabs.Typography.Glyph current, float dpi, out System.Numerics.Vector2 vector) -> bool
+PinataLabs.Typography.Font.TryGetPath(out string? path) -> bool
+PinataLabs.Typography.FontCollection
+PinataLabs.Typography.FontCollection.Add(System.IO.Stream! stream) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(System.IO.Stream! stream, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(System.IO.Stream! stream, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(System.IO.Stream! stream, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(string! path) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(string! path, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(string! path, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Add(string! path, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.AddCollection(System.IO.Stream! stream) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(System.IO.Stream! stream, System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(System.IO.Stream! stream, System.Globalization.CultureInfo! culture, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(System.IO.Stream! stream, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(string! path) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(string! path, System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(string! path, System.Globalization.CultureInfo! culture, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.AddCollection(string! path, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.Families.get -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.FontCollection() -> void
+PinataLabs.Typography.FontCollection.Get(string! name) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.Get(string! name, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontCollection.GetByCulture(System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.FontCollection.TryGet(string! name, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontFamily family) -> bool
+PinataLabs.Typography.FontCollection.TryGet(string! name, out PinataLabs.Typography.FontFamily family) -> bool
+PinataLabs.Typography.FontCollectionExtensions
+PinataLabs.Typography.FontDescription
+PinataLabs.Typography.FontDescription.FontFamily(System.Globalization.CultureInfo! culture) -> string!
+PinataLabs.Typography.FontDescription.FontFamilyInvariantCulture.get -> string!
+PinataLabs.Typography.FontDescription.FontName(System.Globalization.CultureInfo! culture) -> string!
+PinataLabs.Typography.FontDescription.FontNameInvariantCulture.get -> string!
+PinataLabs.Typography.FontDescription.FontSubFamilyName(System.Globalization.CultureInfo! culture) -> string!
+PinataLabs.Typography.FontDescription.FontSubFamilyNameInvariantCulture.get -> string!
+PinataLabs.Typography.FontDescription.GetNameById(System.Globalization.CultureInfo! culture, PinataLabs.Typography.WellKnownIds.KnownNameIds nameId) -> string!
+PinataLabs.Typography.FontDescription.Style.get -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontException
+PinataLabs.Typography.FontException.FontException(string! message) -> void
+PinataLabs.Typography.FontFamily
+PinataLabs.Typography.FontFamily.CreateFont(float size) -> PinataLabs.Typography.Font!
+PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!
+PinataLabs.Typography.FontFamily.Culture.get -> System.Globalization.CultureInfo!
+PinataLabs.Typography.FontFamily.Equals(PinataLabs.Typography.FontFamily other) -> bool
+PinataLabs.Typography.FontFamily.FontFamily() -> void
+PinataLabs.Typography.FontFamily.GetAvailableStyles() -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontStyle>!
+PinataLabs.Typography.FontFamily.Name.get -> string!
+PinataLabs.Typography.FontFamily.TryGetMetrics(PinataLabs.Typography.FontStyle style, out PinataLabs.Typography.FontMetrics? metrics) -> bool
+PinataLabs.Typography.FontFamily.TryGetPaths(out System.Collections.Generic.IEnumerable<string!>! paths) -> bool
+PinataLabs.Typography.FontFamilyNotFoundException
+PinataLabs.Typography.FontFamilyNotFoundException.FontFamily.get -> string!
+PinataLabs.Typography.FontFamilyNotFoundException.FontFamilyNotFoundException(string! family) -> void
+PinataLabs.Typography.FontFamilyNotFoundException.FontFamilyNotFoundException(string! family, System.Collections.Generic.IReadOnlyCollection<string!>! searchDirectories) -> void
+PinataLabs.Typography.FontFamilyNotFoundException.SearchDirectories.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+PinataLabs.Typography.FontMetrics
+PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.FontRectangle.Bottom.get -> float
+PinataLabs.Typography.FontRectangle.Contains(System.Numerics.Vector2 point) -> bool
+PinataLabs.Typography.FontRectangle.Contains(float x, float y) -> bool
+PinataLabs.Typography.FontRectangle.Contains(in PinataLabs.Typography.FontRectangle rectangle) -> bool
+PinataLabs.Typography.FontRectangle.Deconstruct(out float x, out float y, out float width, out float height) -> void
+PinataLabs.Typography.FontRectangle.Equals(PinataLabs.Typography.FontRectangle other) -> bool
+PinataLabs.Typography.FontRectangle.FontRectangle() -> void
+PinataLabs.Typography.FontRectangle.FontRectangle(System.Numerics.Vector2 point, System.Numerics.Vector2 size) -> void
+PinataLabs.Typography.FontRectangle.FontRectangle(float x, float y, float width, float height) -> void
+PinataLabs.Typography.FontRectangle.Height.get -> float
+PinataLabs.Typography.FontRectangle.Inflate(System.Numerics.Vector2 size) -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.FontRectangle.Inflate(float width, float height) -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.FontRectangle.Intersect(in PinataLabs.Typography.FontRectangle rectangle) -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.FontRectangle.IntersectsWith(in PinataLabs.Typography.FontRectangle rectangle) -> bool
+PinataLabs.Typography.FontRectangle.IsEmpty.get -> bool
+PinataLabs.Typography.FontRectangle.Left.get -> float
+PinataLabs.Typography.FontRectangle.Location.get -> System.Numerics.Vector2
+PinataLabs.Typography.FontRectangle.Offset(System.Numerics.Vector2 point) -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.FontRectangle.Offset(float dx, float dy) -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.FontRectangle.Right.get -> float
+PinataLabs.Typography.FontRectangle.Size.get -> System.Numerics.Vector2
+PinataLabs.Typography.FontRectangle.Top.get -> float
+PinataLabs.Typography.FontRectangle.Width.get -> float
+PinataLabs.Typography.FontRectangle.X.get -> float
+PinataLabs.Typography.FontRectangle.Y.get -> float
+PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyle.Bold = 1 -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyle.BoldItalic = PinataLabs.Typography.FontStyle.Bold | PinataLabs.Typography.FontStyle.Italic -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyle.Italic = 2 -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyle.Regular = 0 -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.Glyph
+PinataLabs.Typography.Glyph.BoundingBox(PinataLabs.Typography.GlyphLayoutMode mode, System.Numerics.Vector2 location, float dpi) -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.Glyph.Glyph() -> void
+PinataLabs.Typography.Glyph.GlyphMetrics.get -> PinataLabs.Typography.GlyphMetrics!
+PinataLabs.Typography.GlyphBounds
+PinataLabs.Typography.GlyphBounds.Bounds.get -> PinataLabs.Typography.FontRectangle
+PinataLabs.Typography.GlyphBounds.Codepoint.get -> PinataLabs.Typography.Unicode.CodePoint
+PinataLabs.Typography.GlyphBounds.GlyphBounds() -> void
+PinataLabs.Typography.GlyphBounds.GlyphBounds(PinataLabs.Typography.Unicode.CodePoint codePoint, in PinataLabs.Typography.FontRectangle bounds) -> void
+PinataLabs.Typography.GlyphColor
+PinataLabs.Typography.GlyphColor.Alpha.get -> byte
+PinataLabs.Typography.GlyphColor.Blue.get -> byte
+PinataLabs.Typography.GlyphColor.Equals(PinataLabs.Typography.GlyphColor other) -> bool
+PinataLabs.Typography.GlyphColor.GlyphColor() -> void
+PinataLabs.Typography.GlyphColor.Green.get -> byte
+PinataLabs.Typography.GlyphColor.Red.get -> byte
+PinataLabs.Typography.GlyphLayoutMode
+PinataLabs.Typography.GlyphLayoutMode.Horizontal = 0 -> PinataLabs.Typography.GlyphLayoutMode
+PinataLabs.Typography.GlyphLayoutMode.Vertical = 1 -> PinataLabs.Typography.GlyphLayoutMode
+PinataLabs.Typography.GlyphLayoutMode.VerticalRotated = 2 -> PinataLabs.Typography.GlyphLayoutMode
+PinataLabs.Typography.GlyphMetrics
+PinataLabs.Typography.GlyphMetrics.AdvanceHeight.get -> ushort
+PinataLabs.Typography.GlyphMetrics.AdvanceWidth.get -> ushort
+PinataLabs.Typography.GlyphMetrics.BottomSideBearing.get -> short
+PinataLabs.Typography.GlyphMetrics.CodePoint.get -> PinataLabs.Typography.Unicode.CodePoint
+PinataLabs.Typography.GlyphMetrics.GlyphColor.get -> PinataLabs.Typography.GlyphColor?
+PinataLabs.Typography.GlyphMetrics.GlyphId.get -> ushort
+PinataLabs.Typography.GlyphMetrics.GlyphType.get -> PinataLabs.Typography.GlyphType
+PinataLabs.Typography.GlyphMetrics.Height.get -> float
+PinataLabs.Typography.GlyphMetrics.LeftSideBearing.get -> short
+PinataLabs.Typography.GlyphMetrics.RightSideBearing.get -> short
+PinataLabs.Typography.GlyphMetrics.ScaleFactor.get -> System.Numerics.Vector2
+PinataLabs.Typography.GlyphMetrics.TextAttributes.get -> PinataLabs.Typography.TextAttributes
+PinataLabs.Typography.GlyphMetrics.TextDecorations.get -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.GlyphMetrics.TopSideBearing.get -> short
+PinataLabs.Typography.GlyphMetrics.UnitsPerEm.get -> ushort
+PinataLabs.Typography.GlyphMetrics.Width.get -> float
+PinataLabs.Typography.GlyphMissingException
+PinataLabs.Typography.GlyphMissingException.GlyphMissingException(PinataLabs.Typography.Unicode.CodePoint codePoint) -> void
+PinataLabs.Typography.GlyphRendererParameters
+PinataLabs.Typography.GlyphRendererParameters.CodePoint.get -> PinataLabs.Typography.Unicode.CodePoint
+PinataLabs.Typography.GlyphRendererParameters.Dpi.get -> float
+PinataLabs.Typography.GlyphRendererParameters.Equals(PinataLabs.Typography.GlyphRendererParameters other) -> bool
+PinataLabs.Typography.GlyphRendererParameters.Font.get -> string!
+PinataLabs.Typography.GlyphRendererParameters.FontStyle.get -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.GlyphRendererParameters.GlyphColor.get -> PinataLabs.Typography.GlyphColor
+PinataLabs.Typography.GlyphRendererParameters.GlyphId.get -> ushort
+PinataLabs.Typography.GlyphRendererParameters.GlyphRendererParameters() -> void
+PinataLabs.Typography.GlyphRendererParameters.GlyphType.get -> PinataLabs.Typography.GlyphType
+PinataLabs.Typography.GlyphRendererParameters.LayoutMode.get -> PinataLabs.Typography.GlyphLayoutMode
+PinataLabs.Typography.GlyphRendererParameters.PointSize.get -> float
+PinataLabs.Typography.GlyphRendererParameters.TextRun.get -> PinataLabs.Typography.TextRun!
+PinataLabs.Typography.GlyphType
+PinataLabs.Typography.GlyphType.ColrLayer = 2 -> PinataLabs.Typography.GlyphType
+PinataLabs.Typography.GlyphType.Fallback = 0 -> PinataLabs.Typography.GlyphType
+PinataLabs.Typography.GlyphType.Standard = 1 -> PinataLabs.Typography.GlyphType
+PinataLabs.Typography.HintingMode
+PinataLabs.Typography.HintingMode.None = 0 -> PinataLabs.Typography.HintingMode
+PinataLabs.Typography.HintingMode.Standard = 1 -> PinataLabs.Typography.HintingMode
+PinataLabs.Typography.HorizontalAlignment
+PinataLabs.Typography.HorizontalAlignment.Center = 2 -> PinataLabs.Typography.HorizontalAlignment
+PinataLabs.Typography.HorizontalAlignment.Left = 0 -> PinataLabs.Typography.HorizontalAlignment
+PinataLabs.Typography.HorizontalAlignment.Right = 1 -> PinataLabs.Typography.HorizontalAlignment
+PinataLabs.Typography.HorizontalMetrics
+PinataLabs.Typography.HorizontalMetrics.AdvanceHeightMax.get -> short
+PinataLabs.Typography.HorizontalMetrics.AdvanceWidthMax.get -> short
+PinataLabs.Typography.HorizontalMetrics.Ascender.get -> short
+PinataLabs.Typography.HorizontalMetrics.Descender.get -> short
+PinataLabs.Typography.HorizontalMetrics.HorizontalMetrics() -> void
+PinataLabs.Typography.HorizontalMetrics.LineGap.get -> short
+PinataLabs.Typography.HorizontalMetrics.LineHeight.get -> short
+PinataLabs.Typography.IColorGlyphRenderer
+PinataLabs.Typography.IColorGlyphRenderer.SetColor(PinataLabs.Typography.GlyphColor color) -> void
+PinataLabs.Typography.IFontCollection
+PinataLabs.Typography.IFontCollection.Add(System.IO.Stream! stream) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(System.IO.Stream! stream, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(System.IO.Stream! stream, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(System.IO.Stream! stream, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(string! path) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(string! path, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(string! path, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.Add(string! path, out PinataLabs.Typography.FontDescription! description) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IFontCollection.AddCollection(System.IO.Stream! stream) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(System.IO.Stream! stream, System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(System.IO.Stream! stream, System.Globalization.CultureInfo! culture, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(System.IO.Stream! stream, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(string! path) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(string! path, System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(string! path, System.Globalization.CultureInfo! culture, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IFontCollection.AddCollection(string! path, out System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontDescription!>! descriptions) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IGlyphRenderer
+PinataLabs.Typography.IGlyphRenderer.BeginFigure() -> void
+PinataLabs.Typography.IGlyphRenderer.BeginGlyph(in PinataLabs.Typography.FontRectangle bounds, in PinataLabs.Typography.GlyphRendererParameters parameters) -> bool
+PinataLabs.Typography.IGlyphRenderer.BeginText(in PinataLabs.Typography.FontRectangle bounds) -> void
+PinataLabs.Typography.IGlyphRenderer.CubicBezierTo(System.Numerics.Vector2 secondControlPoint, System.Numerics.Vector2 thirdControlPoint, System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphRenderer.EnabledDecorations() -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.IGlyphRenderer.EndFigure() -> void
+PinataLabs.Typography.IGlyphRenderer.EndGlyph() -> void
+PinataLabs.Typography.IGlyphRenderer.EndText() -> void
+PinataLabs.Typography.IGlyphRenderer.LineTo(System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphRenderer.MoveTo(System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphRenderer.QuadraticBezierTo(System.Numerics.Vector2 secondControlPoint, System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphRenderer.SetDecoration(PinataLabs.Typography.TextDecorations textDecorations, System.Numerics.Vector2 start, System.Numerics.Vector2 end, float thickness) -> void
+PinataLabs.Typography.IGlyphRendererExtensions
+PinataLabs.Typography.IMetricsHeader
+PinataLabs.Typography.IMetricsHeader.AdvanceHeightMax.get -> short
+PinataLabs.Typography.IMetricsHeader.AdvanceWidthMax.get -> short
+PinataLabs.Typography.IMetricsHeader.Ascender.get -> short
+PinataLabs.Typography.IMetricsHeader.Descender.get -> short
+PinataLabs.Typography.IMetricsHeader.LineGap.get -> short
+PinataLabs.Typography.IMetricsHeader.LineHeight.get -> short
+PinataLabs.Typography.IReadOnlyFontCollection
+PinataLabs.Typography.IReadOnlyFontCollection.Families.get -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IReadOnlyFontCollection.Get(string! name) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IReadOnlyFontCollection.Get(string! name, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+PinataLabs.Typography.IReadOnlyFontCollection.GetByCulture(System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.IReadOnlyFontCollection.TryGet(string! name, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontFamily family) -> bool
+PinataLabs.Typography.IReadOnlyFontCollection.TryGet(string! name, out PinataLabs.Typography.FontFamily family) -> bool
+PinataLabs.Typography.IReadOnlySystemFontCollection
+PinataLabs.Typography.IReadOnlySystemFontCollection.SearchDirectories.get -> System.Collections.Generic.IEnumerable<string!>!
+PinataLabs.Typography.InvalidFontFileException
+PinataLabs.Typography.InvalidFontFileException.InvalidFontFileException(string! message) -> void
+PinataLabs.Typography.InvalidFontTableException
+PinataLabs.Typography.InvalidFontTableException.InvalidFontTableException(string! message, string! table) -> void
+PinataLabs.Typography.InvalidFontTableException.Table.get -> string!
+PinataLabs.Typography.KerningMode
+PinataLabs.Typography.KerningMode.Auto = 2 -> PinataLabs.Typography.KerningMode
+PinataLabs.Typography.KerningMode.None = 1 -> PinataLabs.Typography.KerningMode
+PinataLabs.Typography.KerningMode.Standard = 0 -> PinataLabs.Typography.KerningMode
+PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutMode.HorizontalBottomTop = 1 -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutMode.HorizontalTopBottom = 0 -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutMode.VerticalLeftRight = 2 -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutMode.VerticalMixedLeftRight = 8 -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutMode.VerticalMixedRightLeft = 16 -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutMode.VerticalRightLeft = 4 -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.LayoutModeExtensions
+PinataLabs.Typography.MissingFontTableException
+PinataLabs.Typography.MissingFontTableException.MissingFontTableException(string! message, string! table) -> void
+PinataLabs.Typography.MissingFontTableException.Table.get -> string!
+PinataLabs.Typography.SystemFonts
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AboveBaseForms = 1633842790 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AboveBaseMarkPositioning = 1633842797 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AboveBaseSubstitutions = 1633842803 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AccessAllAlternates = 1633774708 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Akhand = 1634429038 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AlternateAnnotationForms = 1851878516 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AlternateHalfWidths = 1751215220 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AlternateVerticalHalfMetrics = 1986552172 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AlternateVerticalMetrics = 1986096244 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.AlternativeFractions = 1634103907 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.BelowBaseForms = 1651275622 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.BelowBaseMarkPositioning = 1651275629 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.BelowBaseSubstitutions = 1651275635 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.CapitalSpacing = 1668313968 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.CaseSensitiveForms = 1667330917 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.CenteredCjkPunctuation = 1668309876 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ConjunctFormAfterRo = 1667654002 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ConjunctForms = 1667916660 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ContextualAlternates = 1667329140 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ContextualLigatures = 1668049255 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ContextualSwash = 1668511592 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.CursivePositioning = 1668641395 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Denominators = 1684959085 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.DiscretionaryLigatures = 1684826471 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Distances = 1684632436 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.DotlessForms = 1685351539 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ExpertForms = 1702391924 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.FinalGlyphOnLineAlternates = 1717660788 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.FlattenedAscentForms = 1718378851 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Fractions = 1718772067 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.FullWidths = 1719101796 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.GlyphCompositionDecomposition = 1667460464 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HalantForms = 1751215214 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HalfForms = 1751215206 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HalfWidths = 1752656228 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Hangul = 1752065900 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HistoricalForms = 1751741300 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HistoricalLigatures = 1751935335 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HojoKanjiForms = 1752132207 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.HorizontalKanaAlternates = 1751871073 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.InitialForms = 1768843636 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.IsolatedForms = 1769172844 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Italics = 1769234796 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Jis2004 = 1785737268 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Jis78Forms = 1785739064 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Jis83Forms = 1785739315 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Jis90Forms = 1785739568 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.JustificationAlternates = 1784769652 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Kerning = 1801810542 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.LeadingJamoForms = 1818914159 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.LeftBounds = 1818649188 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.LeftToRightGlyphAlternates = 1819570785 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.LeftToRightMirroredForms = 1819570797 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Ligatures = 1818847073 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.LiningFigures = 1819178349 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.LocalizedForms = 1819239276 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.MarkPositioning = 1835102827 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.MarkToMarkPositioning = 1835756907 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.MathScriptStyleAlternates = 1936946297 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.MathematicalGreek = 1835496043 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.MedialForms = 1835361385 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.MedialForms2 = 1835361330 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Mset = 1836279156 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.NlcKanjiForms = 1852597099 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.NuktaForms = 1853188980 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Numerators = 1853189490 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.OldstyleFigures = 1869509997 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.OpticalBounds = 1869636196 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.OpticalSize = 1936292453 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Ordinals = 1869767790 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Ornaments = 1869770349 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.PetiteCapitals = 1885561200 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.PetiteCapitalsFromCapitals = 1664249955 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.PostBaseForms = 1886614630 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.PostBaseSubstitutions = 1886614643 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.PreBaseForms = 1886545254 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.PreBaseSubstitutions = 1886545267 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ProportionalAlternateVerticalMetrics = 1987076460 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ProportionalAlternateWidths = 1885432948 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ProportionalFigures = 1886287213 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ProportionalKana = 1886088801 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ProportionalWidths = 1886873956 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.QuarterWidths = 1903651172 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RakarForms = 1919644262 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Randomize = 1918987876 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RephForm = 1919969382 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RequiredContextualAlternates = 1919118452 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RequiredLigatures = 1919707495 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RequiredVariationAlternates = 1920365166 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RightBounds = 1920229988 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RightToLeftAlternates = 1920232545 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RightToLeftMirroredForms = 1920232557 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.RubyNotationForms = 1920295545 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ScientificInferiors = 1936289382 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.SimplifiedForms = 1936552044 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.SlashedZero = 2053468783 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.SmallCapitals = 1936548720 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.SmallCapitalsFromCapitals = 1664250723 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.StretchingGlyphDecomposition = 1937007464 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.StylisticAlternates = 1935764596 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Subscript = 1937072755 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Superscript = 1937076339 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Swash = 1937208168 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TabularFigures = 1953396077 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TerminalForm2 = 1718185522 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TerminalForm3 = 1718185523 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TerminalForms = 1718185569 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.ThirdWidths = 1953982820 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Titling = 1953068140 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TraditionalForms = 1953653092 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TraditionalNameForms = 1953390957 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.TrailingJamoForms = 1953131887 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.Unicase = 1970170211 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VattuVariants = 1986098293 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VerticalAlternates = 1986359924 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VerticalAlternatesAndRotation = 1987212338 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VerticalAlternatesForRotation = 1987212402 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VerticalKanaAlternates = 1986752097 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VerticalKerning = 1986753134 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags.VowelJamoForms = 1986686319 -> PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags
+PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef
+PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef.BaseGlyph = 1 -> PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef
+PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef.ComponentGlyph = 4 -> PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef
+PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef.LigatureGlyph = 2 -> PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef
+PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef.MarkGlyph = 3 -> PinataLabs.Typography.Tables.AdvancedTypographic.GlyphClassDef
+PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+PinataLabs.Typography.Tables.AdvancedTypographic.Tag.Equals(PinataLabs.Typography.Tables.AdvancedTypographic.Tag other) -> bool
+PinataLabs.Typography.Tables.AdvancedTypographic.Tag.Tag() -> void
+PinataLabs.Typography.Tables.AdvancedTypographic.Tag.Tag(uint value) -> void
+PinataLabs.Typography.Tables.AdvancedTypographic.Tag.Value.get -> uint
+PinataLabs.Typography.Tables.TrueType.TrueTypeGlyphMetrics
+PinataLabs.Typography.TextAlignment
+PinataLabs.Typography.TextAlignment.Center = 2 -> PinataLabs.Typography.TextAlignment
+PinataLabs.Typography.TextAlignment.End = 1 -> PinataLabs.Typography.TextAlignment
+PinataLabs.Typography.TextAlignment.Start = 0 -> PinataLabs.Typography.TextAlignment
+PinataLabs.Typography.TextAttributes
+PinataLabs.Typography.TextAttributes.None = 0 -> PinataLabs.Typography.TextAttributes
+PinataLabs.Typography.TextAttributes.Subscript = 1 -> PinataLabs.Typography.TextAttributes
+PinataLabs.Typography.TextAttributes.Superscript = 2 -> PinataLabs.Typography.TextAttributes
+PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.TextDecorations.None = 0 -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.TextDecorations.Overline = 4 -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.TextDecorations.Strikeout = 2 -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.TextDecorations.Underline = 1 -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.TextDirection
+PinataLabs.Typography.TextDirection.Auto = 2 -> PinataLabs.Typography.TextDirection
+PinataLabs.Typography.TextDirection.LeftToRight = 0 -> PinataLabs.Typography.TextDirection
+PinataLabs.Typography.TextDirection.RightToLeft = 1 -> PinataLabs.Typography.TextDirection
+PinataLabs.Typography.TextJustification
+PinataLabs.Typography.TextJustification.InterCharacter = 2 -> PinataLabs.Typography.TextJustification
+PinataLabs.Typography.TextJustification.InterWord = 1 -> PinataLabs.Typography.TextJustification
+PinataLabs.Typography.TextJustification.None = 0 -> PinataLabs.Typography.TextJustification
+PinataLabs.Typography.TextMeasurer
+PinataLabs.Typography.TextOptions
+PinataLabs.Typography.TextOptions.ColorFontSupport.get -> PinataLabs.Typography.ColorFontSupport
+PinataLabs.Typography.TextOptions.ColorFontSupport.set -> void
+PinataLabs.Typography.TextOptions.Dpi.get -> float
+PinataLabs.Typography.TextOptions.Dpi.set -> void
+PinataLabs.Typography.TextOptions.FallbackFontFamilies.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontFamily>!
+PinataLabs.Typography.TextOptions.FallbackFontFamilies.set -> void
+PinataLabs.Typography.TextOptions.FeatureTags.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.Tables.AdvancedTypographic.Tag>!
+PinataLabs.Typography.TextOptions.FeatureTags.set -> void
+PinataLabs.Typography.TextOptions.Font.get -> PinataLabs.Typography.Font!
+PinataLabs.Typography.TextOptions.Font.set -> void
+PinataLabs.Typography.TextOptions.HintingMode.get -> PinataLabs.Typography.HintingMode
+PinataLabs.Typography.TextOptions.HintingMode.set -> void
+PinataLabs.Typography.TextOptions.HorizontalAlignment.get -> PinataLabs.Typography.HorizontalAlignment
+PinataLabs.Typography.TextOptions.HorizontalAlignment.set -> void
+PinataLabs.Typography.TextOptions.KerningMode.get -> PinataLabs.Typography.KerningMode
+PinataLabs.Typography.TextOptions.KerningMode.set -> void
+PinataLabs.Typography.TextOptions.LayoutMode.get -> PinataLabs.Typography.LayoutMode
+PinataLabs.Typography.TextOptions.LayoutMode.set -> void
+PinataLabs.Typography.TextOptions.LineSpacing.get -> float
+PinataLabs.Typography.TextOptions.LineSpacing.set -> void
+PinataLabs.Typography.TextOptions.Origin.get -> System.Numerics.Vector2
+PinataLabs.Typography.TextOptions.Origin.set -> void
+PinataLabs.Typography.TextOptions.TabWidth.get -> float
+PinataLabs.Typography.TextOptions.TabWidth.set -> void
+PinataLabs.Typography.TextOptions.TextAlignment.get -> PinataLabs.Typography.TextAlignment
+PinataLabs.Typography.TextOptions.TextAlignment.set -> void
+PinataLabs.Typography.TextOptions.TextDirection.get -> PinataLabs.Typography.TextDirection
+PinataLabs.Typography.TextOptions.TextDirection.set -> void
+PinataLabs.Typography.TextOptions.TextJustification.get -> PinataLabs.Typography.TextJustification
+PinataLabs.Typography.TextOptions.TextJustification.set -> void
+PinataLabs.Typography.TextOptions.TextOptions(PinataLabs.Typography.Font! font) -> void
+PinataLabs.Typography.TextOptions.TextOptions(PinataLabs.Typography.TextOptions! options) -> void
+PinataLabs.Typography.TextOptions.TextRuns.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.TextRun!>!
+PinataLabs.Typography.TextOptions.TextRuns.set -> void
+PinataLabs.Typography.TextOptions.VerticalAlignment.get -> PinataLabs.Typography.VerticalAlignment
+PinataLabs.Typography.TextOptions.VerticalAlignment.set -> void
+PinataLabs.Typography.TextOptions.WordBreaking.get -> PinataLabs.Typography.WordBreaking
+PinataLabs.Typography.TextOptions.WordBreaking.set -> void
+PinataLabs.Typography.TextOptions.WrappingLength.get -> float
+PinataLabs.Typography.TextOptions.WrappingLength.set -> void
+PinataLabs.Typography.TextRenderer
+PinataLabs.Typography.TextRenderer.RenderText(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> void
+PinataLabs.Typography.TextRenderer.RenderText(string! text, PinataLabs.Typography.TextOptions! options) -> void
+PinataLabs.Typography.TextRenderer.TextRenderer(PinataLabs.Typography.IGlyphRenderer! renderer) -> void
+PinataLabs.Typography.TextRun
+PinataLabs.Typography.TextRun.End.get -> int
+PinataLabs.Typography.TextRun.End.set -> void
+PinataLabs.Typography.TextRun.Font.get -> PinataLabs.Typography.Font?
+PinataLabs.Typography.TextRun.Font.set -> void
+PinataLabs.Typography.TextRun.Slice(System.ReadOnlySpan<char> text) -> System.ReadOnlySpan<char>
+PinataLabs.Typography.TextRun.Start.get -> int
+PinataLabs.Typography.TextRun.Start.set -> void
+PinataLabs.Typography.TextRun.TextAttributes.get -> PinataLabs.Typography.TextAttributes
+PinataLabs.Typography.TextRun.TextAttributes.set -> void
+PinataLabs.Typography.TextRun.TextDecorations.get -> PinataLabs.Typography.TextDecorations
+PinataLabs.Typography.TextRun.TextDecorations.set -> void
+PinataLabs.Typography.TextRun.TextRun() -> void
+PinataLabs.Typography.Unicode.ArabicJoiningClass
+PinataLabs.Typography.Unicode.ArabicJoiningClass.ArabicJoiningClass() -> void
+PinataLabs.Typography.Unicode.ArabicJoiningClass.ArabicJoiningClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> void
+PinataLabs.Typography.Unicode.ArabicJoiningClass.JoiningGroup.get -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningClass.JoiningType.get -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.AfricanFeh = 0 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.AfricanNoon = 1 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.AfricanQaf = 2 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Ain = 3 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Alaph = 4 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Alef = 5 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Beh = 6 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Beth = 7 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.BurushaskiYehBarree = 8 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Dal = 9 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.DalathRish = 10 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.E = 11 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.FarsiYeh = 12 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Fe = 13 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Feh = 14 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.FinalSemkath = 15 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Gaf = 16 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Gamal = 17 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Hah = 18 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.HanifiRohingyaKinnaYa = 19 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.HanifiRohingyaPa = 20 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.He = 21 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Heh = 22 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.HehGoal = 23 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Heth = 24 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Kaf = 25 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Kaph = 26 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Khaph = 27 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.KnottedHeh = 28 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Lam = 29 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Lamadh = 30 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamBha = 31 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamJa = 32 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamLla = 33 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamLlla = 34 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamNga = 35 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamNna = 36 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamNnna = 37 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamNya = 38 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamRa = 39 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamSsa = 40 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.MalayalamTta = 41 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanAleph = 42 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanAyin = 43 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanBeth = 44 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanDaleth = 45 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanDhamedh = 46 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanFive = 47 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanGimel = 48 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanHeth = 49 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanHundred = 50 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanKaph = 51 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanLamedh = 52 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanMem = 53 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanNun = 54 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanOne = 55 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanPe = 56 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanQoph = 57 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanResh = 58 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanSadhe = 59 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanSamekh = 60 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanTaw = 61 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanTen = 62 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanTeth = 63 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanThamedh = 64 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanTwenty = 65 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanWaw = 66 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanYodh = 67 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ManichaeanZayin = 68 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Meem = 69 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Mim = 70 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.NoJoiningGroup = 71 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Noon = 72 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Nun = 73 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Nya = 74 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Pe = 75 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Qaf = 76 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Qaph = 77 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Reh = 78 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ReversedPe = 79 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.RohingyaYeh = 80 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Sad = 81 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Sadhe = 82 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Seen = 83 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Semkath = 84 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Shin = 85 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.StraightWaw = 86 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.SwashKaf = 87 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.SyriacWaw = 88 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Tah = 89 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Taw = 90 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.TehMarbuta = 91 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.TehMarbutaGoal = 92 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Teth = 93 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ThinYeh = 94 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.VerticalTail = 95 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Waw = 96 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Yeh = 97 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.YehBarree = 98 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.YehWithTail = 99 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Yudh = 100 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.YudhHe = 101 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Zain = 102 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.Zhain = 103 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningType.DualJoining = 2 -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningType.JoinCausing = 3 -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningType.LeftJoining = 1 -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningType.NonJoining = 4 -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningType.RightJoining = 0 -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.ArabicJoiningType.Transparent = 5 -> PinataLabs.Typography.Unicode.ArabicJoiningType
+PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.ArabicLetter = 2 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.ArabicNumber = 6 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.BoundaryNeutral = 9 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.CommonSeparator = 7 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.EuropeanNumber = 3 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.EuropeanSeparator = 4 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.EuropeanTerminator = 5 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.FirstStrongIsolate = 21 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.LeftToRight = 0 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.LeftToRightEmbedding = 14 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.LeftToRightIsolate = 19 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.LeftToRightOverride = 15 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.NonspacingMark = 8 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.OtherNeutral = 13 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.ParagraphSeparator = 10 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.PopDirectionalFormat = 18 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.PopDirectionalIsolate = 22 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.RightToLeft = 1 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.RightToLeftEmbedding = 16 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.RightToLeftIsolate = 20 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.RightToLeftOverride = 17 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.SegmentSeparator = 11 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiCharacterType.Whitespace = 12 -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiClass
+PinataLabs.Typography.Unicode.BidiClass.BidiClass() -> void
+PinataLabs.Typography.Unicode.BidiClass.BidiClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> void
+PinataLabs.Typography.Unicode.BidiClass.CharacterType.get -> PinataLabs.Typography.Unicode.BidiCharacterType
+PinataLabs.Typography.Unicode.BidiClass.PairedBracketType.get -> PinataLabs.Typography.Unicode.BidiPairedBracketType
+PinataLabs.Typography.Unicode.BidiClass.TryGetPairedBracket(out PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+PinataLabs.Typography.Unicode.BidiPairedBracketType
+PinataLabs.Typography.Unicode.BidiPairedBracketType.Close = 2 -> PinataLabs.Typography.Unicode.BidiPairedBracketType
+PinataLabs.Typography.Unicode.BidiPairedBracketType.None = 0 -> PinataLabs.Typography.Unicode.BidiPairedBracketType
+PinataLabs.Typography.Unicode.BidiPairedBracketType.Open = 1 -> PinataLabs.Typography.Unicode.BidiPairedBracketType
+PinataLabs.Typography.Unicode.CodePoint
+PinataLabs.Typography.Unicode.CodePoint.CodePoint() -> void
+PinataLabs.Typography.Unicode.CodePoint.CodePoint(char highSurrogate, char lowSurrogate) -> void
+PinataLabs.Typography.Unicode.CodePoint.CodePoint(char value) -> void
+PinataLabs.Typography.Unicode.CodePoint.CodePoint(int value) -> void
+PinataLabs.Typography.Unicode.CodePoint.CodePoint(uint value) -> void
+PinataLabs.Typography.Unicode.CodePoint.CompareTo(PinataLabs.Typography.Unicode.CodePoint other) -> int
+PinataLabs.Typography.Unicode.CodePoint.Equals(PinataLabs.Typography.Unicode.CodePoint other) -> bool
+PinataLabs.Typography.Unicode.CodePoint.IsAscii.get -> bool
+PinataLabs.Typography.Unicode.CodePoint.IsBmp.get -> bool
+PinataLabs.Typography.Unicode.CodePoint.Plane.get -> int
+PinataLabs.Typography.Unicode.CodePoint.Utf16SequenceLength.get -> int
+PinataLabs.Typography.Unicode.CodePoint.Utf8SequenceLength.get -> int
+PinataLabs.Typography.Unicode.CodePoint.Value.get -> int
+PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.Any = 0 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.CarriageReturn = 1 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.Control = 3 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.Extend = 4 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.ExtendedPictographic = 13 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.HangulLead = 8 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.HangulLeadVowel = 11 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.HangulLeadVowelTail = 12 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.HangulTail = 10 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.HangulVowel = 9 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.LineFeed = 2 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.Prepend = 6 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.RegionalIndicator = 5 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.SpacingMark = 7 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.GraphemeClusterClass.ZeroWidthJoiner = 14 -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.Bottom = 0 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.BottomAndLeft = 1 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.BottomAndRight = 2 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.Left = 3 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.LeftAndRight = 4 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.NA = 5 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.Overstruck = 6 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.Right = 7 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.Top = 8 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.TopAndBottom = 9 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.TopAndBottomAndLeft = 10 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.TopAndBottomAndRight = 11 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.TopAndLeft = 12 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.TopAndLeftAndRight = 13 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.TopAndRight = 14 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicPositionalCategory.VisualOrderLeft = 15 -> PinataLabs.Typography.Unicode.IndicPositionalCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Avagraha = 0 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Bindu = 1 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.BrahmiJoiningNumber = 2 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.CantillationMark = 3 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Consonant = 4 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantDead = 5 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantFinal = 6 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantHeadLetter = 7 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantInitialPostfixed = 8 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantKiller = 9 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantMedial = 10 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantPlaceholder = 11 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantPrecedingRepha = 12 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantPrefixed = 13 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantSubjoined = 14 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantSucceedingRepha = 15 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ConsonantWithStacker = 16 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.GeminationMark = 17 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.InvisibleStacker = 18 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Joiner = 19 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ModifyingLetter = 20 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.NonJoiner = 21 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Nukta = 22 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Number = 23 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.NumberJoiner = 24 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Other = 25 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.PureKiller = 26 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.RegisterShifter = 27 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.SyllableModifier = 28 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ToneLetter = 29 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ToneMark = 30 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Virama = 31 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Visarga = 32 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.Vowel = 33 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.VowelDependent = 34 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.VowelIndependent = 35 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.AI = 33 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.AL = 12 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.B2 = 19 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.BA = 17 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.BB = 18 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.BK = 34 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.CB = 32 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.CJ = 35 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.CL = 1 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.CM = 21 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.CP = 2 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.CR = 36 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.EB = 29 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.EM = 30 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.EX = 6 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.GL = 4 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.H2 = 23 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.H3 = 24 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.HL = 13 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.HY = 16 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.ID = 14 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.IN = 15 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.IS = 8 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.JL = 25 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.JT = 27 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.JV = 26 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.LF = 37 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.NL = 38 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.NS = 5 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.NU = 11 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.OP = 0 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.PO = 10 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.PR = 9 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.QU = 3 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.RI = 28 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.SA = 39 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.SG = 40 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.SP = 41 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.SY = 7 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.WJ = 22 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.XX = 42 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.ZW = 20 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.ZWJ = 31 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.MemoryExtensions
+PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Adlam = 3 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Ahom = 5 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.AnatolianHieroglyphs = 55 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Arabic = 6 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Armenian = 8 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Avestan = 9 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Balinese = 10 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Bamum = 11 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.BassaVah = 12 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Batak = 13 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Bengali = 14 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Bhaiksuki = 15 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Bopomofo = 16 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Brahmi = 17 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Braille = 18 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Buginese = 19 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Buhid = 20 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.CanadianAboriginal = 22 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Carian = 23 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.CaucasianAlbanian = 4 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Chakma = 21 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Cham = 24 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Cherokee = 25 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Chorasmian = 26 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Common = 1 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Coptic = 27 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Cuneiform = 159 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Cypriot = 29 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.CyproMinoan = 28 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Cyrillic = 30 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Deseret = 34 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Devanagari = 31 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.DivesAkuru = 32 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Dogra = 33 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Duployan = 35 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.EgyptianHieroglyphs = 36 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Elbasan = 37 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Elymaic = 38 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Ethiopic = 39 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Georgian = 40 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Glagolitic = 41 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Gothic = 44 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Grantha = 45 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Greek = 46 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Gujarati = 47 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.GunjalaGondi = 42 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Gurmukhi = 48 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Han = 50 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Hangul = 49 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.HanifiRohingya = 119 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Hanunoo = 51 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Hatran = 52 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Hebrew = 53 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Hiragana = 54 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.ImperialAramaic = 7 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Inherited = 2 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.InscriptionalPahlavi = 113 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.InscriptionalParthian = 117 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Javanese = 61 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Kaithi = 69 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Kannada = 68 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Katakana = 63 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.KatakanaOrHiragana = 58 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.KayahLi = 62 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Kharoshthi = 64 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.KhitanSmallScript = 67 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Khmer = 65 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Khojki = 66 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Khudawadi = 128 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Lao = 71 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Latin = 72 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Lepcha = 73 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Limbu = 74 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.LinearA = 75 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.LinearB = 76 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Lisu = 77 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Lycian = 78 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Lydian = 79 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Mahajani = 80 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Makasar = 81 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Malayalam = 89 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Mandaic = 82 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Manichaean = 83 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Marchen = 84 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.MasaramGondi = 43 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Medefaidrin = 85 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.MeeteiMayek = 93 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.MendeKikakui = 86 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.MeroiticCursive = 87 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.MeroiticHieroglyphs = 88 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Miao = 116 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Modi = 90 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Mongolian = 91 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Mro = 92 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Multani = 94 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Myanmar = 95 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Nabataean = 98 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Nandinagari = 96 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.NewTaiLue = 140 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Newa = 99 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Nko = 100 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Nushu = 101 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.NyiakengPuachueHmong = 57 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Ogham = 102 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OlChiki = 103 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldHungarian = 59 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldItalic = 60 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldNorthArabian = 97 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldPermic = 111 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldPersian = 158 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldSogdian = 131 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldSouthArabian = 122 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldTurkic = 104 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OldUyghur = 108 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Oriya = 105 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Osage = 106 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Osmanya = 107 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.PahawhHmong = 56 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Palmyrene = 109 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.PauCinHau = 110 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.PhagsPa = 112 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Phoenician = 115 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.PsalterPahlavi = 114 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Rejang = 118 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Runic = 120 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Samaritan = 121 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Saurashtra = 123 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Sharada = 126 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Shavian = 125 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Siddham = 127 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.SignWriting = 124 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Sinhala = 129 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Sogdian = 130 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.SoraSompeng = 132 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Soyombo = 133 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Sundanese = 134 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.SylotiNagri = 135 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Syriac = 136 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tagalog = 146 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tagbanwa = 137 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.TaiLe = 139 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.TaiTham = 70 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.TaiViet = 143 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Takri = 138 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tamil = 141 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tangsa = 151 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tangut = 142 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Telugu = 144 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Thaana = 147 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Thai = 148 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tibetan = 149 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tifinagh = 145 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Tirhuta = 150 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Toto = 152 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Ugaritic = 153 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Unknown = 0 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Vai = 154 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Vithkuqi = 155 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Wancho = 157 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.WarangCiti = 156 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Yezidi = 160 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Yi = 161 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.ZanabazarSquare = 162 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.SpanCodePointEnumerator
+PinataLabs.Typography.Unicode.SpanCodePointEnumerator.Current.get -> PinataLabs.Typography.Unicode.CodePoint
+PinataLabs.Typography.Unicode.SpanCodePointEnumerator.GetEnumerator() -> PinataLabs.Typography.Unicode.SpanCodePointEnumerator
+PinataLabs.Typography.Unicode.SpanCodePointEnumerator.MoveNext() -> bool
+PinataLabs.Typography.Unicode.SpanCodePointEnumerator.SpanCodePointEnumerator() -> void
+PinataLabs.Typography.Unicode.SpanCodePointEnumerator.SpanCodePointEnumerator(System.ReadOnlySpan<char> source) -> void
+PinataLabs.Typography.Unicode.SpanGraphemeEnumerator
+PinataLabs.Typography.Unicode.SpanGraphemeEnumerator.Current.get -> System.ReadOnlySpan<char>
+PinataLabs.Typography.Unicode.SpanGraphemeEnumerator.GetEnumerator() -> PinataLabs.Typography.Unicode.SpanGraphemeEnumerator
+PinataLabs.Typography.Unicode.SpanGraphemeEnumerator.MoveNext() -> bool
+PinataLabs.Typography.Unicode.SpanGraphemeEnumerator.SpanGraphemeEnumerator() -> void
+PinataLabs.Typography.Unicode.SpanGraphemeEnumerator.SpanGraphemeEnumerator(System.ReadOnlySpan<char> source) -> void
+PinataLabs.Typography.Unicode.VerticalOrientationType
+PinataLabs.Typography.Unicode.VerticalOrientationType.Rotate = 1 -> PinataLabs.Typography.Unicode.VerticalOrientationType
+PinataLabs.Typography.Unicode.VerticalOrientationType.TransformRotate = 3 -> PinataLabs.Typography.Unicode.VerticalOrientationType
+PinataLabs.Typography.Unicode.VerticalOrientationType.TransformUpright = 2 -> PinataLabs.Typography.Unicode.VerticalOrientationType
+PinataLabs.Typography.Unicode.VerticalOrientationType.Upright = 0 -> PinataLabs.Typography.Unicode.VerticalOrientationType
+PinataLabs.Typography.VerticalAlignment
+PinataLabs.Typography.VerticalAlignment.Bottom = 2 -> PinataLabs.Typography.VerticalAlignment
+PinataLabs.Typography.VerticalAlignment.Center = 1 -> PinataLabs.Typography.VerticalAlignment
+PinataLabs.Typography.VerticalAlignment.Top = 0 -> PinataLabs.Typography.VerticalAlignment
+PinataLabs.Typography.VerticalMetrics
+PinataLabs.Typography.VerticalMetrics.AdvanceHeightMax.get -> short
+PinataLabs.Typography.VerticalMetrics.AdvanceWidthMax.get -> short
+PinataLabs.Typography.VerticalMetrics.Ascender.get -> short
+PinataLabs.Typography.VerticalMetrics.Descender.get -> short
+PinataLabs.Typography.VerticalMetrics.LineGap.get -> short
+PinataLabs.Typography.VerticalMetrics.LineHeight.get -> short
+PinataLabs.Typography.VerticalMetrics.VerticalMetrics() -> void
+PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.CopyrightNotice = 0 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.Description = 10 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.Designer = 9 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.DesignerUrl = 12 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.FontFamilyName = 1 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.FontSubfamilyName = 2 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.FullFontName = 4 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.LicenseDescription = 13 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.LicenseInfoUrl = 14 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.Manufacturer = 8 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.PostscriptName = 6 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.SampleText = 19 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.Trademark = 7 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.TypographicFamilyName = 16 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.TypographicSubfamilyName = 17 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.UniqueFontID = 3 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.VendorUrl = 11 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WellKnownIds.KnownNameIds.Version = 5 -> PinataLabs.Typography.WellKnownIds.KnownNameIds
+PinataLabs.Typography.WordBreaking
+PinataLabs.Typography.WordBreaking.BreakAll = 1 -> PinataLabs.Typography.WordBreaking
+PinataLabs.Typography.WordBreaking.BreakWord = 3 -> PinataLabs.Typography.WordBreaking
+PinataLabs.Typography.WordBreaking.KeepAll = 2 -> PinataLabs.Typography.WordBreaking
+PinataLabs.Typography.WordBreaking.Standard = 0 -> PinataLabs.Typography.WordBreaking
+abstract PinataLabs.Typography.FontMetrics.Description.get -> PinataLabs.Typography.FontDescription!
+abstract PinataLabs.Typography.FontMetrics.HorizontalMetrics.get -> PinataLabs.Typography.HorizontalMetrics!
+abstract PinataLabs.Typography.FontMetrics.ItalicAngle.get -> float
+abstract PinataLabs.Typography.FontMetrics.ScaleFactor.get -> float
+abstract PinataLabs.Typography.FontMetrics.StrikeoutPosition.get -> short
+abstract PinataLabs.Typography.FontMetrics.StrikeoutSize.get -> short
+abstract PinataLabs.Typography.FontMetrics.SubscriptXOffset.get -> short
+abstract PinataLabs.Typography.FontMetrics.SubscriptXSize.get -> short
+abstract PinataLabs.Typography.FontMetrics.SubscriptYOffset.get -> short
+abstract PinataLabs.Typography.FontMetrics.SubscriptYSize.get -> short
+abstract PinataLabs.Typography.FontMetrics.SuperscriptXOffset.get -> short
+abstract PinataLabs.Typography.FontMetrics.SuperscriptXSize.get -> short
+abstract PinataLabs.Typography.FontMetrics.SuperscriptYOffset.get -> short
+abstract PinataLabs.Typography.FontMetrics.SuperscriptYSize.get -> short
+abstract PinataLabs.Typography.FontMetrics.TryGetGlyphMetrics(PinataLabs.Typography.Unicode.CodePoint codePoint, PinataLabs.Typography.TextAttributes textAttributes, PinataLabs.Typography.TextDecorations textDecorations, PinataLabs.Typography.LayoutMode layoutMode, PinataLabs.Typography.ColorFontSupport support, out System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.GlyphMetrics!>? metrics) -> bool
+abstract PinataLabs.Typography.FontMetrics.UnderlinePosition.get -> short
+abstract PinataLabs.Typography.FontMetrics.UnderlineThickness.get -> short
+abstract PinataLabs.Typography.FontMetrics.UnitsPerEm.get -> ushort
+abstract PinataLabs.Typography.FontMetrics.VerticalMetrics.get -> PinataLabs.Typography.VerticalMetrics!
+override PinataLabs.Typography.FontFamily.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontFamily.GetHashCode() -> int
+override PinataLabs.Typography.FontFamily.ToString() -> string!
+override PinataLabs.Typography.FontRectangle.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontRectangle.GetHashCode() -> int
+override PinataLabs.Typography.FontRectangle.ToString() -> string!
+override PinataLabs.Typography.GlyphBounds.ToString() -> string!
+override PinataLabs.Typography.GlyphColor.Equals(object? obj) -> bool
+override PinataLabs.Typography.GlyphColor.GetHashCode() -> int
+override PinataLabs.Typography.GlyphRendererParameters.Equals(object? obj) -> bool
+override PinataLabs.Typography.GlyphRendererParameters.GetHashCode() -> int
+override PinataLabs.Typography.Tables.AdvancedTypographic.Tag.Equals(object? obj) -> bool
+override PinataLabs.Typography.Tables.AdvancedTypographic.Tag.GetHashCode() -> int
+override PinataLabs.Typography.Tables.AdvancedTypographic.Tag.ToString() -> string!
+override PinataLabs.Typography.TextRun.ToString() -> string!
+override PinataLabs.Typography.Unicode.CodePoint.Equals(object? obj) -> bool
+override PinataLabs.Typography.Unicode.CodePoint.GetHashCode() -> int
+override PinataLabs.Typography.Unicode.CodePoint.ToString() -> string!
+static PinataLabs.Typography.FontCollectionExtensions.AddSystemFonts(this PinataLabs.Typography.FontCollection! collection) -> PinataLabs.Typography.FontCollection!
+static PinataLabs.Typography.FontCollectionExtensions.AddSystemFonts(this PinataLabs.Typography.FontCollection! collection, System.Predicate<PinataLabs.Typography.FontMetrics!>! match) -> PinataLabs.Typography.FontCollection!
+static PinataLabs.Typography.FontDescription.LoadDescription(System.IO.Stream! stream) -> PinataLabs.Typography.FontDescription!
+static PinataLabs.Typography.FontDescription.LoadDescription(string! path) -> PinataLabs.Typography.FontDescription!
+static PinataLabs.Typography.FontDescription.LoadFontCollectionDescriptions(System.IO.Stream! stream) -> PinataLabs.Typography.FontDescription![]!
+static PinataLabs.Typography.FontDescription.LoadFontCollectionDescriptions(string! path) -> PinataLabs.Typography.FontDescription![]!
+static PinataLabs.Typography.FontFamily.operator !=(PinataLabs.Typography.FontFamily left, PinataLabs.Typography.FontFamily right) -> bool
+static PinataLabs.Typography.FontFamily.operator ==(PinataLabs.Typography.FontFamily left, PinataLabs.Typography.FontFamily right) -> bool
+static PinataLabs.Typography.FontRectangle.Center(in PinataLabs.Typography.FontRectangle rectangle) -> System.Numerics.Vector2
+static PinataLabs.Typography.FontRectangle.FromLTRB(float left, float top, float right, float bottom) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.FontRectangle.Inflate(in PinataLabs.Typography.FontRectangle rectangle, float x, float y) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.FontRectangle.Intersect(in PinataLabs.Typography.FontRectangle a, in PinataLabs.Typography.FontRectangle b) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.FontRectangle.Transform(in PinataLabs.Typography.FontRectangle rectangle, System.Numerics.Matrix3x2 matrix) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.FontRectangle.Union(in PinataLabs.Typography.FontRectangle a, in PinataLabs.Typography.FontRectangle b) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.FontRectangle.operator !=(in PinataLabs.Typography.FontRectangle left, in PinataLabs.Typography.FontRectangle right) -> bool
+static PinataLabs.Typography.FontRectangle.operator ==(in PinataLabs.Typography.FontRectangle left, in PinataLabs.Typography.FontRectangle right) -> bool
+static PinataLabs.Typography.GlyphColor.operator !=(PinataLabs.Typography.GlyphColor left, PinataLabs.Typography.GlyphColor right) -> bool
+static PinataLabs.Typography.GlyphColor.operator ==(PinataLabs.Typography.GlyphColor left, PinataLabs.Typography.GlyphColor right) -> bool
+static PinataLabs.Typography.GlyphRendererParameters.operator !=(PinataLabs.Typography.GlyphRendererParameters left, PinataLabs.Typography.GlyphRendererParameters right) -> bool
+static PinataLabs.Typography.GlyphRendererParameters.operator ==(PinataLabs.Typography.GlyphRendererParameters left, PinataLabs.Typography.GlyphRendererParameters right) -> bool
+static PinataLabs.Typography.IGlyphRendererExtensions.Render(this PinataLabs.Typography.IGlyphRenderer! renderer, System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.IGlyphRenderer!
+static PinataLabs.Typography.LayoutModeExtensions.IsHorizontal(this PinataLabs.Typography.LayoutMode mode) -> bool
+static PinataLabs.Typography.LayoutModeExtensions.IsVertical(this PinataLabs.Typography.LayoutMode mode) -> bool
+static PinataLabs.Typography.LayoutModeExtensions.IsVerticalMixed(this PinataLabs.Typography.LayoutMode mode) -> bool
+static PinataLabs.Typography.SystemFonts.Collection.get -> PinataLabs.Typography.IReadOnlySystemFontCollection!
+static PinataLabs.Typography.SystemFonts.CreateFont(string! name, System.Globalization.CultureInfo! culture, float size) -> PinataLabs.Typography.Font!
+static PinataLabs.Typography.SystemFonts.CreateFont(string! name, System.Globalization.CultureInfo! culture, float size, PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!
+static PinataLabs.Typography.SystemFonts.CreateFont(string! name, float size) -> PinataLabs.Typography.Font!
+static PinataLabs.Typography.SystemFonts.CreateFont(string! name, float size, PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!
+static PinataLabs.Typography.SystemFonts.Families.get -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+static PinataLabs.Typography.SystemFonts.Get(string! fontFamily, System.Globalization.CultureInfo! culture) -> PinataLabs.Typography.FontFamily
+static PinataLabs.Typography.SystemFonts.Get(string! name) -> PinataLabs.Typography.FontFamily
+static PinataLabs.Typography.SystemFonts.GetByCulture(System.Globalization.CultureInfo! culture) -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontFamily>!
+static PinataLabs.Typography.SystemFonts.TryGet(string! fontFamily, System.Globalization.CultureInfo! culture, out PinataLabs.Typography.FontFamily family) -> bool
+static PinataLabs.Typography.SystemFonts.TryGet(string! fontFamily, out PinataLabs.Typography.FontFamily family) -> bool
+static PinataLabs.Typography.Tables.AdvancedTypographic.Tag.Parse(string! value) -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+static PinataLabs.Typography.Tables.AdvancedTypographic.Tag.implicit operator PinataLabs.Typography.Tables.AdvancedTypographic.Tag(PinataLabs.Typography.Tables.AdvancedTypographic.FeatureTags value) -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+static PinataLabs.Typography.Tables.AdvancedTypographic.Tag.implicit operator PinataLabs.Typography.Tables.AdvancedTypographic.Tag(uint value) -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+static PinataLabs.Typography.Tables.AdvancedTypographic.Tag.operator !=(PinataLabs.Typography.Tables.AdvancedTypographic.Tag left, PinataLabs.Typography.Tables.AdvancedTypographic.Tag right) -> bool
+static PinataLabs.Typography.Tables.AdvancedTypographic.Tag.operator ==(PinataLabs.Typography.Tables.AdvancedTypographic.Tag left, PinataLabs.Typography.Tables.AdvancedTypographic.Tag right) -> bool
+static PinataLabs.Typography.TextMeasurer.CountLines(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> int
+static PinataLabs.Typography.TextMeasurer.CountLines(string! text, PinataLabs.Typography.TextOptions! options) -> int
+static PinataLabs.Typography.TextMeasurer.MeasureAdvance(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.TextMeasurer.MeasureAdvance(string! text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.TextMeasurer.MeasureBounds(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.TextMeasurer.MeasureBounds(string! text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.TextMeasurer.MeasureSize(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.TextMeasurer.MeasureSize(string! text, PinataLabs.Typography.TextOptions! options) -> PinataLabs.Typography.FontRectangle
+static PinataLabs.Typography.TextMeasurer.TryMeasureCharacterAdvances(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options, out System.ReadOnlySpan<PinataLabs.Typography.GlyphBounds> advances) -> bool
+static PinataLabs.Typography.TextMeasurer.TryMeasureCharacterAdvances(string! text, PinataLabs.Typography.TextOptions! options, out System.ReadOnlySpan<PinataLabs.Typography.GlyphBounds> advances) -> bool
+static PinataLabs.Typography.TextMeasurer.TryMeasureCharacterBounds(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options, out System.ReadOnlySpan<PinataLabs.Typography.GlyphBounds> bounds) -> bool
+static PinataLabs.Typography.TextMeasurer.TryMeasureCharacterBounds(string! text, PinataLabs.Typography.TextOptions! options, out System.ReadOnlySpan<PinataLabs.Typography.GlyphBounds> bounds) -> bool
+static PinataLabs.Typography.TextMeasurer.TryMeasureCharacterSizes(System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options, out System.ReadOnlySpan<PinataLabs.Typography.GlyphBounds> sizes) -> bool
+static PinataLabs.Typography.TextMeasurer.TryMeasureCharacterSizes(string! text, PinataLabs.Typography.TextOptions! options, out System.ReadOnlySpan<PinataLabs.Typography.GlyphBounds> sizes) -> bool
+static PinataLabs.Typography.TextRenderer.RenderTextTo(PinataLabs.Typography.IGlyphRenderer! renderer, System.ReadOnlySpan<char> text, PinataLabs.Typography.TextOptions! options) -> void
+static PinataLabs.Typography.TextRenderer.RenderTextTo(PinataLabs.Typography.IGlyphRenderer! renderer, string! text, PinataLabs.Typography.TextOptions! options) -> void
+static PinataLabs.Typography.Unicode.CodePoint.GetBidiClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.BidiClass
+static PinataLabs.Typography.Unicode.CodePoint.GetCodePointCount(System.ReadOnlySpan<char> source) -> int
+static PinataLabs.Typography.Unicode.CodePoint.GetGeneralCategory(PinataLabs.Typography.Unicode.CodePoint codePoint) -> System.Globalization.UnicodeCategory
+static PinataLabs.Typography.Unicode.CodePoint.GetGraphemeClusterClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.GraphemeClusterClass
+static PinataLabs.Typography.Unicode.CodePoint.GetLineBreakClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.LineBreakClass
+static PinataLabs.Typography.Unicode.CodePoint.GetVerticalOrientationType(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.VerticalOrientationType
+static PinataLabs.Typography.Unicode.CodePoint.IsControl(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsDigit(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsLetter(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsLetterOrDigit(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsLower(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsMark(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsNewLine(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsNonBreakingSpace(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsNumber(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsPunctuation(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsSeparator(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsSymbol(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsTabulation(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsUpper(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsValid(int value) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsValid(uint value) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsVariationSelector(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsWhiteSpace(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsZeroWidthJoiner(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.IsZeroWidthNonJoiner(PinataLabs.Typography.Unicode.CodePoint codePoint) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.ReplacementChar.get -> PinataLabs.Typography.Unicode.CodePoint
+static PinataLabs.Typography.Unicode.CodePoint.TryGetBidiMirror(PinataLabs.Typography.Unicode.CodePoint codePoint, out PinataLabs.Typography.Unicode.CodePoint mirror) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.TryGetVerticalMirror(PinataLabs.Typography.Unicode.CodePoint codePoint, out PinataLabs.Typography.Unicode.CodePoint mirror) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.explicit operator PinataLabs.Typography.Unicode.CodePoint(char ch) -> PinataLabs.Typography.Unicode.CodePoint
+static PinataLabs.Typography.Unicode.CodePoint.explicit operator PinataLabs.Typography.Unicode.CodePoint(int value) -> PinataLabs.Typography.Unicode.CodePoint
+static PinataLabs.Typography.Unicode.CodePoint.explicit operator PinataLabs.Typography.Unicode.CodePoint(uint value) -> PinataLabs.Typography.Unicode.CodePoint
+static PinataLabs.Typography.Unicode.CodePoint.operator !=(PinataLabs.Typography.Unicode.CodePoint left, PinataLabs.Typography.Unicode.CodePoint right) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.operator <(PinataLabs.Typography.Unicode.CodePoint left, PinataLabs.Typography.Unicode.CodePoint right) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.operator <=(PinataLabs.Typography.Unicode.CodePoint left, PinataLabs.Typography.Unicode.CodePoint right) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.operator ==(PinataLabs.Typography.Unicode.CodePoint left, PinataLabs.Typography.Unicode.CodePoint right) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.operator >(PinataLabs.Typography.Unicode.CodePoint left, PinataLabs.Typography.Unicode.CodePoint right) -> bool
+static PinataLabs.Typography.Unicode.CodePoint.operator >=(PinataLabs.Typography.Unicode.CodePoint left, PinataLabs.Typography.Unicode.CodePoint right) -> bool
+static PinataLabs.Typography.Unicode.MemoryExtensions.EnumerateCodePoints(this System.ReadOnlySpan<char> span) -> PinataLabs.Typography.Unicode.SpanCodePointEnumerator
+static PinataLabs.Typography.Unicode.MemoryExtensions.EnumerateCodePoints(this System.Span<char> span) -> PinataLabs.Typography.Unicode.SpanCodePointEnumerator
+static PinataLabs.Typography.Unicode.MemoryExtensions.EnumerateGraphemes(this System.ReadOnlySpan<char> span) -> PinataLabs.Typography.Unicode.SpanGraphemeEnumerator
+static PinataLabs.Typography.Unicode.MemoryExtensions.EnumerateGraphemes(this System.Span<char> span) -> PinataLabs.Typography.Unicode.SpanGraphemeEnumerator
+static PinataLabs.Typography.Unicode.MemoryExtensions.GetCodePointCount(this System.ReadOnlySpan<char> span) -> int
+static PinataLabs.Typography.Unicode.MemoryExtensions.GetCodePointCount(this System.Span<char> span) -> int
+static PinataLabs.Typography.Unicode.MemoryExtensions.GetCodePointCount(this string! text) -> int
+static PinataLabs.Typography.Unicode.MemoryExtensions.GetGraphemeCount(this System.ReadOnlySpan<char> span) -> int
+static PinataLabs.Typography.Unicode.MemoryExtensions.GetGraphemeCount(this System.Span<char> span) -> int
+static PinataLabs.Typography.Unicode.MemoryExtensions.GetGraphemeCount(this string! text) -> int
+static readonly PinataLabs.Typography.FontRectangle.Empty -> PinataLabs.Typography.FontRectangle

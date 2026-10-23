@@ -2,8 +2,8 @@
 <Project>
 
   <!--
-    Vendored from SixLabors/SharedInfrastructure (Apache-2.0) at commit 33cb12ca,
-    msbuild/props/SixLabors.Tests.props, and modified by PinataLabs.
+    Vendored (Apache-2.0) from SharedInfrastructure at commit 33cb12ca and modified
+    by PinataLabs. NOTICE lists the upstream repository and file path.
   -->
 
   <!-- Compilation and build location settings. -->

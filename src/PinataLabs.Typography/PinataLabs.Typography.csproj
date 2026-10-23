@@ -6,7 +6,7 @@
     <RootNamespace>PinataLabs.Typography</RootNamespace>
     <PackageId>PinataLabs.Typography</PackageId>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/SixLabors/Fonts/</RepositoryUrl>
+    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/PinataLabs/Typography</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageTags>font;truetype;opentype;woff;woff2</PackageTags>
     <Description>A cross-platform library for loading and laying out fonts for processing and measuring; written in C#</Description>
@@ -19,6 +19,20 @@
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="Unicode\StateAutomation\StateMachine.cs" />
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\INode.cs" Link="Unicode\StateAutomation\INode.cs" />
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\NOTICE" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
+  <!--
+    Public API baseline. The build fails (RS0016/RS0017) when the public surface differs from these files.
+    A public API change needs an approved proposal, its own commit, a PublicAPI.Unshipped.txt change and a CHANGELOG.md entry.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
   <Import Project="..\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
