@@ -1,8 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-    - name: Ask a Question
-      url: https://github.com/SixLabors/Fonts/discussions?discussions_q=category%3AHelp
-      about: Ask a question about this project.
-    - name: Feature Request
-      url: https://github.com/SixLabors/Fonts/discussions?discussions_q=category%3AIdeas
-      about: Share ideas for new features for this project.
+    - name: Contribution guide
+      url: https://github.com/PinataLabs/Typography/blob/main/.github/CONTRIBUTING.md
+      about: Read how to report bugs, propose changes and ask questions.
