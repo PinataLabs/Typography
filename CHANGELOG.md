@@ -4,7 +4,8 @@ All notable changes to PinataLabs.Typography are recorded in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-PinataLabs.Typography is derived from SixLabors.Fonts, forked at commit `32bef429`.
+PinataLabs.Typography is a fork of an Apache-2.0 project, taken at commit `32bef429`.
+See `NOTICE` for the original project and its copyright.
 The entries below describe the changes from that commit.
 
 ## Public API changes
@@ -24,16 +25,16 @@ An additive or breaking public API change needs all of these:
 
 ### Changed
 
-- **Rename.** The package and assembly `SixLabors.Fonts` is now `PinataLabs.Typography`.
-  Every namespace `SixLabors.Fonts[.X]` is now `PinataLabs.Typography[.X]`, mapped 1:1.
+- **Rename.** The package and assembly are now `PinataLabs.Typography`.
+  Every namespace from the original project is mapped 1:1 to `PinataLabs.Typography[.X]`.
   The type and member names do not change.
 - **Retargeting.** The library targets `net8.0`, `net10.0` and `net11.0`.
   The old targets `netcoreapp3.1`, `netstandard2.1` and `netstandard2.0` are removed.
   The package no longer depends on `System.Memory`, `System.Buffers`,
   `System.Numerics.Vectors` or `System.Runtime.CompilerServices.Unsafe`.
-- **AppContext switch rename.** `Switch.SixLabors.Fonts.DoNotUseNativeSystemFontsEnumeration`
+- **AppContext switch rename.** The switch that disables native system font enumeration
   is now `Switch.PinataLabs.Typography.DoNotUseNativeSystemFontsEnumeration`.
-  The old switch name has no effect.
+  The original project's switch name has no effect.
 - **No strong naming.** The assembly is not strong-named. Its public key token is null,
   so code that references it by the old strong name must be rebuilt.
 
