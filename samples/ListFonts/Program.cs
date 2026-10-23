@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using SixLabors.Fonts;
+using PinataLabs.Typography;
 
 namespace ListFonts
 {

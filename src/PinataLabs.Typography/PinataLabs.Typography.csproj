@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>PinataLabs.Typography</AssemblyName>
+    <AssemblyTitle>PinataLabs.Typography</AssemblyTitle>
+    <RootNamespace>PinataLabs.Typography</RootNamespace>
+    <PackageId>PinataLabs.Typography</PackageId>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/SixLabors/Fonts/</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageTags>font;truetype;opentype;woff;woff2</PackageTags>
+    <Description>A cross-platform library for loading and laying out fonts for processing and measuring; written in C#</Description>
+    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="Unicode\StateAutomation\StateMachine.cs" />
+    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\INode.cs" Link="Unicode\StateAutomation\INode.cs" />
+    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
+  </ItemGroup>
+
+  <Import Project="..\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
+</Project>

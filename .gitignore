@@ -255,8 +255,7 @@ paket-files/
 /samples/DrawWithImageSharp/Output
 
 /tests/CodeCoverage/OpenCover.*
-SixLabors.Shapes.Coverage.xml
-/SixLabors.Fonts.Coverage.xml
+/PinataLabs.Typography.Coverage.xml
 
 /coverage.*.xml
 *.lcov

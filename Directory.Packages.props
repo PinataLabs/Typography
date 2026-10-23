@@ -32,16 +32,4 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 
-  <!-- Samples. -->
-  <ItemGroup>
-    <!--
-      Pinned, not latest: later versions are not Apache-2.0, and the earlier pin
-      (beta15.14) is not on nuget.org. The DrawWithImageSharp sample that uses it
-      no longer compiles (it needs the SixLabors strong-name key), so the solution
-      does not build it; the rebrand deletes it (spec 001, scope item 15).
-    -->
-    <PackageVersion Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta15" />
-    <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
-  </ItemGroup>
-
 </Project>
