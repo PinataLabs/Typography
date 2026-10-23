@@ -3,18 +3,19 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Linq;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.General.CMap;
 using PinataLabs.Typography.WellKnownIds;
-
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class CMapTableTests
     {
         [Test]
-        public void LoadFormat0()
+        public async Task LoadFormat0()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -25,23 +26,23 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             var table = CMapTable.Load(writer.GetReader());
 
-            Assert.Single(table.Tables, x => x != null);
+            await Assert.That(table.Tables.Where(x => x != null)).HasSingleItem();
 
             Format0SubTable[] format0Tables = table.Tables.OfType<Format0SubTable>().ToArray();
-            Assert.Single(format0Tables);
+            await Assert.That(format0Tables).HasSingleItem();
         }
 
         [Test]
-        public void ShouldThrowExceptionWhenTableCouldNotBeFound()
+        public async Task ShouldThrowExceptionWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                InvalidFontTableException exception = Assert.Throws<InvalidFontTableException>(() => CMapTable.Load(new FontReader(stream)));
+                InvalidFontTableException exception = await Assert.That(() => CMapTable.Load(new FontReader(stream))).ThrowsExactly<InvalidFontTableException>();
 
-                Assert.Equal("cmap", exception.Table);
+                await Assert.That(exception.Table).IsEqualTo("cmap");
             }
         }
     }

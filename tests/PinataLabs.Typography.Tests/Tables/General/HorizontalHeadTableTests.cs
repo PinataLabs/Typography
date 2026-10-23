@@ -2,15 +2,17 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General
 {
     public class HorizontalHeadTableTests
     {
         [Test]
-        public void LoadHorizontalHeadTable()
+        public async Task LoadHorizontalHeadTable()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -18,28 +20,28 @@ namespace PinataLabs.Typography.Tests.Tables.General
 
             var tbl = HorizontalHeadTable.Load(writer.GetReader());
 
-            Assert.Equal(1, tbl.Ascender);
-            Assert.Equal(2, tbl.Descender);
-            Assert.Equal(3, tbl.LineGap);
-            Assert.Equal(4, tbl.AdvanceWidthMax);
-            Assert.Equal(5, tbl.MinLeftSideBearing);
-            Assert.Equal(6, tbl.MinRightSideBearing);
-            Assert.Equal(7, tbl.XMaxExtent);
-            Assert.Equal(8, tbl.CaretSlopeRise);
-            Assert.Equal(9, tbl.CaretSlopeRun);
-            Assert.Equal(10, tbl.CaretOffset);
-            Assert.Equal(11, tbl.NumberOfHMetrics);
+            await Assert.That(tbl.Ascender).IsEqualTo(1);
+            await Assert.That(tbl.Descender).IsEqualTo(2);
+            await Assert.That(tbl.LineGap).IsEqualTo(3);
+            await Assert.That(tbl.AdvanceWidthMax).IsEqualTo(4);
+            await Assert.That(tbl.MinLeftSideBearing).IsEqualTo(5);
+            await Assert.That(tbl.MinRightSideBearing).IsEqualTo(6);
+            await Assert.That(tbl.XMaxExtent).IsEqualTo(7);
+            await Assert.That(tbl.CaretSlopeRise).IsEqualTo(8);
+            await Assert.That(tbl.CaretSlopeRun).IsEqualTo(9);
+            await Assert.That(tbl.CaretOffset).IsEqualTo(10);
+            await Assert.That(tbl.NumberOfHMetrics).IsEqualTo(11);
         }
 
         [Test]
-        public void ShouldReturnNullWhenTableCouldNotBeFound()
+        public async Task ShouldReturnNullWhenTableCouldNotBeFound()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTrueTypeFileHeader();
 
             using (System.IO.MemoryStream stream = writer.GetStream())
             {
-                Assert.Null(HorizontalHeadTable.Load(new FontReader(stream)));
+                await Assert.That(HorizontalHeadTable.Load(new FontReader(stream))).IsNull();
             }
         }
     }

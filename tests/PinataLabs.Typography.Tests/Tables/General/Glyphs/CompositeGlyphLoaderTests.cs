@@ -4,15 +4,17 @@
 
 using System;
 using System.Numerics;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 {
     public class CompositeGlyphLoaderTests
     {
         [Test]
-        public void LoadSingleGlyphWithUInt16Offset_unsigned_short()
+        public async Task LoadSingleGlyphWithUInt16Offset_unsigned_short()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteUInt16((ushort)CompositeGlyphFlags.Args1And2AreWords); // 16bit unsigned
@@ -33,12 +35,12 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 
             GlyphVector finalGlyph = glyph.CreateGlyph(tbl);
 
-            ControlPoint point = Assert.Single(finalGlyph.ControlPoints);
-            Assert.Equal(new Vector2(short.MaxValue + 1 + 20, short.MaxValue + 2 + 21), point.Point);
+            ControlPoint point = await Assert.That(finalGlyph.ControlPoints).HasSingleItem();
+            await Assert.That(point.Point).IsEqualTo(new Vector2(short.MaxValue + 1 + 20, short.MaxValue + 2 + 21));
         }
 
         [Test]
-        public void LoadSingleGlyphWithInt16Offset_signed_short()
+        public async Task LoadSingleGlyphWithInt16Offset_signed_short()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteUInt16((ushort)(CompositeGlyphFlags.Args1And2AreWords /* 16bit */ | CompositeGlyphFlags.ArgsAreXYValues /* signed */)); // flags
@@ -59,12 +61,12 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 
             GlyphVector finalGlyph = glyph.CreateGlyph(tbl);
 
-            ControlPoint point = Assert.Single(finalGlyph.ControlPoints);
-            Assert.Equal(new Vector2(short.MinValue + 1 + 20, short.MinValue + 2 + 21), point.Point);
+            ControlPoint point = await Assert.That(finalGlyph.ControlPoints).HasSingleItem();
+            await Assert.That(point.Point).IsEqualTo(new Vector2(short.MinValue + 1 + 20, short.MinValue + 2 + 21));
         }
 
         [Test]
-        public void LoadSingleGlyphWithUInt8Offset_unsigned_byte()
+        public async Task LoadSingleGlyphWithUInt8Offset_unsigned_byte()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteUInt16(0); // 8bit unsigned
@@ -85,12 +87,12 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 
             GlyphVector finalGlyph = glyph.CreateGlyph(tbl);
 
-            ControlPoint point = Assert.Single(finalGlyph.ControlPoints);
-            Assert.Equal(new Vector2(sbyte.MaxValue + 1 + 20, sbyte.MaxValue + 2 + 21), point.Point);
+            ControlPoint point = await Assert.That(finalGlyph.ControlPoints).HasSingleItem();
+            await Assert.That(point.Point).IsEqualTo(new Vector2(sbyte.MaxValue + 1 + 20, sbyte.MaxValue + 2 + 21));
         }
 
         [Test]
-        public void LoadSingleGlyphWithInt8Offset_signed_byte()
+        public async Task LoadSingleGlyphWithInt8Offset_signed_byte()
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteUInt16((ushort)CompositeGlyphFlags.ArgsAreXYValues); // signed byte
@@ -111,8 +113,8 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs
 
             GlyphVector finalGlyph = glyph.CreateGlyph(tbl);
 
-            ControlPoint point = Assert.Single(finalGlyph.ControlPoints);
-            Assert.Equal(new Vector2(sbyte.MinValue + 1 + 20, sbyte.MinValue + 2 + 21), point.Point);
+            ControlPoint point = await Assert.That(finalGlyph.ControlPoints).HasSingleItem();
+            await Assert.That(point.Point).IsEqualTo(new Vector2(sbyte.MinValue + 1 + 20, sbyte.MinValue + 2 + 21));
         }
     }
 }

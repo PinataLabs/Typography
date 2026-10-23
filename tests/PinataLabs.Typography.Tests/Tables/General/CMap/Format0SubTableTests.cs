@@ -3,17 +3,20 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Linq;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.CMap;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.WellKnownIds;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Enums;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.General.CMap
 {
     public class Format0SubTableTests
     {
         [Test]
-        public void LoadFormat0()
+        public async Task LoadFormat0()
         {
             var writer = new BigEndianBinaryWriter();
 
@@ -27,38 +30,38 @@ namespace PinataLabs.Typography.Tests.Tables.General.CMap
 
             BigEndianBinaryReader reader = writer.GetReader();
             ushort format = reader.ReadUInt16(); // read format before we pass along as that's what the cmap table does
-            Assert.Equal(0, format);
+            await Assert.That(format).IsEqualTo(0);
 
             Format0SubTable table = Format0SubTable.Load(
                 new[] { new EncodingRecord(PlatformIDs.Windows, 2, 0) },
                 reader).Single();
 
-            Assert.Equal(0, table.Language);
-            Assert.Equal(PlatformIDs.Windows, table.Platform);
-            Assert.Equal(2, table.Encoding);
-            Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, table.GlyphIds);
+            await Assert.That(table.Language).IsEqualTo(0);
+            await Assert.That(table.Platform).IsEqualTo(PlatformIDs.Windows);
+            await Assert.That(table.Encoding).IsEqualTo(2);
+            await Assert.That(table.GlyphIds).IsEquivalentTo(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, CollectionOrdering.Matching);
         }
 
         [Test]
-        public void GetCharacter()
+        public async Task GetCharacter()
         {
             var format = new Format0SubTable(0, PlatformIDs.Windows, 2, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
 
             bool found = format.TryGetGlyphId(new CodePoint(4), out ushort id);
 
-            Assert.True(found);
-            Assert.Equal(5, id);
+            await Assert.That(found).IsTrue();
+            await Assert.That(id).IsEqualTo(5);
         }
 
         [Test]
-        public void GetCharacter_missing()
+        public async Task GetCharacter_missing()
         {
             var format = new Format0SubTable(0, PlatformIDs.Windows, 2, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
 
             bool found = format.TryGetGlyphId(new CodePoint(99), out ushort id);
 
-            Assert.False(found);
-            Assert.Equal(0, id);
+            await Assert.That(found).IsFalse();
+            await Assert.That(id).IsEqualTo(0);
         }
     }
 }

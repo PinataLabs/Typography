@@ -5,15 +5,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Native;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Native
 {
     public class MacSystemFontsEnumeratorTests
     {
         [Test]
-        public void TestReset()
+        public async Task TestReset()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -22,11 +24,11 @@ namespace PinataLabs.Typography.Tests.Native
 
             using var enumerator = new MacSystemFontsEnumerator();
             var fonts1 = new HashSet<string>(enumerator);
-            Assert.NotEmpty(fonts1);
+            await Assert.That(fonts1).IsNotEmpty();
 
             enumerator.Reset();
             var fonts2 = new HashSet<string>(enumerator);
-            Assert.Empty(fonts1.Except(fonts2));
+            await Assert.That(fonts1.Except(fonts2)).IsEmpty();
         }
     }
 }

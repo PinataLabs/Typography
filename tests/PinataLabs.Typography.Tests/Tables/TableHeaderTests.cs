@@ -2,9 +2,10 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables;
-
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables
 {
@@ -18,17 +19,17 @@ namespace PinataLabs.Typography.Tests.Tables
 
         [Test]
         [MethodDataSource(nameof(ReadAllValuesData))]
-        public void ReadAllValues(string tag, uint checksum, uint offset, uint length)
+        public async Task ReadAllValues(string tag, uint checksum, uint offset, uint length)
         {
             var writer = new BigEndianBinaryWriter();
             writer.WriteTableHeader(tag, checksum, offset, length);
 
             var header = TableHeader.Read(writer.GetReader());
 
-            Assert.Equal(checksum, header.CheckSum);
-            Assert.Equal(length, header.Length);
-            Assert.Equal(offset, header.Offset);
-            Assert.Equal(tag, header.Tag);
+            await Assert.That(header.CheckSum).IsEqualTo(checksum);
+            await Assert.That(header.Length).IsEqualTo(length);
+            await Assert.That(header.Offset).IsEqualTo(offset);
+            await Assert.That(header.Tag).IsEqualTo(tag);
         }
     }
 }

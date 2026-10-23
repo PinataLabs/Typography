@@ -3,8 +3,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
-using Xunit;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
@@ -40,7 +42,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("و", 316)]
         [Arguments("ه", 298)]
         [Arguments("ی", 335)]
-        public void RenderArabicCharacters_WithIsolatedForm_Works(string testStr, int expectedGlyphIndex)
+        public async Task RenderArabicCharacters_WithIsolatedForm_Works(string testStr, int expectedGlyphIndex)
         {
             // arrange
             Font arabicFont = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(8);
@@ -50,14 +52,14 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(arabicFont));
 
             // assert
-            GlyphRendererParameters glyphKey = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
+            GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
         }
 
         // LookupType1SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#11-single-substitution-format-1
         [Test]
-        public void SingleSubstitution_Works()
+        public async Task SingleSubstitution_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubTestFontFile1).CreateFont(12);
@@ -69,12 +71,12 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            GlyphRendererParameters glyphKey = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
+            GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
         }
 
         [Test]
-        public void ContextualFractions_WithFractionSlash_Works()
+        public async Task ContextualFractions_WithFractionSlash_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.RobotoRegular).CreateFont(12);
@@ -86,15 +88,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font) { FeatureTags = new Tag[] { FeatureTags.Numerators, FeatureTags.Denominators } });
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void ContextualFractions_WithSlash_Works()
+        public async Task ContextualFractions_WithSlash_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.RobotoRegular).CreateFont(12);
@@ -106,17 +108,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font) { FeatureTags = new Tag[] { FeatureTags.Fractions } });
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType2SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#21-multiple-substitution-format-1
         [Test]
-        public void MultipleSubstitution_Works()
+        public async Task MultipleSubstitution_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubTestFontFile1).CreateFont(12);
@@ -128,14 +130,14 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            GlyphRendererParameters glyphKey = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
+            GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
         }
 
         // LookupType3SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-3-alternate-substitution-subtable
         [Test]
-        public void AlternateSubstitution_Works()
+        public async Task AlternateSubstitution_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubTestFontFile1).CreateFont(12);
@@ -147,14 +149,14 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            GlyphRendererParameters glyphKey = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
+            GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
         }
 
         // LookupType4SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-3-alternate-substitution-subtable
         [Test]
-        public void LigatureSubstitution_Works()
+        public async Task LigatureSubstitution_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubTestFontFile1).CreateFont(12);
@@ -166,14 +168,14 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            GlyphRendererParameters glyphKey = Assert.Single(renderer.GlyphKeys);
-            Assert.Equal(expectedGlyphIndex, glyphKey.GlyphId);
+            GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
+            await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
         }
 
         // LookupType5SubTable, Format 1.
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-5-contextual-substitution-subtable
         [Test]
-        public void ContextualSubstitution_Format1_Works()
+        public async Task ContextualSubstitution_Format1_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubLookupType5Format1).CreateFont(12);
@@ -185,17 +187,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType5SubTable, Format 2.
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-5-contextual-substitution-subtable
         [Test]
-        public void ContextualSubstitution_Format2_Works()
+        public async Task ContextualSubstitution_Format2_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubLookupType5Format2).CreateFont(12);
@@ -207,17 +209,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType5SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-5-contextual-substitution-subtable
         [Test]
-        public void ContextualSubstitution_Format3_Works()
+        public async Task ContextualSubstitution_Format3_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubLookupType5Format3).CreateFont(12);
@@ -229,17 +231,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType6SubTable, Format 1
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#62-chained-contexts-substitution-format-1-class-based-glyph-contexts
         [Test]
-        public void ChainedContextsSubstitution_Format1_Works()
+        public async Task ChainedContextsSubstitution_Format1_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubLookupType6Format1).CreateFont(12);
@@ -251,17 +253,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType6SubTable, Format 2
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#62-chained-contexts-substitution-format-2-class-based-glyph-contexts
         [Test]
-        public void ChainedContextsSubstitution_Format2_Works()
+        public async Task ChainedContextsSubstitution_Format2_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubLookupType6Format2).CreateFont(12);
@@ -273,17 +275,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType6SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#63-chained-contexts-substitution-format-3-coverage-based-glyph-contexts
         [Test]
-        public void ChainedContextsSubstitution_Format3_Works()
+        public async Task ChainedContextsSubstitution_Format3_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubTestFontFile2).CreateFont(12);
@@ -295,17 +297,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType6SubTable, Format 3
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#63-chained-contexts-substitution-format-3-coverage-based-glyph-contexts
         [Test]
-        public void ChainedContextsSubstitution_Format3_WithCursiveScript_Works()
+        public async Task ChainedContextsSubstitution_Format3_WithCursiveScript_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.FormalScript).CreateFont(12);
@@ -317,17 +319,17 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         // LookupType8SubTable
         // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-8-reverse-chaining-contextual-single-substitution-subtable
         [Test]
-        public void ReverseChainingContextualSingleSubstitution_Works()
+        public async Task ReverseChainingContextualSingleSubstitution_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.GSubTestFontFile2).CreateFont(12);
@@ -339,16 +341,16 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             TextRenderer.RenderTextTo(renderer, testStr, new TextOptions(font));
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
-        // Related PR: https://github.com/SixLabors/Fonts/pull/248
+        // See upstream PR #248 (pre-fork).
         [Test]
-        public void OldStyleFiguresFeature_Works()
+        public async Task OldStyleFiguresFeature_Works()
         {
             // arrange
             Font font = new FontCollection().Add(TestFonts.EbGaramond).CreateFont(12);
@@ -363,15 +365,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
             });
 
             // assert
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
-        public void BillionLaughsAttackDoesNotThrowException()
+        public async Task BillionLaughsAttackDoesNotThrowException()
         {
             // Arrange
             Font font = new FontCollection().Add(TestFonts.GSubLookupType2BillionLaughs).CreateFont(12);

@@ -2,7 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using Xunit;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 {
@@ -122,15 +124,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // Harfbuzz replaces the default ignorable with id 91 with a space (3) and sets the advance to 0. We skip it entirely on rendering.
         [Arguments(KannadaFont.Sans, "\u0c86\u0ccd\u0caf\u0c95\u0ccd\u0cb7\u0cbf\u0cb8\u0ccd\u200c", new int[] { 7, 122, 285, 200 })]
-        public void CanShapeKannadaText(KannadaFont font, string input, int[] expectedGlyphIndices)
+        public async Task CanShapeKannadaText(KannadaFont font, string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(font == KannadaFont.Serif ? KannadaNotoSerifTTF : KannadaNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -147,15 +149,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0c15\u0c4d\u0c37\u0c4d", new int[] { 137 })]
         [Arguments("\u0c15\u0c4d\u0c37\u0c4d\u0c23", new int[] { 21, 605 })]
         [Arguments("\u0c3d\u0c02", new int[] { 56, 5 })]
-        public void CanShapeTeluguText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeTeluguText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(TeluguNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -196,15 +198,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f\u0ba4\u0bc1\u002e", new int[] { 29, 41, 91, 32, 87, 28, 82, 23, 116, 164 })]
         [Arguments("\u0bb8\u0bcd\u0bb0\u0bc0", new int[] { 147 })]
         [Arguments("\u0b95\u0bcd\u0bb7", new int[] { 76 })]
-        public void CanShapeTamilText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeTamilText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(TamilNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -251,15 +253,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         // Harfbuzz replaces the default ignorable with id 133 with a space (3) and sets the advance to 0. We skip it entirely on rendering.
         [Arguments("\u0926\u094d\u200c\u0938\u093f", new int[] { 42, 81, 563, 60 })]
         [Arguments("\u0926\u094d\u200d\u0938\u093f", new int[] { 558, 200, 60 })]
-        public void CanShapeDevanagariTextWithJoiners(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeDevanagariTextWithJoiners(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(DevanagariNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -308,15 +310,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0930\u0941\u0901\u0903", new int[] { 413, 5, 7 })]
         [Arguments("\u0031\u093f", new int[] { 558, 748 })]
         [Arguments("\u0967\u0951", new int[] { 107, 85 })]
-        public void CanShapeDevanagariText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeDevanagariText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(DevanagariNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -329,15 +331,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0930\u094d\u25cc\u093c", new int[] { 135, 64, 181 })]
         [Arguments("\u25cc\u094d\u091a\u094d\u091b\u0947", new int[] { 135, 81, 188, 31, 75 })]
         [Arguments("\u0930\u094d\u00a0", new int[] { 52, 81, 3 })]
-        public void CanShapeDevanagariTextWithDottedCircle(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeDevanagariTextWithDottedCircle(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(DevanagariNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -349,15 +351,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // Harfbuzz replaces the default ignorable with id 133 with a space (3) and sets the advance to 0. We skip it entirely on rendering.
         [Arguments("\u0924\u094d\u0930\u094d\u200c\u0915", new int[] { 269, 81, 25 })]
-        public void CanShapeDevanagariTextWithEyelash(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeDevanagariTextWithEyelash(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(DevanagariNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -419,30 +421,30 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
 
         // Harfbuzz replaces the default ignorable with id 574 with a space (3) and sets the advance to 0. We skip it entirely on rendering.
         [Arguments("\u0995\u09cd\u200d\u09b7", new int[] { 130, 48 })]
-        public void CanShapeBengaliText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeBengaliText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(BengaliNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
         [Test]
         [Arguments("\u0a15\u0a4d\u0a39", new int[] { 17, 111 })]
         [Arguments("\u0a24\u0a4d\u0a2f\u0a4b", new int[] { 32, 175, 58 })]
-        public void CanShapeGurmukhiText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeGurmukhiText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(GurmukhiNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -468,15 +470,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0a98\u0acd\u0aa4", new int[] { 133, 36 })]
         [Arguments("\u0a98\u0acd\u0aa5", new int[] { 133, 37 })]
         [Arguments("\u0a98\u0acd\u0aa6", new int[] { 133, 38 })]
-        public void CanShapeGujaratiText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeGujaratiText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(GujaratiNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -552,15 +554,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0d15\u0d4b\u0d02\u200c", new int[] { 67, 20, 59, 4 })]
         [Arguments("\u0d2f\u200d\u0d4d\u0d2f", new int[] { 46, 144 })]
         [Arguments("\u0d38\u0d4d\u0d31\u0d4d\u0d31\u0d4d", new int[] { 214, 72 })]
-        public void CanShapeMalayalamText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeMalayalamText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(MalayalamNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -573,15 +575,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments("\u0b38\u0b4d\u0b24\u0b4d\u0b30", new int[] { 51, 161 })]
         [Arguments("\u0b2e\u0b41\u0b01", new int[] { 43, 4, 58 })]
         [Arguments("\u0b2e\u0b41\u0b02", new int[] { 43, 58, 5 })]
-        public void CanShapeOriyaText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeOriyaText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(OriyaNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
 
@@ -613,15 +615,15 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub
         [Arguments(
             "\u178a\u17be\u1798\u17d2\u1794\u17b8\u17b2\u17d2\u1799\u1794\u17b6\u1793\u1780\u17b6\u1793\u17cb\u178f\u17c2\u1794\u17d2\u179a\u179f\u17be\u179a\u17a1\u17be\u1784\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u1780\u17b6\u179a\u1792\u17d2\u179c\u17be\u178a\u17c6\u178e\u17be\u179a\u179a\u1794\u179f\u17cb\u1797\u17d2\u1789\u17c0\u179c\u1791\u17c1\u179f\u1785\u179a\u178e\u17cd",
             new int[] { 107, 54, 104, 68, 165, 98, 94, 170, 188, 96, 63, 44, 96, 63, 117, 108, 59, 171, 64, 107, 75, 104, 70, 107, 77, 104, 48, 75, 171, 68, 96, 64, 117, 44, 96, 70, 107, 62, 173, 104, 54, 112, 107, 58, 104, 70, 70, 64, 75, 117, 107, 67, 153, 192, 72, 107, 61, 75, 49, 70, 58, 119 })]
-        public void CanShapeKhmerText(string input, int[] expectedGlyphIndices)
+        public async Task CanShapeKhmerText(string input, int[] expectedGlyphIndices)
         {
             ColorGlyphRenderer renderer = new();
             TextRenderer.RenderTextTo(renderer, input, new TextOptions(KhmerNotoSansTTF));
 
-            Assert.Equal(expectedGlyphIndices.Length, renderer.GlyphKeys.Count);
+            await Assert.That(renderer.GlyphKeys.Count).IsEqualTo(expectedGlyphIndices.Length);
             for (int i = 0; i < expectedGlyphIndices.Length; i++)
             {
-                Assert.Equal(expectedGlyphIndices[i], renderer.GlyphKeys[i].GlyphId);
+                await Assert.That(renderer.GlyphKeys[i].GlyphId).IsEqualTo(expectedGlyphIndices[i]);
             }
         }
     }
