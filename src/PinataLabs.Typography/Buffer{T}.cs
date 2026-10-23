@@ -22,7 +22,7 @@ internal ref struct Buffer<T>
 
     public Buffer(int length)
     {
-        Guard.MustBeGreaterThanOrEqualTo(length, 0, nameof(length));
+        ArgumentOutOfRangeException.ThrowIfNegative(length, nameof(length));
         int itemSizeBytes = Unsafe.SizeOf<T>();
         int bufferSizeInBytes = length * itemSizeBytes;
         this.buffer = ArrayPool<byte>.Shared.Rent(bufferSizeInBytes);

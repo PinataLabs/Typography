@@ -14,8 +14,5 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)DebugGuard.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Guard.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Guard.Numeric.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ThrowHelper.cs" />
   </ItemGroup>
 </Project>

@@ -1487,7 +1487,8 @@ internal class TrueTypeInterpreter
 
     private int CheckIndex(int index, int length)
     {
-        Guard.MustBeBetweenOrEqualTo(index, 0, length - 1, nameof(index));
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, length);
         return index;
     }
 

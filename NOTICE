@@ -26,9 +26,6 @@ licensed under the Apache License, Version 2.0, at commit
   sixlabors.tests.ruleset                   .editorconfig (rule severities, modified)
   stylecop.json                             build/stylecop.json (modified)
   src/SharedInfrastructure/DebugGuard.cs    src/SharedInfrastructure/DebugGuard.cs (modified)
-  src/SharedInfrastructure/Guard.cs         src/SharedInfrastructure/Guard.cs (modified)
-  src/SharedInfrastructure/Guard.Numeric.cs src/SharedInfrastructure/Guard.Numeric.cs (modified)
-  src/SharedInfrastructure/ThrowHelper.cs   src/SharedInfrastructure/ThrowHelper.cs (modified)
   src/SharedInfrastructure/SharedInfrastructure.projitems
                                             src/SharedInfrastructure/SharedInfrastructure.projitems (modified)
 

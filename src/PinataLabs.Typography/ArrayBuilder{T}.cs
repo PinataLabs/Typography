@@ -28,7 +28,7 @@ internal struct ArrayBuilder<T>
     public ArrayBuilder(int capacity)
         : this()
     {
-        Guard.MustBeGreaterThanOrEqualTo(capacity, 0, nameof(capacity));
+        ArgumentOutOfRangeException.ThrowIfNegative(capacity, nameof(capacity));
 
         this.data = new T[capacity];
         this.size = capacity;

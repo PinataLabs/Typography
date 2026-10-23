@@ -60,7 +60,7 @@ public class TextOptions
         get => this.font!;
         set
         {
-            Guard.NotNull(value, nameof(this.Font));
+            ArgumentNullException.ThrowIfNull(value, nameof(this.Font));
             this.font = value;
         }
     }
@@ -82,7 +82,7 @@ public class TextOptions
 
         set
         {
-            Guard.MustBeGreaterThanOrEqualTo(value, 0, nameof(this.Dpi));
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 0, nameof(this.Dpi));
             this.dpi = value;
         }
     }
@@ -112,7 +112,11 @@ public class TextOptions
 
         set
         {
-            Guard.IsTrue(value != 0, nameof(this.LineSpacing), "Value must not be equal to 0.");
+            if (value == 0)
+            {
+                throw new ArgumentException("Value must not be equal to 0.", nameof(this.LineSpacing));
+            }
+
             this.lineSpacing = value;
         }
     }
