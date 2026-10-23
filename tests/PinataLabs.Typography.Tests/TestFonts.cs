@@ -23,6 +23,8 @@ public static class TestFonts
 
     public static string WendyOneFile => GetFullPath("Wendy_One/WendyOne-Regular.ttf");
 
+    public static string TekoVariableFile => GetFullPath("Teko/Teko-Variable.ttf");
+
     // Font from: https://google-webfonts-helper.herokuapp.com/fonts/open-sans?subsets=cyrillic,cyrillic-ext,greek,greek-ext,hebrew,latin,latin-ext,vietnamese
     public static string OpenSansFile => GetFullPath("OpenSans-Regular.ttf");
 

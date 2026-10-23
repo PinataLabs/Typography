@@ -143,10 +143,9 @@ internal static class LookupType5SubTable
                 : ligGlyph.CodePointCount - 1;
 
             MarkRecord markRecord = this.markArrayTable.MarkRecords[markIndex];
-            AnchorTable baseAnchor = ligatureAttach.ComponentRecords[compIndex].LigatureAnchorTables[markRecord.MarkClass];
-            AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
+            AnchorTable? baseAnchor = ligatureAttach.ComponentRecords[compIndex].LigatureAnchorTables[markRecord.MarkClass];
 
-            return true;
+            return AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
         }
     }
 }

@@ -31,6 +31,14 @@ internal readonly struct MarkRecord
         this.MarkClass = reader.ReadUInt16();
         ushort markAnchorOffset = reader.ReadOffset16();
 
+        // The offset should not be NULL but some fonts do so for marks that cannot attach.
+        // Loading from a zero offset would read the MarkArray header as an anchor table.
+        if (markAnchorOffset is 0)
+        {
+            this.MarkAnchorTable = null;
+            return;
+        }
+
         // Reset the reader position after reading the anchor table.
         long readerPosition = reader.BaseStream.Position;
         this.MarkAnchorTable = AnchorTable.Load(reader, offset + markAnchorOffset);
@@ -45,5 +53,5 @@ internal readonly struct MarkRecord
     /// <summary>
     /// Gets the mark anchor table.
     /// </summary>
-    public AnchorTable MarkAnchorTable { get; }
+    public AnchorTable? MarkAnchorTable { get; }
 }

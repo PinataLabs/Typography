@@ -128,10 +128,9 @@ internal static class LookupType4SubTable
             }
 
             MarkRecord markRecord = this.markArrayTable.MarkRecords[markIndex];
-            AnchorTable baseAnchor = this.baseArrayTable.BaseRecords[baseIndex].BaseAnchorTables[markRecord.MarkClass];
-            AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
+            AnchorTable? baseAnchor = this.baseArrayTable.BaseRecords[baseIndex].BaseAnchorTables[markRecord.MarkClass];
 
-            return true;
+            return AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
         }
     }
 }
