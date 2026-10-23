@@ -10,7 +10,7 @@ namespace SixLabors.Fonts.Tests
 {
     internal static class TestEnvironment
     {
-        private const string SixLaborsSolutionFileName = "SixLabors.Fonts.sln";
+        private const string SixLaborsSolutionFileName = "SixLabors.Fonts.slnx";
 
         private const string UnicodeTestDataRelativePath = @"tests\UnicodeTestData\";
 
