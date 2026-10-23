@@ -598,6 +598,33 @@ public class TextLayoutTests
     }
 
     [Test]
+    [Arguments("abcde", 4)]
+    [Arguments("abcdef", 4)]
+    [Arguments("abcdef", 5)]
+    public async Task BuildTextRuns_ExclusiveEndIsNotExtendedToFinalCharacter(string text, int end)
+    {
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 0, End = end, Font = font2 },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(2);
+        await Assert.That(runs[0].Start).IsEqualTo(0);
+        await Assert.That(runs[0].End).IsEqualTo(end);
+        await Assert.That(runs[0].Font).IsEqualTo(font2);
+        await Assert.That(runs[1].Start).IsEqualTo(end);
+        await Assert.That(runs[1].End).IsEqualTo(text.Length);
+        await Assert.That(runs[1].Font).IsEqualTo(font);
+    }
+
+    [Test]
     public async Task BuildTextRuns_PreventsOverlappingRun()
     {
         const string text = "This is a long and Honorificabilitudinitatibus califragilisticexpialidocious";
