@@ -26,13 +26,12 @@
   </PropertyGroup>
 
   <!--
-    Define Environmental conditionals. Determined by environmental settings set in build-and-test.yml
-    These proeprties are defined 2X to ensure both MSBuild and Visual Studio (preprocessor directives)
-    can correctly detect them.
-    -->
+    True when the CI environment variable is 'true', as it is on GitHub Actions.
+    This file is imported before PinataLabs.Global.props, so the property is
+    defined here, before the CI-only settings below use it.
+  -->
   <PropertyGroup>
     <IsContinuousIntegration Condition="'$(CI)' == 'true'">true</IsContinuousIntegration>
-    <IsCodeCoverage Condition="'$(codecov)' == 'true'">true</IsCodeCoverage>
   </PropertyGroup>
 
   <!-- Deterministic settings. CI only .-->
@@ -43,6 +42,12 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <!-- Ensure deterministic builds work when triggered against individual projects. -->
+  <!-- https://github.com/dotnet/roslyn/issues/37379#issuecomment-513371985 -->
+  <ItemGroup Condition="'$(IsContinuousIntegration)'=='true'">
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
 
   <!--MinVer Properties for versioning. CI only-->
   <PropertyGroup Condition="'$(IsContinuousIntegration)'=='true'">

@@ -13,23 +13,6 @@
     that is done by the file that imports us.
   -->
 
-  <!--
-    Define Environmental conditionals. Determined by environmental settings set in build-and-test.yml
-    These proeprties are defined 2X to ensure both MSBuild and Visual Studio (preprocessor directives)
-    can correctly detect them.
-    -->
-  <PropertyGroup>
-    <IsContinuousIntegration Condition="'$(CI)' == 'true'">true</IsContinuousIntegration>
-    <IsCodeCoverage Condition="'$(codecov)' == 'true'">true</IsCodeCoverage>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(IsContinuousIntegration)'=='true'">
-    <DefineConstants>$(DefineConstants);ENV_CI</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsCodeCoverage)'=='true'">
-    <DefineConstants>$(DefineConstants);ENV_CODECOV</DefineConstants>
-  </PropertyGroup>
-
   <!--Define OS platform conditions and constants.
    https://docs.microsoft.com/en-us/visualstudio/msbuild/property-functions?view=vs-2019#msbuild-property-functions
    https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.osplatform?view=net-5.0#properties
@@ -72,7 +55,6 @@
     <NeutralLanguage>en</NeutralLanguage>
     <OverwriteReadOnlyFiles>true</OverwriteReadOnlyFiles>
     <DebugType>portable</DebugType>
-    <DebugType Condition="'$(IsCodeCoverage)'=='true'">full</DebugType>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
@@ -88,12 +70,6 @@
     <BaseOutputPath>$(BaseArtifactsPath)bin/$(BaseArtifactsPathSuffix)/</BaseOutputPath>
     <PackageOutputPath>$(BaseArtifactsPath)pkg/$(BaseArtifactsPathSuffix)/$(Configuration)/</PackageOutputPath>
   </PropertyGroup>
-
-  <!-- Ensure deterministic builds work when triggered against individual projects. -->
-  <!-- https://github.com/dotnet/roslyn/issues/37379#issuecomment-513371985 -->
-  <ItemGroup Condition="'$(IsContinuousIntegration)'=='true'">
-    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
-  </ItemGroup>
 
   <!--
     Package references and additional files which are consumed by all projects.

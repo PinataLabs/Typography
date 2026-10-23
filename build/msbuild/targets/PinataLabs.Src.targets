@@ -4,14 +4,6 @@
   <!--
     Vendored (Apache-2.0) from SharedInfrastructure at commit 33cb12ca and modified
     by PinataLabs. NOTICE lists the upstream repository and file path.
-
-    The upstream target that copied .editorconfig, .gitattributes and codecov.yml
-    from the submodule to the repository root is gone: those files now live in
-    the repository directly.
   -->
-
-  <!-- Empty target so that `dotnet test` will work on the solution -->
-  <!-- https://github.com/Microsoft/vstest/issues/411 -->
-  <Target Name="VSTest" Condition="'$(IsTestProject)' == 'true'"/>
 
 </Project>
