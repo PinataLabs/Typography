@@ -43,6 +43,9 @@ internal static class ShaperFactory
             or ScriptClass.Telugu
             or ScriptClass.Khmer => new IndicShaper(script, unicodeScriptTag, textOptions),
 
+            // Myanmar
+            ScriptClass.Myanmar => new MyanmarShaper(script, textOptions),
+
             // Universal
             ScriptClass.Balinese
             or ScriptClass.Batak

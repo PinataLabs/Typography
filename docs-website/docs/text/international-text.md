@@ -62,6 +62,7 @@ characters, or marks stacked above and below. The library has a shaper for each 
 | --- | --- |
 | Arabic | Arabic, Syriac, N'Ko, Mongolian, Phags-pa, Mandaic, Manichaean and Psalter Pahlavi: the scripts that join letters. Picks the initial, medial, final and isolated form of each letter. |
 | Indic | Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam and Khmer. Reorders vowel signs and forms conjuncts. |
+| Myanmar | Burmese and the other languages written in the Myanmar script. Finds syllables, moves the kinzi, medial RA and vowel sign E, and adds a dotted circle to broken syllables. |
 | Hangul | Korean. Composes and decomposes Hangul syllables from jamo. |
 | Universal | About 40 other complex scripts, such as Balinese, Batak, Javanese, Sinhala, Sundanese, Tai Tham and Tibetan, by the model of the Universal Shaping Engine. |
 | Default | Latin, Greek, Cyrillic, Hebrew, Chinese, Japanese and all other scripts. |

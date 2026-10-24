@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -55,6 +56,15 @@ internal class GlyphShapingData
                 data.IndicShapingEngineInfo.Position,
                 data.IndicShapingEngineInfo.SyllableType,
                 data.IndicShapingEngineInfo.Syllable);
+        }
+
+        if (data.MyanmarShapingEngineInfo != null)
+        {
+            this.MyanmarShapingEngineInfo = new(
+                data.MyanmarShapingEngineInfo.Category,
+                data.MyanmarShapingEngineInfo.Position,
+                data.MyanmarShapingEngineInfo.SyllableType,
+                data.MyanmarShapingEngineInfo.Syllable);
         }
 
         if (!clearFeatures)
@@ -145,6 +155,11 @@ internal class GlyphShapingData
     /// </summary>
     public IndicShapingEngineInfo? IndicShapingEngineInfo { get; set; }
 
+    /// <summary>
+    /// Gets or sets the Myanmar shaping information.
+    /// </summary>
+    public MyanmarShapingEngineInfo? MyanmarShapingEngineInfo { get; set; }
+
     private string DebuggerDisplay
         => FormattableString
         .Invariant($" {this.GlyphId} : {this.CodePoint.ToDebuggerDisplay()} : {CodePoint.GetScriptClass(this.CodePoint)} : {this.Direction} : {this.TextRun.TextAttributes} : {this.LigatureId} : {this.LigatureComponent} : {this.IsDecomposed}");
@@ -165,6 +180,32 @@ internal class UniversalShapingEngineInfo
     }
 
     public string Category { get; set; }
+
+    public string SyllableType { get; }
+
+    public int Syllable { get; }
+}
+
+/// <summary>
+/// Represents information required for Myanmar shaping.
+/// </summary>
+internal class MyanmarShapingEngineInfo
+{
+    public MyanmarShapingEngineInfo(
+        MyanmarShaper.Categories category,
+        MyanmarShaper.Positions position,
+        string syllableType,
+        int syllable)
+    {
+        this.Category = category;
+        this.Position = position;
+        this.SyllableType = syllableType;
+        this.Syllable = syllable;
+    }
+
+    public MyanmarShaper.Categories Category { get; set; }
+
+    public MyanmarShaper.Positions Position { get; set; }
 
     public string SyllableType { get; }
 
