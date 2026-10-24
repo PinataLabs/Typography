@@ -77,6 +77,13 @@ public class TextRun
         return text.Slice(start, length);
     }
 
+    /// <summary>
+    /// Creates a shallow copy of this run. The copy has the same runtime type as the original,
+    /// so state added by derived classes is carried over without them having to participate.
+    /// </summary>
+    /// <returns>The copied <see cref="TextRun"/>.</returns>
+    internal TextRun Clone() => (TextRun)this.MemberwiseClone();
+
     /// <inheritdoc/>
     public override string ToString()
         => $"[TextRun: Start={this.Start}, End={this.End}, TextAttributes={this.TextAttributes}]";

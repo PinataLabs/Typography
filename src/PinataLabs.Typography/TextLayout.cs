@@ -46,7 +46,10 @@ internal static class TextLayout
         int start = 0;
         int end = text.GetGraphemeCount();
         List<TextRun> textRuns = [];
-        foreach (TextRun textRun in options.TextRuns!.OrderBy(x => x.Start))
+
+        // Work on private copies so the caller's instances are never written to.
+        // Everything below may freely adjust Start, End and Font.
+        foreach (TextRun textRun in CopyRuns(options.TextRuns!).OrderBy(x => x.Start))
         {
             // Fill gaps within runs.
             if (textRun.Start > start)
@@ -88,6 +91,17 @@ internal static class TextLayout
         }
 
         return textRuns;
+    }
+
+    private static List<TextRun> CopyRuns(IReadOnlyList<TextRun> source)
+    {
+        List<TextRun> copies = new(source.Count);
+        foreach (TextRun run in source)
+        {
+            copies.Add(run.Clone());
+        }
+
+        return copies;
     }
 
     private static TextBox ProcessText(ReadOnlySpan<char> text, TextOptions options)
