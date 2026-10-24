@@ -1,5 +1,7 @@
 # PinataLabs.Typography
 
+![A piñata donkey setting metal type on a letterpress, under the word Typography](assets/logo.png)
+
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-pinatalabs.github.io-blue.svg)](https://pinatalabs.github.io/Typography/)
 
