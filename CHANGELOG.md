@@ -23,6 +23,14 @@ An additive or breaking public API change needs all of these:
 
 ## [Unreleased]
 
+### Added
+
+- **Myanmar shaper.** Myanmar text now has its own shaper, which follows the Microsoft
+  OpenType specification for Myanmar. It splits text into syllables, moves the kinzi after the base,
+  and moves medial RA and vowel sign E before it. A broken syllable gets a dotted circle.
+  Before, Myanmar text had no script-specific processing, so these marks stayed in logical order.
+  The shaper uses the `mym2` script tag, and falls back to `mymr`. (#30)
+
 ### Changed
 
 - **Rename.** The package and assembly are now `PinataLabs.Typography`.
