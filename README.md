@@ -1,8 +1,11 @@
 # PinataLabs.Typography
 
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-pinatalabs.github.io-blue.svg)](https://pinatalabs.github.io/Typography/)
 
 PinataLabs.Typography is a cross-platform .NET library that loads fonts and lays out and measures text. It is written in C# and has no native dependencies.
+
+Read the [documentation](https://pinatalabs.github.io/Typography/) for guides, the API reference and troubleshooting.
 
 ## Features
 
