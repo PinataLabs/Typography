@@ -35,6 +35,12 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      # SonarCloud analyses the ubuntu leg only, so each commit is uploaded once. The token is
+      # empty on the other legs, and on pull requests from forks and Dependabot, which cannot
+      # read secrets. Every Sonar step checks it, so those runs build and test without Sonar.
+      SONAR_TOKEN: ${{ matrix.os == 'ubuntu-latest' && secrets.SONAR_TOKEN || '' }}
+
     steps:
       - name: Git config
         shell: bash
@@ -42,8 +48,11 @@ jobs:
           git config --global core.autocrlf false
           git config --global core.longpaths true
 
+      # Full history, so SonarCloud can blame lines and tell new code from old.
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # global.json pins the .NET 11 SDK, which carries only the net11.0 runtime.
       # The 8.0 and 10.0 entries install the runtimes the net8.0 and net10.0 tests need.
@@ -58,8 +67,41 @@ jobs:
       - name: Show .NET info
         run: dotnet --info
 
+      - name: Set up JDK 17
+        if: env.SONAR_TOKEN != ''
+        uses: actions/setup-java@v6
+        with:
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Cache SonarCloud packages
+        if: env.SONAR_TOKEN != ''
+        uses: actions/cache@v6
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install SonarCloud scanner
+        if: env.SONAR_TOKEN != ''
+        run: dotnet tool install --global dotnet-sonarscanner
+
       - name: Restore
         run: dotnet restore PinataLabs.Typography.slnx
+
+      # Must come before the build: the scanner hooks into it to collect what it analyses.
+      # Coverage is the net10.0 test run's, read from every *coverage.xml it writes.
+      - name: Begin SonarCloud analysis
+        if: env.SONAR_TOKEN != ''
+        run: >
+          dotnet sonarscanner begin
+          /k:"PinataLabs_Typography"
+          /o:"pinatalabs"
+          /d:sonar.token="$SONAR_TOKEN"
+          /d:sonar.host.url="https://sonarcloud.io"
+          /d:sonar.cs.vscoveragexml.reportsPaths="**/*coverage.xml"
+          /d:sonar.exclusions="docs-website/**,**/*.ttf,**/*.otf,**/*.ttc,**/*.woff,**/*.woff2,**/*.png,**/*.fuzz"
+          /d:sonar.coverage.exclusions="tests/**,samples/**,src/PinataLabs.Typography.UnicodeTrieGenerator/**"
 
       - name: Build
         id: build
@@ -70,10 +112,19 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net8.0 --no-build
 
+      # TUnit brings Microsoft's code coverage extension, so --coverage needs no extra package.
+      # The file name must end in coverage.xml to match sonar.cs.vscoveragexml.reportsPaths.
       - name: Test net10.0
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net10.0 --no-build
+        run: >
+          dotnet test --solution PinataLabs.Typography.slnx -c Release -f net10.0 --no-build
+          ${{ env.SONAR_TOKEN != '' && '--coverage --coverage-output-format xml --coverage-output coverage.xml' || '' }}
 
       - name: Test net11.0
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net11.0 --no-build
+
+      # Uploads even when a test failed, so the analysis still reflects the commit.
+      - name: End SonarCloud analysis
+        if: ${{ !cancelled() && env.SONAR_TOKEN != '' && steps.build.outcome == 'success' }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
