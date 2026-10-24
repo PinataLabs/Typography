@@ -9,11 +9,26 @@ returns the glyphs in visual order.
 
 ## Right-to-left and bidirectional text
 
-The default `TextDirection.Auto` applies the
-[Unicode Bidirectional Algorithm](https://www.unicode.org/reports/tr9/) (UAX #9). It finds the base
-direction from the first strong character of the text, and puts runs of left-to-right and
-right-to-left text in the right visual order. Brackets and numbers are handled by the algorithm's
-rules.
+The library always applies the
+[Unicode Bidirectional Algorithm](https://www.unicode.org/reports/tr9/) (UAX #9). It puts runs of
+left-to-right and right-to-left text in the right visual order. Brackets and numbers are handled by
+the algorithm's rules.
+
+`TextDirection` sets the base direction of the paragraph, as the CSS `direction` property and the
+HTML `dir` attribute do:
+
+| Value | CSS and HTML | Base direction |
+| --- | --- | --- |
+| `Auto` (default) | `dir="auto"` | From the first strong character of the text. |
+| `LeftToRight` | `direction: ltr` | Left to right. |
+| `RightToLeft` | `direction: rtl` | Right to left. |
+
+The base direction does not change the order of the characters in a word. With `RightToLeft`, the
+English word `abc` stays `abc`, and it is placed at the right. The base direction sets:
+
+- The order of the runs of each direction.
+- The direction of numbers and punctuation between runs.
+- The edge for `TextAlignment.Start`.
 
 ```csharp
 using PinataLabs.Typography;
@@ -27,17 +42,12 @@ TextOptions options = new(arabicFont)
 FontRectangle size = TextMeasurer.MeasureSize("مرحبا بالعالم 2026", options);
 ```
 
-:::warning[A fixed direction applies to every character]
+To force characters into one direction, as CSS `unicode-bidi: bidi-override` does, put Unicode
+direction controls in the text. For example, `"\u202Eabc\u202C"` (RIGHT-TO-LEFT OVERRIDE, then POP
+DIRECTIONAL FORMATTING) comes out as `cba`.
 
-`TextDirection.LeftToRight` and `TextDirection.RightToLeft` do not set only the base direction. They
-turn off the bidirectional algorithm and lay out **every** character in that direction. With
-`RightToLeft`, the English word `abc` comes out as `cba`. Explicit Unicode direction controls in the
-text, such as U+202E RIGHT-TO-LEFT OVERRIDE, have no effect either.
-
-Keep the default `Auto` for any text that can mix directions, such as user input, names and
-numbers. Use a fixed direction only for text that you know is in one direction.
-
-:::
+The whole text is one paragraph for the algorithm. Line breaks do not start a new paragraph, so
+`Auto` finds one base direction for all of the lines.
 
 Use `TextAlignment.Start` and `TextAlignment.End` rather than left and right. They follow the
 direction of the text, so one set of options works for both directions. See
