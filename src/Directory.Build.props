@@ -1,26 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Common NuGet package settings. -->
+  <PropertyGroup>
+    <Copyright>Copyright (c) Six Labors. Copyright (c) PinataLabs.</Copyright>
+    <Authors>PinataLabs</Authors>
+    <Company>PinataLabs</Company>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix Condition="'$(PackageVersion)' != ''">$(PackageVersion)</VersionPrefix>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
+  <!-- True when the CI environment variable is 'true', as it is on GitHub Actions. -->
+  <PropertyGroup>
+    <IsContinuousIntegration Condition="'$(CI)' == 'true'">true</IsContinuousIntegration>
+  </PropertyGroup>
+
+  <!-- Deterministic, versioned and source-linked builds. CI only. -->
+  <PropertyGroup Condition="'$(IsContinuousIntegration)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerVerbosity>normal</MinVerVerbosity>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsContinuousIntegration)' == 'true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <PackageReference Include="MinVer" PrivateAssets="All" />
+  </ItemGroup>
+
   <!--
-    Directory.Build.props is automatically picked up and imported by
-    Microsoft.Common.props. This file needs to exist, even if empty so that
-    files in the parent directory tree, with the same name, are not imported
-    instead. They import fairly early and only Sdk.props will have been
-    imported beforehand. We also don't need to add ourselves to
-    MSBuildAllProjects, as that is done by the file that imports us.
+    The assembly is not strong-named, so InternalsVisibleTo carries no public key.
+    DynamicProxyGenAssembly2 lets the mocking library's Castle proxies use our internals.
   -->
-
-  <!-- Import the shared src .props file -->
-  <Import Project="$(MSBuildThisFileDirectory)..\build\msbuild\props\PinataLabs.Src.props" />
-
-  <!-- Import the solution .props file. -->
-  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
-
   <ItemGroup>
-    <!--
-      The assembly is not strong-named, so InternalsVisibleTo carries no public key.
-      DynamicProxyGenAssembly2 lets the mocking library's Castle proxies use our internals.
-    -->
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
     <InternalsVisibleTo Include="PinataLabs.Typography.Tests" />
   </ItemGroup>

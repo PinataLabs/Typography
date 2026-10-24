@@ -43,6 +43,10 @@ An additive or breaking public API change needs all of these:
 - **Slash line breaks.** When a line must wrap and a word contains `/`, the line breaks at an
   earlier space if there is one, not after the slash. A URL now moves to the next line whole.
   A single long word with no earlier break opportunity still breaks after the slash. (#35)
+- **Build layout.** The MSBuild settings now live only in the `Directory.Build.props` files,
+  and `build/msbuild` and the `SharedInfrastructure` shared project are gone. Build output uses
+  the SDK artifacts layout: `artifacts/bin/<Project>/<config>_<tfm>/` and `artifacts/package/<config>/`.
+  This does not change the package.
 - **Hinting concurrency.** TrueType hinting for one font now runs one glyph at a time.
   Threads that hint the same font wait for each other. (#27)
 

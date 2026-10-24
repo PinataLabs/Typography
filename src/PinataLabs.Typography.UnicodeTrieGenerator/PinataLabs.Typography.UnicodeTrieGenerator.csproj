@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,11 +22,10 @@
     <Compile Include="..\PinataLabs.Typography\Unicode\UnicodeTrieBuilder.cs" Link="UnicodeTrieBuilder.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\VerticalOrientationType.cs" Link="VerticalOrientationType.cs" />
 
-
     <Compile Include="..\PinataLabs.Typography\ArraySlice{T}.cs" Link="StateAutomation\ArraySlice{T}.cs" />
     <Compile Include="..\PinataLabs.Typography\ReadOnlyArraySlice{T}.cs" Link="StateAutomation\ReadOnlyArraySlice{T}.cs" />
+    <Compile Include="..\PinataLabs.Typography\DebugGuard.cs" Link="DebugGuard.cs" />
   </ItemGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Pegasus" PrivateAssets="all" />
@@ -38,7 +36,5 @@
     <PegGrammar Include="StateAutomation\Grammar.peg" />
     <InternalsVisibleTo Include="PinataLabs.Typography.Tests" />
   </ItemGroup>
-
-  <Import Project="..\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
 
 </Project>
