@@ -49,6 +49,16 @@ An additive or breaking public API change needs all of these:
   This does not change the package.
 - **Hinting concurrency.** TrueType hinting for one font now runs one glyph at a time.
   Threads that hint the same font wait for each other. (#27)
+- **`TextDirection` sets the base direction only.** `LeftToRight` and `RightToLeft` set the
+  paragraph direction, as CSS `direction` does. The bidirectional algorithm still runs, so `"abc"`
+  with `RightToLeft` stays `abc` and no longer comes out as `cba`. Unicode direction controls now
+  work with a fixed direction. `TextAlignment.Start` and `End` follow the paragraph direction.
+
+### Fixed
+
+- **Tab width.** `TextOptions.TabWidth` now takes effect for fonts that have no glyph for U+0009.
+  A tab is `TabWidth` times the advance of the space glyph, in horizontal and vertical layout.
+  `-1` still uses the font's tab glyph advance. (#39)
 
 ### Removed
 

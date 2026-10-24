@@ -142,7 +142,8 @@ public class TextOptions
     public WordBreaking WordBreaking { get; set; }
 
     /// <summary>
-    /// Gets or sets the text direction.
+    /// Gets or sets the base (paragraph) direction of the text.
+    /// The Unicode Bidirectional Algorithm is always applied, so runs of the other direction keep their own order.
     /// </summary>
     public TextDirection TextDirection { get; set; } = TextDirection.Auto;
 
