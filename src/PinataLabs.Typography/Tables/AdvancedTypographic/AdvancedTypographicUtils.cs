@@ -26,16 +26,29 @@ internal static class AdvancedTypographicUtils
     /// </summary>
     /// <param name="codePoint">The codepoint represented by the glyph.</param>
     /// <param name="layoutMode">The layout mode.</param>
+    /// <param name="hasVerticalForm">
+    /// Whether the glyph was resolved to a vertical form. Only relevant to <c>Tr</c> (transform-rotate) codepoints
+    /// in vertical mixed layout, which are upright when the font provides a vertical form and rotated otherwise.
+    /// </param>
     /// <returns>The <see cref="bool"/>.</returns>
-    public static bool IsVerticalGlyph(CodePoint codePoint, LayoutMode layoutMode)
+    public static bool IsVerticalGlyph(CodePoint codePoint, LayoutMode layoutMode, bool hasVerticalForm)
     {
         if (layoutMode.IsVertical())
         {
             return true;
         }
 
-        bool isVerticalLayout = layoutMode.IsVerticalMixed();
-        return isVerticalLayout && CodePoint.GetVerticalOrientationType(codePoint) is VerticalOrientationType.Upright or VerticalOrientationType.TransformUpright;
+        if (!layoutMode.IsVerticalMixed())
+        {
+            return false;
+        }
+
+        return CodePoint.GetVerticalOrientationType(codePoint) switch
+        {
+            VerticalOrientationType.Upright or VerticalOrientationType.TransformUpright => true,
+            VerticalOrientationType.TransformRotate => hasVerticalForm,
+            _ => false,
+        };
     }
 
     public static int GetMaxAllowableShapingCollectionCount(int length)

@@ -22,9 +22,9 @@ public class Issues_32
             TabWidth = 0
         });
 
-        // tab width of 0 should make tabs not render at all
+        // tab width of 0 should make tabs not render at all, even though this font has no space glyph (#39)
         await Assert.That(Math.Round(size.Height, 4)).IsEqualTo(10);
-        await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(320);
+        await Assert.That(Math.Round(size.Width, 4)).IsEqualTo(290);
     }
 
     public static Font CreateFont(string text)

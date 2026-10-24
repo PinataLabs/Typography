@@ -133,7 +133,7 @@ internal static class LookupType3SubTable
             AnchorXY exitXY = exit.GetAnchor(fontMetrics, current, collection);
             AnchorXY entryXY = entry.GetAnchor(fontMetrics, next, collection);
 
-            bool isVerticalLayout = AdvancedTypographicUtils.IsVerticalGlyph(current.CodePoint, collection.TextOptions.LayoutMode);
+            bool isVerticalLayout = AdvancedTypographicUtils.IsVerticalGlyph(current.CodePoint, collection.TextOptions.LayoutMode, current.HasVerticalForm);
             if (!isVerticalLayout)
             {
                 // Horizontal

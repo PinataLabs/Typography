@@ -89,12 +89,9 @@ internal class DefaultShaper : BaseShaper
         this.AddFeature(collection, index, count, RvnrTag);
 
         // Add directional features.
-        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        bool isVerticalLayout = false;
         for (int i = index; i < index + count; i++)
         {
             GlyphShapingData shapingData = collection[i];
-            isVerticalLayout |= AdvancedTypographicUtils.IsVerticalGlyph(shapingData.CodePoint, layoutMode);
 
             if (shapingData.Direction == TextDirection.LeftToRight)
             {
@@ -121,36 +118,33 @@ internal class DefaultShaper : BaseShaper
         this.AddFeature(collection, index, count, MarkTag);
         this.AddFeature(collection, index, count, MkmkTag);
 
+        // Add horizontal or vertical features. The choice is made per glyph so that, in vertical mixed
+        // layouts, rotated glyphs keep their horizontal features while upright glyphs get `vert`.
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        bool isVerticalLayout = false;
         for (int i = index; i < index + count; i++)
         {
-            GlyphShapingData shapingData = collection[i];
-            isVerticalLayout |= AdvancedTypographicUtils.IsVerticalGlyph(shapingData.CodePoint, layoutMode);
-        }
+            if (!AdvancedTypographicUtils.IsVerticalGlyph(collection[i].CodePoint, layoutMode, collection[i].HasVerticalForm))
+            {
+                // Add horizontal features.
+                this.AddFeature(collection, i, 1, CaltTag);
+                this.AddFeature(collection, i, 1, CligTag);
+                this.AddFeature(collection, i, 1, LigaTag);
+                this.AddFeature(collection, i, 1, RcltTag);
+                this.AddFeature(collection, i, 1, CursTag);
+                this.AddFeature(collection, i, 1, KernTag);
+            }
+            else
+            {
+                // We only apply `vert` feature.See:
+                // https://github.com/harfbuzz/harfbuzz/commit/d71c0df2d17f4590d5611239577a6cb532c26528
+                // https://lists.freedesktop.org/archives/harfbuzz/2013-August/003490.html
 
-        // Add horizontal or vertical features.
-        if (!isVerticalLayout)
-        {
-            // Add horizontal features.
-            this.AddFeature(collection, index, count, CaltTag);
-            this.AddFeature(collection, index, count, CligTag);
-            this.AddFeature(collection, index, count, LigaTag);
-            this.AddFeature(collection, index, count, RcltTag);
-            this.AddFeature(collection, index, count, CursTag);
-            this.AddFeature(collection, index, count, KernTag);
-        }
-        else
-        {
-            // We only apply `vert` feature.See:
-            // https://github.com/harfbuzz/harfbuzz/commit/d71c0df2d17f4590d5611239577a6cb532c26528
-            // https://lists.freedesktop.org/archives/harfbuzz/2013-August/003490.html
-
-            // We really want to find a 'vert' feature if there's any in the font, no
-            // matter which script/langsys it is listed (or not) under.
-            // See various bugs referenced from:
-            // https://github.com/harfbuzz/harfbuzz/issues/63
-            this.AddFeature(collection, index, count, VertTag);
+                // We really want to find a 'vert' feature if there's any in the font, no
+                // matter which script/langsys it is listed (or not) under.
+                // See various bugs referenced from:
+                // https://github.com/harfbuzz/harfbuzz/issues/63
+                this.AddFeature(collection, i, 1, VertTag);
+            }
         }
 
         // Add user defined features.

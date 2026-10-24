@@ -33,8 +33,10 @@ FontRectangle size = TextMeasurer.MeasureSize(text, options);
 | `TextDecorations` | Lines to draw with the run: `Underline`, `Strikeout`, `Overline`, or a combination. |
 | `TextAttributes` | `Subscript` or `Superscript`. |
 
-Text that is not in a run uses `TextOptions.Font`. If two runs overlap, the later run wins for the
-overlapping part.
+Text that is not in a run uses `TextOptions.Font`. `Start` and `End` are clamped to the grapheme
+count, and a run that is empty after clamping is dropped. If two runs overlap or nest, the run that is
+later in the list wins for the overlapping part, and the earlier run continues after it. For example,
+a run for `[0,10)` followed by a run for `[2,5)` gives the first run for `[0,2)` and `[5,10)`.
 
 :::warning[Indexes count graphemes]
 

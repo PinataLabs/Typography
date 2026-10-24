@@ -142,7 +142,8 @@ public class TextOptions
     public WordBreaking WordBreaking { get; set; }
 
     /// <summary>
-    /// Gets or sets the text direction.
+    /// Gets or sets the base (paragraph) direction of the text.
+    /// The Unicode Bidirectional Algorithm is always applied, so runs of the other direction keep their own order.
     /// </summary>
     public TextDirection TextDirection { get; set; } = TextDirection.Auto;
 
@@ -190,5 +191,17 @@ public class TextOptions
     /// <summary>
     /// Gets or sets an optional collection of text runs to apply to the body of text.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Runs are normalised before layout and the caller's instances are never modified.
+    /// <see cref="TextRun.Start"/> and <see cref="TextRun.End"/> are clamped to the grapheme count of the text.
+    /// Runs that are empty after clamping (zero length, inverted, or entirely past the end) are dropped.
+    /// </para>
+    /// <para>
+    /// Where runs overlap or nest, the run later in the list wins inside the overlap and the earlier run
+    /// resumes after it, like nested CSS spans. Start order does not matter, and runs with equal starts are
+    /// ordered by their position in the list. Graphemes not covered by any run use <see cref="Font"/>.
+    /// </para>
+    /// </remarks>
     public IReadOnlyList<TextRun> TextRuns { get; set; } = [];
 }

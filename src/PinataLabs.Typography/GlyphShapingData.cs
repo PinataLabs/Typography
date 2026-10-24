@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -40,6 +41,7 @@ internal class GlyphShapingData
         this.MarkAttachment = data.MarkAttachment;
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsDecomposed = data.IsDecomposed;
+        this.HasVerticalForm = data.HasVerticalForm;
         if (data.UniversalShapingEngineInfo != null)
         {
             this.UniversalShapingEngineInfo = new(
@@ -55,6 +57,15 @@ internal class GlyphShapingData
                 data.IndicShapingEngineInfo.Position,
                 data.IndicShapingEngineInfo.SyllableType,
                 data.IndicShapingEngineInfo.Syllable);
+        }
+
+        if (data.MyanmarShapingEngineInfo != null)
+        {
+            this.MyanmarShapingEngineInfo = new(
+                data.MyanmarShapingEngineInfo.Category,
+                data.MyanmarShapingEngineInfo.Position,
+                data.MyanmarShapingEngineInfo.SyllableType,
+                data.MyanmarShapingEngineInfo.Syllable);
         }
 
         if (!clearFeatures)
@@ -136,6 +147,14 @@ internal class GlyphShapingData
     public bool IsDecomposed { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether this glyph was resolved to a vertical form (the font's
+    /// <c>vert</c> substitution or a cmap vertical presentation form). It is only set for <c>Tr</c>
+    /// (transform-rotate) codepoints in vertical mixed layout; such glyphs are laid out upright when set
+    /// and rotated, with horizontal features and metrics, otherwise.
+    /// </summary>
+    public bool HasVerticalForm { get; set; }
+
+    /// <summary>
     /// Gets or sets the universal shaping information.
     /// </summary>
     public UniversalShapingEngineInfo? UniversalShapingEngineInfo { get; set; }
@@ -144,6 +163,11 @@ internal class GlyphShapingData
     /// Gets or sets the Indic shaping information.
     /// </summary>
     public IndicShapingEngineInfo? IndicShapingEngineInfo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Myanmar shaping information.
+    /// </summary>
+    public MyanmarShapingEngineInfo? MyanmarShapingEngineInfo { get; set; }
 
     private string DebuggerDisplay
         => FormattableString
@@ -165,6 +189,32 @@ internal class UniversalShapingEngineInfo
     }
 
     public string Category { get; set; }
+
+    public string SyllableType { get; }
+
+    public int Syllable { get; }
+}
+
+/// <summary>
+/// Represents information required for Myanmar shaping.
+/// </summary>
+internal class MyanmarShapingEngineInfo
+{
+    public MyanmarShapingEngineInfo(
+        MyanmarShaper.Categories category,
+        MyanmarShaper.Positions position,
+        string syllableType,
+        int syllable)
+    {
+        this.Category = category;
+        this.Position = position;
+        this.SyllableType = syllableType;
+        this.Syllable = syllable;
+    }
+
+    public MyanmarShaper.Categories Category { get; set; }
+
+    public MyanmarShaper.Positions Position { get; set; }
 
     public string SyllableType { get; }
 

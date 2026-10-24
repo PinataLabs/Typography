@@ -2,8 +2,12 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Tests.Fakes;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -116,5 +120,121 @@ public class VerticalGlyphFormTests
         float columnCentre = originX + (TextMeasurer.MeasureAdvance(text, options).Width * .5F);
 
         await Assert.That(inkCentre).IsEqualTo(columnCentre).Within(1.5F);
+    }
+
+    [Test]
+    [Arguments("あーい", 1)]
+    [Arguments("ー", 0)]
+    public async Task TrCharacterUsesVertFormInVerticalMixedLayout(string text, int index)
+    {
+        List<ushort> ids = GlyphIds(text, LayoutMode.VerticalMixedRightLeft);
+
+        await Assert.That(ids[index]).IsEqualTo(VerticalProlongedSoundMark);
+    }
+
+    [Test]
+    public async Task TrCharacterWithVertFormIsCentredInTheColumnInVerticalMixedLayout()
+    {
+        const float originX = 100F;
+        FontFamily family = new FontCollection().Add(TestFonts.NotoSansKRRegular);
+        TextOptions options = new(family.CreateFont(30))
+        {
+            LayoutMode = LayoutMode.VerticalMixedRightLeft,
+            Origin = new System.Numerics.Vector2(originX, 10),
+        };
+
+        GlyphRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "ー", options);
+
+        float inkCentre = (renderer.ControlPoints.Min(p => p.X) + renderer.ControlPoints.Max(p => p.X)) * .5F;
+        float columnCentre = originX + (TextMeasurer.MeasureAdvance("ー", options).Width * .5F);
+
+        await Assert.That(inkCentre).IsEqualTo(columnCentre).Within(1.5F);
+    }
+
+    [Test]
+    public async Task TrCharacterWithoutVertFormIsStillRotated()
+    {
+        // The fake font has no GSUB table, so U+30FC has no vertical form and must be rotated:
+        // its advance along the column is its horizontal advance width.
+        Font font = FakeFont.CreateFont("ー");
+
+        FontRectangle horizontal = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.HorizontalTopBottom });
+        FontRectangle mixed = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft });
+
+        await Assert.That(mixed.Height).IsEqualTo(horizontal.Width).Within(0.001F);
+    }
+
+    [Test]
+    [Arguments("あAV")]
+    [Arguments("AV、")]
+    public async Task RotatedLatinKeepsKerningInMixedRunWithUprightCharacter(string text)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.RobotoRegular);
+        Font font = family.CreateFont(30);
+
+        float Advance(string value, LayoutMode mode, KerningMode kerning)
+        {
+            FontRectangle r = TextMeasurer.MeasureAdvance(value, new TextOptions(font) { LayoutMode = mode, KerningMode = kerning });
+            return mode == LayoutMode.HorizontalTopBottom ? r.Width : r.Height;
+        }
+
+        // The font must kern the pair horizontally, otherwise this test proves nothing.
+        await Assert.That(Advance("AV", LayoutMode.HorizontalTopBottom, KerningMode.Standard))
+            .IsLessThan(Advance("AV", LayoutMode.HorizontalTopBottom, KerningMode.None));
+
+        await Assert.That(Advance(text, LayoutMode.VerticalMixedRightLeft, KerningMode.Standard))
+            .IsLessThan(Advance(text, LayoutMode.VerticalMixedRightLeft, KerningMode.None));
+    }
+
+    [Test]
+    public async Task TrCharacterWithNonVertSubstitutionIsStillRotated()
+    {
+        // A ccmp/locl style substitution changes the glyph id but is not a vertical form,
+        // so the character must stay rotated and use its horizontal advance.
+        CodePoint prolonged = new(0x30FC);
+        CodePoint other = new('A');
+        SubstitutingFakeFontInstance instance = new("ーA", prolonged, other);
+        Font font = ((IFontMetricsCollection)new FontCollection()).AddMetrics(instance, CultureInfo.InvariantCulture).CreateFont(12);
+
+        FontRectangle horizontal = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.HorizontalTopBottom });
+        FontRectangle mixed = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft });
+        FontRectangle vertical = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.VerticalRightLeft });
+
+        // The font must distinguish the two advances, otherwise this test proves nothing.
+        await Assert.That(vertical.Height).IsGreaterThan(horizontal.Width);
+        await Assert.That(mixed.Height).IsEqualTo(horizontal.Width).Within(0.001F);
+    }
+
+    [Test]
+    public async Task RotatedTrGlyphIsShapedWithHorizontalFeatures()
+    {
+        List<string> tags = PlanTrGlyph(hasVerticalForm: false);
+
+        await Assert.That(tags).Contains("kern");
+        await Assert.That(tags).Contains("liga");
+        await Assert.That(tags).DoesNotContain("vert");
+    }
+
+    [Test]
+    public async Task UprightTrGlyphIsShapedWithVertOnly()
+    {
+        List<string> tags = PlanTrGlyph(hasVerticalForm: true);
+
+        await Assert.That(tags).Contains("vert");
+        await Assert.That(tags).DoesNotContain("kern");
+    }
+
+    private static List<string> PlanTrGlyph(bool hasVerticalForm)
+    {
+        Font font = FakeFont.CreateFont("ー");
+        TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft };
+        GlyphSubstitutionCollection collection = new(options);
+        collection.AddGlyph(1, new CodePoint(0x30FC), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1, Font = font }, 0);
+        collection[0].HasVerticalForm = hasVerticalForm;
+
+        new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);
+
+        return collection[0].Features.Select(f => f.Tag.ToString()).ToList();
     }
 }

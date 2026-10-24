@@ -136,8 +136,9 @@ internal sealed class FileFontMetrics : FontMetrics
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         LayoutMode layoutMode,
-        ColorFontSupport support)
-        => this.fontMetrics.Value.GetGlyphMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, support);
+        ColorFontSupport support,
+        bool hasVerticalForm = false)
+        => this.fontMetrics.Value.GetGlyphMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, support, hasVerticalForm);
 
     /// <inheritdoc />
     internal override IReadOnlyList<CodePoint> GetAvailableCodePoints()

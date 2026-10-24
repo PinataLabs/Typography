@@ -148,6 +148,7 @@ internal class GSubTable : Table
             // Plan substitution features for each glyph.
             // Shapers can adjust the count during initialization and feature processing so we must capture
             // the current count to allow resetting indexes and processing counts.
+            ResolveVerticalForms(fontMetrics, this, collection, index, count, current);
             int collectionCount = collection.Count;
             shaper.Plan(collection, index, count);
             int delta = collection.Count - collectionCount;
@@ -190,6 +191,53 @@ internal class GSubTable : Table
                 count += delta;
                 i += delta;
             }
+        }
+    }
+
+    /// <summary>
+    /// Resolves, once per glyph and before any features are planned, whether each <c>Tr</c> (transform-rotate)
+    /// glyph in a vertical mixed layout has a vertical form in this font. Glyphs the <c>vert</c> feature
+    /// substitutes are laid out upright; the others stay rotated and are shaped like any horizontal glyph.
+    /// </summary>
+    private static void ResolveVerticalForms(
+        FontMetrics fontMetrics,
+        GSubTable table,
+        GlyphSubstitutionCollection collection,
+        int index,
+        int count,
+        ScriptClass script)
+    {
+        if (!collection.TextOptions.LayoutMode.IsVerticalMixed())
+        {
+            return;
+        }
+
+        Tag vert = Tag.Parse("vert");
+        if (!table.TryGetFeatureLookups(in vert, script, out _))
+        {
+            return;
+        }
+
+        for (int i = index; i < index + count; i++)
+        {
+            GlyphShapingData data = collection[i];
+            if (data.HasVerticalForm || CodePoint.GetVerticalOrientationType(data.CodePoint) != VerticalOrientationType.TransformRotate)
+            {
+                continue;
+            }
+
+            // Probe the vert lookups with the glyph on its own.
+            GlyphSubstitutionCollection probe = new(collection.TextOptions) { FontMetrics = fontMetrics };
+            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0);
+            probe.AddShapingFeature(0, new TagEntry(vert, true));
+
+            SkippingGlyphIterator iterator = new(fontMetrics, probe, 0, default);
+            int probeCount = 1;
+            int probeIndex = 0;
+            int probeCollectionCount = 1;
+            int operations = 0;
+            table.ApplyFeature(fontMetrics, probe, ref iterator, in vert, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
+            data.HasVerticalForm = probe[0].GlyphId != data.GlyphId;
         }
     }
 
@@ -302,6 +350,12 @@ internal class GSubTable : Table
             ushort[] featureIndices = langSysTables[i].FeatureIndices;
             for (int j = 0; j < featureIndices.Length; j++)
             {
+                // Skip feature indices that fall outside the feature list.
+                if (featureIndices[j] >= this.FeatureList.FeatureTables.Length)
+                {
+                    continue;
+                }
+
                 FeatureTable featureTable = this.FeatureList.FeatureTables[featureIndices[j]];
                 Tag feature = featureTable.FeatureTag;
 
@@ -314,6 +368,13 @@ internal class GSubTable : Table
                 for (int k = 0; k < lookupListIndices.Length; k++)
                 {
                     ushort lookupIndex = lookupListIndices[k];
+
+                    // Skip lookup indices that fall outside the lookup list.
+                    if (lookupIndex >= this.LookupList.LookupTables.Length)
+                    {
+                        continue;
+                    }
+
                     LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
                     lookups.Add(new(feature, lookupIndex, lookupTable));
                 }

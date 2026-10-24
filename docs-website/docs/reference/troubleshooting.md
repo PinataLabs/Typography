@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Fixes for common problems with PinataLabs.Typography, such as missing fonts, boxes instead of characters, wrong sizes and reversed text.
+description: Fixes for common problems with PinataLabs.Typography, such as missing fonts, boxes instead of characters, wrong sizes and Arabic letters that do not join.
 ---
 
 ## `FontFamilyNotFoundException` for an installed font
@@ -30,12 +30,6 @@ for glyphs with `GlyphType.Fallback` in your renderer.
 
 The library uses a y-axis that points down, as images and screens do. PDF and some graphics systems
 use a y-axis that points up. Flip the points when you draw: `y' = pageHeight - y`.
-
-## English words come out reversed
-
-`TextDirection` is set to `RightToLeft`. A fixed direction applies to every character. Use
-`TextDirection.Auto` for text that can mix directions. See
-[International text](../text/international-text.md#right-to-left-and-bidirectional-text).
 
 ## Arabic letters do not join, or Indic text is in the wrong order
 

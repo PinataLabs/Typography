@@ -598,6 +598,69 @@ public class TextLayoutTests
     }
 
     [Test]
+    public async Task BuildTextRuns_DoesNotMutateCallerRuns()
+    {
+        const string text = "abcdefghij";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextRun first = new() { Start = 0, End = 8 };
+        TextRun second = new() { Start = 4, End = 6, Font = font2 };
+        TextOptions options = new(font) { TextRuns = new List<TextRun> { first, second } };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        // Caller's instances are untouched.
+        await Assert.That(first.End).IsEqualTo(8);
+        await Assert.That(first.Font).IsNull();
+        await Assert.That(second.Start).IsEqualTo(4);
+        await Assert.That(second.End).IsEqualTo(6);
+
+        // The result is built from copies.
+        await Assert.That(runs.Any(r => ReferenceEquals(r, first) || ReferenceEquals(r, second))).IsFalse();
+        await Assert.That(runs[0].Font).IsEqualTo(font);
+        await Assert.That(runs[0].End).IsEqualTo(4);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_ReusedOptionsDoNotKeepStaleFont()
+    {
+        const string text = "abcdef";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextRun run = new() { Start = 0, End = 3 };
+        TextOptions options = new(font) { TextRuns = new List<TextRun> { run } };
+
+        TextLayout.BuildTextRuns(text.AsSpan(), options);
+        options.Font = font2;
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs[0].Font).IsEqualTo(font2);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_PreservesDerivedRunTypeAndData()
+    {
+        const string text = "abcdef";
+        Font font = CreateFont(text);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun> { new CustomRun { Start = 0, End = 3, Tag = "bold", TextDecorations = TextDecorations.Strikeout } }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        CustomRun copy = (CustomRun)runs[0];
+        await Assert.That(copy.Tag).IsEqualTo("bold");
+        await Assert.That(copy.TextDecorations).IsEqualTo(TextDecorations.Strikeout);
+        await Assert.That(copy.Font).IsEqualTo(font);
+    }
+
+    private sealed class CustomRun : TextRun
+    {
+        public string? Tag { get; set; }
+    }
+
+    [Test]
     [Arguments("abcde", 4)]
     [Arguments("abcdef", 4)]
     [Arguments("abcdef", 5)]
@@ -695,6 +758,160 @@ public class TextLayoutTests
         await Assert.That(runs[1].Font).IsEqualTo(font);
         await Assert.That(runs[1].Start).IsEqualTo(1);
         await Assert.That(runs[1].End).IsEqualTo(76);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_SameStart_LaterRunWins()
+    {
+        const string text = "abcdefghijkl";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 0, End = 5 },
+                new TextRun() { Start = 0, End = 10, Font = font2 },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(2);
+        await Assert.That(runs[0].Start).IsEqualTo(0);
+        await Assert.That(runs[0].End).IsEqualTo(10);
+        await Assert.That(runs[0].Font).IsEqualTo(font2);
+        await Assert.That(runs[1].Start).IsEqualTo(10);
+        await Assert.That(runs[1].End).IsEqualTo(12);
+        await Assert.That(runs[1].Font).IsEqualTo(font);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_NestedRun_OuterRunResumesAfterInnerRun()
+    {
+        const string text = "abcdefghijkl";
+        Font font = CreateFont(text);
+        Font fontA = CreateFont(text, 16);
+        Font fontB = CreateFont(text, 24);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 0, End = 10, Font = fontA },
+                new TextRun() { Start = 2, End = 5, Font = fontB },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(4);
+        await Assert.That(runs[0].Start).IsEqualTo(0);
+        await Assert.That(runs[0].End).IsEqualTo(2);
+        await Assert.That(runs[0].Font).IsEqualTo(fontA);
+        await Assert.That(runs[1].Start).IsEqualTo(2);
+        await Assert.That(runs[1].End).IsEqualTo(5);
+        await Assert.That(runs[1].Font).IsEqualTo(fontB);
+        await Assert.That(runs[2].Start).IsEqualTo(5);
+        await Assert.That(runs[2].End).IsEqualTo(10);
+        await Assert.That(runs[2].Font).IsEqualTo(fontA);
+        await Assert.That(runs[3].Start).IsEqualTo(10);
+        await Assert.That(runs[3].End).IsEqualTo(12);
+        await Assert.That(runs[3].Font).IsEqualTo(font);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_OuterRunListedAfterInnerRun_OuterWins()
+    {
+        // Later in list order wins, regardless of Start.
+        const string text = "abcdefghijkl";
+        Font font = CreateFont(text);
+        Font fontA = CreateFont(text, 16);
+        Font fontB = CreateFont(text, 24);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 2, End = 5, Font = fontB },
+                new TextRun() { Start = 0, End = 10, Font = fontA },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(2);
+        await Assert.That(runs[0].Font).IsEqualTo(fontA);
+        await Assert.That(runs[0].End).IsEqualTo(10);
+        await Assert.That(runs[1].Start).IsEqualTo(10);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_EndPastGraphemeCount_IsClamped()
+    {
+        const string text = "abcdefghij";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>() { new TextRun() { Start = 8, End = 20, Font = font2 } }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(2);
+        await Assert.That(runs[1].Start).IsEqualTo(8);
+        await Assert.That(runs[1].End).IsEqualTo(10);
+        await Assert.That(runs[1].Font).IsEqualTo(font2);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_InvalidRuns_AreDroppedOrClamped()
+    {
+        const string text = "abcdefghij";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new TextRun() { Start = 3, End = 3, Font = font2 },   // zero length
+                new TextRun() { Start = 6, End = 2, Font = font2 },   // inverted
+                new TextRun() { Start = 10, End = 15, Font = font2 }, // starts at count
+                new TextRun() { Start = 12, End = 15, Font = font2 }, // past the end
+                new TextRun() { Start = -4, End = 3, Font = font2 },  // negative start
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(2);
+        await Assert.That(runs[0].Start).IsEqualTo(0);
+        await Assert.That(runs[0].End).IsEqualTo(3);
+        await Assert.That(runs[0].Font).IsEqualTo(font2);
+        await Assert.That(runs[1].Start).IsEqualTo(3);
+        await Assert.That(runs[1].End).IsEqualTo(10);
+        await Assert.That(runs[1].Font).IsEqualTo(font);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_SplitDerivedRun_KeepsTypeOnBothPieces()
+    {
+        const string text = "abcdefghijkl";
+        Font font = CreateFont(text);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun>()
+            {
+                new CustomRun() { Start = 0, End = 10, Tag = "outer" },
+                new TextRun() { Start = 2, End = 5 },
+            }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs.Count).IsEqualTo(4);
+        await Assert.That(((CustomRun)runs[0]).Tag).IsEqualTo("outer");
+        await Assert.That(runs[1] is CustomRun).IsFalse();
+        await Assert.That(((CustomRun)runs[2]).Tag).IsEqualTo("outer");
     }
 
     [Test]
@@ -1268,6 +1485,67 @@ public class TextLayoutTests
         // Ink bounds sit inside the advance by the side bearings, so allow a few pixels.
         float edge = alignment == TextAlignment.Start ? bounds.Right : bounds.Left;
         await Assert.That(Math.Abs(edge - expectedEdge)).IsLessThan(5);
+    }
+
+    // A fixed TextDirection sets the paragraph embedding level (CSS direction, UAX #9 HL1).
+    // It must not stop strong characters from resolving to their own direction.
+    [Test]
+    public async Task TextDirection_RightToLeft_KeepsLatinTextInLogicalOrder()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+
+        string visual = GetVisualOrder("abc", new TextOptions(font) { TextDirection = TextDirection.RightToLeft });
+
+        await Assert.That(visual).IsEqualTo("abc");
+    }
+
+    [Test]
+    public async Task TextDirection_LeftToRight_ReordersArabicTextVisually()
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+
+        string visual = GetVisualOrder("كتب abc", new TextOptions(font) { TextDirection = TextDirection.LeftToRight });
+
+        await Assert.That(visual).IsEqualTo("بتك abc");
+    }
+
+    // An explicit RLO ... PDF is how CSS unicode-bidi: bidi-override is defined, so it must
+    // still be honoured when the paragraph direction is fixed.
+    [Test]
+    public async Task TextDirection_LeftToRight_HonoursExplicitDirectionalOverride()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+
+        string visual = GetVisualOrder("\u202Eabc\u202C", new TextOptions(font) { TextDirection = TextDirection.LeftToRight });
+
+        await Assert.That(string.Concat(visual.Where(char.IsLetter))).IsEqualTo("cba");
+    }
+
+    // TextAlignment.Start follows the paragraph direction, as CSS text-align: start does.
+    // The paragraph direction is the resolved paragraph embedding level, not the direction
+    // of whichever glyph happens to come first on the first line.
+    [Test]
+    [Arguments(TextDirection.RightToLeft, "abcxyz\nxyz", 'z')]
+    [Arguments(TextDirection.Auto, "سلام abc\nسلام", 'س')]
+    public async Task TextDirection_RightToLeftParagraph_AlignsStartToTheRight(TextDirection direction, string text, char lastOnEachLine)
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = direction, TextAlignment = TextAlignment.Start };
+
+        TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
+        float[] rightEdges = bounds.ToArray()
+            .Where(x => x.Codepoint == new CodePoint(lastOnEachLine))
+            .Select(x => x.Bounds.Right)
+            .ToArray();
+
+        await Assert.That(rightEdges.Length).IsEqualTo(2);
+        await Assert.That(Math.Round(rightEdges[1], 4)).IsEqualTo(Math.Round(rightEdges[0], 4));
+    }
+
+    private static string GetVisualOrder(string text, TextOptions options)
+    {
+        TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
+        return string.Concat(bounds.ToArray().OrderBy(x => x.Bounds.X).Select(x => x.Codepoint.ToString()));
     }
 
 #if OS_WINDOWS

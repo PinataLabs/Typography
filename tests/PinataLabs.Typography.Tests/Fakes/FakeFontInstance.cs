@@ -56,7 +56,7 @@ internal class FakeFontInstance : StreamFontMetrics
         return new FakeFontInstance(tables);
     }
 
-    private static TrueTypeFontTables CreateTrueTypeFontTables(string text, string fontName = "name")
+    internal static TrueTypeFontTables CreateTrueTypeFontTables(string text, string fontName = "name")
     {
         List<FakeGlyphSource> glyphs = GetGlyphs(text);
         HeadTable head = GenerateHeadTable();

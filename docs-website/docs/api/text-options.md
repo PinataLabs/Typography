@@ -31,8 +31,8 @@ mutable. Do not change one while another thread uses it.
 | `WrappingLength` | `float` | `-1` | The width of the text box in pixels (the height, for vertical text). Lines wrap at this length. `-1` turns wrapping off. |
 | `WordBreaking` | `WordBreaking` | `Standard` | How to break words that do not fit. |
 | `LineSpacing` | `float` | `1` | A multiple of the font's line height. Must not be `0`. |
-| `TabWidth` | `float` | `-1` | The width of a tab, as a number of spaces. `-1` uses the font's tab glyph. Has an effect only when the font has a glyph for U+0009. |
-| `TextDirection` | `TextDirection` | `Auto` | The direction of the text. `Auto` applies the Unicode Bidirectional Algorithm. |
+| `TextDirection` | `TextDirection` | `Auto` | The base direction of the text, as CSS `direction`. `Auto` finds it from the first strong character. |
+| `TabWidth` | `float` | `-1` | The width of a tab, as a number of spaces. `-1` uses the font's tab glyph. |
 | `TextAlignment` | `TextAlignment` | `Start` | How each line is placed in the text box. |
 | `TextJustification` | `TextJustification` | `None` | How lines are stretched to the width of the box. Needs `WrappingLength`. |
 | `HorizontalAlignment` | `HorizontalAlignment` | `Left` | Which part of the text box is at `Origin`, horizontally. |
@@ -62,11 +62,9 @@ own data to a renderer.
 | `Slice(ReadOnlySpan<char> text)` | The part of `text` that the run covers. |
 
 `Start` and `End` count graphemes, not `char` values. Text outside every run uses
-`TextOptions.Font`. When runs overlap, the later run, by `Start`, wins.
+`TextOptions.Font`.
 
-:::note
-
-The library sets `Font` on a run that has a `null` font to `TextOptions.Font` during layout. Do not
-reuse one `TextRun` object with options that have a different font.
-
-:::
+The library does not change your `TextRun` objects, so you can reuse them.
+It clamps `Start` and `End` to the grapheme count and drops runs that are empty after clamping.
+When runs overlap or nest, the run that is later in the list wins for the overlapping part, and the
+earlier run continues after it. The order of `Start` values does not matter.

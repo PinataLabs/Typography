@@ -2,8 +2,6 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-
 namespace PinataLabs.Typography.Tables.Cff;
 
 internal sealed class Cff2Table : Table, ICffTable
@@ -12,7 +10,7 @@ internal sealed class Cff2Table : Table, ICffTable
 
     private readonly CffGlyphData[] glyphs;
 
-    public Cff2Table(CffFont cff1Font) => this.glyphs = cff1Font.Glyphs;
+    public Cff2Table(CffGlyphData[] glyphs) => this.glyphs = glyphs;
 
     public int GlyphCount => this.glyphs.Length;
 
@@ -21,16 +19,27 @@ internal sealed class Cff2Table : Table, ICffTable
 
     public static Cff2Table? Load(FontReader fontReader)
     {
-        if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader))
+        if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader, out TableHeader? header))
         {
             return null;
         }
 
         using (binaryReader)
         {
-            return Load(binaryReader);
+            return new(Cff2Parser.Load(binaryReader.ReadBytes((int)header.Length)));
         }
     }
 
-    public static Cff2Table Load(BigEndianBinaryReader reader) => throw new NotSupportedException("CFF2 Fonts are not currently supported.");
+    /// <summary>
+    /// Loads a CFF2 table from a reader positioned at the start of the table, reading to the end of the stream.
+    /// CFF2 fonts are loaded at their default instance: <c>blend</c> operators use their default values and the
+    /// variation axes are ignored.
+    /// </summary>
+    /// <param name="reader">The reader.</param>
+    /// <returns>The <see cref="Cff2Table"/>.</returns>
+    public static Cff2Table Load(BigEndianBinaryReader reader)
+    {
+        long remaining = reader.BaseStream.Length - reader.BaseStream.Position;
+        return new(Cff2Parser.Load(reader.ReadBytes((int)remaining)));
+    }
 }

@@ -83,23 +83,26 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <param name="offset">The zero-based index within the input codepoint collection.</param>
     /// <param name="pointSize">The font size in PT units of the font containing this glyph.</param>
     /// <param name="isDecomposed">Whether the glyph is the result of a decomposition substitution.</param>
+    /// <param name="hasVerticalForm">Whether the glyph was resolved to a vertical form.</param>
     /// <param name="metrics">
     /// When this method returns, contains the glyph metrics associated with the specified offset,
     /// if the value is found; otherwise, the default value for the type of the metrics parameter.
     /// This parameter is passed uninitialized.
     /// </param>
     /// <returns>The metrics.</returns>
-    public bool TryGetGlyphMetricsAtOffset(int offset, out float pointSize, out bool isDecomposed, [NotNullWhen(true)] out IReadOnlyList<GlyphMetrics>? metrics)
+    public bool TryGetGlyphMetricsAtOffset(int offset, out float pointSize, out bool isDecomposed, out bool hasVerticalForm, [NotNullWhen(true)] out IReadOnlyList<GlyphMetrics>? metrics)
     {
         List<GlyphMetrics> match = [];
         pointSize = 0;
         isDecomposed = false;
+        hasVerticalForm = false;
         for (int i = 0; i < this.glyphs.Count; i++)
         {
             if (this.glyphs[i].Offset == offset)
             {
                 GlyphPositioningData glyph = this.glyphs[i];
                 isDecomposed = glyph.Data.IsDecomposed;
+                hasVerticalForm |= glyph.Data.HasVerticalForm;
                 pointSize = glyph.PointSize;
                 match.AddRange(glyph.Metrics);
             }
@@ -153,7 +156,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                     var metrics = new List<GlyphMetrics>(data.Count);
                     TextAttributes textAttributes = shape.TextRun.TextAttributes;
                     TextDecorations textDecorations = shape.TextRun.TextDecorations;
-                    foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport))
+                    foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport, shape.HasVerticalForm))
                     {
                         if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint))
                         {
@@ -230,9 +233,9 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             // cache the original in the font metrics and only update our collection.
             TextAttributes textAttributes = data.TextRun.TextAttributes;
             TextDecorations textDecorations = data.TextRun.TextDecorations;
-            bool isVerticalLayout = AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode);
+            bool isVerticalLayout = AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, data.HasVerticalForm);
 
-            foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport))
+            foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport, data.HasVerticalForm))
             {
                 if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint))
                 {
@@ -305,11 +308,12 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public void Advance(FontMetrics fontMetrics, int index, ushort glyphId, short dx, short dy)
     {
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
+        bool hasVerticalForm = this.glyphs[index].Data.HasVerticalForm;
         foreach (GlyphMetrics m in this.glyphs[index].Metrics)
         {
             if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
             {
-                m.ApplyAdvance(dx, AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode) ? dy : (short)0);
+                m.ApplyAdvance(dx, AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode, hasVerticalForm) ? dy : (short)0);
             }
         }
     }
