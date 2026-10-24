@@ -32,7 +32,7 @@ mutable. Do not change one while another thread uses it.
 | `WordBreaking` | `WordBreaking` | `Standard` | How to break words that do not fit. |
 | `LineSpacing` | `float` | `1` | A multiple of the font's line height. Must not be `0`. |
 | `TabWidth` | `float` | `-1` | The width of a tab, as a number of spaces. `-1` uses the font's tab glyph. Has an effect only when the font has a glyph for U+0009. |
-| `TextDirection` | `TextDirection` | `Auto` | The direction of the text. `Auto` applies the Unicode Bidirectional Algorithm. |
+| `TextDirection` | `TextDirection` | `Auto` | The base direction of the text, as CSS `direction`. `Auto` finds it from the first strong character. |
 | `TextAlignment` | `TextAlignment` | `Start` | How each line is placed in the text box. |
 | `TextJustification` | `TextJustification` | `None` | How lines are stretched to the width of the box. Needs `WrappingLength`. |
 | `HorizontalAlignment` | `HorizontalAlignment` | `Left` | Which part of the text box is at `Origin`, horizontally. |

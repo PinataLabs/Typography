@@ -16,8 +16,6 @@ internal class BidiData
     private ArrayBuilder<BidiCharacterType> types;
     private ArrayBuilder<BidiPairedBracketType> pairedBracketTypes;
     private ArrayBuilder<int> pairedBracketValues;
-    private ArrayBuilder<BidiCharacterType> savedTypes;
-    private ArrayBuilder<BidiPairedBracketType> savedPairedBracketTypes;
     private ArrayBuilder<sbyte> tempLevelBuffer;
     private readonly List<int> paragraphPositions = [];
 
@@ -133,36 +131,6 @@ internal class BidiData
         this.Types = this.types.AsSlice();
         this.PairedBracketTypes = this.pairedBracketTypes.AsSlice();
         this.PairedBracketValues = this.pairedBracketValues.AsSlice();
-    }
-
-    /// <summary>
-    /// Save the Types and PairedBracketTypes of this bididata
-    /// </summary>
-    /// <remarks>
-    /// This is used when processing embedded style runs with
-    /// BidiCharacterType overrides.  TextLayout saves the data,
-    /// overrides the style runs to neutral, processes the bidi
-    /// data for the entire paragraph and then restores this data
-    /// before processing the embedded runs.
-    /// </remarks>
-    public void SaveTypes()
-    {
-        // Capture the types data
-        this.savedTypes.Clear();
-        this.savedTypes.Add(this.types.AsSlice());
-        this.savedPairedBracketTypes.Clear();
-        this.savedPairedBracketTypes.Add(this.pairedBracketTypes.AsSlice());
-    }
-
-    /// <summary>
-    /// Restore the data saved by SaveTypes
-    /// </summary>
-    public void RestoreTypes()
-    {
-        this.types.Clear();
-        this.types.Add(this.savedTypes.AsSlice());
-        this.pairedBracketTypes.Clear();
-        this.pairedBracketTypes.Add(this.savedPairedBracketTypes.AsSlice());
     }
 
     /// <summary>

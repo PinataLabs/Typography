@@ -133,8 +133,8 @@ the tabs and place each part yourself.
 
 ## Text direction
 
-`TextDirection` sets the direction of the text. The default, `Auto`, applies the Unicode
-Bidirectional Algorithm, so mixed English and Arabic text comes out in the right order.
-`LeftToRight` and `RightToLeft` force every character in that direction. See
-[International text](./international-text.md#right-to-left-and-bidirectional-text) before you set
-them.
+`TextDirection` sets the base direction of the text, as the CSS `direction` property does. The
+default, `Auto`, finds it from the first strong character. Mixed English and Arabic text comes out
+in the right order with all three values. `TextAlignment.Start` and `TextAlignment.End` follow the
+base direction. See
+[International text](./international-text.md#right-to-left-and-bidirectional-text).
