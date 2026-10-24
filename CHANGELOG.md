@@ -50,6 +50,12 @@ An additive or breaking public API change needs all of these:
 - **Hinting concurrency.** TrueType hinting for one font now runs one glyph at a time.
   Threads that hint the same font wait for each other. (#27)
 
+### Fixed
+
+- **Tab width.** `TextOptions.TabWidth` now takes effect for fonts that have no glyph for U+0009.
+  A tab is `TabWidth` times the advance of the space glyph, in horizontal and vertical layout.
+  `-1` still uses the font's tab glyph advance. (#39)
+
 ### Removed
 
 These public members existed only for the removed targets. They were type forwarders
