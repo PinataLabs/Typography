@@ -1050,10 +1050,15 @@ internal static class TextLayout
                         lineAdvance = 0;
                         requiredBreak = true;
                     }
-                    else if (shouldWrap && lineAdvance + glyphAdvance >= wrappingLength)
+                    else if (shouldWrap && !CodePoint.IsNewLine(codePoint) && lineAdvance + glyphAdvance >= wrappingLength)
                     {
                         // Forced wordbreak
-                        if (breakAll)
+                        if (textLine.Count == 0)
+                        {
+                            // Nothing to break. The glyph is wider than the available space
+                            // so it must be placed on this line regardless.
+                        }
+                        else if (breakAll)
                         {
                             textLines.Add(textLine.Finalize());
                             glyphCount += textLine.Count;
@@ -1320,6 +1325,25 @@ internal static class TextLayout
                 return this;
             }
 
+            // A solidus allows a break after it but, as recommended by UAX #14, prefer an earlier
+            // opportunity after whitespace if one exists on this line so words like "and/or" or
+            // paths are kept together where possible.
+            if (this.data[index - 1].CodePoint.Value == 0x2F)
+            {
+                for (int i = index - 1; i > 0; i--)
+                {
+                    CodePoint previous = this.data[i - 1].CodePoint;
+                    if (CodePoint.IsWhiteSpace(previous)
+                        && !CodePoint.IsNonBreakingSpace(previous)
+                        && !CodePoint.IsWhiteSpace(this.data[i].CodePoint))
+                    {
+                        index = i;
+                        glyphWrap = this.data[index];
+                        break;
+                    }
+                }
+            }
+
             // Word breaks should not be used for Chinese/Japanese/Korean (CJK) text
             // when word-breaking mode is keep-all.
             if (keepAll && UnicodeUtility.IsCJKCodePoint((uint)glyphWrap.CodePoint.Value))
@@ -1340,6 +1364,23 @@ internal static class TextLayout
                 {
                     return this;
                 }
+            }
+
+            // If everything before the split point is whitespace there is nothing meaningful to keep on this
+            // line once the whitespace is trimmed, so do not split.
+            bool hasContent = false;
+            for (int i = 0; i < index; i++)
+            {
+                if (!CodePoint.IsWhiteSpace(this.data[i].CodePoint))
+                {
+                    hasContent = true;
+                    break;
+                }
+            }
+
+            if (!hasContent)
+            {
+                return this;
             }
 
             // Create a new line ensuring we capture the initial metrics.
