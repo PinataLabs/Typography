@@ -37,6 +37,14 @@ An additive or breaking public API change needs all of these:
   The original project's switch name has no effect.
 - **No strong naming.** The assembly is not strong-named. Its public key token is null,
   so code that references it by the old strong name must be rebuilt.
+- **Text run end.** `TextRun.End` is now always exclusive. A run whose `End` is one less
+  than the text length no longer covers the last character, which now uses the default font.
+  Code that set `End` to `length - 1` to work around the old behaviour must set it to `length`. (#22)
+- **Slash line breaks.** When a line must wrap and a word contains `/`, the line breaks at an
+  earlier space if there is one, not after the slash. A URL now moves to the next line whole.
+  A single long word with no earlier break opportunity still breaks after the slash. (#35)
+- **Hinting concurrency.** TrueType hinting for one font now runs one glyph at a time.
+  Threads that hint the same font wait for each other. (#27)
 
 ### Removed
 
@@ -124,3 +132,49 @@ static System.MathF.Tan(float x) -> float
 static System.MathF.Tanh(float x) -> float
 static System.MathF.Truncate(float x) -> float
 ```
+
+### Fixed
+
+#### Line breaking and layout
+
+- A number is no longer split between digits when a comma, colon or other punctuation
+  appears earlier in the text. For example, `(1999)` stays together in "Super, Smash Bros (1999)". (#28)
+- `WordBreaking.BreakWord` no longer splits a token after a colon when the token fits on the next line. (#28)
+- `WordBreaking.BreakAll` with a wrapping length narrower than the first glyph no longer throws
+  `ArgumentOutOfRangeException`. (#35)
+- Text with a long run of leading spaces before a long word no longer throws during layout. (#35)
+- A line that exactly fills the wrapping length and is followed by a newline no longer gets
+  an extra blank line. Consecutive newlines now give the correct number of blank lines. (#35)
+- A mandatory newline no longer stops an earlier word on the same line from wrapping. (#35)
+- In horizontal layout, CJK brackets such as `【】「」` are no longer drawn in their vertical forms. (#34)
+- In vertical layout, upright glyphs are centred in the column. Kana, `、` and `ー` were off-centre. (#34)
+- The default shaper now checks the correct glyph range when it decides whether to apply `vert`. (#34)
+- Fonts that have no `vert` feature still get vertical presentation forms from the cmap in vertical layout. (#34)
+
+#### Shaping and font fallback
+
+- A fallback font is shaped with its own tables, not with the tables of the primary font.
+  Kannada and Khmer fallback text now shapes the same as when the font is the primary font. (#31)
+- The universal shaper no longer throws `NullReferenceException` for some scripts, such as
+  Tai Viet and Sinhala, when the text does not start at the beginning of a run. (#31)
+- GPOS mark attachment (lookup types 4, 5 and 6) no longer throws `NullReferenceException`
+  when a font leaves an anchor empty. The attachment is skipped. (#29)
+- A mark array with an empty anchor offset is read correctly. It no longer throws
+  "anchorFormat identifier is invalid". (#29)
+
+#### Hinting
+
+- Rendering text from several threads with `HintingMode.Standard` no longer throws errors
+  from the TrueType interpreter. (#27)
+- A hint program that fails (for example, by reading past the end of the CVT) no longer throws.
+  That glyph is drawn without hinting. (#27)
+
+#### Malformed fonts
+
+- A corrupt cmap format 4 subtable no longer throws `IndexOutOfRangeException`.
+  The glyph is reported as not found. (#26)
+- A font that declares CFF outlines but has no CFF or CFF2 table is rejected at load time with
+  `InvalidFontFileException`, not a `NullReferenceException` at first use. (#26)
+- Corrupt GPOS pair adjustment data (lookup type 2, format 1) no longer throws `IndexOutOfRangeException`. (#26)
+- Composite glyphs that refer to themselves, or that form a cycle, no longer cause a stack overflow.
+  Composite nesting is limited to 16 levels, and components with an out-of-range glyph id are ignored. (#26)
