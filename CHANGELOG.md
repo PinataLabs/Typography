@@ -23,6 +23,13 @@ An additive or breaking public API change needs all of these:
 
 ## [Unreleased]
 
+### Added
+
+- **CFF2 fonts.** Fonts with a `CFF2` outline table, such as variable OpenType/CFF2 fonts, now load
+  and render. They are supported at the default instance only. `blend` operators use their default
+  values, and the variation axes (`fvar`, `avar`, `HVAR`, `MVAR`) are ignored. Before, loading
+  such a font threw `NotSupportedException`. (#21)
+
 ### Changed
 
 - **Rename.** The package and assembly are now `PinataLabs.Typography`.

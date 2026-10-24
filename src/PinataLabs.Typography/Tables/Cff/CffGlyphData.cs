@@ -12,14 +12,20 @@ internal struct CffGlyphData
     private readonly byte[][] localSubrBuffers;
     private readonly byte[] charStrings;
     private readonly int nominalWidthX;
+    private readonly int[]? blendRegionCounts;
+    private readonly int vsIndex;
 
     public CffGlyphData(
         ushort glyphIndex,
         byte[][] globalSubrBuffers,
         byte[][] localSubrBuffers,
         int nominalWidthX,
-        byte[] charStrings)
+        byte[] charStrings,
+        int[]? blendRegionCounts = null,
+        int vsIndex = 0)
     {
+        this.blendRegionCounts = blendRegionCounts;
+        this.vsIndex = vsIndex;
         this.GlyphIndex = glyphIndex;
         this.globalSubrBuffers = globalSubrBuffers;
         this.localSubrBuffers = localSubrBuffers;
@@ -39,7 +45,9 @@ internal struct CffGlyphData
             this.charStrings,
             this.globalSubrBuffers,
             this.localSubrBuffers,
-            this.nominalWidthX);
+            this.nominalWidthX,
+            this.blendRegionCounts,
+            this.vsIndex);
 
         return engine.GetBounds();
     }
@@ -50,7 +58,9 @@ internal struct CffGlyphData
              this.charStrings,
              this.globalSubrBuffers,
              this.localSubrBuffers,
-             this.nominalWidthX);
+             this.nominalWidthX,
+             this.blendRegionCounts,
+             this.vsIndex);
 
         engine.RenderTo(renderer, origin, scale, offset, transform);
     }

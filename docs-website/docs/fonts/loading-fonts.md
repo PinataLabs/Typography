@@ -11,7 +11,7 @@ a `FontFamily` from it by name.
 | Format | Extensions | Notes |
 | --- | --- | --- |
 | TrueType | `.ttf` | TrueType (`glyf`) outlines. |
-| OpenType | `.otf` | CFF1 and CFF2 outlines. |
+| OpenType | `.otf` | CFF1 and CFF2 outlines. CFF2 fonts render at their default instance. |
 | TrueType collection | `.ttc` | More than one font in one file. Use `AddCollection`. |
 | WOFF | `.woff` | Web font, compressed with zlib. |
 | WOFF2 | `.woff2` | Web font, compressed with Brotli. |
