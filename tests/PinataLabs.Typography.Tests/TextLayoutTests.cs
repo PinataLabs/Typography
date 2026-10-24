@@ -1252,6 +1252,24 @@ public class TextLayoutTests
         return line;
     }
 
+    // In a right-to-left paragraph, Start is the right edge of the wrapping box and End is the
+    // left edge, as CSS text-align: start and end are with direction: rtl.
+    [Test]
+    [Arguments(TextAlignment.Start, 300)]
+    [Arguments(TextAlignment.End, 0)]
+    public async Task TextAlignment_RightToLeft_AlignsToEdgeOfWrappingBox(TextAlignment alignment, float expectedEdge)
+    {
+        const float wrappingLength = 300;
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextAlignment = alignment, WrappingLength = wrappingLength };
+
+        FontRectangle bounds = TextMeasurer.MeasureBounds("سلام", options);
+
+        // Ink bounds sit inside the advance by the side bearings, so allow a few pixels.
+        float edge = alignment == TextAlignment.Start ? bounds.Right : bounds.Left;
+        await Assert.That(Math.Abs(edge - expectedEdge)).IsLessThan(5);
+    }
+
 #if OS_WINDOWS
     [Test]
     public void BenchmarkTest()

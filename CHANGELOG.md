@@ -154,6 +154,8 @@ static System.MathF.Truncate(float x) -> float
 - In vertical layout, upright glyphs are centred in the column. Kana, `、` and `ー` were off-centre. (#34)
 - The default shaper now checks the correct glyph range when it decides whether to apply `vert`. (#34)
 - Fonts that have no `vert` feature still get vertical presentation forms from the cmap in vertical layout. (#34)
+- Right-to-left text with `TextAlignment.Start` and a `WrappingLength` is aligned to the right edge
+  of the wrapping box. It was at the left edge. (#42)
 
 #### Shaping and font fallback
 
