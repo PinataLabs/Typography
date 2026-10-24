@@ -1,0 +1,47 @@
+name: Pre-release
+
+# Publishes a pre-release of PinataLabs.Typography to NuGet from the commit this is
+# dispatched on. MinVer numbers it from the last tag and the commit height, e.g.
+# 1.0.0-beta.12. There is no tag, changelog roll or GitHub Release.
+#
+# The work happens in release-publish.yml. Its publish job runs in the `nuget`
+# environment, which allows main only, so a dispatch from another branch can still
+# dry-run but cannot publish. See docs/releasing.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease-label:
+        description: 'Pre-release label (alpha, beta, rc)'
+        required: true
+        default: 'alpha'
+        type: choice
+        options:
+          - alpha
+          - beta
+          - rc
+      dry-run:
+        description: 'Dry run — build, test and pack, but publish nothing'
+        required: false
+        default: true
+        type: boolean
+
+permissions: {}
+
+# One release at a time, stable or pre-release, and never cancel one part-way.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish
+    uses: ./.github/workflows/release-publish.yml
+    with:
+      kind: prerelease
+      prerelease-label: ${{ inputs.prerelease-label }}
+      dry-run: ${{ inputs.dry-run }}
+    permissions:
+      contents: write
+      id-token: write
+    secrets: inherit

@@ -28,6 +28,10 @@
 
 - Open an [issue](https://github.com/PinataLabs/Typography/issues) with your question.
 
+## Are you a maintainer making a release?
+
+- Follow [Releasing](../docs/releasing.md).
+
 ## Code of Conduct
 
 This project follows the [Code of Conduct](../CODE_OF_CONDUCT.md).
