@@ -17,7 +17,15 @@ internal sealed class Cff1Table : Table, ICffTable
     public int GlyphCount => this.glyphs.Length;
 
     public CffGlyphData GetGlyph(int index)
-        => this.glyphs[index];
+    {
+        // An out-of-range glyph id resolves to glyph 0 (.notdef).
+        if ((uint)index >= (uint)this.glyphs.Length)
+        {
+            index = 0;
+        }
+
+        return this.glyphs[index];
+    }
 
     public static Cff1Table? Load(FontReader fontReader)
     {
