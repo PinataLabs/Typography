@@ -1,0 +1,293 @@
+name: Release Publish
+
+# Builds, tests, packs and publishes PinataLabs.Typography to NuGet. This is the only
+# workflow that logs in to NuGet, so it is the file named in the nuget.org trusted
+# publishing policy. nuget.org matches the policy against the token's job_workflow_ref
+# claim, which names this file even when another workflow calls it.
+#
+# It is never run directly. Two workflows call it:
+#
+#   release-prepare.yml     stable — rolls the changelog, tags vX.Y.Z, then calls this
+#   release-prerelease.yml  alpha, beta or rc — calls this with the label
+#
+# The work is split in two jobs. `build` needs no secrets and runs on any ref. `publish`
+# holds the NuGet token, so it runs in the `nuget` environment, which allows deployments
+# from main only — nuget.org has no branch restriction of its own.
+
+on:
+  workflow_call:
+    inputs:
+      kind:
+        description: 'stable or prerelease'
+        required: true
+        type: string
+      tag:
+        description: 'Tag to release (stable only)'
+        required: false
+        type: string
+        default: ''
+      prerelease-label:
+        description: 'Pre-release label: alpha, beta or rc (prerelease only)'
+        required: false
+        type: string
+        default: ''
+      dry-run:
+        description: 'Build, test and pack, but publish nothing'
+        required: false
+        type: boolean
+        default: true
+
+permissions: {}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  build:
+    name: Build, test and pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    env:
+      KIND: ${{ inputs.kind }}
+      TAG: ${{ inputs.tag }}
+      # Read by MinVer. Empty for a stable release, which builds from its tag.
+      MinVerDefaultPreReleaseIdentifiers: ${{ inputs.prerelease-label }}
+
+    steps:
+      - name: Check inputs
+        env:
+          LABEL: ${{ inputs.prerelease-label }}
+        run: |
+          case "$KIND" in
+            stable)
+              if [ -z "$TAG" ]; then
+                echo "::error::A stable release needs a tag"
+                exit 1
+              fi
+              ;;
+            prerelease)
+              case "$LABEL" in
+                alpha|beta|rc) ;;
+                *) echo "::error::Pre-release label must be alpha, beta or rc (got '$LABEL')"; exit 1 ;;
+              esac
+              ;;
+            *)
+              echo "::error::kind must be stable or prerelease (got '$KIND')"
+              exit 1
+              ;;
+          esac
+
+      # A stable release builds the commit its tag points at. A pre-release builds the
+      # commit the caller was dispatched on.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      # global.json pins the .NET 11 SDK, which carries only the net11.0 runtime.
+      # The 8.0 and 10.0 entries install the runtimes the net8.0 and net10.0 tests need.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore PinataLabs.Typography.slnx
+
+      - name: Build
+        run: dotnet build PinataLabs.Typography.slnx -c Release --no-restore
+
+      # The suite has to pass for the commit being released. A NuGet version cannot be
+      # taken back.
+      - name: Test net8.0
+        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net8.0 --no-build
+
+      - name: Test net10.0
+        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net10.0 --no-build
+
+      - name: Test net11.0
+        run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net11.0 --no-build
+
+      # Not ./artifacts: Directory.Build.props sends build output there.
+      - name: Pack
+        run: |
+          dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release --no-build --output ./packages
+          ls -la ./packages/
+
+      # What was actually built, read from the package rather than assumed from inputs.
+      - name: Resolve the packed version
+        id: version
+        run: |
+          package=$(ls ./packages/PinataLabs.Typography.*.nupkg)
+          version=$(basename "$package" .nupkg)
+          version=${version#PinataLabs.Typography.}
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Packed PinataLabs.Typography $version"
+
+      # A stable package must carry its tag's version. A mismatch means MinVer did not
+      # see the tag and produced a pre-release version instead.
+      - name: Verify the version matches the tag
+        if: inputs.kind == 'stable'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ "$VERSION" != "${TAG#v}" ]; then
+            echo "::error::Package is version $VERSION but tag $TAG expects ${TAG#v} — refusing to publish"
+            exit 1
+          fi
+          echo "Version $VERSION matches tag $TAG"
+
+      # Dispatching again with no new commits gives the same MinVer version, and
+      # --skip-duplicate would turn that into a green run that published nothing.
+      # A stable release keeps --skip-duplicate instead, so a half-finished one resumes.
+      - name: Verify the pre-release version is new
+        if: inputs.kind == 'prerelease'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          case "$VERSION" in
+            *-*) ;;
+            *) echo "::error::$VERSION is not a pre-release version"; exit 1 ;;
+          esac
+
+          lower=$(printf '%s' "$VERSION" | tr '[:upper:]' '[:lower:]')
+          status=$(curl -s -o versions.json -w '%{http_code}' \
+            https://api.nuget.org/v3-flatcontainer/pinatalabs.typography/index.json)
+          case "$status" in
+            200)
+              if jq -e --arg v "$lower" '.versions | index($v)' versions.json >/dev/null; then
+                echo "::error::PinataLabs.Typography $VERSION is already on nuget.org. Commit something first, or pick another label."
+                exit 1
+              fi
+              ;;
+            404) echo "PinataLabs.Typography is not on nuget.org yet" ;;
+            *) echo "::error::Could not query nuget.org (HTTP $status)"; exit 1 ;;
+          esac
+          echo "$VERSION is not on nuget.org yet"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          {
+            echo "### PinataLabs.Typography $VERSION ($KIND)"
+            echo
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "**Dry run — nothing was published.**"
+              echo
+            fi
+            for package in ./packages/*; do
+              echo "- \`$(basename "$package")\`"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: ./packages/*
+
+  publish:
+    name: Publish
+    needs: build
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: packages
+          path: ./packages
+
+      # Captured before publishing, because once this release is published it becomes
+      # "latest" and can no longer serve as the previous tag.
+      - name: Resolve previous release tag
+        if: inputs.kind == 'stable'
+        id: previous
+        run: |
+          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases \
+                   --limit 20 --json tagName --jq '[.[] | select(.tagName | test("^v[0-9]"))] | .[0].tagName // ""')
+          echo "tag=$prev" >> "$GITHUB_OUTPUT"
+          echo "Previous release tag: ${prev:-<none>}"
+
+      - name: NuGet login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        id: nuget-login
+        with:
+          user: jafin
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+
+      - name: Push symbols to NuGet
+        run: dotnet nuget push ./packages/*.snupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+
+      # Publishes the rolling draft that Release Drafter has been accumulating from
+      # merged PRs, so any manual edits made to it are kept.
+      - name: Publish GitHub Release
+        if: inputs.kind == 'stable'
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          publish: true
+          tag: ${{ inputs.tag }}
+          name: ${{ inputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Release Drafter has no first-time-contributor detection, so borrow GitHub's own
+      # and append its "New Contributors" section to the notes.
+      - name: Append new contributors
+        if: inputs.kind == 'stable'
+        env:
+          PREV: ${{ steps.previous.outputs.tag }}
+        run: |
+          if [ -n "$PREV" ]; then
+            generated=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$TAG" -f previous_tag_name="$PREV" --jq .body)
+          else
+            generated=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$TAG" --jq .body)
+          fi
+
+          printf '%s\n' "$generated" | awk '/^## New Contributors/ { found = 1 } found { print }' > new-contributors.md
+
+          if [ ! -s new-contributors.md ]; then
+            echo "No new contributors in this release."
+            exit 0
+          fi
+
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > notes.md
+          printf '\n' >> notes.md
+          cat new-contributors.md >> notes.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file notes.md
+          echo "Appended:"
+          cat new-contributors.md
+
+      - name: Upload release assets
+        if: inputs.kind == 'stable'
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: |
+            ./packages/*.nupkg
+            ./packages/*.snupkg
