@@ -1,9 +1,17 @@
 name: Build and Test
 
+# Markdown files and the documentation website are not inputs to the .NET build, so a change
+# that touches only those files skips this workflow. The Docs workflow builds docs-website/.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs-website/**'
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs-website/**'
 
 permissions:
   contents: read
