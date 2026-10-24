@@ -90,6 +90,23 @@ public class LineBreakEnumeratorTests
     }
 
     [Test]
+    [Arguments("Super, Smash Bros (1999)", new[] { 7, 13, 18, 24 })]
+    [Arguments("Super Smash Bros (1999)", new[] { 6, 12, 17, 23 })]
+    [Arguments("Super, Smash Bros (9999)", new[] { 7, 13, 18, 24 })]
+    [Arguments("(9999)", new[] { 6 })]
+    [Arguments("a, 99", new[] { 3, 5 })]
+    public async Task NumbersAfterEarlierPunctuationAreNotSplit(string text, int[] expected)
+    {
+        var breaks = new List<int>();
+        foreach (LineBreak lineBreak in new LineBreakEnumerator(text.AsSpan()))
+        {
+            breaks.Add(lineBreak.PositionWrap);
+        }
+
+        await Assert.That(breaks.ToArray()).IsEquivalentTo(expected);
+    }
+
+    [Test]
     public async Task ICUTests()
     {
         await Assert.That(this.ICUTestsImpl()).IsTrue();
