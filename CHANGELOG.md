@@ -158,6 +158,11 @@ static System.MathF.Truncate(float x) -> float
 
 #### Line breaking and layout
 
+- `TextOptions.TextRuns` is now normalised before layout. `Start` and `End` are clamped to the grapheme
+  count, and runs that are empty after clamping are dropped. Overlapping and nested runs no longer throw
+  or lose the outer run's font: the run later in the list wins for the overlap and the earlier run
+  continues after it. (#23)
+
 - A number is no longer split between digits when a comma, colon or other punctuation
   appears earlier in the text. For example, `(1999)` stays together in "Super, Smash Bros (1999)". (#28)
 - `WordBreaking.BreakWord` no longer splits a token after a colon when the token fits on the next line. (#28)
