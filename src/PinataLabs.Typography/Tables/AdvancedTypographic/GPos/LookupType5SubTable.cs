@@ -103,7 +103,7 @@ internal static class LookupType5SubTable
             }
 
             int markIndex = this.markCoverage.CoverageIndexOf(glyphId);
-            if (markIndex < 0)
+            if (markIndex < 0 || markIndex >= this.markArrayTable.MarkRecords.Length)
             {
                 return false;
             }
@@ -126,7 +126,7 @@ internal static class LookupType5SubTable
 
             ushort baseGlyphId = collection[baseGlyphIndex].GlyphId;
             int ligatureIndex = this.ligatureCoverage.CoverageIndexOf(baseGlyphId);
-            if (ligatureIndex < 0)
+            if (ligatureIndex < 0 || ligatureIndex >= this.ligatureArrayTable.LigatureAttachTables.Length)
             {
                 return false;
             }
@@ -142,8 +142,26 @@ internal static class LookupType5SubTable
                 ? Math.Min(markGlyph.LigatureComponent, ligGlyph.CodePointCount) - 1
                 : ligGlyph.CodePointCount - 1;
 
+            // The component index comes from the code point count, which is not bounded by the
+            // number of components in the font. A ligature with fewer components than code points
+            // attaches the mark to its last component. A negative index or a ligature without
+            // components means the subtable does not apply.
+            ComponentRecord[] components = ligatureAttach.ComponentRecords;
+            if (compIndex < 0 || components.Length == 0)
+            {
+                return false;
+            }
+
+            compIndex = Math.Min(compIndex, components.Length - 1);
+
             MarkRecord markRecord = this.markArrayTable.MarkRecords[markIndex];
-            AnchorTable? baseAnchor = ligatureAttach.ComponentRecords[compIndex].LigatureAnchorTables[markRecord.MarkClass];
+            AnchorTable[] ligatureAnchors = components[compIndex].LigatureAnchorTables;
+            if (markRecord.MarkClass >= (uint)ligatureAnchors.Length)
+            {
+                return false;
+            }
+
+            AnchorTable? baseAnchor = ligatureAnchors[markRecord.MarkClass];
 
             return AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
         }
