@@ -345,7 +345,7 @@ internal class GPosTable : Table
                 }
 
                 GlyphShapingData cursiveData = collection[j];
-                if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode))
+                if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, data.HasVerticalForm))
                 {
                     data.Bounds.Y += cursiveData.Bounds.Y;
                 }

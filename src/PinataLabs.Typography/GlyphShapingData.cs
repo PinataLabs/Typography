@@ -41,6 +41,7 @@ internal class GlyphShapingData
         this.MarkAttachment = data.MarkAttachment;
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsDecomposed = data.IsDecomposed;
+        this.HasVerticalForm = data.HasVerticalForm;
         if (data.UniversalShapingEngineInfo != null)
         {
             this.UniversalShapingEngineInfo = new(
@@ -144,6 +145,14 @@ internal class GlyphShapingData
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution
     /// </summary>
     public bool IsDecomposed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this glyph was resolved to a vertical form (the font's
+    /// <c>vert</c> substitution or a cmap vertical presentation form). It is only set for <c>Tr</c>
+    /// (transform-rotate) codepoints in vertical mixed layout; such glyphs are laid out upright when set
+    /// and rotated, with horizontal features and metrics, otherwise.
+    /// </summary>
+    public bool HasVerticalForm { get; set; }
 
     /// <summary>
     /// Gets or sets the universal shaping information.

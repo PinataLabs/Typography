@@ -2,8 +2,12 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Tests.Fakes;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -181,5 +185,56 @@ public class VerticalGlyphFormTests
 
         await Assert.That(Advance(text, LayoutMode.VerticalMixedRightLeft, KerningMode.Standard))
             .IsLessThan(Advance(text, LayoutMode.VerticalMixedRightLeft, KerningMode.None));
+    }
+
+    [Test]
+    public async Task TrCharacterWithNonVertSubstitutionIsStillRotated()
+    {
+        // A ccmp/locl style substitution changes the glyph id but is not a vertical form,
+        // so the character must stay rotated and use its horizontal advance.
+        CodePoint prolonged = new(0x30FC);
+        CodePoint other = new('A');
+        SubstitutingFakeFontInstance instance = new("ーA", prolonged, other);
+        Font font = ((IFontMetricsCollection)new FontCollection()).AddMetrics(instance, CultureInfo.InvariantCulture).CreateFont(12);
+
+        FontRectangle horizontal = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.HorizontalTopBottom });
+        FontRectangle mixed = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft });
+        FontRectangle vertical = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.VerticalRightLeft });
+
+        // The font must distinguish the two advances, otherwise this test proves nothing.
+        await Assert.That(vertical.Height).IsGreaterThan(horizontal.Width);
+        await Assert.That(mixed.Height).IsEqualTo(horizontal.Width).Within(0.001F);
+    }
+
+    [Test]
+    public async Task RotatedTrGlyphIsShapedWithHorizontalFeatures()
+    {
+        List<string> tags = PlanTrGlyph(hasVerticalForm: false);
+
+        await Assert.That(tags).Contains("kern");
+        await Assert.That(tags).Contains("liga");
+        await Assert.That(tags).DoesNotContain("vert");
+    }
+
+    [Test]
+    public async Task UprightTrGlyphIsShapedWithVertOnly()
+    {
+        List<string> tags = PlanTrGlyph(hasVerticalForm: true);
+
+        await Assert.That(tags).Contains("vert");
+        await Assert.That(tags).DoesNotContain("kern");
+    }
+
+    private static List<string> PlanTrGlyph(bool hasVerticalForm)
+    {
+        Font font = FakeFont.CreateFont("ー");
+        TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft };
+        GlyphSubstitutionCollection collection = new(options);
+        collection.AddGlyph(1, new CodePoint(0x30FC), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1, Font = font }, 0);
+        collection[0].HasVerticalForm = hasVerticalForm;
+
+        new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);
+
+        return collection[0].Features.Select(f => f.Tag.ToString()).ToList();
     }
 }

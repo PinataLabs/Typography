@@ -64,13 +64,18 @@ An additive or breaking public API change needs all of these:
 - **`TextDirection` sets the base direction only.** `LeftToRight` and `RightToLeft` set the
   paragraph direction, as CSS `direction` does. The bidirectional algorithm still runs, so `"abc"`
   with `RightToLeft` stays `abc` and no longer comes out as `cba`. Unicode direction controls now
-  work with a fixed direction. `TextAlignment.Start` and `End` follow the paragraph direction.
+  work with a fixed direction. `TextAlignment.Start` and `End` follow the paragraph direction. (#40)
 
 ### Fixed
 
 - **Tab width.** `TextOptions.TabWidth` now takes effect for fonts that have no glyph for U+0009.
   A tab is `TabWidth` times the advance of the space glyph, in horizontal and vertical layout.
-  `-1` still uses the font's tab glyph advance. (#39)
+  `-1` still uses the font's tab glyph advance. A font with no space glyph uses a quarter of
+  the em as the space width. (#39)
+- **Vertical mixed layout.** A `Tr` (transform-rotate) character is laid out upright only when the font
+  has a vertical form for it, from the `vert` feature or a cmap presentation form. Other substitutions,
+  such as `ccmp` or `locl`, no longer make it upright. A `Tr` character with no vertical form is rotated and
+  shaped with the horizontal features, including `kern`. (#49)
 
 ### Removed
 

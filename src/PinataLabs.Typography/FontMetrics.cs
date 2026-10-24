@@ -202,6 +202,10 @@ public abstract class FontMetrics
     /// <param name="textDecorations">The text decorations applied to the glyph.</param>
     /// <param name="layoutMode">The layout mode applied to the glyph.</param>
     /// <param name="support">Options for enabling color font support during layout and rendering.</param>
+    /// <param name="hasVerticalForm">
+    /// Whether a <c>Tr</c> glyph was resolved to its vertical form. When <see langword="false"/> such a glyph
+    /// is rotated and uses horizontal metrics in vertical mixed layout.
+    /// </param>
     /// <returns>The <see cref="IEnumerable{GlyphMetrics}"/>.</returns>
     internal abstract IReadOnlyList<GlyphMetrics> GetGlyphMetrics(
         CodePoint codePoint,
@@ -209,7 +213,8 @@ public abstract class FontMetrics
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         LayoutMode layoutMode,
-        ColorFontSupport support);
+        ColorFontSupport support,
+        bool hasVerticalForm = false);
 
     /// <summary>
     /// Tries to get the GSUB table.

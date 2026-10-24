@@ -209,7 +209,8 @@ internal partial class StreamFontMetrics : FontMetrics
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         LayoutMode layoutMode,
-        ColorFontSupport support)
+        ColorFontSupport support,
+        bool hasVerticalForm = false)
     {
         GlyphType glyphType = GlyphType.Standard;
         if (glyphId == 0)
@@ -220,14 +221,14 @@ internal partial class StreamFontMetrics : FontMetrics
         }
 
         if (support == ColorFontSupport.MicrosoftColrFormat
-            && this.TryGetColoredMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, out GlyphMetrics[]? metrics))
+            && this.TryGetColoredMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, hasVerticalForm, out GlyphMetrics[]? metrics))
         {
             return metrics;
         }
 
         // We overwrite the cache entry for this type should the attributes change.
         return this.glyphCache.GetOrAdd(
-              CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode),
+              CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm),
               key =>
               [
                 this.CreateGlyphMetrics(
@@ -538,8 +539,9 @@ internal partial class StreamFontMetrics : FontMetrics
         CodePoint codePoint,
         ushort glyphId,
         TextAttributes textAttributes,
-        LayoutMode layoutMode)
-        => (glyphId, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode));
+        LayoutMode layoutMode,
+        bool hasVerticalForm)
+        => (glyphId, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, hasVerticalForm));
 
     private bool TryGetColoredMetrics(
         CodePoint codePoint,
@@ -547,6 +549,7 @@ internal partial class StreamFontMetrics : FontMetrics
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         LayoutMode layoutMode,
+        bool hasVerticalForm,
         [NotNullWhen(true)] out GlyphMetrics[]? metrics)
     {
         ColrTable? colr = this.outlineType == OutlineType.TrueType
@@ -560,7 +563,7 @@ internal partial class StreamFontMetrics : FontMetrics
         }
 
         // We overwrite the cache entry for this type should the attributes change.
-        metrics = this.colorGlyphCache.GetOrAdd(CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode), key =>
+        metrics = this.colorGlyphCache.GetOrAdd(CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm), key =>
         {
             GlyphMetrics[] m = [];
             Span<LayerRecord> indexes = colr.GetLayers(key.Id);

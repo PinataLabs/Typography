@@ -31,8 +31,11 @@ Most container images have no fonts installed. Plan for that:
 - `Font`, `FontFamily`, `FontMetrics` and a `FontCollection` that you have finished filling can be
   shared between threads. Many threads can measure and render with the same font at the same time.
 - Do not add fonts to a `FontCollection` while other threads read from it.
-- `TextOptions` and `TextRun` are mutable. Give each thread its own, or do not change them after
-  you share them.
+- Many threads can lay out and measure text with one `TextOptions`, including its `TextRuns`.
+  Layout works on copies of your runs and does not change them. `TextOptions` and `TextRun` are
+  mutable, so do not change them while another thread uses them.
+- A copy of a run keeps its runtime type. If you derive from `TextRun`, your renderer sees the derived
+  type in `GlyphRendererParameters.TextRun`, with your data. Do not rely on it being the same instance.
 - `TextRenderer` and your `IGlyphRenderer` hold state. Use each one on one thread at a time.
 
 [Hinting](../rendering/hinting.md#threads) is thread-safe. It runs the hinting program of one font on

@@ -89,12 +89,9 @@ internal class DefaultShaper : BaseShaper
         this.AddFeature(collection, index, count, RvnrTag);
 
         // Add directional features.
-        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        bool isVerticalLayout = false;
         for (int i = index; i < index + count; i++)
         {
             GlyphShapingData shapingData = collection[i];
-            isVerticalLayout |= AdvancedTypographicUtils.IsVerticalGlyph(shapingData.CodePoint, layoutMode);
 
             if (shapingData.Direction == TextDirection.LeftToRight)
             {
@@ -126,7 +123,7 @@ internal class DefaultShaper : BaseShaper
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
         for (int i = index; i < index + count; i++)
         {
-            if (!AdvancedTypographicUtils.IsVerticalGlyph(collection[i].CodePoint, layoutMode))
+            if (!AdvancedTypographicUtils.IsVerticalGlyph(collection[i].CodePoint, layoutMode, collection[i].HasVerticalForm))
             {
                 // Add horizontal features.
                 this.AddFeature(collection, i, 1, CaltTag);

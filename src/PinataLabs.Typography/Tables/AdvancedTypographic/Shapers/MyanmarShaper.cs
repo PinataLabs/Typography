@@ -1,4 +1,3 @@
-// Copyright (c) Six Labors.
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
@@ -22,6 +21,11 @@ internal sealed class MyanmarShaper : DefaultShaper
     private const string NonMyanmarCluster = "non_myanmar_cluster";
 
     private const int DottedCircle = 0x25CC;
+
+    /// <summary>
+    /// The number of glyphs in a kinzi: Ra, Asat, Virama.
+    /// </summary>
+    private const int KinziLength = 3;
 
     private static readonly Tag RphfTag = Tag.Parse("rphf");
     private static readonly Tag PrefTag = Tag.Parse("pref");
@@ -192,9 +196,9 @@ internal sealed class MyanmarShaper : DefaultShaper
             }
 
             // The kinzi is the only part that takes part in rphf.
-            if (HasKinzi(categories, start, end))
+            if (HasKinzi(categories.AsSpan(start, end - start)))
             {
-                for (int i = start; i < start + 3; i++)
+                for (int i = start; i < start + KinziLength; i++)
                 {
                     substitutionCollection.EnableShapingFeature(index + i, RphfTag);
                 }
@@ -207,7 +211,7 @@ internal sealed class MyanmarShaper : DefaultShaper
                 if (fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
                 {
                     // The dotted circle is the base, so it goes after any kinzi.
-                    int at = index + start + (HasKinzi(categories, start, end) ? 3 : 0);
+                    int at = index + start + (HasKinzi(categories.AsSpan(start, end - start)) ? KinziLength : 0);
                     substitutionCollection.InsertGlyph(at, id, new(DottedCircle));
                     substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, s + 1);
                 }
@@ -239,16 +243,14 @@ internal sealed class MyanmarShaper : DefaultShaper
 
     private static void ReorderSyllable(GlyphSubstitutionCollection collection, int start, int end)
     {
-        // The kinzi is moved to after the base. Its glyphs are the first three, if present.
-        int limit = start;
-        bool hasKinzi = end - start >= 3
-            && CategoryOf(collection[start]) == Categories.Ra
-            && CategoryOf(collection[start + 1]) == Categories.As
-            && CategoryOf(collection[start + 2]) == Categories.H;
-        if (hasKinzi)
+        // The kinzi is moved to after the base. Its glyphs are the first ones, if present.
+        Span<Categories> head = stackalloc Categories[Math.Min(KinziLength, end - start)];
+        for (int i = 0; i < head.Length; i++)
         {
-            limit += 3;
+            head[i] = CategoryOf(collection[start + i]);
         }
+
+        int limit = HasKinzi(head) ? start + KinziLength : start;
 
         // The base is the first consonant after the kinzi.
         int baseIndex = end;
@@ -327,7 +329,7 @@ internal sealed class MyanmarShaper : DefaultShaper
         collection.Sort(
             start,
             end,
-            static (a, b) => (a.MyanmarShapingEngineInfo?.Position ?? Positions.Start).CompareTo(b.MyanmarShapingEngineInfo?.Position ?? Positions.Start));
+            static (a, b) => PositionOf(a).CompareTo(PositionOf(b)));
     }
 
     private static void SetPosition(GlyphShapingData data, Positions position)
@@ -341,14 +343,17 @@ internal sealed class MyanmarShaper : DefaultShaper
     private static Categories CategoryOf(GlyphShapingData data)
         => data.MyanmarShapingEngineInfo?.Category ?? Categories.Other;
 
+    private static Positions PositionOf(GlyphShapingData data)
+        => data.MyanmarShapingEngineInfo?.Position ?? Positions.Start;
+
     private static bool IsBase(Categories category)
         => category is Categories.C or Categories.Ra or Categories.IV or Categories.GB;
 
-    private static bool HasKinzi(Categories[] categories, int start, int end)
-        => end - start >= 3
-        && categories[start] == Categories.Ra
-        && categories[start + 1] == Categories.As
-        && categories[start + 2] == Categories.H;
+    private static bool HasKinzi(ReadOnlySpan<Categories> categories)
+        => categories.Length >= KinziLength
+        && categories[0] == Categories.Ra
+        && categories[1] == Categories.As
+        && categories[2] == Categories.H;
 
     /// <summary>
     /// Maps a code point to its Myanmar shaping category. The Indic syllabic and positional
@@ -438,7 +443,7 @@ internal sealed class MyanmarShaper : DefaultShaper
     /// </summary>
     private static int MatchSyllable(Categories[] c, int start, out string type)
     {
-        int p = HasKinzi(c, start, c.Length) ? start + 3 : start;
+        int p = HasKinzi(c.AsSpan(start)) ? start + KinziLength : start;
         if (p < c.Length && IsBase(c[p]))
         {
             p++;

@@ -17,6 +17,12 @@ namespace PinataLabs.Typography;
 /// </summary>
 internal static class TextLayout
 {
+    /// <summary>
+    /// The fraction of an em used as the width of a space when applying <see cref="TextOptions.TabWidth"/>
+    /// to a font that has no space glyph.
+    /// </summary>
+    private const float SpaceFallbackEmFraction = 0.25F;
+
     public static IReadOnlyList<GlyphLayout> GenerateLayout(ReadOnlySpan<char> text, TextOptions options)
     {
         if (text.IsEmpty)
@@ -850,7 +856,8 @@ internal static class TextLayout
         for (int i = 0; i < collection.Count; i++)
         {
             GlyphShapingData data = collection[i];
-            if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode))
+            bool isTransformRotate = CodePoint.GetVerticalOrientationType(data.CodePoint) is VerticalOrientationType.TransformRotate;
+            if (!isTransformRotate && !AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, false))
             {
                 continue;
             }
@@ -863,6 +870,9 @@ internal static class TextLayout
             if (fontMetrics.TryGetGlyphId(mirror, out ushort glyphId))
             {
                 collection.Replace(i, glyphId);
+
+                // A Tr glyph with a cmap vertical presentation form is laid out upright.
+                data.HasVerticalForm |= isTransformRotate;
             }
         }
     }
@@ -934,7 +944,7 @@ internal static class TextLayout
             var codePointEnumerator = new SpanCodePointEnumerator(graphemeEnumerator.Current);
             while (codePointEnumerator.MoveNext())
             {
-                if (!positionings.TryGetGlyphMetricsAtOffset(codePointIndex, out float pointSize, out bool isDecomposed, out IReadOnlyList<GlyphMetrics>? metrics))
+                if (!positionings.TryGetGlyphMetricsAtOffset(codePointIndex, out float pointSize, out bool isDecomposed, out bool hasVerticalForm, out IReadOnlyList<GlyphMetrics>? metrics))
                 {
                     // Codepoint was skipped during original enumeration.
                     codePointIndex++;
@@ -949,9 +959,8 @@ internal static class TextLayout
                 bool isRotated = isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.Rotate;
                 if (isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.TransformRotate)
                 {
-                    // Tr: use the vertical form (upright) when the font substituted one; otherwise rotate.
-                    GlyphMetrics first = metrics[0];
-                    isRotated = !first.FontMetrics.TryGetGlyphId(codePoint, out ushort cmapGlyphId) || first.GlyphId == cmapGlyphId;
+                    // Tr: upright only when the font has a vertical form for the glyph; otherwise rotate.
+                    isRotated = !hasVerticalForm;
                 }
 
                 if (CodePoint.IsVariationSelector(codePoint))
@@ -988,7 +997,9 @@ internal static class TextLayout
                     if (options.TabWidth > -1F)
                     {
                         // Do not use the default font tab width. Instead find the advance for the space glyph
-                        // and multiply that by the options value.
+                        // and multiply that by the options value. A font without a space glyph falls back to
+                        // a quarter of the em, so the option still takes effect.
+                        float spaceAdvance = glyph.FontMetrics.UnitsPerEm * SpaceFallbackEmFraction;
                         CodePoint space = new(0x0020);
                         if (glyph.FontMetrics.TryGetGlyphId(space, out ushort spaceGlyphId))
                         {
@@ -1000,20 +1011,25 @@ internal static class TextLayout
                                   layoutMode,
                                   options.ColorFontSupport)[0];
 
-                            if (isHorizontalLayout || isRotated)
-                            {
-                                glyphAdvance = spaceMetrics.AdvanceWidth * options.TabWidth;
-                                glyph.SetAdvanceWidth((ushort)glyphAdvance);
-                            }
-                            else
-                            {
-                                glyphAdvance = spaceMetrics.AdvanceHeight * options.TabWidth;
-                                glyph.SetAdvanceHeight((ushort)glyphAdvance);
-                            }
-
-                            // The advance list is what reaches the line, so it must carry the tab width.
-                            decomposedAdvances[0] = glyphAdvance;
+                            spaceAdvance = isHorizontalLayout || isRotated
+                                ? spaceMetrics.AdvanceWidth
+                                : spaceMetrics.AdvanceHeight;
                         }
+
+                        // The advance list is what reaches the line, so it keeps the exact (fractional) width.
+                        // Glyph metrics store whole font units, so they are rounded rather than truncated.
+                        glyphAdvance = spaceAdvance * options.TabWidth;
+                        ushort storedAdvance = (ushort)Math.Clamp(MathF.Round(glyphAdvance), 0F, ushort.MaxValue);
+                        if (isHorizontalLayout || isRotated)
+                        {
+                            glyph.SetAdvanceWidth(storedAdvance);
+                        }
+                        else
+                        {
+                            glyph.SetAdvanceHeight(storedAdvance);
+                        }
+
+                        decomposedAdvances[0] = glyphAdvance;
                     }
                 }
                 else if (metrics.Count == 1 && (CodePoint.IsZeroWidthJoiner(codePoint) || CodePoint.IsZeroWidthNonJoiner(codePoint)))

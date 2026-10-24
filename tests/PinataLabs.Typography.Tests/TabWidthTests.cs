@@ -79,4 +79,27 @@ public class TabWidthTests
 
         await Assert.That(renderer.ControlPoints.Count).IsEqualTo(0);
     }
+
+    [Test]
+    [Arguments(4F, 100F)]
+    [Arguments(2.3F, 57.5F)]
+    public async Task FontWithoutSpaceGlyphFallsBackToQuarterEm(float tabWidth, float expectedExtra)
+    {
+        // The fake font has no U+0020 glyph, an em of 30 units and, resized to 100, a quarter em is 25 pixels per unit of TabWidth.
+        Font font = new(FakeFont.CreateFont("a	b"), 100);
+
+        float Measure(float width) => TextMeasurer.MeasureAdvance("a	b", new TextOptions(font) { TabWidth = width }).Width;
+
+        await Assert.That(Measure(tabWidth) - Measure(0)).IsEqualTo(expectedExtra).Within(0.6F);
+    }
+
+    [Test]
+    public async Task FractionalTabWidthIsNotTruncated()
+    {
+        // Open Sans space advance is 532 units at 2048 per em (about 6.2 pixels at 24 px); 0.5 of it must not collapse to a whole unit count.
+        float half = Advance("a	b", 0.5F) - Advance("a	b", 0);
+        float one = Advance("a	b", 1) - Advance("a	b", 0);
+
+        await Assert.That(half).IsEqualTo(one / 2F).Within(0.05F);
+    }
 }
