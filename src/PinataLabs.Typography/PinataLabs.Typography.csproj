@@ -20,8 +20,19 @@
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
   </ItemGroup>
 
+  <!--
+    README.md here is the package readme shown on nuget.org. It is a copy of the repository README
+    with the build-from-source sections removed and every link made absolute: nuget.org renders no
+    relative links, and serves images only from allowed hosts. The logo is in Git LFS, so it comes from
+    media.githubusercontent.com; raw.githubusercontent.com returns the LFS pointer instead.
+  -->
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="..\..\NOTICE" Pack="true" PackagePath="" Visible="false" />
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <!--
