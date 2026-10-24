@@ -3,7 +3,7 @@
 
   <!--
     Central Package Management: every package version in the repository is declared here.
-    Project files and the props/targets under build/ reference packages without a version.
+    Project files and the Directory.Build.props files reference packages without a version.
   -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -14,7 +14,7 @@
     <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
 
-  <!-- Build infrastructure (build/msbuild/props) and library analyzers. -->
+  <!-- Build infrastructure (src/Directory.Build.props) and library analyzers. -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />

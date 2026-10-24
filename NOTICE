@@ -17,16 +17,16 @@ licensed under the Apache License, Version 2.0, at commit
 
   Upstream path                             Path in this repository
   ----------------------------------------  ------------------------------------------------
-  msbuild/props/SixLabors.Global.props      build/msbuild/props/PinataLabs.Global.props (modified)
-  msbuild/props/SixLabors.Src.props         build/msbuild/props/PinataLabs.Src.props (modified)
-  msbuild/props/SixLabors.Tests.props       build/msbuild/props/PinataLabs.Tests.props (modified)
-  msbuild/targets/SixLabors.Global.targets  build/msbuild/targets/PinataLabs.Global.targets (modified)
-  msbuild/targets/SixLabors.Src.targets     build/msbuild/targets/PinataLabs.Src.targets (modified)
+  msbuild/props/SixLabors.Global.props      Directory.Build.props (merged, modified)
+  msbuild/props/SixLabors.Src.props         src/Directory.Build.props (merged, modified)
+  msbuild/props/SixLabors.Tests.props       tests/Directory.Build.props (merged, modified)
+  msbuild/targets/SixLabors.Global.targets  (removed; the .NET SDK now generates InternalsVisibleTo)
+  msbuild/targets/SixLabors.Src.targets     (removed)
   sixlabors.ruleset                         .editorconfig (rule severities, modified)
   sixlabors.tests.ruleset                   .editorconfig (rule severities, modified)
-  stylecop.json                             build/stylecop.json (modified)
-  src/SharedInfrastructure/DebugGuard.cs    src/SharedInfrastructure/DebugGuard.cs (modified)
+  stylecop.json                             stylecop.json (modified)
+  src/SharedInfrastructure/DebugGuard.cs    src/PinataLabs.Typography/DebugGuard.cs (modified)
   src/SharedInfrastructure/SharedInfrastructure.projitems
-                                            src/SharedInfrastructure/SharedInfrastructure.projitems (modified)
+                                            (removed; DebugGuard.cs is now part of the library project)
 
 The full text of the Apache License, Version 2.0 is in the LICENSE file.
