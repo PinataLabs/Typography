@@ -32,6 +32,10 @@ internal partial class StreamFontMetrics
         PostTable post = reader.GetTable<PostTable>();
 
         ICffTable? cff = reader.TryGetTable<Cff1Table>() ?? (ICffTable?)reader.TryGetTable<Cff2Table>();
+        if (cff is null)
+        {
+            throw new InvalidFontFileException("Required CFF or CFF2 table is missing or malformed.");
+        }
 
         // TODO: VORG
         HorizontalMetricsTable htmx = reader.GetTable<HorizontalMetricsTable>();
@@ -51,7 +55,7 @@ internal partial class StreamFontMetrics
         ColrTable? colr = reader.TryGetTable<ColrTable>();
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
 
-        CompactFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, cff!)
+        CompactFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, cff)
         {
             Kern = kern,
             Vhea = vhea,

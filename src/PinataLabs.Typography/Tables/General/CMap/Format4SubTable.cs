@@ -44,7 +44,16 @@ internal sealed class Format4SubTable : CMapSubTable
                 else
                 {
                     long offset = (seg.Offset / 2) + (charAsInt - seg.Start);
-                    glyphId = this.GlyphIds[offset - this.Segments.Length + seg.Index];
+                    long index = offset - this.Segments.Length + seg.Index;
+
+                    // The offset is untrusted and may point outside the glyph id array.
+                    if ((ulong)index >= (ulong)this.GlyphIds.Length)
+                    {
+                        glyphId = 0;
+                        return false;
+                    }
+
+                    glyphId = this.GlyphIds[index];
                     return true;
                 }
             }

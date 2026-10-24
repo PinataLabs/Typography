@@ -88,4 +88,26 @@ public class Format4SubTableTests
         await Assert.That(id).IsEqualTo(expected);
         await Assert.That(found).IsEqualTo(expectedFound);
     }
+
+    [Test]
+    [Arguments(0, 10)] // index lands before the glyph id array
+    [Arguments(2000, 10)] // index lands beyond the glyph id array
+    [Arguments(2, 15)] // index is past the end once the code point offset is added
+    public async Task MalformedRangeOffsetDoesNotThrow(ushort rangeOffset, int codePoint)
+    {
+        // A non-zero idRangeOffset indexes into the glyph id array relative to the segment,
+        // so a corrupt value can address memory outside of the array.
+        Format4SubTable.Segment[] segments = new[]
+        {
+            new Format4SubTable.Segment(1, 20, 10, 0, rangeOffset == 0 ? (ushort)1 : rangeOffset),
+            new Format4SubTable.Segment(2, 0xFFFF, 0xFFFF, 1, 0),
+        };
+
+        var table = new Format4SubTable(0, PlatformIDs.Windows, 0, segments, new ushort[] { 1, 2, 3 });
+
+        bool found = table.TryGetGlyphId(new CodePoint(codePoint), out ushort id);
+
+        await Assert.That(found).IsFalse();
+        await Assert.That(id).IsEqualTo((ushort)0);
+    }
 }

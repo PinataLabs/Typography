@@ -12,6 +12,63 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs;
 public class CompositeGlyphLoaderTests
 {
     [Test]
+    public async Task SelfReferencingCompositeDoesNotOverflowTheStack()
+    {
+        var bounds = new Bounds(0, 0, 100, 100);
+        GlyphTable table = new(new GlyphLoader[]
+        {
+            new SimpleGlyphLoader(bounds),
+            CreateComposite(bounds, 1), // refers to itself
+        });
+
+        GlyphVector glyph = table.GetGlyph(1);
+
+        await Assert.That(glyph.ControlPoints.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task CyclicCompositesDoNotOverflowTheStack()
+    {
+        var bounds = new Bounds(0, 0, 100, 100);
+        GlyphTable table = new(new GlyphLoader[]
+        {
+            new SimpleGlyphLoader(bounds),
+            CreateComposite(bounds, 2),
+            CreateComposite(bounds, 3),
+            CreateComposite(bounds, 1),
+        });
+
+        GlyphVector glyph = table.GetGlyph(1);
+
+        await Assert.That(glyph.ControlPoints.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task CompositeComponentOutOfRangeIsIgnored()
+    {
+        var bounds = new Bounds(0, 0, 100, 100);
+        GlyphTable table = new(new GlyphLoader[]
+        {
+            new SimpleGlyphLoader(bounds),
+            CreateComposite(bounds, 500),
+        });
+
+        GlyphVector glyph = table.GetGlyph(1);
+
+        await Assert.That(glyph.ControlPoints.Count).IsEqualTo(0);
+    }
+
+    private static CompositeGlyphLoader CreateComposite(in Bounds bounds, ushort componentIndex)
+    {
+        var writer = new BigEndianBinaryWriter();
+        writer.WriteUInt16(0); // flags: no more components
+        writer.WriteUInt16(componentIndex);
+        writer.WriteUInt8(0); // dx
+        writer.WriteUInt8(0); // dy
+        return CompositeGlyphLoader.LoadCompositeGlyph(writer.GetReader(), in bounds);
+    }
+
+    [Test]
     public async Task LoadSingleGlyphWithUInt16Offset_unsigned_short()
     {
         var writer = new BigEndianBinaryWriter();
