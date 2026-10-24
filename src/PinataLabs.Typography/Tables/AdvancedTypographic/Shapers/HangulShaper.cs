@@ -219,7 +219,7 @@ internal sealed class HangulShaper : DefaultShaper
         int l = (LBase + (s / VCount)) | 0;
         int v = VBase + (s % VCount);
 
-        FontMetrics metrics = data.TextRun.Font!.FontMetrics;
+        FontMetrics metrics = collection.GetFontMetrics(data);
 
         // Don't decompose if all of the components are not available
         if (!metrics.TryGetGlyphId(new(l), out ushort ljmo) ||
@@ -309,7 +309,7 @@ internal sealed class HangulShaper : DefaultShaper
 
             // Replace with a composed glyph if supported by the font,
             // otherwise apply the proper OpenType features to each component.
-            FontMetrics metrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics metrics = collection.GetFontMetrics(data);
             if (metrics.TryGetGlyphId(s, out ushort id))
             {
                 int del = prevType == V ? 3 : 2;
@@ -358,7 +358,7 @@ internal sealed class HangulShaper : DefaultShaper
 
         // Move tone mark to the beginning of the previous syllable, unless it is zero width
         // We don't have access to the glyphs metrics as an array when substituting so we have to loop.
-        FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+        FontMetrics fontMetrics = collection.GetFontMetrics(data);
         TextAttributes textAttributes = data.TextRun.TextAttributes;
         TextDecorations textDecorations = data.TextRun.TextDecorations;
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
@@ -382,7 +382,7 @@ internal sealed class HangulShaper : DefaultShaper
     private int InsertDottedCircle(GlyphSubstitutionCollection collection, GlyphShapingData data, int index)
     {
         bool after = false;
-        FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+        FontMetrics fontMetrics = collection.GetFontMetrics(data);
 
         if (fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
         {
