@@ -38,6 +38,12 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     public TextOptions TextOptions { get; }
 
     /// <summary>
+    /// Gets or sets the metrics of the font currently being shaped. This can differ from the font
+    /// of a glyph's text run when the glyph is being shaped by a fallback font.
+    /// </summary>
+    internal FontMetrics? FontMetrics { get; set; }
+
+    /// <summary>
     /// Gets or sets the running id of any ligature glyphs contained withing this collection are a member of.
     /// </summary>
     public int LigatureId { get; set; } = 1;
@@ -48,6 +54,14 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => this.glyphs[index].Data;
     }
+
+    /// <summary>
+    /// Gets the metrics of the font that should be used to shape the given glyph.
+    /// </summary>
+    /// <param name="data">The glyph shaping data.</param>
+    /// <returns>The font metrics.</returns>
+    internal FontMetrics GetFontMetrics(GlyphShapingData data)
+        => this.FontMetrics ?? data.TextRun.Font!.FontMetrics;
 
     /// <summary>
     /// Gets the shaping data at the specified position.

@@ -109,7 +109,7 @@ internal sealed class IndicShaper : DefaultShaper
         for (int i = end - 1; i >= 0; i--)
         {
             GlyphShapingData data = substitutionCollection[i];
-            FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
 
             if ((Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions) ||
                 UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out decompositions)) &&
@@ -205,14 +205,14 @@ internal sealed class IndicShaper : DefaultShaper
 
         // Create a reusable temporary substitution collection and buffer to allow checking whether
         // certain combinations will be substituted.
-        GlyphSubstitutionCollection tempCollection = new(this.textOptions);
+        GlyphSubstitutionCollection tempCollection = new(this.textOptions) { FontMetrics = substitutionCollection.FontMetrics };
         Span<GlyphShapingData> tempBuffer = new GlyphShapingData[3];
 
         ShapingConfiguration indicConfiguration = this.indicConfiguration;
         for (int i = 0; i < count; i++)
         {
             GlyphShapingData data = substitutionCollection[i + index];
-            FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
 
             fontMetrics.TryGetGlyphId(new(0x0020), out ushort spc);
 
@@ -252,7 +252,7 @@ internal sealed class IndicShaper : DefaultShaper
                 goto Increment;
             }
 
-            FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
             if (!fontMetrics.TryGetGSubTable(out GSubTable? gSubTable))
             {
                 break;
@@ -793,7 +793,7 @@ internal sealed class IndicShaper : DefaultShaper
         }
 
         GlyphShapingData data = buffer[0];
-        FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+        FontMetrics fontMetrics = collection.GetFontMetrics(data);
 
         if (fontMetrics.TryGetGSubTable(out GSubTable? gSubTable))
         {
@@ -876,7 +876,7 @@ internal sealed class IndicShaper : DefaultShaper
             // reordering before applying all the remaining font features to the entire
             // cluster.
             GlyphShapingData data = substitutionCollection[start];
-            FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
             if (!fontMetrics.TryGetGSubTable(out GSubTable? gSubTable))
             {
                 break;

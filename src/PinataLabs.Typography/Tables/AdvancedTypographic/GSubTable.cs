@@ -104,6 +104,9 @@ internal class GSubTable : Table
         int maxOperationsCount = AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(collection.Count);
         int currentOperations = 0;
 
+        // Shapers must query the font that is actually being shaped, not the font of the text run.
+        collection.FontMetrics = fontMetrics;
+
         for (int i = 0; i < collection.Count; i++)
         {
             // Choose a shaper based on the script.

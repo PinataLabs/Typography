@@ -96,7 +96,7 @@ internal sealed class UniversalShaper : DefaultShaper
         for (int i = end - 1; i >= 0; i--)
         {
             GlyphShapingData data = substitutionCollection[i];
-            FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
             if (UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions) && decompositions != null)
             {
                 Span<ushort> ids = buffer.Slice(0, decompositions.Length);
@@ -146,7 +146,7 @@ internal sealed class UniversalShaper : DefaultShaper
             }
 
             // Assign rphf feature
-            int limit = substitutionCollection[match.StartIndex].UniversalShapingEngineInfo!.Category == "R"
+            int limit = substitutionCollection[match.StartIndex + index].UniversalShapingEngineInfo!.Category == "R"
                 ? 1
                 : Math.Min(3, match.EndIndex - match.StartIndex);
 
@@ -239,7 +239,7 @@ internal sealed class UniversalShaper : DefaultShaper
                 goto Increment;
             }
 
-            FontMetrics fontMetrics = data.TextRun.Font!.FontMetrics;
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
             if (type == "broken_cluster" && fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
             {
                 // Insert after possible Repha.
