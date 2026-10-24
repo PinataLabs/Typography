@@ -1003,6 +1003,9 @@ internal static class TextLayout
                                 glyphAdvance = spaceMetrics.AdvanceHeight * options.TabWidth;
                                 glyph.SetAdvanceHeight((ushort)glyphAdvance);
                             }
+
+                            // The advance list is what reaches the line, so it must carry the tab width.
+                            decomposedAdvances[0] = glyphAdvance;
                         }
                     }
                 }

@@ -54,6 +54,12 @@ An additive or breaking public API change needs all of these:
   with `RightToLeft` stays `abc` and no longer comes out as `cba`. Unicode direction controls now
   work with a fixed direction. `TextAlignment.Start` and `End` follow the paragraph direction.
 
+### Fixed
+
+- **Tab width.** `TextOptions.TabWidth` now takes effect for fonts that have no glyph for U+0009.
+  A tab is `TabWidth` times the advance of the space glyph, in horizontal and vertical layout.
+  `-1` still uses the font's tab glyph advance. (#39)
+
 ### Removed
 
 These public members existed only for the removed targets. They were type forwarders
