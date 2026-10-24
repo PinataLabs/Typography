@@ -250,14 +250,21 @@ internal static class AdvancedTypographicUtils
         return true;
     }
 
-    public static void ApplyAnchor(
+    public static bool ApplyAnchor(
         FontMetrics fontMetrics,
         GlyphPositioningCollection collection,
         int index,
-        AnchorTable baseAnchor,
+        AnchorTable? baseAnchor,
         MarkRecord markRecord,
         int baseGlyphIndex)
     {
+        // A base, ligature component or mark2 glyph is not required to define an attachment point
+        // for every mark class (the anchor offset is NULL). In that case the subtable does not apply.
+        if (baseAnchor is null || markRecord.MarkAnchorTable is null)
+        {
+            return false;
+        }
+
         GlyphShapingData baseData = collection[baseGlyphIndex];
         AnchorXY baseXY = baseAnchor.GetAnchor(fontMetrics, baseData, collection);
 
@@ -267,6 +274,7 @@ internal static class AdvancedTypographicUtils
         markData.Bounds.X = baseXY.XCoordinate - markXY.XCoordinate;
         markData.Bounds.Y = baseXY.YCoordinate - markXY.YCoordinate;
         markData.MarkAttachment = baseGlyphIndex;
+        return true;
     }
 
     public static void ApplyPosition(
