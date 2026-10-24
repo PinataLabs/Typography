@@ -117,4 +117,69 @@ public class VerticalGlyphFormTests
 
         await Assert.That(inkCentre).IsEqualTo(columnCentre).Within(1.5F);
     }
+
+    [Test]
+    [Arguments("あーい", 1)]
+    [Arguments("ー", 0)]
+    public async Task TrCharacterUsesVertFormInVerticalMixedLayout(string text, int index)
+    {
+        List<ushort> ids = GlyphIds(text, LayoutMode.VerticalMixedRightLeft);
+
+        await Assert.That(ids[index]).IsEqualTo(VerticalProlongedSoundMark);
+    }
+
+    [Test]
+    public async Task TrCharacterWithVertFormIsCentredInTheColumnInVerticalMixedLayout()
+    {
+        const float originX = 100F;
+        FontFamily family = new FontCollection().Add(TestFonts.NotoSansKRRegular);
+        TextOptions options = new(family.CreateFont(30))
+        {
+            LayoutMode = LayoutMode.VerticalMixedRightLeft,
+            Origin = new System.Numerics.Vector2(originX, 10),
+        };
+
+        GlyphRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "ー", options);
+
+        float inkCentre = (renderer.ControlPoints.Min(p => p.X) + renderer.ControlPoints.Max(p => p.X)) * .5F;
+        float columnCentre = originX + (TextMeasurer.MeasureAdvance("ー", options).Width * .5F);
+
+        await Assert.That(inkCentre).IsEqualTo(columnCentre).Within(1.5F);
+    }
+
+    [Test]
+    public async Task TrCharacterWithoutVertFormIsStillRotated()
+    {
+        // The fake font has no GSUB table, so U+30FC has no vertical form and must be rotated:
+        // its advance along the column is its horizontal advance width.
+        Font font = FakeFont.CreateFont("ー");
+
+        FontRectangle horizontal = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.HorizontalTopBottom });
+        FontRectangle mixed = TextMeasurer.MeasureAdvance("ー", new TextOptions(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft });
+
+        await Assert.That(mixed.Height).IsEqualTo(horizontal.Width).Within(0.001F);
+    }
+
+    [Test]
+    [Arguments("あAV")]
+    [Arguments("AV、")]
+    public async Task RotatedLatinKeepsKerningInMixedRunWithUprightCharacter(string text)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.RobotoRegular);
+        Font font = family.CreateFont(30);
+
+        float Advance(string value, LayoutMode mode, KerningMode kerning)
+        {
+            FontRectangle r = TextMeasurer.MeasureAdvance(value, new TextOptions(font) { LayoutMode = mode, KerningMode = kerning });
+            return mode == LayoutMode.HorizontalTopBottom ? r.Width : r.Height;
+        }
+
+        // The font must kern the pair horizontally, otherwise this test proves nothing.
+        await Assert.That(Advance("AV", LayoutMode.HorizontalTopBottom, KerningMode.Standard))
+            .IsLessThan(Advance("AV", LayoutMode.HorizontalTopBottom, KerningMode.None));
+
+        await Assert.That(Advance(text, LayoutMode.VerticalMixedRightLeft, KerningMode.Standard))
+            .IsLessThan(Advance(text, LayoutMode.VerticalMixedRightLeft, KerningMode.None));
+    }
 }

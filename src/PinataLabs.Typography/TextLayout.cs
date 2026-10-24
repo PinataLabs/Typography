@@ -945,7 +945,13 @@ internal static class TextLayout
                 // For vertical mixed layout we will be rotating glyphs with the vertical orientation type R or TR.
                 CodePoint codePoint = codePointEnumerator.Current;
                 VerticalOrientationType verticalOrientationType = CodePoint.GetVerticalOrientationType(codePoint);
-                bool isRotated = isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.Rotate or VerticalOrientationType.TransformRotate;
+                bool isRotated = isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.Rotate;
+                if (isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.TransformRotate)
+                {
+                    // Tr: use the vertical form (upright) when the font substituted one; otherwise rotate.
+                    GlyphMetrics first = metrics[0];
+                    isRotated = !first.FontMetrics.TryGetGlyphId(codePoint, out ushort cmapGlyphId) || first.GlyphId == cmapGlyphId;
+                }
 
                 if (CodePoint.IsVariationSelector(codePoint))
                 {

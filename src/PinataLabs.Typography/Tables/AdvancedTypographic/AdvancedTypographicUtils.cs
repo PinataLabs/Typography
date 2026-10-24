@@ -35,7 +35,7 @@ internal static class AdvancedTypographicUtils
         }
 
         bool isVerticalLayout = layoutMode.IsVerticalMixed();
-        return isVerticalLayout && CodePoint.GetVerticalOrientationType(codePoint) is VerticalOrientationType.Upright or VerticalOrientationType.TransformUpright;
+        return isVerticalLayout && CodePoint.GetVerticalOrientationType(codePoint) is VerticalOrientationType.Upright or VerticalOrientationType.TransformUpright or VerticalOrientationType.TransformRotate;
     }
 
     public static int GetMaxAllowableShapingCollectionCount(int length)
