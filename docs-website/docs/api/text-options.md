@@ -62,11 +62,9 @@ own data to a renderer.
 | `Slice(ReadOnlySpan<char> text)` | The part of `text` that the run covers. |
 
 `Start` and `End` count graphemes, not `char` values. Text outside every run uses
-`TextOptions.Font`. When runs overlap, the later run, by `Start`, wins.
+`TextOptions.Font`.
 
-:::note
-
-The library sets `Font` on a run that has a `null` font to `TextOptions.Font` during layout. Do not
-reuse one `TextRun` object with options that have a different font.
-
-:::
+The library does not change your `TextRun` objects, so you can reuse them.
+It clamps `Start` and `End` to the grapheme count and drops runs that are empty after clamping.
+When runs overlap or nest, the run that is later in the list wins for the overlapping part, and the
+earlier run continues after it. The order of `Start` values does not matter.
