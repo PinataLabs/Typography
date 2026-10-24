@@ -30,6 +30,10 @@ An additive or breaking public API change needs all of these:
   and moves medial RA and vowel sign E before it. A broken syllable gets a dotted circle.
   Before, Myanmar text had no script-specific processing, so these marks stayed in logical order.
   The shaper uses the `mym2` script tag, and falls back to `mymr`. (#30)
+- **CFF2 fonts.** Fonts with a `CFF2` outline table, such as variable OpenType/CFF2 fonts, now load
+  and render. They are supported at the default instance only. `blend` operators use their default
+  values, and the variation axes (`fvar`, `avar`, `HVAR`, `MVAR`) are ignored. Before, loading
+  such a font threw `NotSupportedException`. (#21)
 
 ### Changed
 
@@ -57,6 +61,16 @@ An additive or breaking public API change needs all of these:
   This does not change the package.
 - **Hinting concurrency.** TrueType hinting for one font now runs one glyph at a time.
   Threads that hint the same font wait for each other. (#27)
+- **`TextDirection` sets the base direction only.** `LeftToRight` and `RightToLeft` set the
+  paragraph direction, as CSS `direction` does. The bidirectional algorithm still runs, so `"abc"`
+  with `RightToLeft` stays `abc` and no longer comes out as `cba`. Unicode direction controls now
+  work with a fixed direction. `TextAlignment.Start` and `End` follow the paragraph direction.
+
+### Fixed
+
+- **Tab width.** `TextOptions.TabWidth` now takes effect for fonts that have no glyph for U+0009.
+  A tab is `TabWidth` times the advance of the space glyph, in horizontal and vertical layout.
+  `-1` still uses the font's tab glyph advance. (#39)
 
 ### Removed
 
@@ -148,6 +162,11 @@ static System.MathF.Truncate(float x) -> float
 ### Fixed
 
 #### Line breaking and layout
+
+- `TextOptions.TextRuns` is now normalised before layout. `Start` and `End` are clamped to the grapheme
+  count, and runs that are empty after clamping are dropped. Overlapping and nested runs no longer throw
+  or lose the outer run's font: the run later in the list wins for the overlap and the earlier run
+  continues after it. (#23)
 
 - A number is no longer split between digits when a comma, colon or other punctuation
   appears earlier in the text. For example, `(1999)` stays together in "Super, Smash Bros (1999)". (#28)

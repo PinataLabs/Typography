@@ -19,7 +19,15 @@ internal class GlyphTable : Table
 
     // TODO: Make this non-virtual
     internal virtual GlyphVector GetGlyph(int index)
-        => this.loaders[index].CreateGlyph(this);
+    {
+        // An out-of-range glyph id resolves to glyph 0 (.notdef).
+        if ((uint)index >= (uint)this.loaders.Length)
+        {
+            index = 0;
+        }
+
+        return this.loaders[index].CreateGlyph(this);
+    }
 
     public static GlyphTable Load(FontReader reader)
     {

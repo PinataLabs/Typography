@@ -52,6 +52,11 @@ public static class TestFonts
     // Noto Sans Myanmar (OFL-1.1, licence in NotoSansMyanmar/OFL.txt): https://github.com/notofonts/myanmar
     public static string NotoSansMyanmarRegular => GetFullPath("NotoSansMyanmar/NotoSansMyanmar-Regular.ttf");
 
+    // Source Sans 3 variable, upright, CFF2 outlines (OFL-1.1, see SourceSans3/OFL.txt), unmodified:
+    // https://github.com/adobe-fonts/source-sans/blob/release/VF/SourceSans3VF-Upright.otf
+    // Default instance is wght=200 (ExtraLight).
+    public static string SourceSans3VariableCff2File => GetFullPath("SourceSans3/SourceSans3VF-Upright.otf");
+
     // FdSelect format 0: https://github.com/adobe-fonts/fdarray-test/
     public static string FDArrayTest257File => GetFullPath("FDArrayTest257.otf");
 

@@ -302,6 +302,12 @@ internal class GSubTable : Table
             ushort[] featureIndices = langSysTables[i].FeatureIndices;
             for (int j = 0; j < featureIndices.Length; j++)
             {
+                // Skip feature indices that fall outside the feature list.
+                if (featureIndices[j] >= this.FeatureList.FeatureTables.Length)
+                {
+                    continue;
+                }
+
                 FeatureTable featureTable = this.FeatureList.FeatureTables[featureIndices[j]];
                 Tag feature = featureTable.FeatureTag;
 
@@ -314,6 +320,13 @@ internal class GSubTable : Table
                 for (int k = 0; k < lookupListIndices.Length; k++)
                 {
                     ushort lookupIndex = lookupListIndices[k];
+
+                    // Skip lookup indices that fall outside the lookup list.
+                    if (lookupIndex >= this.LookupList.LookupTables.Length)
+                    {
+                        continue;
+                    }
+
                     LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
                     lookups.Add(new(feature, lookupIndex, lookupTable));
                 }

@@ -18,7 +18,12 @@ internal sealed class HorizontalMetricsTable : Table
 
     public ushort GetAdvancedWidth(int glyphIndex)
     {
-        if (glyphIndex >= this.advancedWidths.Length)
+        if (this.advancedWidths.Length == 0)
+        {
+            return 0;
+        }
+
+        if ((uint)glyphIndex >= (uint)this.advancedWidths.Length)
         {
             return this.advancedWidths[0];
         }
@@ -28,7 +33,12 @@ internal sealed class HorizontalMetricsTable : Table
 
     internal short GetLeftSideBearing(int glyphIndex)
     {
-        if (glyphIndex >= this.leftSideBearings.Length)
+        if (this.leftSideBearings.Length == 0)
+        {
+            return 0;
+        }
+
+        if ((uint)glyphIndex >= (uint)this.leftSideBearings.Length)
         {
             return this.leftSideBearings[0];
         }

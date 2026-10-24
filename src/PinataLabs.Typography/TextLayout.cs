@@ -43,51 +43,66 @@ internal static class TextLayout
             };
         }
 
-        int start = 0;
-        int end = text.GetGraphemeCount();
-        List<TextRun> textRuns = [];
-        foreach (TextRun textRun in options.TextRuns!.OrderBy(x => x.Start))
+        int count = text.GetGraphemeCount();
+
+        // Normalisation policy (deterministic, documented on TextOptions.TextRuns):
+        //  1. Work on private copies so the caller's instances are never written to.
+        //  2. Clamp each run to [0, count]; drop runs that are empty after clamping
+        //     (zero length, inverted, or entirely past the end).
+        //  3. Where runs overlap or nest, the run later in list order wins inside the
+        //     overlap and the earlier run resumes after it (like nested CSS spans).
+        //     Start order is irrelevant; equal starts are tie-broken by list order.
+        //  4. Graphemes covered by no run get a default-font run.
+        // Each grapheme is assigned to the last run covering it, then consecutive graphemes
+        // with the same owner are emitted as one run. A run split around a nested run yields
+        // one copy per piece, so derived types stay visible in both.
+        List<TextRun> copies = CopyRuns(options.TextRuns!);
+        int[] owners = new int[count];
+        Array.Fill(owners, -1);
+        for (int i = 0; i < copies.Count; i++)
         {
-            // Fill gaps within runs.
-            if (textRun.Start > start)
+            TextRun copy = copies[i];
+            int from = Math.Max(copy.Start, 0);
+            int to = Math.Min(copy.End, count);
+            if (to <= from)
             {
-                textRuns.Add(new()
-                {
-                    Start = start,
-                    End = textRun.Start,
-                    Font = options.Font
-                });
+                continue;
             }
 
-            // Add the current run, ensuring the font is not null.
-            textRun.Font ??= options.Font;
-
-            // Ensure that the previous run does not overlap the current.
-            if (textRuns.Count > 0)
-            {
-                int prevIndex = textRuns.Count - 1;
-                TextRun previous = textRuns[prevIndex];
-                previous.End = Math.Min(previous.End, textRun.Start);
-            }
-
-            textRuns.Add(textRun);
-            start = textRun.End;
+            Array.Fill(owners, i, from, to - from);
         }
 
-        // Add a final run if required.
-        if (start < end)
+        List<TextRun> textRuns = [];
+        int segmentStart = 0;
+        while (segmentStart < count)
         {
-            // End is exclusive, so the remaining graphemes always form a run of their own,
-            // even when only a single grapheme remains.
-            textRuns.Add(new()
+            int owner = owners[segmentStart];
+            int segmentEnd = segmentStart + 1;
+            while (segmentEnd < count && owners[segmentEnd] == owner)
             {
-                Start = start,
-                End = end,
-                Font = options.Font
-            });
+                segmentEnd++;
+            }
+
+            TextRun run = owner < 0 ? new TextRun() : copies[owner].Clone();
+            run.Start = segmentStart;
+            run.End = segmentEnd;
+            run.Font ??= options.Font;
+            textRuns.Add(run);
+            segmentStart = segmentEnd;
         }
 
         return textRuns;
+    }
+
+    private static List<TextRun> CopyRuns(IReadOnlyList<TextRun> source)
+    {
+        List<TextRun> copies = new(source.Count);
+        foreach (TextRun run in source)
+        {
+            copies.Add(run.Clone());
+        }
+
+        return copies;
     }
 
     private static TextBox ProcessText(ReadOnlySpan<char> text, TextOptions options)
@@ -102,20 +117,16 @@ internal static class TextLayout
         GlyphPositioningCollection positionings = new(options);
 
         // Analyse the text for bidi directional runs.
+        // A fixed text direction sets the paragraph embedding level only (UAX #9 HL1),
+        // as CSS direction does. Strong characters still resolve to their own direction.
         BidiAlgorithm bidi = BidiAlgorithm.Instance.Value!;
         var bidiData = new BidiData();
         bidiData.Init(text, (sbyte)options.TextDirection);
-
-        // If we have embedded directional overrides then change those
-        // ranges to neutral.
-        if (options.TextDirection != TextDirection.Auto)
-        {
-            bidiData.SaveTypes();
-            bidiData.Types.Span.Fill(BidiCharacterType.OtherNeutral);
-            bidiData.PairedBracketTypes.Span.Fill(BidiPairedBracketType.None);
-        }
-
         bidi.Process(bidiData);
+
+        TextDirection paragraphDirection = (bidi.ResolvedParagraphEmbeddingLevel & 1) == 0
+            ? TextDirection.LeftToRight
+            : TextDirection.RightToLeft;
 
         // Get the list of directional runs
         BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
@@ -190,7 +201,7 @@ internal static class TextLayout
             font.FontMetrics.UpdatePositions(positionings);
         }
 
-        return BreakLines(text, options, bidiRuns, bidiMap, positionings, layoutMode);
+        return BreakLines(text, options, paragraphDirection, bidiRuns, bidiMap, positionings, layoutMode);
     }
 
     private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options)
@@ -878,6 +889,7 @@ internal static class TextLayout
     private static TextBox BreakLines(
         ReadOnlySpan<char> text,
         TextOptions options,
+        TextDirection paragraphDirection,
         BidiRun[] bidiRuns,
         Dictionary<int, int> bidiMap,
         GlyphPositioningCollection positionings,
@@ -934,7 +946,13 @@ internal static class TextLayout
                 // For vertical mixed layout we will be rotating glyphs with the vertical orientation type R or TR.
                 CodePoint codePoint = codePointEnumerator.Current;
                 VerticalOrientationType verticalOrientationType = CodePoint.GetVerticalOrientationType(codePoint);
-                bool isRotated = isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.Rotate or VerticalOrientationType.TransformRotate;
+                bool isRotated = isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.Rotate;
+                if (isVerticalMixedLayout && verticalOrientationType is VerticalOrientationType.TransformRotate)
+                {
+                    // Tr: use the vertical form (upright) when the font substituted one; otherwise rotate.
+                    GlyphMetrics first = metrics[0];
+                    isRotated = !first.FontMetrics.TryGetGlyphId(codePoint, out ushort cmapGlyphId) || first.GlyphId == cmapGlyphId;
+                }
 
                 if (CodePoint.IsVariationSelector(codePoint))
                 {
@@ -992,6 +1010,9 @@ internal static class TextLayout
                                 glyphAdvance = spaceMetrics.AdvanceHeight * options.TabWidth;
                                 glyph.SetAdvanceHeight((ushort)glyphAdvance);
                             }
+
+                            // The advance list is what reaches the line, so it must carry the tab width.
+                            decomposedAdvances[0] = glyphAdvance;
                         }
                     }
                 }
@@ -1260,13 +1281,16 @@ internal static class TextLayout
             textLines.Add(textLine.Finalize());
         }
 
-        return new TextBox(options, textLines);
+        return new TextBox(options, paragraphDirection, textLines);
     }
 
     internal sealed class TextBox
     {
-        public TextBox(TextOptions options, IReadOnlyList<TextLine> textLines)
+        private readonly TextDirection paragraphDirection;
+
+        public TextBox(TextOptions options, TextDirection paragraphDirection, IReadOnlyList<TextLine> textLines)
         {
+            this.paragraphDirection = paragraphDirection;
             this.TextLines = textLines;
             for (int i = 0; i < this.TextLines.Count - 1; i++)
             {
@@ -1279,7 +1303,7 @@ internal static class TextLayout
         public float ScaledMaxAdvance()
             => this.TextLines.Max(x => x.ScaledLineAdvance);
 
-        public TextDirection TextDirection() => this.TextLines[0][0].TextDirection;
+        public TextDirection TextDirection() => this.paragraphDirection;
     }
 
     internal sealed class TextLine

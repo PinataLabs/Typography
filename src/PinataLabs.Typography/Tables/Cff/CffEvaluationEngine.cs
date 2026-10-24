@@ -31,6 +31,9 @@ internal ref struct CffEvaluationEngine
     private readonly ReadOnlySpan<byte[]> localSubrBuffers;
     private TransformingGlyphRenderer transforming;
     private readonly int nominalWidthX;
+    private readonly int[]? blendRegionCounts;
+    private readonly int initialVsIndex;
+    private int vsIndex;
     private readonly int globalBias;
     private readonly int localBias;
     private readonly Dictionary<int, float> trans;
@@ -40,9 +43,14 @@ internal ref struct CffEvaluationEngine
         ReadOnlySpan<byte> charStrings,
         ReadOnlySpan<byte[]> globalSubrBuffers,
         ReadOnlySpan<byte[]> localSubrBuffers,
-        int nominalWidthX)
+        int nominalWidthX,
+        int[]? blendRegionCounts = null,
+        int vsIndex = 0)
     {
         this.transforming = default;
+        this.blendRegionCounts = blendRegionCounts;
+        this.initialVsIndex = vsIndex;
+        this.vsIndex = vsIndex;
         this.charStrings = charStrings;
         this.globalSubrBuffers = globalSubrBuffers;
         this.localSubrBuffers = localSubrBuffers;
@@ -220,11 +228,22 @@ internal ref struct CffEvaluationEngine
 
                     case Type2Operator1.Reserved15_:
 
-                        // TODO: CFF2
+                        // CFF2 vsindex: selects the ItemVariationData used by subsequent blend operators.
+                        if (this.blendRegionCounts is not null)
+                        {
+                            this.vsIndex = (int)this.stack.Pop();
+                        }
+
                         break;
                     case Type2Operator1.Reserved16_:
 
-                        // TODO: CFF2
+                        // CFF2 blend: n default values followed by n * k deltas. We render the default instance,
+                        // so the deltas are discarded and the n default values stay on the stack.
+                        if (this.blendRegionCounts is not null)
+                        {
+                            this.Blend();
+                        }
+
                         break;
                     case Type2Operator1.Hintmask:
                     case Type2Operator1.Cntrmask:
@@ -717,6 +736,27 @@ internal ref struct CffEvaluationEngine
         return (count < 1240) ? 107 : (count < 33900) ? 1131 : 32768;
     }
 
+    private void Blend()
+    {
+        int n = (int)this.stack.Pop();
+        int[] counts = this.blendRegionCounts!;
+        if ((uint)this.vsIndex >= (uint)counts.Length)
+        {
+            throw new InvalidFontFileException($"Invalid vsindex {this.vsIndex} in CFF2 charstring.");
+        }
+
+        long deltas = (long)n * counts[this.vsIndex];
+        if (n < 0 || deltas + n > this.stack.Length)
+        {
+            throw new InvalidFontFileException("Invalid blend operand count in CFF2 charstring.");
+        }
+
+        for (long i = 0; i < deltas; i++)
+        {
+            this.stack.Pop();
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ParseStems()
     {
@@ -740,6 +780,7 @@ internal ref struct CffEvaluationEngine
         this.y = 0;
         this.width = null;
         this.nStems = 0;
+        this.vsIndex = this.initialVsIndex;
         this.stack.Clear();
         this.trans.Clear();
     }
