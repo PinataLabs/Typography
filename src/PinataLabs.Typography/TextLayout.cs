@@ -545,7 +545,7 @@ internal static class TextLayout
             {
                 // Align the glyph horizontally and vertically centering horizontally around the baseline.
                 Vector2 scale = new Vector2(data.PointSize) / metric.ScaleFactor;
-                float oX = (data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F;
+                float oX = ((data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F) - (metric.Bounds.Min.X * scale.X);
                 Vector2 offset = new(oX, (metric.Bounds.Max.Y + metric.TopSideBearing) * scale.Y);
 
                 glyphs.Add(new GlyphLayout(
@@ -695,7 +695,7 @@ internal static class TextLayout
                 {
                     // Align the glyph horizontally and vertically centering horizontally around the baseline.
                     Vector2 scale = new Vector2(data.PointSize) / metric.ScaleFactor;
-                    float oX = (data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F;
+                    float oX = ((data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F) - (metric.Bounds.Min.X * scale.X);
                     Vector2 offset = new(oX, (metric.Bounds.Max.Y + metric.TopSideBearing) * scale.Y);
 
                     glyphs.Add(new GlyphLayout(
@@ -817,27 +817,6 @@ internal static class TextLayout
             }
 
             if (!CodePoint.TryGetBidiMirror(data.CodePoint, out CodePoint mirror))
-            {
-                continue;
-            }
-
-            if (fontMetrics.TryGetGlyphId(mirror, out ushort glyphId))
-            {
-                collection.Replace(i, glyphId);
-            }
-        }
-
-        // TODO: This only replaces certain glyphs. We should investigate the specification further.
-        // https://www.unicode.org/reports/tr50/#vertical_alternates
-        for (int i = 0; i < collection.Count; i++)
-        {
-            GlyphShapingData data = collection[i];
-            if (CodePoint.GetVerticalOrientationType(data.CodePoint) is VerticalOrientationType.Upright or VerticalOrientationType.TransformUpright)
-            {
-                continue;
-            }
-
-            if (!CodePoint.TryGetVerticalMirror(data.CodePoint, out CodePoint mirror))
             {
                 continue;
             }
