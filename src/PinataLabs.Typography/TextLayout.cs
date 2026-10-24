@@ -76,23 +76,14 @@ internal static class TextLayout
         // Add a final run if required.
         if (start < end)
         {
-            // Offset error by user, last index in input string
-            // instead of exclusive index.
-            if (start == end - 1)
+            // End is exclusive, so the remaining graphemes always form a run of their own,
+            // even when only a single grapheme remains.
+            textRuns.Add(new()
             {
-                int prevIndex = textRuns.Count - 1;
-                TextRun previous = textRuns[prevIndex];
-                previous.End++;
-            }
-            else
-            {
-                textRuns.Add(new()
-                {
-                    Start = start,
-                    End = end,
-                    Font = options.Font
-                });
-            }
+                Start = start,
+                End = end,
+                Font = options.Font
+            });
         }
 
         return textRuns;
