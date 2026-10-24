@@ -1,3 +1,7 @@
+## Rules
+
+- Don't look at SixLabors repo commits or code due to licensing.
+
 ## Agent skills
 
 ### Issue tracker
