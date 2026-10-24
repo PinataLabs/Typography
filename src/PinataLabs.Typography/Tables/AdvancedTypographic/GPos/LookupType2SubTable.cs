@@ -284,7 +284,19 @@ internal static class LookupType2SubTable
 
                 int classDef2 = this.classDefinitionTable2.ClassIndexOf(glyphId2);
 
+                // The ClassDef tables are independent of class1Count and class2Count, so they can
+                // yield a class that has no record. In that case the subtable does not apply.
+                if ((uint)classDef1 >= (uint)this.class1Records.Length)
+                {
+                    return false;
+                }
+
                 Class1Record class1Record = this.class1Records[classDef1];
+                if ((uint)classDef2 >= (uint)class1Record.Class2Records.Length)
+                {
+                    return false;
+                }
+
                 Class2Record class2Record = class1Record.Class2Records[classDef2];
 
                 ValueRecord record1 = class2Record.ValueRecord1;

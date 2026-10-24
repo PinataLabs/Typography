@@ -99,7 +99,7 @@ internal static class LookupType4SubTable
             }
 
             int markIndex = this.markCoverage.CoverageIndexOf(glyphId);
-            if (markIndex == -1)
+            if (markIndex < 0 || markIndex >= this.markArrayTable.MarkRecords.Length)
             {
                 return false;
             }
@@ -122,13 +122,20 @@ internal static class LookupType4SubTable
 
             ushort baseGlyphId = collection[baseGlyphIndex].GlyphId;
             int baseIndex = this.baseCoverage.CoverageIndexOf(baseGlyphId);
-            if (baseIndex < 0)
+            if (baseIndex < 0 || baseIndex >= this.baseArrayTable.BaseRecords.Length)
             {
                 return false;
             }
 
+            // Indices from font data that are out of range mean the subtable does not apply.
             MarkRecord markRecord = this.markArrayTable.MarkRecords[markIndex];
-            AnchorTable? baseAnchor = this.baseArrayTable.BaseRecords[baseIndex].BaseAnchorTables[markRecord.MarkClass];
+            AnchorTable[] baseAnchors = this.baseArrayTable.BaseRecords[baseIndex].BaseAnchorTables;
+            if (markRecord.MarkClass >= (uint)baseAnchors.Length)
+            {
+                return false;
+            }
+
+            AnchorTable? baseAnchor = baseAnchors[markRecord.MarkClass];
 
             return AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
         }

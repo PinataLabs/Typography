@@ -116,25 +116,19 @@ options.LineSpacing = 1.5F; // One and a half times the font's line height.
 ## Tabs
 
 `TabWidth` sets the width of a tab character, as a number of spaces (U+0020) in the current font.
-The default, `-1`, uses the advance of the font's tab glyph.
+The default, `-1`, uses the advance of the font's tab glyph. If the font has no tab glyph, that is the advance of its missing-glyph box.
+
+A value of `0` or more gives each tab exactly that many times the advance of the space glyph, whether or not the font has a tab glyph.
+The width is fixed for each tab. It does not align to tab stops.
 
 ```csharp
 options.TabWidth = 4;
 ```
 
-:::caution[Most fonts have no tab glyph]
-
-`TabWidth` takes effect only when the font maps the tab character (U+0009) to a glyph. Most fonts,
-including Open Sans, DejaVu Sans and Segoe UI, do not. With those fonts a tab gets the advance of
-the font's missing-glyph box, whatever `TabWidth` is. If you need exact tab stops, split the text at
-the tabs and place each part yourself.
-
-:::
-
 ## Text direction
 
-`TextDirection` sets the direction of the text. The default, `Auto`, applies the Unicode
-Bidirectional Algorithm, so mixed English and Arabic text comes out in the right order.
-`LeftToRight` and `RightToLeft` force every character in that direction. See
-[International text](./international-text.md#right-to-left-and-bidirectional-text) before you set
-them.
+`TextDirection` sets the base direction of the text, as the CSS `direction` property does. The
+default, `Auto`, finds it from the first strong character. Mixed English and Arabic text comes out
+in the right order with all three values. `TextAlignment.Start` and `TextAlignment.End` follow the
+base direction. See
+[International text](./international-text.md#right-to-left-and-bidirectional-text).
