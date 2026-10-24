@@ -27,9 +27,11 @@ Default: `Auto`.
 
 | Value | Description |
 | --- | --- |
-| `Auto` | Apply the Unicode Bidirectional Algorithm. |
-| `LeftToRight` | Lay out every character left to right. |
-| `RightToLeft` | Lay out every character right to left. |
+| `Auto` | Find the base direction from the first strong character, as HTML `dir="auto"` does. |
+| `LeftToRight` | Use a left-to-right base direction, as CSS `direction: ltr` does. |
+| `RightToLeft` | Use a right-to-left base direction, as CSS `direction: rtl` does. |
+
+All three apply the Unicode Bidirectional Algorithm, so each run of text keeps its own direction.
 
 ### TextAlignment
 

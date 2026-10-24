@@ -46,7 +46,10 @@ internal static class TextLayout
         int start = 0;
         int end = text.GetGraphemeCount();
         List<TextRun> textRuns = [];
-        foreach (TextRun textRun in options.TextRuns!.OrderBy(x => x.Start))
+
+        // Work on private copies so the caller's instances are never written to.
+        // Everything below may freely adjust Start, End and Font.
+        foreach (TextRun textRun in CopyRuns(options.TextRuns!).OrderBy(x => x.Start))
         {
             // Fill gaps within runs.
             if (textRun.Start > start)
@@ -90,6 +93,17 @@ internal static class TextLayout
         return textRuns;
     }
 
+    private static List<TextRun> CopyRuns(IReadOnlyList<TextRun> source)
+    {
+        List<TextRun> copies = new(source.Count);
+        foreach (TextRun run in source)
+        {
+            copies.Add(run.Clone());
+        }
+
+        return copies;
+    }
+
     private static TextBox ProcessText(ReadOnlySpan<char> text, TextOptions options)
     {
         // Gather the font and fallbacks.
@@ -102,20 +116,16 @@ internal static class TextLayout
         GlyphPositioningCollection positionings = new(options);
 
         // Analyse the text for bidi directional runs.
+        // A fixed text direction sets the paragraph embedding level only (UAX #9 HL1),
+        // as CSS direction does. Strong characters still resolve to their own direction.
         BidiAlgorithm bidi = BidiAlgorithm.Instance.Value!;
         var bidiData = new BidiData();
         bidiData.Init(text, (sbyte)options.TextDirection);
-
-        // If we have embedded directional overrides then change those
-        // ranges to neutral.
-        if (options.TextDirection != TextDirection.Auto)
-        {
-            bidiData.SaveTypes();
-            bidiData.Types.Span.Fill(BidiCharacterType.OtherNeutral);
-            bidiData.PairedBracketTypes.Span.Fill(BidiPairedBracketType.None);
-        }
-
         bidi.Process(bidiData);
+
+        TextDirection paragraphDirection = (bidi.ResolvedParagraphEmbeddingLevel & 1) == 0
+            ? TextDirection.LeftToRight
+            : TextDirection.RightToLeft;
 
         // Get the list of directional runs
         BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
@@ -190,7 +200,7 @@ internal static class TextLayout
             font.FontMetrics.UpdatePositions(positionings);
         }
 
-        return BreakLines(text, options, bidiRuns, bidiMap, positionings, layoutMode);
+        return BreakLines(text, options, paragraphDirection, bidiRuns, bidiMap, positionings, layoutMode);
     }
 
     private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options)
@@ -878,6 +888,7 @@ internal static class TextLayout
     private static TextBox BreakLines(
         ReadOnlySpan<char> text,
         TextOptions options,
+        TextDirection paragraphDirection,
         BidiRun[] bidiRuns,
         Dictionary<int, int> bidiMap,
         GlyphPositioningCollection positionings,
@@ -1260,13 +1271,16 @@ internal static class TextLayout
             textLines.Add(textLine.Finalize());
         }
 
-        return new TextBox(options, textLines);
+        return new TextBox(options, paragraphDirection, textLines);
     }
 
     internal sealed class TextBox
     {
-        public TextBox(TextOptions options, IReadOnlyList<TextLine> textLines)
+        private readonly TextDirection paragraphDirection;
+
+        public TextBox(TextOptions options, TextDirection paragraphDirection, IReadOnlyList<TextLine> textLines)
         {
+            this.paragraphDirection = paragraphDirection;
             this.TextLines = textLines;
             for (int i = 0; i < this.TextLines.Count - 1; i++)
             {
@@ -1279,7 +1293,7 @@ internal static class TextLayout
         public float ScaledMaxAdvance()
             => this.TextLines.Max(x => x.ScaledLineAdvance);
 
-        public TextDirection TextDirection() => this.TextLines[0][0].TextDirection;
+        public TextDirection TextDirection() => this.paragraphDirection;
     }
 
     internal sealed class TextLine
