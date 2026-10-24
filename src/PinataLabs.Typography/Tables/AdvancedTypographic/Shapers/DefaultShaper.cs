@@ -91,7 +91,7 @@ internal class DefaultShaper : BaseShaper
         // Add directional features.
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
         bool isVerticalLayout = false;
-        for (int i = index; i < count; i++)
+        for (int i = index; i < index + count; i++)
         {
             GlyphShapingData shapingData = collection[i];
             isVerticalLayout |= AdvancedTypographicUtils.IsVerticalGlyph(shapingData.CodePoint, layoutMode);
@@ -123,7 +123,7 @@ internal class DefaultShaper : BaseShaper
 
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
         bool isVerticalLayout = false;
-        for (int i = index; i < count; i++)
+        for (int i = index; i < index + count; i++)
         {
             GlyphShapingData shapingData = collection[i];
             isVerticalLayout |= AdvancedTypographicUtils.IsVerticalGlyph(shapingData.CodePoint, layoutMode);

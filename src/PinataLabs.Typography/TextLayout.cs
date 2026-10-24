@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -536,7 +537,7 @@ internal static class TextLayout
             {
                 // Align the glyph horizontally and vertically centering horizontally around the baseline.
                 Vector2 scale = new Vector2(data.PointSize) / metric.ScaleFactor;
-                float oX = (data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F;
+                float oX = ((data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F) - (metric.Bounds.Min.X * scale.X);
                 Vector2 offset = new(oX, (metric.Bounds.Max.Y + metric.TopSideBearing) * scale.Y);
 
                 glyphs.Add(new GlyphLayout(
@@ -686,7 +687,7 @@ internal static class TextLayout
                 {
                     // Align the glyph horizontally and vertically centering horizontally around the baseline.
                     Vector2 scale = new Vector2(data.PointSize) / metric.ScaleFactor;
-                    float oX = (data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F;
+                    float oX = ((data.ScaledLineHeight - (metric.Bounds.Size().X * scale.X)) * .5F) - (metric.Bounds.Min.X * scale.X);
                     Vector2 offset = new(oX, (metric.Bounds.Max.Y + metric.TopSideBearing) * scale.Y);
 
                     glyphs.Add(new GlyphLayout(
@@ -789,6 +790,7 @@ internal static class TextLayout
         // Apply the simple and complex substitutions.
         // TODO: Investigate HarfBuzz normalizer.
         SubstituteBidiMirrors(font.FontMetrics, substitutions);
+        SubstituteVerticalForms(font.FontMetrics, substitutions);
         font.FontMetrics.ApplySubstitution(substitutions);
 
         return !isFallbackRun
@@ -817,13 +819,25 @@ internal static class TextLayout
                 collection.Replace(i, glyphId);
             }
         }
+    }
 
-        // TODO: This only replaces certain glyphs. We should investigate the specification further.
-        // https://www.unicode.org/reports/tr50/#vertical_alternates
+    /// <summary>
+    /// Substitutes cmap vertical presentation forms for fonts that do not provide a <c>vert</c> feature.
+    /// The substitution only applies to vertical layouts and glyphs that are laid out upright; when the
+    /// font has a <c>vert</c> feature that feature is authoritative.
+    /// </summary>
+    private static void SubstituteVerticalForms(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
+    {
+        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
+        if (!(layoutMode.IsVertical() || layoutMode.IsVerticalMixed()) || HasVertFeature(fontMetrics))
+        {
+            return;
+        }
+
         for (int i = 0; i < collection.Count; i++)
         {
             GlyphShapingData data = collection[i];
-            if (CodePoint.GetVerticalOrientationType(data.CodePoint) is VerticalOrientationType.Upright or VerticalOrientationType.TransformUpright)
+            if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode))
             {
                 continue;
             }
@@ -838,6 +852,25 @@ internal static class TextLayout
                 collection.Replace(i, glyphId);
             }
         }
+    }
+
+    private static bool HasVertFeature(FontMetrics fontMetrics)
+    {
+        if (!fontMetrics.TryGetGSubTable(out GSubTable? gsub))
+        {
+            return false;
+        }
+
+        Tag vert = Tag.Parse("vert");
+        foreach (FeatureTable feature in gsub.FeatureList.FeatureTables)
+        {
+            if (feature.FeatureTag == vert)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static TextBox BreakLines(
