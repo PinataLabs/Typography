@@ -201,15 +201,17 @@ internal static class TextLayout
         Vector2 boxLocation = options.Origin / options.Dpi;
         Vector2 penLocation = boxLocation;
 
+        TextDirection direction = textBox.TextDirection();
+
         // If a wrapping length is specified that should be used to determine the
-        // box size to align text within.
+        // box size to align text within. Only left-to-right text aligned to Start can skip it;
+        // for right-to-left text, Start is the far edge of the box.
+        bool isLeftToRightStart = options.TextAlignment == TextAlignment.Start && direction == TextDirection.LeftToRight;
         float maxScaledAdvance = textBox.ScaledMaxAdvance();
-        if (options.TextAlignment != TextAlignment.Start && options.WrappingLength > 0)
+        if (!isLeftToRightStart && options.WrappingLength > 0)
         {
             maxScaledAdvance = Math.Max(options.WrappingLength / options.Dpi, maxScaledAdvance);
         }
-
-        TextDirection direction = textBox.TextDirection();
 
         if (layoutMode == LayoutMode.HorizontalTopBottom)
         {
