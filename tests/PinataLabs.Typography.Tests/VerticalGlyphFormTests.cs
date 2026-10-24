@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
 
@@ -66,6 +67,29 @@ public class VerticalGlyphFormTests
             VerticalIdeographicComma,
             VerticalProlongedSoundMark,
         });
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalRightLeft, true)]
+    [Arguments(LayoutMode.VerticalLeftRight, true)]
+    [Arguments(LayoutMode.HorizontalTopBottom, false)]
+    public async Task CmapVerticalFormsAreUsedOnlyInVerticalLayoutWhenFontHasNoVertFeature(LayoutMode mode, bool expectVerticalForm)
+    {
+        // The fake font has no GSUB table and so no 'vert' feature.
+        CodePoint original = new(0x3010);
+        await Assert.That(CodePoint.TryGetVerticalMirror(original, out CodePoint mirror)).IsTrue();
+
+        string text = char.ConvertFromUtf32(original.Value) + char.ConvertFromUtf32(mirror.Value);
+        Font font = FakeFont.CreateFont(text);
+
+        GlyphRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, char.ConvertFromUtf32(original.Value), new TextOptions(font) { LayoutMode = mode });
+        ushort id = renderer.GlyphKeys.Single().GlyphId;
+
+        GlyphRenderer expected = new();
+        TextRenderer.RenderTextTo(expected, char.ConvertFromUtf32(expectVerticalForm ? mirror.Value : original.Value), new TextOptions(font) { LayoutMode = LayoutMode.HorizontalTopBottom });
+
+        await Assert.That(id).IsEqualTo(expected.GlyphKeys.Single().GlyphId);
     }
 
     [Test]

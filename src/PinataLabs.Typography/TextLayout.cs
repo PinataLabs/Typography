@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -798,6 +799,7 @@ internal static class TextLayout
         // Apply the simple and complex substitutions.
         // TODO: Investigate HarfBuzz normalizer.
         SubstituteBidiMirrors(font.FontMetrics, substitutions);
+        SubstituteVerticalForms(font.FontMetrics, substitutions);
         font.FontMetrics.ApplySubstitution(substitutions);
 
         return !isFallbackRun
@@ -826,6 +828,58 @@ internal static class TextLayout
                 collection.Replace(i, glyphId);
             }
         }
+    }
+
+    /// <summary>
+    /// Substitutes cmap vertical presentation forms for fonts that do not provide a <c>vert</c> feature.
+    /// The substitution only applies to vertical layouts and glyphs that are laid out upright; when the
+    /// font has a <c>vert</c> feature that feature is authoritative.
+    /// </summary>
+    private static void SubstituteVerticalForms(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
+    {
+        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
+        if (!(layoutMode.IsVertical() || layoutMode.IsVerticalMixed()) || HasVertFeature(fontMetrics))
+        {
+            return;
+        }
+
+        for (int i = 0; i < collection.Count; i++)
+        {
+            GlyphShapingData data = collection[i];
+            if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode))
+            {
+                continue;
+            }
+
+            if (!CodePoint.TryGetVerticalMirror(data.CodePoint, out CodePoint mirror))
+            {
+                continue;
+            }
+
+            if (fontMetrics.TryGetGlyphId(mirror, out ushort glyphId))
+            {
+                collection.Replace(i, glyphId);
+            }
+        }
+    }
+
+    private static bool HasVertFeature(FontMetrics fontMetrics)
+    {
+        if (!fontMetrics.TryGetGSubTable(out GSubTable? gsub))
+        {
+            return false;
+        }
+
+        Tag vert = Tag.Parse("vert");
+        foreach (FeatureTable feature in gsub.FeatureList.FeatureTables)
+        {
+            if (feature.FeatureTag == vert)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static TextBox BreakLines(
