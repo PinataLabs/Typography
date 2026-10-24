@@ -598,6 +598,69 @@ public class TextLayoutTests
     }
 
     [Test]
+    public async Task BuildTextRuns_DoesNotMutateCallerRuns()
+    {
+        const string text = "abcdefghij";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextRun first = new() { Start = 0, End = 8 };
+        TextRun second = new() { Start = 4, End = 6, Font = font2 };
+        TextOptions options = new(font) { TextRuns = new List<TextRun> { first, second } };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        // Caller's instances are untouched.
+        await Assert.That(first.End).IsEqualTo(8);
+        await Assert.That(first.Font).IsNull();
+        await Assert.That(second.Start).IsEqualTo(4);
+        await Assert.That(second.End).IsEqualTo(6);
+
+        // The result is built from copies.
+        await Assert.That(runs.Any(r => ReferenceEquals(r, first) || ReferenceEquals(r, second))).IsFalse();
+        await Assert.That(runs[0].Font).IsEqualTo(font);
+        await Assert.That(runs[0].End).IsEqualTo(4);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_ReusedOptionsDoNotKeepStaleFont()
+    {
+        const string text = "abcdef";
+        Font font = CreateFont(text);
+        Font font2 = CreateFont(text, 16);
+        TextRun run = new() { Start = 0, End = 3 };
+        TextOptions options = new(font) { TextRuns = new List<TextRun> { run } };
+
+        TextLayout.BuildTextRuns(text.AsSpan(), options);
+        options.Font = font2;
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        await Assert.That(runs[0].Font).IsEqualTo(font2);
+    }
+
+    [Test]
+    public async Task BuildTextRuns_PreservesDerivedRunTypeAndData()
+    {
+        const string text = "abcdef";
+        Font font = CreateFont(text);
+        TextOptions options = new(font)
+        {
+            TextRuns = new List<TextRun> { new CustomRun { Start = 0, End = 3, Tag = "bold", TextDecorations = TextDecorations.Strikeout } }
+        };
+
+        IReadOnlyList<TextRun> runs = TextLayout.BuildTextRuns(text.AsSpan(), options);
+
+        CustomRun copy = (CustomRun)runs[0];
+        await Assert.That(copy.Tag).IsEqualTo("bold");
+        await Assert.That(copy.TextDecorations).IsEqualTo(TextDecorations.Strikeout);
+        await Assert.That(copy.Font).IsEqualTo(font);
+    }
+
+    private sealed class CustomRun : TextRun
+    {
+        public string? Tag { get; set; }
+    }
+
+    [Test]
     [Arguments("abcde", 4)]
     [Arguments("abcdef", 4)]
     [Arguments("abcdef", 5)]
