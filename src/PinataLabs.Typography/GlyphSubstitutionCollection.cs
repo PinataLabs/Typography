@@ -137,6 +137,32 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         }));
 
     /// <summary>
+    /// Inserts a glyph before the glyph at the specified index. The new glyph copies the shaping data
+    /// of the glyph it is inserted before (or of the last glyph when appending), and represents no codepoints of its own.
+    /// </summary>
+    /// <param name="index">The zero-based index to insert the glyph at. It can equal the count to append.</param>
+    /// <param name="glyphId">The id of the glyph to insert.</param>
+    /// <param name="codePoint">The codepoint the glyph represents.</param>
+    public void InsertGlyph(int index, ushort glyphId, CodePoint codePoint)
+    {
+        OffsetGlyphDataPair pair = this.glyphs[index < this.glyphs.Count ? index : index - 1];
+        GlyphShapingData data = new(pair.Data, false)
+        {
+            GlyphId = glyphId,
+            CodePoint = codePoint,
+            CodePointCount = 0,
+            IsSubstituted = true,
+            IsLigated = false,
+            LigatureId = 0,
+            LigatureComponent = -1,
+            MarkAttachment = -1,
+            CursiveAttachment = -1,
+        };
+
+        this.glyphs.Insert(index, new(pair.Offset, data));
+    }
+
+    /// <summary>
     /// Moves the specified glyph to the specified position.
     /// </summary>
     /// <param name="fromIndex">The index to move from.</param>

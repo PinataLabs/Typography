@@ -49,6 +49,9 @@ public static class TestFonts
 
     public static string NotoSansRunicFile => GetFullPath("Noto/NotoSansRunic-Regular.ttf");
 
+    // Noto Sans Myanmar (OFL-1.1, licence in NotoSansMyanmar/OFL.txt): https://github.com/notofonts/myanmar
+    public static string NotoSansMyanmarRegular => GetFullPath("NotoSansMyanmar/NotoSansMyanmar-Regular.ttf");
+
     // FdSelect format 0: https://github.com/adobe-fonts/fdarray-test/
     public static string FDArrayTest257File => GetFullPath("FDArrayTest257.otf");
 
