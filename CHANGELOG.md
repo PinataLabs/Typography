@@ -23,6 +23,8 @@ An additive or breaking public API change needs all of these:
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-26
+
 ### Added
 
 - **Myanmar shaper.** Myanmar text now has its own shaper, which follows the Microsoft
