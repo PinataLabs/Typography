@@ -23,6 +23,19 @@ An additive or breaking public API change needs all of these:
 
 ## [Unreleased]
 
+### Changed
+
+- **`vrtr` in vertical mixed layout.** Glyphs that are rotated in `VerticalMixedLeftRight` and
+  `VerticalMixedRightLeft` layouts now get the OpenType `vrtr` feature. The font's `vrtr` glyphs are
+  designed to be rotated by the layout engine, so they are still rotated. Fonts without `vrtr` are
+  not affected. (#51)
+
+### Fixed
+
+- **`vrt2` in vertical mixed layout.** A `vrt2` feature requested in `TextOptions.FeatureTags` is no
+  longer applied to glyphs that are rotated in vertical mixed layout. Its glyphs are pre-rotated, so
+  before, these glyphs were rotated twice. `vrt2` is still never applied by default. (#51)
+
 ## [0.1.0] - 2026-10-26
 
 ### Added
