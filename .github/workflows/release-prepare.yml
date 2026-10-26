@@ -91,7 +91,7 @@ jobs:
 
           # Release Drafter resolves the previous version from published GitHub
           # Releases, not from git tags. Until the first release is published it sees
-          # none and drafts v0.0.1, which is below the 1.0 line MinVer is held to.
+          # none and drafts v0.0.1, which is below the 0.1 line MinVer is held to.
           # NuGet versions cannot be reused, so refuse anything that is not an increase
           # over the highest existing tag.
           latest=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n1)
@@ -100,8 +100,11 @@ jobs:
             echo "::error::$tag is not an increase over the latest tag $latest. If the release draft is wrong, pass an explicit version input."
             exit 1
           fi
-          if [ "${version%%.*}" -lt 1 ]; then
-            echo "::error::$tag is below 1.0.0. If the release draft reads v0.0.1 (it does until the first release is published), pass an explicit version input."
+          major=${version%%.*}
+          minor=${version#*.}
+          minor=${minor%%.*}
+          if [ "$major" -eq 0 ] && [ "$minor" -lt 1 ]; then
+            echo "::error::$tag is below 0.1.0. If the release draft reads v0.0.1 (it does until the first release is published), pass an explicit version input."
             exit 1
           fi
 

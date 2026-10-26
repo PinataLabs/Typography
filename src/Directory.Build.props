@@ -32,8 +32,8 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <MinVerTagPrefix>v</MinVerTagPrefix>
-    <!-- The package starts on the 1.0 line. Until the first v1.0.0 tag, builds are 1.0.0-alpha.0.N. -->
-    <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
+    <!-- The package starts on the 0.1 line. Until the first v0.1.0 tag, builds are 0.1.0-alpha.0.N. -->
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
     <MinVerVerbosity>normal</MinVerVerbosity>
   </PropertyGroup>
 

@@ -2,7 +2,7 @@ name: Pre-release
 
 # Publishes a pre-release of PinataLabs.Typography to NuGet from the commit this is
 # dispatched on. MinVer numbers it from the last tag and the commit height, e.g.
-# 1.0.0-beta.12. There is no tag, changelog roll or GitHub Release.
+# 0.1.0-beta.12. There is no tag, changelog roll or GitHub Release.
 #
 # The work happens in release-publish.yml. Its publish job runs in the `nuget`
 # environment, which allows main only, so a dispatch from another branch can still

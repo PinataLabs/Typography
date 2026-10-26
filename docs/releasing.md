@@ -36,7 +36,7 @@ there.
 ## Pre-release
 
 Run **Pre-release** from `main` and pick a label. MinVer numbers the package from the last
-`v` tag and the number of commits since it, for example `1.0.0-beta.12`.
+`v` tag and the number of commits since it, for example `0.1.0-beta.12`.
 
 The run fails if that version is already on nuget.org. That happens when nothing has been
 committed since the last pre-release with the same label.
@@ -47,8 +47,8 @@ environment allows deployments from `main` only.
 ## Versioning
 
 - Versions come from git tags through MinVer, with the tag prefix `v`.
-- `MinVerMinimumMajorMinor` is `1.0`, so before the first stable tag every build is
-  `1.0.0-alpha.0.N`.
+- `MinVerMinimumMajorMinor` is `0.1`, so before the first stable tag every build is
+  `0.1.0-alpha.0.N`.
 - Release Drafter picks the next stable version from the labels on merged pull requests:
   `breaking` bumps the major version, `enhancement` the minor version, anything else the
   patch version.
