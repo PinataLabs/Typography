@@ -26,8 +26,8 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Pegasus" Version="4.1.0" />
-    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
-    <PackageVersion Include="TUnit" Version="1.76.0" />
+    <PackageVersion Include="SkiaSharp" Version="4.154.0" />
+    <PackageVersion Include="TUnit" Version="1.76.45" />
   </ItemGroup>
 
 </Project>
