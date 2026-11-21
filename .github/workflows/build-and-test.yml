@@ -112,6 +112,14 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net8.0 --no-build
 
+      # A netstandard2.1 consumer such as Unity loads the netstandard2.1 asset. This runs the net8.0 tests
+      # against that asset. The rebuild overwrites the net8.0 test output, so it must follow the net8.0 test step.
+      - name: Test net8.0 against the netstandard2.1 asset
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          dotnet build tests/PinataLabs.Typography.Tests -c Release -f net8.0 -p:TestNetStandard=true
+          dotnet test --solution PinataLabs.Typography.slnx -c Release -f net8.0 -p:TestNetStandard=true --no-build
+
       # TUnit brings Microsoft's code coverage extension, so --coverage needs no extra package.
       # The file name must end in coverage.xml to match sonar.cs.vscoveragexml.reportsPaths.
       - name: Test net10.0
