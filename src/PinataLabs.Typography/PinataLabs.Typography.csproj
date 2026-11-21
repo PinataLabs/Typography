@@ -47,6 +47,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="PolySharp" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
   </ItemGroup>
 
   <!-- Polyfills for BCL members that netstandard2.1 lacks. Every other target framework has them. -->
