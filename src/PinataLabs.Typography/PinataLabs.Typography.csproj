@@ -49,4 +49,9 @@
     <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Polyfills for BCL members that netstandard2.1 lacks. Every other target framework has them. -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.1'">
+    <Compile Remove="Polyfills\**" />
+  </ItemGroup>
+
 </Project>
