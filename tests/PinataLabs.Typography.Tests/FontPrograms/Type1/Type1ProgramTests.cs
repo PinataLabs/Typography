@@ -33,7 +33,6 @@ public class Type1ProgramTests
             Type1Program font = Type1Program.Load(container);
 
             await Assert.That(font.GlyphCount).IsEqualTo(2);
-            await Assert.That(font.FontName).IsEqualTo("Synthetic");
             await Assert.That(Type1CharStringEngineTests.Outline(font, "A")).IsEqualTo(Square);
         }
     }
@@ -129,7 +128,6 @@ public class Type1ProgramTests
         builder.ClearTextBody = "/FontName /Other def /PaintType 2 def /FontMatrix [.0005 0 1e-4 0.0005 1 -2] readonly def\n/FontBBox {-1 -2 3.5 4} readonly def\n";
         Type1Program font = builder.Load();
 
-        await Assert.That(font.FontName).IsEqualTo("Other");
         await Assert.That(font.PaintType).IsEqualTo(2);
         await Assert.That(font.FontMatrix).IsEqualTo(new Matrix3x2(0.0005F, 0, 0.0001F, 0.0005F, 1, -2));
         await Assert.That(font.FontBBox).IsEqualTo(new Bounds(-1, -2, 3.5F, 4));
@@ -165,20 +163,7 @@ public class Type1ProgramTests
         => await Assert.That(() => SquareFont().Load().TryGetBuiltInEncoding(new ushort[255])).Throws<ArgumentException>();
 
     [Test]
-    public async Task Length1LocatesTheEexecSectionWhenTheCleartextHidesIt()
-    {
-        // The unterminated string swallows the eexec operator.
-        Type1FontBuilder builder = SquareFont();
-        builder.ClearTextBody = "/FontName /Hidden def\n/Notice (unterminated\n";
-        byte[] data = builder.BuildPfa(hex: false);
-        int length1 = builder.BuildClearText().Length;
-
-        await Assert.That(() => Type1Program.Load(data)).Throws<InvalidFontFileException>();
-        await Assert.That(Type1CharStringEngineTests.Outline(Type1Program.Load(data, length1), "A")).IsEqualTo(Square);
-    }
-
-    [Test]
-    public async Task RetainedByteCountIsTheBufferTheArraysAndTheName()
+    public async Task RetainedByteCountIsTheBufferAndTheArrays()
     {
         Type1FontBuilder builder = SquareFont();
         builder.AddSubr("return");
@@ -189,8 +174,7 @@ public class Type1ProgramTests
         long expected = builder.BuildPrivate().Length
             + (glyphs * ((2 * sizeof(int)) + sizeof(int) + sizeof(byte)))
             + (subrs * 2 * sizeof(int))
-            + (256 * sizeof(ushort))
-            + ("Synthetic".Length * sizeof(char));
+            + (256 * sizeof(ushort));
 
         await Assert.That(builder.Load().RetainedByteCount).IsEqualTo(expected);
         await Assert.That(Type1Program.Load(builder.BuildPfb()).RetainedByteCount).IsEqualTo(expected);

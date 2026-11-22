@@ -25,8 +25,6 @@ internal enum Type1EncodingKind
 /// </summary>
 internal sealed class Type1Header
 {
-    public string FontName { get; set; } = string.Empty;
-
     public Matrix3x2 FontMatrix { get; set; } = Matrix3x2.CreateScale(0.001F);
 
     public Bounds FontBBox { get; set; }

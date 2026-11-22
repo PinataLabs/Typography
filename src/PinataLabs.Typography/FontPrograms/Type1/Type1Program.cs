@@ -49,14 +49,11 @@ internal sealed class Type1Program
         this.subrs = subrs;
         this.nameOffsets = nameOffsets;
         this.nameLengths = nameLengths;
-        this.FontName = header.FontName;
         this.FontMatrix = header.FontMatrix;
         this.FontBBox = header.FontBBox;
         this.PaintType = header.PaintType;
         this.encoding = this.ResolveEncoding(header, clearText);
     }
-
-    public string FontName { get; }
 
     /// <summary>
     /// Gets the matrix from glyph space to ems. 0.001 scale when the font program gives none.
@@ -73,7 +70,7 @@ internal sealed class Type1Program
     public int GlyphCount => this.glyphs.Count;
 
     /// <summary>
-    /// Gets the exact number of bytes that the program keeps alive: its buffer, its arrays and its name.
+    /// Gets the exact number of bytes that the program keeps alive: its buffer and its arrays.
     /// </summary>
     public long RetainedByteCount
         => this.data.Length
@@ -81,8 +78,7 @@ internal sealed class Type1Program
         + this.subrs.RetainedByteCount
         + ((long)sizeof(int) * this.nameOffsets.Length)
         + this.nameLengths.Length
-        + ((long)sizeof(ushort) * (this.encoding?.Length ?? 0))
-        + ((long)sizeof(char) * this.FontName.Length);
+        + ((long)sizeof(ushort) * (this.encoding?.Length ?? 0));
 
     /// <summary>
     /// Tells whether data starts like a Type 1 font program: a PFB segment, or a PostScript <c>%!</c> comment.
@@ -98,19 +94,7 @@ internal sealed class Type1Program
     /// <param name="data">The font file. The program does not keep it.</param>
     /// <returns>The font program.</returns>
     /// <exception cref="InvalidFontFileException">The data is not a Type 1 font program, or is malformed.</exception>
-    public static Type1Program Load(ReadOnlyMemory<byte> data) => Load(data, -1);
-
-    /// <summary>
-    /// Loads a Type 1 font program from the stream of a PDF <c>/FontFile</c>.
-    /// </summary>
-    /// <param name="data">The font file. The program does not keep it.</param>
-    /// <param name="length1">
-    /// The <c>/Length1</c> of the stream, the length of the cleartext, or a negative number when unknown.
-    /// PDF files often state it wrongly, so the loader uses it only when it cannot find <c>eexec</c> itself.
-    /// </param>
-    /// <returns>The font program.</returns>
-    /// <exception cref="InvalidFontFileException">The data is not a Type 1 font program, or is malformed.</exception>
-    public static Type1Program Load(ReadOnlyMemory<byte> data, int length1)
+    public static Type1Program Load(ReadOnlyMemory<byte> data)
     {
         ReadOnlySpan<byte> file = data.Span;
         byte[]? privatePart = null;
@@ -119,13 +103,12 @@ internal sealed class Type1Program
         {
             clearText = Type1Eexec.GetPfbClearText(file, out int binaryPosition);
             privatePart = Type1Eexec.DecryptPfbBinary(file, binaryPosition);
-            length1 = -1;
         }
 
         Type1Header header = Type1Parser.ParseHeader(clearText);
         if (privatePart is null)
         {
-            int start = header.EexecEnd >= 0 ? header.EexecEnd : length1;
+            int start = header.EexecEnd;
             if (start <= 0 || start >= clearText.Length)
             {
                 throw new InvalidFontFileException("The data is not a Type 1 font program: it has no eexec section.");

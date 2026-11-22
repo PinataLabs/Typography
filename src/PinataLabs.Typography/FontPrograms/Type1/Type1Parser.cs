@@ -18,7 +18,6 @@ internal static class Type1Parser
     {
         Type1Header header = new();
         Type1Tokenizer tokenizer = new(clearText);
-        bool hasFontName = false;
         bool hasFontMatrix = false;
         Span<double> numbers = stackalloc double[6];
         while (tokenizer.TryRead(out Type1Token token))
@@ -35,20 +34,7 @@ internal static class Type1Parser
             }
 
             ReadOnlySpan<byte> key = tokenizer.GetBytes(token);
-            if (key.SequenceEqual("FontName"u8))
-            {
-                int saved = tokenizer.Position;
-                if (!hasFontName && tokenizer.TryRead(out Type1Token name) && name.Kind == Type1TokenKind.Name)
-                {
-                    header.FontName = Type1Program.DecodeName(tokenizer.GetBytes(name));
-                    hasFontName = true;
-                }
-                else
-                {
-                    tokenizer.Position = saved;
-                }
-            }
-            else if (key.SequenceEqual("FontMatrix"u8) && !hasFontMatrix)
+            if (key.SequenceEqual("FontMatrix"u8) && !hasFontMatrix)
             {
                 if (!TryReadNumbers(ref tokenizer, numbers))
                 {

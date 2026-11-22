@@ -12,8 +12,6 @@ Output, next to the fonts in tests/PinataLabs.Typography.Tests/Fonts/Type1:
   bchr8a.pfa         bchr8a.pfb as a PFA with a hexadecimal eexec section.
   bchr8a.fontfile    bchr8a.pfb as a PDF /FontFile stream: cleartext, binary
                      eexec section, trailer.
-  containers.json    The derived files, with their true section lengths and
-                     a deliberately wrong /Length1, as a broken PDF gives.
 
 Outline format: one string per glyph, tokens separated by spaces.
   M x y            moveTo
@@ -98,7 +96,7 @@ def write_json(file_name, value):
         stream.write("\n")
 
 
-def write_containers():
+def write_converted_fonts():
     data = t1Lib.readPFB(os.path.join(FONT_DIR, CONTAINER_SOURCE))
     clear, encrypted, trailer = [chunk for _, chunk in t1Lib.findEncryptedChunks(data)]
     stem = os.path.splitext(CONTAINER_SOURCE)[0]
@@ -107,26 +105,13 @@ def write_containers():
     with open(os.path.join(FONT_DIR, stem + ".fontfile"), "wb") as stream:
         stream.write(clear + encrypted + trailer)
 
-    write_json(
-        "containers.json",
-        {
-            "source": CONTAINER_SOURCE,
-            "pfa": stem + ".pfa",
-            "fontFile": stem + ".fontfile",
-            "length1": len(clear),
-            "length2": len(encrypted),
-            "length3": len(trailer),
-            "wrongLength1": len(clear) + 37,
-        },
-    )
-
 
 def main():
     for file_name in FONTS:
         description = describe(file_name)
         write_json(os.path.splitext(file_name)[0] + ".json", description)
         print("%s: %d glyphs" % (file_name, len(description["glyphs"])))
-    write_containers()
+    write_converted_fonts()
     return 0
 
 

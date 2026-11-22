@@ -35,7 +35,6 @@ Licence notes:
 | `<font>.json` | FontName, FontMatrix, built-in encoding, and the advance and outline of every glyph, from fontTools. |
 | `bchr8a.pfa` | `bchr8a.pfb` as a PFA with a hexadecimal eexec section. |
 | `bchr8a.fontfile` | `bchr8a.pfb` as the stream of a PDF `/FontFile`: cleartext, binary eexec section, trailer. |
-| `containers.json` | The true section lengths of `bchr8a.fontfile`, and a wrong `/Length1` for the tests. |
 
 The two converted fonts come from Bitstream Charter only, because its licence permits modified copies
 under the same name.

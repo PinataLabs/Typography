@@ -39,31 +39,9 @@ public class Type1ParityTests
         await Assert.That(Compare(font, fixture)).IsEmpty();
     }
 
-    [Test]
-    public async Task PdfFontFileWithWrongLengthsMatchesFontTools()
-    {
-        using JsonDocument containers = JsonDocument.Parse(Type1TestFonts.Read("containers.json"));
-        JsonElement root = containers.RootElement;
-        byte[] data = Type1TestFonts.Read(root.GetProperty("fontFile").GetString()!);
-        Fixture fixture = Fixture.Read("bchr8a.json");
-
-        int length1 = root.GetProperty("length1").GetInt32();
-        int wrongLength1 = root.GetProperty("wrongLength1").GetInt32();
-        await Assert.That(wrongLength1).IsNotEqualTo(length1);
-
-        await Assert.That(Compare(Type1Program.Load(data, length1), fixture)).IsEmpty();
-        await Assert.That(Compare(Type1Program.Load(data, wrongLength1), fixture)).IsEmpty();
-        await Assert.That(Compare(Type1Program.Load(data, data.Length + 1), fixture)).IsEmpty();
-    }
-
     private static List<string> Compare(Type1Program font, Fixture fixture)
     {
         List<string> failures = [];
-        if (font.FontName != fixture.FontName)
-        {
-            failures.Add($"FontName: expected {fixture.FontName}, got {font.FontName}");
-        }
-
         float[] matrix = [font.FontMatrix.M11, font.FontMatrix.M12, font.FontMatrix.M21, font.FontMatrix.M22, font.FontMatrix.M31, font.FontMatrix.M32];
         if (!matrix.SequenceEqual(fixture.FontMatrix.Select(x => (float)x)))
         {
@@ -133,7 +111,7 @@ public class Type1ParityTests
 
     private sealed record FixtureGlyph(string Name, double Advance, string Outline);
 
-    private sealed record Fixture(string FontName, double[] FontMatrix, string[] Encoding, FixtureGlyph[] Glyphs)
+    private sealed record Fixture(double[] FontMatrix, string[] Encoding, FixtureGlyph[] Glyphs)
     {
         private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
