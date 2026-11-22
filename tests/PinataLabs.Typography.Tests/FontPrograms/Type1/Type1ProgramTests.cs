@@ -153,6 +153,7 @@ public class Type1ProgramTests
     }
 
     [Test]
+    [NotInParallel]
     public async Task AGlyphNameLookupBarelyGrowsWithTheGlyphCount()
     {
         Type1Program small = LongNamedFont(100);
@@ -162,14 +163,15 @@ public class Type1ProgramTests
         double fastestLarge = double.MaxValue;
 
         // Interleaved rounds, so that both fonts get the same JIT tier at their fastest.
-        for (int round = 0; round < 5; round++)
+        for (int round = 0; round < 9; round++)
         {
             fastestSmall = Math.Min(fastestSmall, TimeLookups(small, missing));
             fastestLarge = Math.Min(fastestLarge, TimeLookups(large, missing));
         }
 
         // A scan of the names costs 100 times more with 100 times the glyphs. A binary search costs about twice as much.
-        await Assert.That(fastestLarge).IsLessThan(10 * fastestSmall);
+        // The bound sits between the two with a wide margin either side, because a shared CI runner is noisy.
+        await Assert.That(fastestLarge).IsLessThan(30 * fastestSmall);
     }
 
     [Test]
