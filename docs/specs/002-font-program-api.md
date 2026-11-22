@@ -95,7 +95,7 @@ PR 2 (#75) adds `FontProgramOptions { long? MaxRetainedBytes }`, a `Load(ReadOnl
 ## Load-bearing decisions
 
 1. **Borrow, don't decode.** The font keeps the caller's bytes and a few arrays sized from header counts (for CFF, the charset: 2 bytes per glyph). TrueType allocates no arrays. Nothing is decoded per glyph at load and nothing is cached afterwards. The retained size is therefore exact, fixed at load and known before allocation, which is what PR 2 needs.
-2. **One sink is the internal outline protocol too.** `CffEvaluationEngine` and the TrueType decoder write to `IGlyphOutlineSink` in glyph space. `TransformingGlyphRenderer` becomes the adapter from the sink to `IGlyphRenderer` for layout, and `CffBoundsFinder` implements the sink. Each format has one outline producer, shared by layout and `FontProgram`.
+2. **One sink is the internal outline protocol too.** `CffEvaluationEngine` and the TrueType decoder write to `IGlyphOutlineSink` in glyph space. `TransformingGlyphRenderer` becomes the adapter from the sink to `IGlyphRenderer` for layout, and `CffBoundsFinder` implements the sink. For CFF there is one outline producer, shared by layout and `FontProgram`. TrueType layout keeps the `GlyphVector` loaders, because hinting needs point arrays; the TrueType decoder serves `FontProgram` only. Sharing one TrueType producer is tracked in a follow-up issue.
 3. **One matrix.** A CID-keyed CFF can give each font DICT its own FontMatrix. The CFF program folds each FD matrix, relative to the top one, into that glyph's outline, so `FontMatrix` holds for every glyph. Parity tests compare after applying the matrix.
 4. **`ushort` glyph IDs, `int` CIDs, distinct method names.** Passing a CID where a glyph ID belongs needs a cast.
 5. **Errors.** Load: one exception type, `InvalidFontFileException`. Glyph time: a `false` return, never an exception, so one bad glyph costs only itself.
@@ -146,6 +146,18 @@ Small commits, each green:
 9. fontTools parity tests: every glyph of a TrueType font with composites, SourceSansPro-Regular.otf and FDArrayTest257.otf (CID), plus names and built-in encodings.
 
 Reference data comes from a checked-in Python generator under `tests/tools/` that uses fontTools (`RecordingPen`, `TTFont`, `cffLib`) and writes JSON fixtures. Fixtures for features no shipped test font exercises (Expert charset and encoding, custom encoding with supplements, seac, flex, per-FD FontMatrix) are built with fontTools `fontBuilder` by the same script.
+
+## Implementation notes
+
+The implementation made these local choices where the spec was silent.
+
+- A Font DICT matrix is concatenated with the Top DICT matrix when the top has one.
+- A (3,0) cmap lookup tries the code, then 0xF000, 0xF100 and 0xF200.
+- CFF encoding format 0 treats code 0 as a real code, as Adobe TN5176 says. fontTools does not.
+- A seac component that is missing makes the glyph return `false`.
+- `Load` dispatches strictly on the sfnt tag.
+- A CharstringType other than 2 is rejected.
+- Limits: about one million operators per charstring and 4096 components per outline.
 
 ## Rejected alternatives
 
