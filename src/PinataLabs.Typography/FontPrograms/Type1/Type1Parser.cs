@@ -87,6 +87,7 @@ internal static class Type1Parser
         Type1Tokenizer tokenizer = new(data);
         int lenIV = 4;
         int subrsStart = -1;
+        int declaredSubrCount = 0;
         int subrCount = 0;
         int charStringsStart = -1;
         int entries = 0;
@@ -120,9 +121,9 @@ internal static class Type1Parser
                     throw new InvalidFontFileException("The Type 1 font program has a malformed Subrs array.");
                 }
 
-                subrCount = count;
+                declaredSubrCount = count;
                 subrsStart = tokenizer.Position;
-                ReadSubrs(ref tokenizer, subrCount, null);
+                subrCount = ReadSubrs(ref tokenizer, declaredSubrCount, null);
             }
             else if (charStringsStart < 0 && key.SequenceEqual("CharStrings"u8) && tokenizer.TryReadInt(out _))
             {
@@ -154,7 +155,7 @@ internal static class Type1Parser
         if (subrsStart >= 0)
         {
             tokenizer.Position = subrsStart;
-            ReadSubrs(ref tokenizer, subrCount, subrs);
+            ReadSubrs(ref tokenizer, declaredSubrCount, subrs);
         }
 
         Type1CharStringTable glyphs = new(glyphCount, ref budget);
@@ -279,8 +280,10 @@ internal static class Type1Parser
     }
 
     // Without a table it only checks the entries and moves past them, so that the counts are known before any array exists.
-    private static void ReadSubrs(ref Type1Tokenizer tokenizer, int count, Type1CharStringTable? subrs)
+    // It returns the highest index present plus one: the declared count is not trusted to size the table.
+    private static int ReadSubrs(ref Type1Tokenizer tokenizer, int declaredCount, Type1CharStringTable? subrs)
     {
+        int count = 0;
         while (true)
         {
             int saved = tokenizer.Position;
@@ -306,13 +309,16 @@ internal static class Type1Parser
                 break;
             }
 
-            if ((uint)index >= (uint)count || !TryReadBinary(ref tokenizer, length, out int start))
+            if ((uint)index >= (uint)declaredCount || !TryReadBinary(ref tokenizer, length, out int start))
             {
                 throw new InvalidFontFileException("The Type 1 font program has a malformed or truncated subroutine.");
             }
 
             subrs?.Set(index, start, length);
+            count = Math.Max(count, index + 1);
         }
+
+        return count;
     }
 
     // The declared dictionary size is not trusted: the arrays are sized from the entries the data holds.

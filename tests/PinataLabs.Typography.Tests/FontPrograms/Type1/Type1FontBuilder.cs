@@ -57,6 +57,11 @@ internal sealed class Type1FontBuilder
     /// </summary>
     public int? LenIV { get; set; }
 
+    /// <summary>
+    /// Gets or sets the count that <c>/Subrs</c> declares. <see langword="null"/> declares the number of subroutines.
+    /// </summary>
+    public int? DeclaredSubrCount { get; set; }
+
     public string RD { get; set; } = "RD";
 
     public string ND { get; set; } = "ND";
@@ -150,7 +155,7 @@ internal sealed class Type1FontBuilder
             Text($"/lenIV {lenIV} def\n");
         }
 
-        Text($"/Subrs {this.Subrs.Count} array\n");
+        Text($"/Subrs {this.DeclaredSubrCount ?? this.Subrs.Count} array\n");
         for (int i = 0; i < this.Subrs.Count; i++)
         {
             Text($"dup {i} ");

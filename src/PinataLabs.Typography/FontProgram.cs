@@ -91,7 +91,8 @@ public sealed class FontProgram
     /// A TrueType program allocates no array. A CFF program allocates one array of 2 bytes per glyph
     /// for its charset and one array of Font DICT records, one record for each Font DICT.
     /// A Type 1 program allocates the decrypted private part of the font, which holds the glyphs, two arrays of
-    /// 4 bytes per glyph and two of 4 bytes per subroutine for where they lie in it, one array of 4 bytes, one of
+    /// 4 bytes per glyph and two of 4 bytes per subroutine index, up to the highest that the font defines, for where
+    /// they lie in it, one array of 4 bytes, one of
     /// 1 byte and one of 2 bytes per glyph for the glyph names and their sorted order, and one array of 256 glyph IDs
     /// for its encoding when it has one.
     /// The program makes no other allocation that outlives <c>Load</c>, and it never caches.

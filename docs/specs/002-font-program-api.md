@@ -111,7 +111,7 @@ PR 3 (#73) adds `FontProgramFormat.Type1` and nothing else public. `Load` takes 
 
 - the private part: `byte[]`, its length known from the located eexec section before decryption (binary bytes, or hex digits / 2, less the 4 random bytes);
 - the glyph charstrings: two `int[GlyphCount]` (offset, length);
-- the subroutines: two `int[/Subrs count]`, with a count above the length of the private part refused;
+- the subroutines: two `int[highest /Subrs index present + 1]`, sized from the entries that the data holds, not the declared count, and a declared count above the length of the private part refused;
 - the glyph names: `int[GlyphCount]` offsets into the private part, `byte[GlyphCount]` lengths, and `ushort[GlyphCount]` glyph IDs sorted by name bytes then by ID, which name lookups search, so a name defined twice finds its lowest ID;
 - the built-in encoding: `ushort[256]`, only when the font has an `/Encoding`.
 

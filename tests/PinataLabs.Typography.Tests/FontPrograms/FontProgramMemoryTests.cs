@@ -83,6 +83,21 @@ public class FontProgramMemoryTests
     }
 
     [Test]
+    public async Task AType1ProgramSizesItsSubroutinesFromTheEntriesNotTheDeclaredCount()
+    {
+        // The declared count must not pass the length of the private part, so one long glyph pads it.
+        Type1FontBuilder builder = Type1Font();
+        builder.AddGlyph("P", "0 500 hsbw " + string.Concat(Enumerable.Repeat("1 1 rlineto ", 35000)) + "endchar");
+        long declaredAsHeld = FontProgram.Load(builder.BuildPfb()).RetainedByteCount;
+        int privateLength = builder.BuildPrivate().Length;
+
+        builder.DeclaredSubrCount = 100000;
+        long longerText = builder.BuildPrivate().Length - privateLength;
+
+        await Assert.That(FontProgram.Load(builder.BuildPfb()).RetainedByteCount).IsEqualTo(declaredAsHeld + longerText);
+    }
+
+    [Test]
     public async Task ALimitBelowTheDecryptedPartRefusesAType1FontBeforeItDecrypts()
     {
         Type1FontBuilder builder = Type1Font();
