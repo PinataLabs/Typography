@@ -24,7 +24,6 @@ internal class CffParser
     private readonly StringBuilder pooledStringBuilder = new();
     private long offset;
     private int charStringsOffset;
-    private int charsetOffset;
     private int encodingOffset = -1;
     private int privateDICTOffset;
     private int privateDICTLength;
@@ -48,7 +47,6 @@ internal class CffParser
         CffPrivateDictionary? privateDictionary = this.ReadPrivateDict(reader);
         CffGlyphData[] glyphs = this.ReadCharStringsIndex(reader, topDictionary, globalSubrRawBuffers, fontDicts, privateDictionary);
 
-        this.ReadCharsets(reader, stringIndex, glyphs);
         this.ReadEncodings(reader);
 
         return new(fontName, topDictionary, glyphs);
@@ -198,9 +196,6 @@ internal class CffParser
                 case "CharStrings":
                     this.charStringsOffset = (int)entry.Operands[0].RealNumValue;
                     break;
-                case "charset":
-                    this.charsetOffset = (int)entry.Operands[0].RealNumValue;
-                    break;
                 case "Encoding":
                     this.encodingOffset = (int)entry.Operands[0].RealNumValue;
                     break;
@@ -305,122 +300,6 @@ internal class CffParser
                     // TODO: Seek.
                     break;
             }
-        }
-    }
-
-    private void ReadCharsets(BigEndianBinaryReader reader, string[] stringIndex, CffGlyphData[] glyphs)
-    {
-        // Charset data is located via the offset operand to the
-        // charset operator in the Top DICT.
-
-        // Each charset is described by a format-
-        // type identifier byte followed by format-specific data.
-        // Three formats are currently defined as shown in Tables
-        // 17, 18, and 20.
-        reader.BaseStream.Position = this.offset + this.charsetOffset;
-        switch (reader.ReadByte())
-        {
-            default:
-                throw new NotSupportedException();
-            case 0:
-                this.ReadCharsetsFormat0(reader, stringIndex, glyphs);
-                break;
-            case 1:
-                this.ReadCharsetsFormat1(reader, stringIndex, glyphs);
-                break;
-            case 2:
-                this.ReadCharsetsFormat2(reader, stringIndex, glyphs);
-                break;
-        }
-    }
-
-    private void ReadCharsetsFormat0(BigEndianBinaryReader reader, string[] stringIndex, CffGlyphData[] glyphs)
-    {
-        // Table 17: Format 0
-        // Type     Name                Description
-        // Card8     format             =0
-        // SID       glyph[nGlyphs-1]   Glyph name array
-
-        // Each element of the glyph array represents the name of the
-        // corresponding glyph. This format should be used when the SIDs
-        // are in a fairly random order. The number of glyphs (nGlyphs) is
-        // the value of the count field in the
-        // CharStrings INDEX. (There is
-        // one less element in the glyph name array than nGlyphs because
-        // the .notdef glyph name is omitted.)
-        for (int i = 1; i < glyphs.Length; ++i)
-        {
-            ref CffGlyphData data = ref glyphs[i];
-            data.GlyphName = this.GetSid(reader.ReadUInt16(), stringIndex);
-        }
-    }
-
-    private void ReadCharsetsFormat1(BigEndianBinaryReader reader, string[] stringIndex, CffGlyphData[] glyphs)
-    {
-        // Table 18 Format 1
-        // Type     Name                Description
-        // Card8        format              =1
-        // struct   Range1[<varies>]    Range1 array (see Table  19)
-
-        // Table 19 Range1 Format (Charset)
-        // Type      Name          Description
-        // SID       first         First glyph in range
-        // Card8     nLeft         Glyphs left in range(excluding first)
-
-        // Each Range1 describes a group of sequential SIDs. The number
-        // of ranges is not explicitly specified in the font. Instead, software
-        // utilizing this data simply processes ranges until all glyphs in the
-        // font are covered. This format is particularly suited to charsets
-        // that are well ordered
-        for (int i = 1; i < glyphs.Length;)
-        {
-            int sid = reader.ReadUInt16(); // First glyph in range
-            int count = reader.ReadByte() + 1; // since it does not include first element.
-            do
-            {
-                ref CffGlyphData data = ref glyphs[i];
-                data.GlyphName = this.GetSid(sid, stringIndex);
-
-                count--;
-                i++;
-                sid++;
-            }
-            while (count > 0);
-        }
-    }
-
-    private void ReadCharsetsFormat2(BigEndianBinaryReader reader, string[] stringIndex, CffGlyphData[] glyphs)
-    {
-        // note:eg, Adobe's source-code-pro font
-
-        // Table 20 Format 2
-        // Type          Name              Description
-        // Card8         format            2
-        // struct        Range2[<varies>]  Range2 array (see Table 21)
-        //
-        //-----------------------------------------------
-        // Table 21 Range2 Format
-        // Type          Name             Description
-        // SID           first            First glyph in range
-        // Card16        nLeft            Glyphs left in range (excluding first)
-        //-----------------------------------------------
-
-        // Format 2 differs from format 1 only in the size of the nLeft field in each range.
-        // This format is most suitable for fonts with a large well - ordered charset — for example, for Asian CIDFonts.
-        for (int i = 1; i < glyphs.Length;)
-        {
-            int sid = reader.ReadUInt16(); // First glyph in range
-            int count = reader.ReadUInt16() + 1; // since it does not include first element.
-            do
-            {
-                ref CffGlyphData data = ref glyphs[i];
-                data.GlyphName = this.GetSid(sid, stringIndex);
-
-                count--;
-                i++;
-                sid++;
-            }
-            while (count > 0);
         }
     }
 

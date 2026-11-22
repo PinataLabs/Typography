@@ -31,13 +31,9 @@ internal struct CffGlyphData
         this.localSubrBuffers = localSubrBuffers;
         this.nominalWidthX = nominalWidthX;
         this.charStrings = charStrings;
-
-        this.GlyphName = null;
     }
 
     public readonly ushort GlyphIndex { get; }
-
-    public string? GlyphName { get; set; }
 
     public Bounds GetBounds()
     {
