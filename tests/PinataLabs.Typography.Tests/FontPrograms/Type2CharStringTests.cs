@@ -108,6 +108,47 @@ public class Type2CharStringTests
         await Assert.That(Evaluate(charString)).IsNull();
     }
 
+    // Each expression leaves one number, which becomes the x of the start point.
+    [Test]
+    [Arguments("10 3 sub", 7)]
+    [Arguments("20 4 div", 5)]
+    [Arguments("0 not", 1)]
+    [Arguments("5 not", 0)]
+    [Arguments("1 0 and", 0)]
+    [Arguments("1 2 and", 1)]
+    [Arguments("1 0 or", 1)]
+    [Arguments("-5 abs", 5)]
+    [Arguments("5 neg", -5)]
+    [Arguments("3 4 add", 7)]
+    [Arguments("3 4 mul", 12)]
+    [Arguments("9 sqrt", 3)]
+    [Arguments("3 3 eq", 1)]
+    [Arguments("3 4 eq", 0)]
+    [Arguments("7 8 drop", 7)]
+    [Arguments("4 dup add", 8)]
+    [Arguments("1 2 exch sub", 1)]
+    [Arguments("11 22 1 2 ifelse", 11)]
+    [Arguments("11 22 3 2 ifelse", 22)]
+    [Arguments("42 3 put 3 get 3 get add", 84)]
+    [Arguments("5 6 1 index add add", 16)]
+    [Arguments("5 6 0 index add add", 17)]
+    [Arguments("5 6 -1 index add add", 17)]
+    [Arguments("1 2 3 3 1 roll sub sub", 4)]
+    [Arguments("1 2 3 3 -1 roll sub sub", 0)]
+    [Arguments("1 2 3 3 4 roll sub sub", 4)]
+    public async Task ArithmeticOperatorFollowsTheType2Definition(string expression, int expected)
+    {
+        List<object> tokens = [];
+        foreach (string token in expression.Split(' '))
+        {
+            tokens.Add(int.TryParse(token, out int number) ? number : token);
+        }
+
+        string? outline = Evaluate(Assemble([.. tokens, 0, Rmoveto, 1, Hlineto, Endchar]));
+
+        await Assert.That(outline).IsEqualTo($"M {expected} 0 L {expected + 1} 0 Z");
+    }
+
     [Test]
     public async Task RandomGivesTheSameOutlineEachTime()
     {

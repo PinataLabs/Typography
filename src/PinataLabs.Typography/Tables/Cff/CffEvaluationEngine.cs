@@ -456,6 +456,8 @@ internal ref struct CffEvaluationEngine
         float c6y;
         bool a;
         bool b;
+        float right;
+        int slot;
 
         switch ((Type2Operator2)twoByteOperator)
         {
@@ -475,8 +477,7 @@ internal ref struct CffEvaluationEngine
 
             case Type2Operator2.Not:
 
-                a = this.Pop() != 0;
-                this.Push(a ? 1 : 0);
+                this.Push(this.Pop() == 0 ? 1 : 0);
                 break;
 
             case Type2Operator2.Abs:
@@ -491,12 +492,15 @@ internal ref struct CffEvaluationEngine
 
             case Type2Operator2.Sub:
 
-                this.Push(this.Pop() - this.Pop());
+                // num1 num2 sub: the second operand is on top.
+                right = this.Pop();
+                this.Push(this.Pop() - right);
                 break;
 
             case Type2Operator2.Div:
 
-                this.Push(this.Pop() / this.Pop());
+                right = this.Pop();
+                this.Push(this.Pop() / right);
                 break;
 
             case Type2Operator2.Neg:
@@ -516,23 +520,23 @@ internal ref struct CffEvaluationEngine
 
             case Type2Operator2.Put:
 
-                float value = this.Pop();
-                this.SetTransient((int)this.Pop(), value);
+                // val i put: the slot is on top.
+                slot = (int)this.Pop();
+                this.SetTransient(slot, this.Pop());
                 break;
 
             case Type2Operator2.Get:
 
-                int slot = (int)this.Pop();
-                this.Push(this.GetTransient(slot));
-                this.SetTransient(slot, 0);
+                this.Push(this.GetTransient((int)this.Pop()));
                 break;
 
             case Type2Operator2.Ifelse:
 
-                float s1 = this.Pop();
-                float s2 = this.Pop();
-                float v1 = this.Pop();
+                // s1 s2 v1 v2 ifelse: s1 if v1 <= v2, else s2.
                 float v2 = this.Pop();
+                float v1 = this.Pop();
+                float s2 = this.Pop();
+                float s1 = this.Pop();
 
                 this.Push(v1 <= v2 ? s1 : s2);
                 break;
@@ -563,8 +567,8 @@ internal ref struct CffEvaluationEngine
 
                 float ex = this.Pop();
                 float ch = this.Pop();
-                this.Push(ch);
                 this.Push(ex);
+                this.Push(ch);
                 break;
 
             case Type2Operator2.Index:
