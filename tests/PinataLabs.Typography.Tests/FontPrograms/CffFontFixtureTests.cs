@@ -78,6 +78,45 @@ public class CffFontFixtureTests
     }
 
     [Test]
+    [Arguments("cff-isoadobe")]
+    [Arguments("cff-expert")]
+    [Arguments("cff-expertsubset")]
+    [Arguments("cff-encoding-format0")]
+    [Arguments("cff-encoding-format1")]
+    [Arguments("cff-seac")]
+    [Arguments("SourceSansPro-Regular")]
+    public async Task BuiltInEncodingMatchesFontTools(string fixtureName)
+    {
+        FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);
+        CffFont font = LoadCff(fixture.FontPath);
+        ushort[] glyphIds = new ushort[256];
+
+        await Assert.That(font.TryGetBuiltInEncoding(glyphIds)).IsTrue();
+
+        List<string> differences = [];
+        for (int code = 0; code < glyphIds.Length; code++)
+        {
+            if (glyphIds[code] != fixture.Encoding![code])
+            {
+                differences.Add($"code {code}: glyph {glyphIds[code]}, expected {fixture.Encoding[code]}");
+            }
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
+    public async Task CidKeyedFontHasNoBuiltInEncoding()
+    {
+        CffFont font = LoadCff(FontProgramFixture.Load("cff-cid-fdselect0").FontPath);
+        ushort[] glyphIds = new ushort[256];
+        Array.Fill(glyphIds, ushort.MaxValue);
+
+        await Assert.That(font.TryGetBuiltInEncoding(glyphIds)).IsFalse();
+        await Assert.That(Array.TrueForAll(glyphIds, x => x == ushort.MaxValue)).IsTrue();
+    }
+
+    [Test]
     public async Task CidLookupIsIdentityWhenTheFontIsNotCidKeyed()
     {
         CffFont font = LoadCff(FontProgramFixture.Load("cff-isoadobe").FontPath);

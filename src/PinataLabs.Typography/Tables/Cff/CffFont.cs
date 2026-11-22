@@ -19,6 +19,7 @@ internal sealed class CffFont
 
     // For each glyph its SID, or its CID in a CID-keyed font.
     private readonly ushort[] charset;
+    private readonly int encodingOffset;
     private readonly CffFontDict topPrivate;
     private readonly CffFontDict[] fontDicts;
     private readonly int fdSelectOffset;
@@ -30,6 +31,7 @@ internal sealed class CffFont
         CffIndex charStrings,
         ushort[] charset,
         bool isCidKeyed,
+        int encodingOffset,
         CffFontDict topPrivate,
         CffFontDict[] fontDicts,
         int fdSelectOffset)
@@ -40,6 +42,7 @@ internal sealed class CffFont
         this.charStrings = charStrings;
         this.charset = charset;
         this.IsCidKeyed = isCidKeyed;
+        this.encodingOffset = encodingOffset;
         this.topPrivate = topPrivate;
         this.fontDicts = fontDicts;
         this.fdSelectOffset = fdSelectOffset;
@@ -179,6 +182,120 @@ internal sealed class CffFont
         {
             throw new InvalidFontFileException("The CFF FDSelect is truncated.");
         }
+    }
+
+    /// <summary>
+    /// Gets the glyph for each of the 256 codes of the encoding that the font carries.
+    /// </summary>
+    /// <param name="glyphIds">Receives 256 glyph IDs, 0 where a code has no glyph.</param>
+    /// <returns>
+    /// <see langword="false"/>, with nothing written, if the font is CID-keyed or its encoding is malformed.
+    /// </returns>
+    public bool TryGetBuiltInEncoding(Span<ushort> glyphIds)
+    {
+        if (this.IsCidKeyed)
+        {
+            return false;
+        }
+
+        Span<ushort> codes = stackalloc ushort[256];
+        codes.Clear();
+
+        // Offsets 0 and 1 name the predefined Standard and Expert encodings.
+        if (this.encodingOffset <= 1)
+        {
+            ushort[] sids = this.encodingOffset == 0 ? CffPredefinedTables.StandardEncoding : CffPredefinedTables.ExpertEncoding;
+            for (int code = 0; code < codes.Length; code++)
+            {
+                codes[code] = this.GetGlyphForSid(sids[code]);
+            }
+        }
+        else if (!this.TryReadCustomEncoding(codes))
+        {
+            return false;
+        }
+
+        codes.CopyTo(glyphIds);
+        return true;
+    }
+
+    private bool TryReadCustomEncoding(Span<ushort> codes)
+    {
+        ReadOnlySpan<byte> table = this.data.Span.Slice(this.encodingOffset);
+        if (table.Length < 2)
+        {
+            return false;
+        }
+
+        // The codes of glyphs 1, 2, 3 and so on: one code per glyph in format 0, ranges of codes in format 1.
+        int count = table[1];
+        int position = 2;
+        int glyph = 1;
+        switch (table[0] & 0x7F)
+        {
+            case 0:
+                if (position + count > table.Length)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < count; i++, glyph++)
+                {
+                    this.Encode(codes, table[position++], glyph);
+                }
+
+                break;
+
+            case 1:
+                if (position + (2 * count) > table.Length)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < count; i++, position += 2)
+                {
+                    for (int code = table[position], last = code + table[position + 1]; code <= last; code++, glyph++)
+                    {
+                        this.Encode(codes, code, glyph);
+                    }
+                }
+
+                break;
+
+            default:
+                return false;
+        }
+
+        // The high bit of the format marks supplements: extra codes for glyphs that have more than one.
+        if ((table[0] & 0x80) != 0)
+        {
+            if (position >= table.Length || position + 1 + (3 * table[position]) > table.Length)
+            {
+                return false;
+            }
+
+            int supplements = table[position++];
+            for (int i = 0; i < supplements; i++, position += 3)
+            {
+                codes[table[position]] = this.GetGlyphForSid(BinaryPrimitives.ReadUInt16BigEndian(table.Slice(position + 1)));
+            }
+        }
+
+        return true;
+    }
+
+    private void Encode(Span<ushort> codes, int code, int glyph)
+    {
+        if (code < codes.Length && glyph < this.GlyphCount)
+        {
+            codes[code] = (ushort)glyph;
+        }
+    }
+
+    private ushort GetGlyphForSid(ushort sid)
+    {
+        int index = this.charset.AsSpan().IndexOf(sid);
+        return index < 0 ? (ushort)0 : (ushort)index;
     }
 
     private bool NameEquals(int sid, ReadOnlySpan<char> name)

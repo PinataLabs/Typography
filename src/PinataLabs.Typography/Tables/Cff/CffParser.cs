@@ -15,6 +15,7 @@ internal static class CffParser
 {
     // Top DICT operators.
     private const int OpCharset = 15;
+    private const int OpEncoding = 16;
     private const int OpCharStrings = 17;
     private const int OpPrivate = 18;
     private const int OpCharstringType = 0x0C06;
@@ -53,6 +54,7 @@ internal static class CffParser
         }
 
         int charsetOffset = 0;
+        int encodingOffset = 0;
         bool isCidKeyed = false;
         int charStringsOffset = 0;
         int privateSize = 0;
@@ -68,6 +70,9 @@ internal static class CffParser
             {
                 case OpCharset when count >= 1:
                     charsetOffset = ToOffset(operands[0], span.Length);
+                    break;
+                case OpEncoding when count >= 1:
+                    encodingOffset = ToOffset(operands[0], span.Length);
                     break;
                 case OpRos:
                     isCidKeyed = true;
@@ -121,7 +126,7 @@ internal static class CffParser
 
         ushort[] charset = ReadCharset(span, charsetOffset, charStrings.Count, isCidKeyed);
 
-        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, topPrivate, fontDicts, fdSelectOffset);
+        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, encodingOffset, topPrivate, fontDicts, fdSelectOffset);
     }
 
     /// <summary>
