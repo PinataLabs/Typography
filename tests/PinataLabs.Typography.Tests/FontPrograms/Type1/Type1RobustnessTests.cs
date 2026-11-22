@@ -182,8 +182,8 @@ public class Type1RobustnessTests
         font.TryGetBuiltInEncoding(encoding);
         for (int glyphId = 0; glyphId < font.GlyphCount; glyphId++)
         {
-            OutlineRecorder recorder = new();
-            bool drawn = font.TryWriteOutline((ushort)glyphId, ref recorder);
+            GlyphOutline outline = new();
+            bool drawn = font.TryWriteOutline((ushort)glyphId, ref outline);
             font.TryGetAdvanceWidth((ushort)glyphId, out _);
             font.TryGetGlyphId(font.GetGlyphName((ushort)glyphId), out _);
             font.TryGetGlyphIdForCid(glyphId, out _);

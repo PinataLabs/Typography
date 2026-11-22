@@ -73,14 +73,14 @@ public class Type1ParityTests
                 continue;
             }
 
-            OutlineRecorder recorder = new();
-            if (!font.TryWriteOutline(glyphId, ref recorder))
+            GlyphOutline actual = new();
+            if (!font.TryWriteOutline(glyphId, ref actual))
             {
                 failures.Add($"{glyph.Name}: no outline");
                 continue;
             }
 
-            string? difference = OutlineRecorder.Difference(OutlineRecorder.Parse(glyph.Outline), recorder.Commands, Tolerance);
+            string? difference = GlyphOutline.Compare(GlyphOutline.Parse(glyph.Outline), GlyphOutline.Identity, actual, GlyphOutline.Identity, Tolerance);
             if (difference is not null)
             {
                 failures.Add($"{glyph.Name}: {difference}");

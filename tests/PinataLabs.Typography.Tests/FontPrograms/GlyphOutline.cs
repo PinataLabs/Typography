@@ -21,6 +21,8 @@ internal sealed class GlyphOutline : IGlyphOutlineSink
     /// </summary>
     public const double Tolerance = 1e-5;
 
+    public static readonly double[] Identity = [1, 0, 0, 1, 0, 0];
+
     private readonly List<(char Command, double[] Values)> commands = [];
 
     public static GlyphOutline Parse(string text)
@@ -30,6 +32,9 @@ internal sealed class GlyphOutline : IGlyphOutlineSink
         for (int i = 0; i < tokens.Length;)
         {
             char command = tokens[i++][0];
+
+            // fontTools ends a contour that a Type 1 charstring left open with E. The engine closes such a contour.
+            command = command == 'E' ? 'Z' : command;
             int count = command switch { 'M' or 'L' => 2, 'Q' => 4, 'C' => 6, 'Z' => 0, _ => throw new FormatException(text) };
             double[] values = new double[count];
             for (int j = 0; j < count; j++)
@@ -44,10 +49,15 @@ internal sealed class GlyphOutline : IGlyphOutlineSink
     }
 
     /// <summary>
-    /// Compares two outlines after each is mapped to ems by its matrix, given as [a b c d e f].
+    /// Compares two outlines after each is mapped by its matrix, given as [a b c d e f].
     /// </summary>
     /// <returns>A description of the first difference, or null when the outlines match.</returns>
-    public static string? Compare(GlyphOutline expected, double[] expectedMatrix, GlyphOutline actual, double[] actualMatrix)
+    public static string? Compare(
+        GlyphOutline expected,
+        double[] expectedMatrix,
+        GlyphOutline actual,
+        double[] actualMatrix,
+        double tolerance = Tolerance)
     {
         if (expected.commands.Count != actual.commands.Count)
         {
@@ -67,7 +77,7 @@ internal sealed class GlyphOutline : IGlyphOutlineSink
             {
                 (double x, double y) = Apply(expectedMatrix, values[j], values[j + 1]);
                 (double actualX, double actualY) = Apply(actualMatrix, actualValues[j], actualValues[j + 1]);
-                if (Math.Abs(x - actualX) > Tolerance || Math.Abs(y - actualY) > Tolerance)
+                if (!(Math.Abs(x - actualX) <= tolerance) || !(Math.Abs(y - actualY) <= tolerance))
                 {
                     return $"command {i}: expected '{expected}' but was '{actual}'";
                 }

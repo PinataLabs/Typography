@@ -199,9 +199,9 @@ public class Type1CharStringEngineTests
 
     internal static string? Outline(Type1Program font, string glyphName)
     {
-        OutlineRecorder recorder = new();
-        return font.TryGetGlyphId(glyphName, out ushort glyphId) && font.TryWriteOutline(glyphId, ref recorder)
-            ? string.Join(" ", recorder.Commands)
+        GlyphOutline outline = new();
+        return font.TryGetGlyphId(glyphName, out ushort glyphId) && font.TryWriteOutline(glyphId, ref outline)
+            ? outline.ToString()
             : null;
     }
 

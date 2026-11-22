@@ -98,13 +98,13 @@ public class Type1ProgramTests
             .AddGlyph("B", "0 500 hsbw endchar")
             .AddGlyph("A", "0 500 hsbw endchar")
             .Load();
-        OutlineRecorder recorder = new();
+        GlyphOutline outline = new();
 
         await Assert.That(Names(font)).IsEqualTo(".notdef B A");
         await Assert.That(font.TryGetGlyphId(".notdef", out ushort glyphId)).IsTrue();
         await Assert.That(glyphId).IsEqualTo((ushort)0);
-        await Assert.That(font.TryWriteOutline(0, ref recorder)).IsTrue();
-        await Assert.That(recorder.Commands).IsEmpty();
+        await Assert.That(font.TryWriteOutline(0, ref outline)).IsTrue();
+        await Assert.That(outline.ToString()).IsEqualTo(string.Empty);
         await Assert.That(font.TryGetAdvanceWidth(0, out float advance)).IsTrue();
         await Assert.That(advance).IsEqualTo(0F);
     }
@@ -113,11 +113,11 @@ public class Type1ProgramTests
     public async Task GlyphLookupsRejectWhatTheFontDoesNotHave()
     {
         Type1Program font = SquareFont().Load();
-        OutlineRecorder recorder = new();
+        GlyphOutline outline = new();
 
         await Assert.That(font.TryGetGlyphId("B", out _)).IsFalse();
         await Assert.That(font.GetGlyphName(2)).IsNull();
-        await Assert.That(font.TryWriteOutline(2, ref recorder)).IsFalse();
+        await Assert.That(font.TryWriteOutline(2, ref outline)).IsFalse();
         await Assert.That(font.TryGetAdvanceWidth(2, out _)).IsFalse();
     }
 
