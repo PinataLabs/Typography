@@ -185,11 +185,22 @@ public class FontProgramMemoryTests
     [Test]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("Type1/bchr8a.pfb")]
+    [Arguments("Type1/bchr8a.pfa")]
+    [Arguments("Type1/bchr8a.fontfile")]
+    [Arguments("Type1/cmr10.pfb")]
+    [Arguments("Type1/cmmi10.pfb")]
+    [Arguments("Type1/qtmr.pfb")]
     public async Task ARefusalCarriesTheSizeThatLoads(string fontFile)
     {
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
         long size = FontProgram.Load(data).RetainedByteCount;
-        long[] limits = [data.Length, data.Length + 1, data.Length + ((size - data.Length) / 2), size - ArrayHeaderBytes - 1, size - 1];
+
+        // The first charge is the data of a CFF font and the decrypted private part of a Type 1 font.
+        // A refusal there carries only that, because the counts of the arrays are read after it.
+        long first = (await Assert.That(() => FontProgram.Load(data, new FontProgramOptions { MaxRetainedBytes = 0 }))
+            .Throws<FontProgramTooLargeException>())!.RetainedByteCount;
+        long[] limits = [first, first + 1, first + ((size - first) / 2), size - ArrayHeaderBytes - 1, size - 1];
 
         foreach (long limit in limits)
         {
