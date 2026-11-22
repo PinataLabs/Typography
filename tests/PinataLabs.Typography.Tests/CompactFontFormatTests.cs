@@ -2,7 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
 
@@ -25,5 +27,22 @@ public class CompactFontFormatTests
         // assert
         GlyphRendererParameters glyphKey = await Assert.That(renderer.GlyphKeys).HasSingleItem();
         await Assert.That(glyphKey.GlyphId).IsEqualTo(expectedGlyphIndex);
+    }
+
+    [Test]
+    public async Task EmptyGlyphHasZeroBounds()
+    {
+        Font font = new FontCollection().Add(TestFonts.GetPath("SourceSansPro-Regular.otf")).CreateFont(12);
+
+        await Assert.That(font.FontMetrics.TryGetGlyphMetrics(
+            new CodePoint(' '),
+            TextAttributes.None,
+            TextDecorations.None,
+            LayoutMode.HorizontalTopBottom,
+            ColorFontSupport.None,
+            out IReadOnlyList<GlyphMetrics>? metrics)).IsTrue();
+
+        await Assert.That(metrics![0].Width).IsEqualTo((ushort)0);
+        await Assert.That(metrics[0].Height).IsEqualTo((ushort)0);
     }
 }
