@@ -49,15 +49,19 @@ public class LayoutOutlineCharacterizationTests
     }
 
     /// <summary>
-    /// Compares the outline that the layout path draws for every glyph of a synthetic font with fontTools.
+    /// Compares the outline that the layout path draws for every glyph of a synthetic font with fontTools, in ems.
+    /// Layout draws in units of the 'head' table, so a CID-keyed glyph must carry the matrix of its Font DICT.
     /// </summary>
     [Test]
     [Arguments("cff-type2")]
     [Arguments("cff-seac")]
+    [Arguments("cff-cid-top-identity")]
+    [Arguments("cff-cid-upem2048")]
     public async Task EveryGlyphOfASyntheticFontMatchesFontTools(string fixtureName)
     {
         FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);
         Font font = LayoutOutlineRecorder.LoadAtUnitScale(fixture.FontPath);
+        double scale = 1.0 / font.FontMetrics.UnitsPerEm;
         List<string> differences = [];
 
         for (int i = 0; i < fixture.Glyphs.Length; i++)
@@ -65,9 +69,9 @@ public class LayoutOutlineCharacterizationTests
             string calls = LayoutOutlineRecorder.Render(font, (ushort)i);
             string? difference = GlyphOutline.Compare(
                 GlyphOutline.Parse(fixture.Glyphs[i].Outline),
-                fixture.FontMatrix,
+                fixture.Glyphs[i].Matrix ?? fixture.FontMatrix,
                 GlyphOutline.Parse(LayoutOutlineRecorder.ToGlyphSpaceOutline(calls)),
-                fixture.FontMatrix);
+                [scale, 0, 0, scale, 0, 0]);
 
             if (difference is not null)
             {

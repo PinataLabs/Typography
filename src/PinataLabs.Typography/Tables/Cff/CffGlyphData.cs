@@ -16,6 +16,7 @@ internal readonly struct CffGlyphData
     private readonly float nominalWidthX;
     private readonly float defaultWidthX;
     private readonly Matrix3x2? transform;
+    private readonly Matrix3x2? glyphMatrix;
     private readonly CffFont? font;
     private readonly int[]? blendRegionCounts;
     private readonly int vsIndex;
@@ -38,6 +39,7 @@ internal readonly struct CffGlyphData
         this.charString = charString;
         this.defaultWidthX = 0;
         this.transform = null;
+        this.glyphMatrix = null;
         this.font = null;
     }
 
@@ -47,9 +49,33 @@ internal readonly struct CffGlyphData
         this.font = font;
         this.defaultWidthX = fontDict.DefaultWidthX;
         this.transform = fontDict.Transform;
+        this.glyphMatrix = fontDict.GlyphMatrix ?? font.FontMatrix;
+    }
+
+    private CffGlyphData(in CffGlyphData glyph, Matrix3x2? transform)
+    {
+        this = glyph;
+        this.transform = transform;
     }
 
     public ushort GlyphIndex { get; }
+
+    /// <summary>
+    /// Gets a copy of the glyph that writes its outline in the units of the 'head' table, as text layout
+    /// expects, instead of in the glyph space of the font.
+    /// </summary>
+    /// <param name="unitsPerEm">The units per em of the 'head' table.</param>
+    /// <returns>The <see cref="CffGlyphData"/>.</returns>
+    public CffGlyphData InUnitsPerEm(ushort unitsPerEm)
+    {
+        if (this.glyphMatrix is not Matrix3x2 matrix)
+        {
+            return this;
+        }
+
+        Matrix3x2 units = matrix * Matrix3x2.CreateScale(unitsPerEm);
+        return new CffGlyphData(in this, IsNearIdentity(units) ? null : units);
+    }
 
     public Bounds GetBounds()
     {
@@ -109,6 +135,18 @@ internal readonly struct CffGlyphData
         {
             throw new InvalidFontFileException($"The charstring of CFF glyph {this.GlyphIndex} is malformed.");
         }
+    }
+
+    // A FontMatrix of 0.001 and 1000 units per em can multiply to a little more or less than 1.
+    private static bool IsNearIdentity(Matrix3x2 matrix)
+    {
+        const float tolerance = 1e-6F;
+        return MathF.Abs(matrix.M11 - 1) < tolerance
+            && MathF.Abs(matrix.M12) < tolerance
+            && MathF.Abs(matrix.M21) < tolerance
+            && MathF.Abs(matrix.M22 - 1) < tolerance
+            && MathF.Abs(matrix.M31) < tolerance
+            && MathF.Abs(matrix.M32) < tolerance;
     }
 
     private CffEvaluationEngine CreateEngine(Span<float> stack, Span<float> transient)

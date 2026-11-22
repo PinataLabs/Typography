@@ -45,8 +45,9 @@ An additive or breaking public API change needs all of these:
 - **CFF glyph outlines.** Text layout draws these CFF glyphs correctly now: a glyph that uses a
   `flex`, `hflex`, `hflex1` or `flex1` operator, a glyph with fractional coordinates, and an accented glyph
   that an `endchar` with four arguments builds from two other glyphs. In a CID-keyed font, each glyph
-  uses the subroutines and the FontMatrix of its own Font DICT. The arithmetic operators of a charstring
-  take their operands in the right order.
+  uses the subroutines and the FontMatrix of its own Font DICT. Layout draws a glyph at the size that its
+  FontMatrix and the units per em of the `head` table give, so a FontMatrix other than 1/unitsPerEm
+  changes the size. The arithmetic operators of a charstring take their operands in the right order.
 - **Malformed CFF fonts.** A CFF table or glyph that is malformed makes layout throw
   `InvalidFontFileException`. Before, it threw several exception types, and a subroutine that called
   itself stopped the process with a stack overflow.

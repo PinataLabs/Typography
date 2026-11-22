@@ -2,13 +2,21 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using PinataLabs.Typography.Tables.General;
+
 namespace PinataLabs.Typography.Tables.Cff;
 
 internal sealed class Cff1Table : Table, ICffTable
 {
     internal const string TableName = "CFF "; // 4 chars
 
-    public Cff1Table(CffFont font) => this.Font = font;
+    private readonly ushort unitsPerEm;
+
+    public Cff1Table(CffFont font, ushort unitsPerEm)
+    {
+        this.Font = font;
+        this.unitsPerEm = unitsPerEm;
+    }
 
     public CffFont Font { get; }
 
@@ -27,7 +35,7 @@ internal sealed class Cff1Table : Table, ICffTable
             throw new InvalidFontFileException($"The data of CFF glyph {index} is malformed.");
         }
 
-        return glyph;
+        return glyph.InUnitsPerEm(this.unitsPerEm);
     }
 
     public static Cff1Table? Load(FontReader fontReader)
@@ -39,7 +47,8 @@ internal sealed class Cff1Table : Table, ICffTable
 
         using (binaryReader)
         {
-            return new(CffParser.Load(binaryReader.ReadBytes((int)header.Length)));
+            CffFont font = CffParser.Load(binaryReader.ReadBytes((int)header.Length));
+            return new(font, fontReader.GetTable<HeadTable>().UnitsPerEm);
         }
     }
 }

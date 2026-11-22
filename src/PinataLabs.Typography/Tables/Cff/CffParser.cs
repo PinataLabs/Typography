@@ -111,7 +111,7 @@ internal static class CffParser
         Matrix3x2 fontMatrix = topMatrix ?? Matrix3x2.CreateScale(0.001F);
 
         // A font that is not CID-keyed has one Font DICT: its Top DICT.
-        CffFontDict[] fontDicts = [privateSize == 0 ? default : ReadPrivateDict(data, privateOffset, privateSize, null)];
+        CffFontDict[] fontDicts = [privateSize == 0 ? default : ReadPrivateDict(data, privateOffset, privateSize, null, null)];
         if (fdArrayOffset != 0)
         {
             CffIndex fdArray = CffIndex.Read(data, fdArrayOffset, 2, out _);
@@ -220,6 +220,7 @@ internal static class CffParser
     {
         int privateSize = 0;
         int privateOffset = 0;
+        Matrix3x2? glyphMatrix = null;
         Matrix3x2? transform = null;
 
         Span<double> operands = stackalloc double[CffDictReader.MaxOperands];
@@ -235,25 +236,26 @@ internal static class CffParser
             {
                 // The matrix of a Font DICT applies first. The Top DICT matrix follows when the font has one.
                 // The font reports one matrix for every glyph, so keep what is left after that matrix is removed.
-                Matrix3x2 glyphMatrix = ToMatrix(operands);
+                Matrix3x2 matrix = ToMatrix(operands);
                 if (topMatrix is Matrix3x2 top)
                 {
-                    glyphMatrix *= top;
+                    matrix *= top;
                 }
 
-                if (glyphMatrix != fontMatrix && Matrix3x2.Invert(fontMatrix, out Matrix3x2 inverse))
+                glyphMatrix = matrix;
+                if (matrix != fontMatrix && Matrix3x2.Invert(fontMatrix, out Matrix3x2 inverse))
                 {
-                    transform = glyphMatrix * inverse;
+                    transform = matrix * inverse;
                 }
             }
         }
 
         return privateSize == 0
-            ? new CffFontDict(default, 0, 0, transform)
-            : ReadPrivateDict(data, privateOffset, privateSize, transform);
+            ? new CffFontDict(default, 0, 0, glyphMatrix, transform)
+            : ReadPrivateDict(data, privateOffset, privateSize, glyphMatrix, transform);
     }
 
-    private static CffFontDict ReadPrivateDict(ReadOnlyMemory<byte> data, int offset, int size, Matrix3x2? transform)
+    private static CffFontDict ReadPrivateDict(ReadOnlyMemory<byte> data, int offset, int size, Matrix3x2? glyphMatrix, Matrix3x2? transform)
     {
         if ((long)offset + size > data.Length)
         {
@@ -288,7 +290,7 @@ internal static class CffParser
             }
         }
 
-        return new CffFontDict(localSubrs, defaultWidthX, nominalWidthX, transform);
+        return new CffFontDict(localSubrs, defaultWidthX, nominalWidthX, glyphMatrix, transform);
     }
 
     private static Matrix3x2 ToMatrix(ReadOnlySpan<double> operands)

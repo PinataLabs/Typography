@@ -297,10 +297,10 @@ def char_string(program):
     return T2CharString(program=list(program))
 
 
-def build_cff(file_name, glyphs, private=None, font_info=None, tables=True, customize=None):
+def build_cff(file_name, glyphs, private=None, font_info=None, tables=True, customize=None, units_per_em=1000):
     """glyphs: list of (name, program). Returns the path of the saved font."""
     order = [name for name, _ in glyphs]
-    builder = FontBuilder(unitsPerEm=1000, isTTF=False)
+    builder = FontBuilder(unitsPerEm=units_per_em, isTTF=False)
     builder.setupGlyphOrder(order)
     builder.setupCharacterMap({0xE000 + index: name for index, name in enumerate(order) if index})
     builder.setupCFF(
@@ -439,13 +439,15 @@ def seac_font(file_name, tables=True):
     return build_cff(file_name, glyphs, private={"defaultWidthX": 480, "nominalWidthX": 600}, tables=tables)
 
 
-def cid_font(file_name, select_format, top_matrix=None):
+def cid_font(file_name, select_format, top_matrix=None, fd_matrices=None, units_per_em=1000, tables=False):
     # (FontMatrix or None, defaultWidthX, nominalWidthX)
     font_dicts = [
         (None, 500, 0),
         ([0.002, 0, 0, 0.001, 0, 0], 700, 300),
         ([0.0005, 0, 0.0001, 0.0005, 0.01, -0.02], 250, -100),
     ]
+    if fd_matrices is not None:
+        font_dicts = [(matrix, default, nominal) for matrix, (_, default, nominal) in zip(fd_matrices, font_dicts)]
     # (CID, Font DICT index, program)
     cid_glyphs = [
         (0, 0, ["endchar"]),
@@ -464,6 +466,10 @@ def cid_font(file_name, select_format, top_matrix=None):
         top = font_set.topDictIndex[0]
         names = [".notdef"] + ["cid%05d" % cid for cid, _, _ in cid_glyphs[1:]]
         top.ROS = ("Adobe", "Identity", 0)
+        if top_matrix is None:
+            # fontBuilder writes a Top DICT matrix when the units per em are not 1000. Write the default, which CFF omits.
+            top.FontMatrix = [0.001, 0, 0, 0.001, 0, 0]
+            top.rawDict.pop("FontMatrix", None)
         top.CIDCount = 65535
         fd_array = cffLib.FDArrayIndex()
         fd_array.strings = None
@@ -516,7 +522,7 @@ def cid_font(file_name, select_format, top_matrix=None):
 
     glyphs = [("g%d" % index if index else ".notdef", program) for index, (_, _, program) in enumerate(cid_glyphs)]
     font_info = {"FontMatrix": top_matrix} if top_matrix is not None else None
-    path = build_cff(file_name, glyphs, font_info=font_info, tables=False, customize=customize)
+    path = build_cff(file_name, glyphs, font_info=font_info, tables=tables, customize=customize, units_per_em=units_per_em)
     check = TTFont(path)["CFF "].cff.topDictIndex[0]
     assert check.FDSelect.format == select_format, (file_name, check.FDSelect.format)
     return path
@@ -690,6 +696,10 @@ def main():
         (cid_font("cff-cid-fdselect0.otf", 0), None),
         # With a Top DICT matrix, a Font DICT matrix is concatenated with it.
         (cid_font("cff-cid-fdselect3.otf", 3, [0.0005, 0, 0, 0.00025, 0, 0]), None),
+        # Two fonts that text layout loads. In the first, every Font DICT scales by 0.001 and the Top DICT
+        # matrix is the identity. In the second, every Font DICT matrix matches the 2048 units per em of 'head'.
+        (cid_font("cff-cid-top-identity.otf", 3, [1, 0, 0, 1, 0, 0], [[0.001, 0, 0, 0.001, 0, 0]] * 3, tables=True), None),
+        (cid_font("cff-cid-upem2048.otf", 3, None, [[1 / 2048, 0, 0, 1 / 2048, 0, 0]] * 3, 2048, tables=True), None),
         (composite_font("tt-composite.ttf"), None),
         (names_font("tt-names.ttf"), None),
     ]

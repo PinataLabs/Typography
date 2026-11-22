@@ -10,11 +10,12 @@ namespace PinataLabs.Typography.Tables.Cff;
 /// </summary>
 internal readonly struct CffFontDict
 {
-    public CffFontDict(CffIndex localSubrs, float defaultWidthX, float nominalWidthX, Matrix3x2? transform = null)
+    public CffFontDict(CffIndex localSubrs, float defaultWidthX, float nominalWidthX, Matrix3x2? glyphMatrix = null, Matrix3x2? transform = null)
     {
         this.LocalSubrs = localSubrs;
         this.DefaultWidthX = defaultWidthX;
         this.NominalWidthX = nominalWidthX;
+        this.GlyphMatrix = glyphMatrix;
         this.Transform = transform;
     }
 
@@ -23,6 +24,12 @@ internal readonly struct CffFontDict
     public float DefaultWidthX { get; }
 
     public float NominalWidthX { get; }
+
+    /// <summary>
+    /// Gets the matrix from the glyph space of this Font DICT to ems, or <see langword="null"/> when
+    /// the Font DICT has no matrix of its own and the matrix of the font applies.
+    /// </summary>
+    public Matrix3x2? GlyphMatrix { get; }
 
     /// <summary>
     /// Gets the matrix from the glyph space of this Font DICT to the glyph space of the font,
