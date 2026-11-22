@@ -159,6 +159,8 @@ The implementation made these local choices where the spec was silent.
 - `Load` dispatches strictly on the sfnt tag.
 - A CharstringType other than 2 is rejected.
 - Limits: about one million operators per charstring and 4096 components per outline.
+- A CFF 1 charstring holds at most 48 arguments on its stack, the Type 2 limit. CFF2 keeps its limit of 513.
+- An outline makes at most 1,000,000 sink calls. Past that, `TryWriteOutline` returns `false` and layout treats the glyph as malformed. The TrueType decoder counts a simple glyph before it writes it, as its point count plus three calls per contour, an upper bound.
 
 ## Rejected alternatives
 

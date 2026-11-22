@@ -17,8 +17,10 @@ internal static class TrueTypeGlyphDecoder
 
     private const int MaxDepth = 16;
 
-    // Components can repeat work without a limit on the glyph size, so bound the number of components per outline.
+    // Components can repeat work without a limit on the glyph size, so bound the number of components
+    // and the number of sink calls per outline.
     private const int MaxComponents = 4096;
+    private const int MaxSinkCalls = 1_000_000;
 
     private const int OnCurve = 0x01;
     private const int XShort = 0x02;
@@ -46,11 +48,11 @@ internal static class TrueTypeGlyphDecoder
     public static bool TryWriteOutline<TSink>(TrueTypeProgram font, ushort glyphId, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
-        int budget = MaxComponents;
+        Budget budget = new() { Components = MaxComponents, SinkCalls = MaxSinkCalls };
         return TryWriteGlyph(font, glyphId, Matrix3x2.Identity, 0, ref budget, ref sink);
     }
 
-    private static bool TryWriteGlyph<TSink>(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref int budget, ref TSink sink)
+    private static bool TryWriteGlyph<TSink>(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
         if (!font.TryGetGlyphData(glyphId, out ReadOnlySpan<byte> glyph))
@@ -76,16 +78,16 @@ internal static class TrueTypeGlyphDecoder
 
         if (matrix.IsIdentity)
         {
-            return TryWriteSimple(glyph, contourCount, ref sink);
+            return TryWriteSimple(glyph, contourCount, ref budget, ref sink);
         }
 
         TransformedSink<TSink> transformed = new(sink, matrix);
-        bool result = TryWriteSimple(glyph, contourCount, ref transformed);
+        bool result = TryWriteSimple(glyph, contourCount, ref budget, ref transformed);
         sink = transformed.Inner;
         return result;
     }
 
-    private static bool TryWriteComposite<TSink>(TrueTypeProgram font, ReadOnlySpan<byte> glyph, Matrix3x2 matrix, int depth, ref int budget, ref TSink sink)
+    private static bool TryWriteComposite<TSink>(TrueTypeProgram font, ReadOnlySpan<byte> glyph, Matrix3x2 matrix, int depth, ref Budget budget, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
         if (depth >= MaxDepth)
@@ -96,7 +98,7 @@ internal static class TrueTypeGlyphDecoder
         ComponentReader components = new(glyph);
         while (components.TryRead(out Component component))
         {
-            if (--budget < 0
+            if (--budget.Components < 0
                 || !TryPlaceComponent(font, glyph, in component, depth, ref budget, out Matrix3x2 placement)
                 || !TryWriteGlyph(font, component.GlyphId, placement * matrix, depth + 1, ref budget, ref sink))
             {
@@ -110,7 +112,7 @@ internal static class TrueTypeGlyphDecoder
     /// <summary>
     /// Gets the matrix that maps the points of a component into the space of its composite glyph.
     /// </summary>
-    private static bool TryPlaceComponent(TrueTypeProgram font, ReadOnlySpan<byte> glyph, in Component component, int depth, ref int budget, out Matrix3x2 placement)
+    private static bool TryPlaceComponent(TrueTypeProgram font, ReadOnlySpan<byte> glyph, in Component component, int depth, ref Budget budget, out Matrix3x2 placement)
     {
         placement = component.Transform;
         Vector2 offset;
@@ -145,7 +147,7 @@ internal static class TrueTypeGlyphDecoder
     }
 
     // A composite numbers the points of its components in order.
-    private static bool TryFindPoint(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref int budget, ref int index, out Vector2 point)
+    private static bool TryFindPoint(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, ref int index, out Vector2 point)
     {
         point = default;
         if (!font.TryGetGlyphData(glyphId, out ReadOnlySpan<byte> glyph))
@@ -190,7 +192,7 @@ internal static class TrueTypeGlyphDecoder
         return true;
     }
 
-    private static bool TryFindCompositePoint(TrueTypeProgram font, ReadOnlySpan<byte> glyph, int end, Matrix3x2 matrix, int depth, ref int budget, ref int index, out Vector2 point)
+    private static bool TryFindCompositePoint(TrueTypeProgram font, ReadOnlySpan<byte> glyph, int end, Matrix3x2 matrix, int depth, ref Budget budget, ref int index, out Vector2 point)
     {
         point = default;
         if (depth >= MaxDepth)
@@ -201,7 +203,7 @@ internal static class TrueTypeGlyphDecoder
         ComponentReader components = new(glyph);
         while (index >= 0 && components.TryRead(out Component component) && component.Start < end)
         {
-            if (--budget < 0
+            if (--budget.Components < 0
                 || !TryPlaceComponent(font, glyph, in component, depth, ref budget, out Matrix3x2 placement)
                 || !TryFindPoint(font, component.GlyphId, placement * matrix, depth + 1, ref budget, ref index, out point))
             {
@@ -212,10 +214,17 @@ internal static class TrueTypeGlyphDecoder
         return !components.Failed;
     }
 
-    private static bool TryWriteSimple<TSink>(ReadOnlySpan<byte> glyph, int contourCount, ref TSink sink)
+    private static bool TryWriteSimple<TSink>(ReadOnlySpan<byte> glyph, int contourCount, ref Budget budget, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
         if (!PointReader.TryCreate(glyph, contourCount, out PointReader points))
+        {
+            return false;
+        }
+
+        // A contour writes a MoveTo, at most one segment for each point and one to close it, and a ClosePath.
+        budget.SinkCalls -= points.Count + (3 * contourCount);
+        if (budget.SinkCalls < 0)
         {
             return false;
         }
@@ -316,6 +325,13 @@ internal static class TrueTypeGlyphDecoder
 
         sink.ClosePath();
         points = contourEnd;
+    }
+
+    private struct Budget
+    {
+        public int Components;
+
+        public int SinkCalls;
     }
 
     private readonly struct Component

@@ -20,7 +20,8 @@ namespace PinataLabs.Typography.Tables.Cff;
 internal ref struct CffEvaluationEngine
 {
     /// <summary>
-    /// The size of the argument stack that the caller provides. CFF2 allows 513 arguments and Type 2 allows 48.
+    /// The size of the argument stack that the caller provides: the 513 arguments that CFF2 allows.
+    /// The engine uses 48 of them for a CFF 1 charstring, the Type 2 limit.
     /// </summary>
     public const int StackSize = 513;
 
@@ -32,8 +33,13 @@ internal ref struct CffEvaluationEngine
     // The Type 2 limit on nested subroutine calls.
     private const int MaxSubrDepth = 10;
 
+    private const int Type2StackSize = 48;
+
     // Subroutine calls can repeat work without a limit on the charstring size, so bound the work itself.
     private const int MaxOperators = 1 << 20;
+
+    // Each operator can write many segments, so bound the outline too.
+    private const int MaxSinkCalls = 1_000_000;
 
     private readonly ReadOnlySpan<byte> charString;
     private readonly CffFont? font;
@@ -63,6 +69,7 @@ internal ref struct CffEvaluationEngine
     private bool failed;
     private bool inSeac;
     private int operatorCount;
+    private int sinkCalls;
     private uint randomState;
 
     public CffEvaluationEngine(
@@ -84,7 +91,7 @@ internal ref struct CffEvaluationEngine
         this.localSubrs = localSubrs;
         this.nominalWidthX = nominalWidthX;
         this.defaultWidthX = defaultWidthX;
-        this.stack = stack;
+        this.stack = blendRegionCounts is null ? stack.Slice(0, Math.Min(stack.Length, Type2StackSize)) : stack;
         this.transient = transient;
         this.blendRegionCounts = blendRegionCounts;
         this.initialVsIndex = vsIndex;
@@ -161,6 +168,7 @@ internal ref struct CffEvaluationEngine
         this.inSeac = false;
         this.MissingSeacComponent = false;
         this.operatorCount = 0;
+        this.sinkCalls = 0;
         this.randomState = 0x9E3779B9;
     }
 
@@ -241,7 +249,7 @@ internal ref struct CffEvaluationEngine
                         this.EnsureOpen(ref sink);
                         this.x += this.Shift();
                         this.y += this.Shift();
-                        sink.LineTo(new Vector2(this.x, this.y));
+                        this.LineTo(ref sink, new Vector2(this.x, this.y));
                     }
 
                     this.Clear();
@@ -263,7 +271,7 @@ internal ref struct CffEvaluationEngine
                             this.y += this.Shift();
                         }
 
-                        sink.LineTo(new Vector2(this.x, this.y));
+                        this.LineTo(ref sink, new Vector2(this.x, this.y));
                         phase = !phase;
                     }
 
@@ -290,7 +298,7 @@ internal ref struct CffEvaluationEngine
                     this.EnsureOpen(ref sink);
                     this.x += this.Shift();
                     this.y += this.Shift();
-                    sink.LineTo(new Vector2(this.x, this.y));
+                    this.LineTo(ref sink, new Vector2(this.x, this.y));
 
                     this.Clear();
                     break;
@@ -302,7 +310,7 @@ internal ref struct CffEvaluationEngine
                         this.EnsureOpen(ref sink);
                         this.x += this.Shift();
                         this.y += this.Shift();
-                        sink.LineTo(new Vector2(this.x, this.y));
+                        this.LineTo(ref sink, new Vector2(this.x, this.y));
                     }
 
                     this.RelativeCurveTo(ref sink);
@@ -327,7 +335,7 @@ internal ref struct CffEvaluationEngine
                         this.x = c2x;
                         this.y = c2y + this.Shift();
 
-                        sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
+                        this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
                     }
 
                     this.Clear();
@@ -350,7 +358,7 @@ internal ref struct CffEvaluationEngine
                         this.x = c2x + this.Shift();
                         this.y = c2y;
 
-                        sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
+                        this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
                     }
 
                     this.Clear();
@@ -382,7 +390,7 @@ internal ref struct CffEvaluationEngine
                             this.y = c2y + (this.Count == 1 ? this.Shift() : 0);
                         }
 
-                        sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
+                        this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
                         phase = !phase;
                     }
 
@@ -617,8 +625,8 @@ internal ref struct CffEvaluationEngine
                 this.x = c6x;
                 this.y = c6y;
 
-                sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
-                sink.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
+                this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
+                this.CurveTo(ref sink, new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
 
                 this.Clear();
                 break;
@@ -650,8 +658,8 @@ internal ref struct CffEvaluationEngine
                 this.x = c6x;
                 this.y = c6y;
 
-                sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
-                sink.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
+                this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
+                this.CurveTo(ref sink, new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
 
                 this.Clear();
                 break;
@@ -689,8 +697,8 @@ internal ref struct CffEvaluationEngine
                 this.x = c6x;
                 this.y = c6y;
 
-                sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
-                sink.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
+                this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
+                this.CurveTo(ref sink, new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
 
                 this.Clear();
                 break;
@@ -809,14 +817,18 @@ internal ref struct CffEvaluationEngine
         float c2y = c1y + this.Shift();
         this.x = c2x + this.Shift();
         this.y = c2y + this.Shift();
-        sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
+        this.CurveTo(ref sink, new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
     }
 
     private void MoveTo<TSink>(ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
         this.ClosePath(ref sink);
-        sink.MoveTo(new Vector2(this.x, this.y));
+        if (this.TrySpendSinkCall())
+        {
+            sink.MoveTo(new Vector2(this.x, this.y));
+        }
+
         this.isOpen = true;
         this.Clear();
     }
@@ -827,8 +839,30 @@ internal ref struct CffEvaluationEngine
     {
         if (!this.isOpen)
         {
-            sink.MoveTo(new Vector2(this.x, this.y));
+            if (this.TrySpendSinkCall())
+            {
+                sink.MoveTo(new Vector2(this.x, this.y));
+            }
+
             this.isOpen = true;
+        }
+    }
+
+    private void LineTo<TSink>(ref TSink sink, Vector2 point)
+        where TSink : IGlyphOutlineSink
+    {
+        if (this.TrySpendSinkCall())
+        {
+            sink.LineTo(point);
+        }
+    }
+
+    private void CurveTo<TSink>(ref TSink sink, Vector2 control1, Vector2 control2, Vector2 point)
+        where TSink : IGlyphOutlineSink
+    {
+        if (this.TrySpendSinkCall())
+        {
+            sink.CubicBezierTo(control1, control2, point);
         }
     }
 
@@ -837,9 +871,25 @@ internal ref struct CffEvaluationEngine
     {
         if (this.isOpen)
         {
-            sink.ClosePath();
+            if (this.TrySpendSinkCall())
+            {
+                sink.ClosePath();
+            }
+
             this.isOpen = false;
         }
+    }
+
+    private bool TrySpendSinkCall()
+    {
+        if (this.sinkCalls >= MaxSinkCalls)
+        {
+            this.failed = true;
+            return false;
+        }
+
+        this.sinkCalls++;
+        return true;
     }
 
     private void ParseStems()

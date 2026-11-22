@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace PinataLabs.Typography.Tests.FontPrograms;
@@ -53,5 +55,52 @@ public class TrueTypeProgramTests
         GlyphOutline outline = new();
 
         await Assert.That(font.TryWriteOutline(1, ref outline)).IsFalse();
+    }
+
+    [Test]
+    public async Task OutlineOfMoreThanAMillionSegmentsFails()
+    {
+        // A contour of 1000 points, in four runs of repeated flags: on curve, x and y one unit on.
+        List<byte> simple = [0, 1, 0, 0, 0, 0, 3, 232, 3, 232, 3, 231, 0, 0];
+        foreach (int run in (int[])[256, 256, 256, 232])
+        {
+            simple.AddRange([0x3F, (byte)(run - 1)]);
+        }
+
+        simple.AddRange(Enumerable.Repeat((byte)1, 2000));
+
+        // 1100 components of that glyph: about 1.1 million sink calls.
+        const int componentCount = 1100;
+        List<byte> composite = [0xFF, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0];
+        for (int i = 0; i < componentCount; i++)
+        {
+            int flags = 0x0002 | (i + 1 < componentCount ? 0x0020 : 0);
+            composite.AddRange([0, (byte)flags, 0, 1, 0, 0]);
+        }
+
+        FontProgram font = FontProgram.Load(TrueTypeBuilder.Build([[], [.. simple], [.. composite]]));
+        SegmentCounter counter = default;
+
+        await Assert.That(font.TryWriteOutline(1, ref counter)).IsTrue();
+        await Assert.That(counter.Calls).IsEqualTo(1001);
+
+        counter = default;
+        await Assert.That(font.TryWriteOutline(2, ref counter)).IsFalse();
+        await Assert.That(counter.Calls).IsLessThanOrEqualTo(1_000_000);
+    }
+
+    private struct SegmentCounter : IGlyphOutlineSink
+    {
+        public int Calls { get; private set; }
+
+        public void MoveTo(Vector2 point) => this.Calls++;
+
+        public void LineTo(Vector2 point) => this.Calls++;
+
+        public void QuadraticBezierTo(Vector2 control, Vector2 point) => this.Calls++;
+
+        public void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point) => this.Calls++;
+
+        public void ClosePath() => this.Calls++;
     }
 }

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.Cff;
 
@@ -108,6 +109,45 @@ public class Type2CharStringTests
     }
 
     [Test]
+    [Arguments(48, true)]
+    [Arguments(50, false)]
+    public async Task ArgumentStackHoldsTheType2LimitOf48(int argumentCount, bool succeeds)
+    {
+        string? outline = Evaluate(Assemble([0, 0, Rmoveto, .. Repeat(1, argumentCount), Rlineto, Endchar]));
+
+        await Assert.That(outline is not null).IsEqualTo(succeeds);
+    }
+
+    [Test]
+    public async Task OutlineOfMoreThanAMillionSegmentsFails()
+    {
+        // Each subroutine calls the next one four times, six levels deep. The last draws 480 lines,
+        // so the glyph has about two million segments from about 200 bytes.
+        byte[][] subrs = new byte[7][];
+        for (int i = 0; i < 6; i++)
+        {
+            object[] call = [i + 1 - 107, Callsubr];
+            subrs[i] = Assemble([.. call, .. call, .. call, .. call, "return"]);
+        }
+
+        List<object> lines = [];
+        for (int i = 0; i < 20; i++)
+        {
+            lines.AddRange(Repeat(1, 48));
+            lines.Add(Rlineto);
+        }
+
+        subrs[6] = Assemble([.. lines, "return"]);
+        CffGlyphData glyph = new(0, default, BuildIndex(subrs), 0, Assemble(0, 0, Rmoveto, -107, Callsubr, Endchar));
+        SegmentCounter counter = default;
+
+        bool written = glyph.TryWriteOutline(ref counter);
+
+        await Assert.That(written).IsFalse();
+        await Assert.That(counter.Calls).IsLessThanOrEqualTo(1_000_000);
+    }
+
+    [Test]
     [Arguments("10 3 sub", 7)]
     [Arguments("20 4 div", 5)]
     [Arguments("0 not", 1)]
@@ -158,7 +198,7 @@ public class Type2CharStringTests
         await Assert.That(Evaluate(charString)).IsEqualTo(first);
     }
 
-    private static object[] Repeat(int value, int count)
+    private static object[] Repeat(object value, int count)
     {
         object[] tokens = new object[count];
         Array.Fill(tokens, value);
@@ -228,5 +268,20 @@ public class Type2CharStringTests
         }
 
         return bytes.ToArray();
+    }
+
+    private struct SegmentCounter : IGlyphOutlineSink
+    {
+        public int Calls { get; private set; }
+
+        public void MoveTo(Vector2 point) => this.Calls++;
+
+        public void LineTo(Vector2 point) => this.Calls++;
+
+        public void QuadraticBezierTo(Vector2 control, Vector2 point) => this.Calls++;
+
+        public void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point) => this.Calls++;
+
+        public void ClosePath() => this.Calls++;
     }
 }

@@ -51,7 +51,9 @@ An additive or breaking public API change needs all of these:
 - **Malformed CFF fonts.** A CFF table or glyph that is malformed makes layout throw
   `InvalidFontFileException`. Before, it threw several exception types, and a subroutine that called
   itself stopped the process with a stack overflow. An accented glyph whose `endchar` names a base or
-  accent glyph that the font does not have draws without the two glyphs, as before.
+  accent glyph that the font does not have draws without the two glyphs, as before. A charstring in a
+  `CFF ` table with more than 48 arguments on its stack, the Type 2 limit, is malformed, and so is an
+  outline of more than a million segments.
 - **Bounds of an empty CFF glyph.** A CFF glyph without an outline, such as a space, has a width and
   a height of 0 on every runtime. Before, the width was 1 on .NET 10 and later.
 
