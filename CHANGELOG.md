@@ -40,6 +40,19 @@ An additive or breaking public API change needs all of these:
   `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
   The public API is the same on every target. (#69)
 
+### Fixed
+
+- **CFF glyph outlines.** Text layout draws these CFF glyphs correctly now: a glyph that uses a
+  `flex`, `hflex`, `hflex1` or `flex1` operator, a glyph with fractional coordinates, and an accented glyph
+  that an `endchar` with four arguments builds from two other glyphs. In a CID-keyed font, each glyph
+  uses the subroutines and the FontMatrix of its own Font DICT. The arithmetic operators of a charstring
+  take their operands in the right order.
+- **Malformed CFF fonts.** A CFF table or glyph that is malformed makes layout throw
+  `InvalidFontFileException`. Before, it threw several exception types, and a subroutine that called
+  itself stopped the process with a stack overflow.
+- **Bounds of an empty CFF glyph.** A CFF glyph without an outline, such as a space, has a width and
+  a height of 0 on every runtime. Before, the width was 1 on .NET 10 and later.
+
 ## [0.1.0] - 2026-10-26
 
 ### Added

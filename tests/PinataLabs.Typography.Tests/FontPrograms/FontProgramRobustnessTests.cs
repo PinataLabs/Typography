@@ -10,31 +10,36 @@ using System.Threading.Tasks;
 namespace PinataLabs.Typography.Tests.FontPrograms;
 
 /// <summary>
-/// Damages a font one byte at a time and at every length, and checks the two error rules:
+/// Damages a font one byte at a time and cuts it short, and checks the two error rules:
 /// load throws only <see cref="InvalidFontFileException"/>, and no call after load throws.
+/// A small font is damaged at every byte and cut at every length. A large font is sampled.
 /// </summary>
 public class FontProgramRobustnessTests
 {
     [Test]
-    [Arguments("cff-type2.otf")]
-    [Arguments("cff-type2-widths.otf")]
-    [Arguments("cff-seac.otf")]
-    [Arguments("cff-cid-fdselect0.otf")]
-    [Arguments("cff-cid-fdselect3.otf")]
-    [Arguments("cff-encoding-format0.otf")]
-    [Arguments("cff-encoding-format1.otf")]
-    [Arguments("cff-expertsubset.otf")]
-    [Arguments("tt-composite.ttf")]
-    [Arguments("tt-names.ttf")]
+    [Arguments("FontPrograms/cff-type2.otf")]
+    [Arguments("FontPrograms/cff-type2-widths.otf")]
+    [Arguments("FontPrograms/cff-seac.otf")]
+    [Arguments("FontPrograms/cff-cid-fdselect0.otf")]
+    [Arguments("FontPrograms/cff-cid-fdselect3.otf")]
+    [Arguments("FontPrograms/cff-encoding-format0.otf")]
+    [Arguments("FontPrograms/cff-encoding-format1.otf")]
+    [Arguments("FontPrograms/cff-expertsubset.otf")]
+    [Arguments("FontPrograms/tt-composite.ttf")]
+    [Arguments("FontPrograms/tt-names.ttf")]
+    [Arguments("OpenSans-Regular.ttf")]
+    [Arguments("SourceSansPro-Regular.otf")]
+    [Arguments("FDArrayTest257.otf")]
     public async Task DamagedFontFailsOnlyInTheDocumentedWays(string fontFile)
     {
-        byte[] original = File.ReadAllBytes(TestFonts.GetPath("FontPrograms/" + fontFile));
+        byte[] original = File.ReadAllBytes(TestFonts.GetPath(fontFile));
         List<string> failures = [];
+        int step = Math.Max(1, original.Length / 2000);
 
         // The same damage on every run.
         Random random = new(20261122);
         byte[] data = (byte[])original.Clone();
-        for (int position = 0; position < original.Length; position++)
+        for (int position = 0; position < original.Length; position += step)
         {
             byte value = original[position];
             foreach (byte damaged in (byte[])[0x00, 0xFF, (byte)(value ^ 0x80), (byte)(value + 1), (byte)random.Next(256)])
@@ -46,7 +51,7 @@ public class FontProgramRobustnessTests
             data[position] = value;
         }
 
-        for (int length = 0; length < original.Length; length++)
+        for (int length = 0; length < original.Length; length += step)
         {
             Exercise(original.AsMemory(0, length), $"length {length}", failures);
         }
