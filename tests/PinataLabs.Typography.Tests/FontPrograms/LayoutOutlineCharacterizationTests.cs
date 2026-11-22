@@ -53,6 +53,7 @@ public class LayoutOutlineCharacterizationTests
     /// </summary>
     [Test]
     [Arguments("cff-type2")]
+    [Arguments("cff-seac")]
     public async Task EveryGlyphOfASyntheticFontMatchesFontTools(string fixtureName)
     {
         FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);

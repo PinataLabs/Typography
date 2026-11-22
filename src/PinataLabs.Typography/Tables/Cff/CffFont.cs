@@ -175,8 +175,26 @@ internal sealed class CffFont
             return false;
         }
 
-        glyph = new CffGlyphData((ushort)glyphId, this.globalSubrs, in this.fontDicts[fontDict], charString);
+        glyph = new CffGlyphData((ushort)glyphId, this, this.globalSubrs, in this.fontDicts[fontDict], charString);
         return true;
+    }
+
+    /// <summary>
+    /// Gets the charstring of the glyph that a code of the Standard Encoding names, for a seac endchar.
+    /// </summary>
+    /// <param name="code">The code in the Standard Encoding.</param>
+    /// <param name="charString">The charstring of the glyph.</param>
+    /// <returns><see langword="false"/> if the font is CID-keyed or has no glyph for the code.</returns>
+    internal bool TryGetSeacComponent(int code, out ReadOnlyMemory<byte> charString)
+    {
+        charString = default;
+        if (this.IsCidKeyed || (uint)code >= (uint)CffPredefinedTables.StandardEncoding.Length)
+        {
+            return false;
+        }
+
+        int glyphId = this.charset.AsSpan().IndexOf(CffPredefinedTables.StandardEncoding[code]);
+        return glyphId >= 0 && this.charStrings.TryGet(glyphId, out charString);
     }
 
     /// <summary>

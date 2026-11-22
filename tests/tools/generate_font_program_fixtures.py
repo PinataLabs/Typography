@@ -427,7 +427,7 @@ def type2_font(file_name, tables=True):
                      tables=tables, customize=customize)
 
 
-def seac_font(file_name):
+def seac_font(file_name, tables=True):
     glyphs = [
         (".notdef", ["endchar"]),
         ("A", [0, 0, "rmoveto", 300, 700, "rlineto", 300, -700, "rlineto", "endchar"]),
@@ -436,7 +436,7 @@ def seac_font(file_name):
         ("Aacute", [150, 230, 65, 194, "endchar"]),
         ("Aacute.width", [-45, -20.5, 300, 65, 194, "endchar"]),
     ]
-    return build_cff(file_name, glyphs, private={"defaultWidthX": 480, "nominalWidthX": 600})
+    return build_cff(file_name, glyphs, private={"defaultWidthX": 480, "nominalWidthX": 600}, tables=tables)
 
 
 def cid_font(file_name, select_format, top_matrix=None):
@@ -686,6 +686,7 @@ def main():
         (type2_font("cff-type2.otf"), None),
         (type2_font("cff-type2-widths.otf", tables=False), None),
         (seac_font("cff-seac.otf"), None),
+        (seac_font("cff-seac-widths.otf", tables=False), None),
         (cid_font("cff-cid-fdselect0.otf", 0), None),
         # With a Top DICT matrix, a Font DICT matrix is concatenated with it.
         (cid_font("cff-cid-fdselect3.otf", 3, [0.0005, 0, 0, 0.00025, 0, 0]), None),

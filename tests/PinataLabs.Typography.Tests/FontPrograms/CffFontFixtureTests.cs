@@ -123,12 +123,14 @@ public class CffFontFixtureTests
 
     // Each Font DICT of the CID fonts has its own subroutines, widths and, for some, its own FontMatrix.
     // The Type 2 font has the flex operators, fractional numbers, hints, subroutines and each form of width.
+    // The seac font has glyphs that an endchar with four arguments builds from two other glyphs.
     // The outlines are compared in ems: the fontTools outline through the matrix of the glyph, and
     // the CffFont outline through the one matrix of the font.
     [Test]
     [Arguments("cff-cid-fdselect0")]
     [Arguments("cff-cid-fdselect3")]
     [Arguments("cff-type2-widths")]
+    [Arguments("cff-seac-widths")]
     public async Task OutlinesAndWidthsMatchFontTools(string fixtureName)
     {
         FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);

@@ -16,6 +16,7 @@ internal readonly struct CffGlyphData
     private readonly float nominalWidthX;
     private readonly float defaultWidthX;
     private readonly Matrix3x2? transform;
+    private readonly CffFont? font;
     private readonly int[]? blendRegionCounts;
     private readonly int vsIndex;
 
@@ -37,11 +38,13 @@ internal readonly struct CffGlyphData
         this.charString = charString;
         this.defaultWidthX = 0;
         this.transform = null;
+        this.font = null;
     }
 
-    public CffGlyphData(ushort glyphIndex, CffIndex globalSubrs, in CffFontDict fontDict, ReadOnlyMemory<byte> charString)
+    public CffGlyphData(ushort glyphIndex, CffFont font, CffIndex globalSubrs, in CffFontDict fontDict, ReadOnlyMemory<byte> charString)
         : this(glyphIndex, globalSubrs, fontDict.LocalSubrs, fontDict.NominalWidthX, charString)
     {
+        this.font = font;
         this.defaultWidthX = fontDict.DefaultWidthX;
         this.transform = fontDict.Transform;
     }
@@ -118,6 +121,7 @@ internal readonly struct CffGlyphData
             this.defaultWidthX,
             stack,
             transient,
+            this.font,
             this.blendRegionCounts,
             this.vsIndex);
 }

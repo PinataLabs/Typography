@@ -36,6 +36,7 @@ internal ref struct CffEvaluationEngine
     private const int MaxOperators = 1 << 20;
 
     private readonly ReadOnlySpan<byte> charString;
+    private readonly CffFont? font;
     private readonly CffIndex globalSubrs;
     private readonly CffIndex localSubrs;
     private readonly float nominalWidthX;
@@ -61,6 +62,7 @@ internal ref struct CffEvaluationEngine
     private bool isOpen;
     private bool ended;
     private bool failed;
+    private bool inSeac;
     private int operatorCount;
     private uint randomState;
 
@@ -72,11 +74,13 @@ internal ref struct CffEvaluationEngine
         float defaultWidthX,
         Span<float> stack,
         Span<float> transient,
+        CffFont? font = null,
         int[]? blendRegionCounts = null,
         int vsIndex = 0)
     {
         this = default;
         this.charString = charString;
+        this.font = font;
         this.globalSubrs = globalSubrs;
         this.localSubrs = localSubrs;
         this.nominalWidthX = nominalWidthX;
@@ -149,6 +153,7 @@ internal ref struct CffEvaluationEngine
         this.isOpen = false;
         this.ended = false;
         this.failed = false;
+        this.inSeac = false;
         this.operatorCount = 0;
         this.randomState = 0x9E3779B9;
     }
@@ -394,8 +399,14 @@ internal ref struct CffEvaluationEngine
 
                 case Type2Operator1.Endchar:
 
-                    this.TakeWidth(this.Count > 0);
+                    // After an optional width, endchar has no arguments, or the four of a seac.
+                    this.TakeWidth((this.Count & 1) != 0);
                     this.ClosePath(ref sink);
+                    if (this.Count >= 4 && !this.inSeac && !this.widthOnly)
+                    {
+                        this.Seac(ref sink);
+                    }
+
                     this.ended = true;
                     break;
 
@@ -735,6 +746,46 @@ internal ref struct CffEvaluationEngine
         }
 
         this.Run(subr.Span, ref sink, depth + 1);
+    }
+
+    // adx ady bchar achar endchar: the deprecated way to build an accented glyph. It draws the glyph of
+    // Standard Encoding code bchar, and then the glyph of code achar moved by (adx, ady).
+    private void Seac<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        float adx = this.Shift();
+        float ady = this.Shift();
+        int baseCode = (int)this.Shift();
+        int accentCode = (int)this.Shift();
+        float ownWidth = this.width;
+        bool hasOwnWidth = this.hasWidth;
+
+        this.inSeac = true;
+        this.RunSeacComponent(baseCode, 0, 0, ref sink);
+        this.RunSeacComponent(accentCode, adx, ady, ref sink);
+
+        this.width = ownWidth;
+        this.hasWidth = hasOwnWidth;
+    }
+
+    private void RunSeacComponent<TSink>(int code, float originX, float originY, ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        if (this.failed || this.font is null || !this.font.TryGetSeacComponent(code, out ReadOnlyMemory<byte> component))
+        {
+            this.failed = true;
+            return;
+        }
+
+        // Every operator moves relative to the current point, so starting there moves the whole component.
+        this.Clear();
+        this.x = originX;
+        this.y = originY;
+        this.stemCount = 0;
+        this.widthResolved = false;
+        this.ended = false;
+        this.Run(component.Span, ref sink, 0);
+        this.ClosePath(ref sink);
     }
 
     private void RelativeCurveTo<TSink>(ref TSink sink)
