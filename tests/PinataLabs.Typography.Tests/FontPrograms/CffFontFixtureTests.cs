@@ -106,6 +106,61 @@ public class CffFontFixtureTests
     }
 
     [Test]
+    [Arguments("cff-cid-fdselect0")]
+    [Arguments("cff-cid-fdselect3")]
+    [Arguments("cff-isoadobe")]
+    [Arguments("FDArrayTest257")]
+    public async Task FontMatrixMatchesFontTools(string fixtureName)
+    {
+        FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);
+        double[] matrix = GlyphOutline.ToArray(LoadCff(fixture.FontPath).FontMatrix);
+
+        for (int i = 0; i < matrix.Length; i++)
+        {
+            await Assert.That(matrix[i]).IsEqualTo(fixture.FontMatrix[i]).Within(1e-9);
+        }
+    }
+
+    // Each Font DICT of these fonts has its own subroutines, widths and, for some, its own FontMatrix.
+    // The outlines are compared in ems: the fontTools outline through the matrix of the glyph, and
+    // the CffFont outline through the one matrix of the font.
+    [Test]
+    [Arguments("cff-cid-fdselect0")]
+    [Arguments("cff-cid-fdselect3")]
+    public async Task OutlinesAndWidthsOfEachFontDictMatchFontTools(string fixtureName)
+    {
+        FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);
+        CffFont font = LoadCff(fixture.FontPath);
+        double[] fontMatrix = GlyphOutline.ToArray(font.FontMatrix);
+        List<string> differences = [];
+
+        for (int i = 0; i < fixture.Glyphs.Length; i++)
+        {
+            FontProgramFixture.FixtureGlyph glyph = fixture.Glyphs[i];
+            GlyphOutline actual = new();
+            if (!font.TryGetGlyph(i, out CffGlyphData data))
+            {
+                differences.Add($"glyph {i}: no data");
+                continue;
+            }
+
+            data.WriteOutline(ref actual);
+            string? difference = GlyphOutline.Compare(GlyphOutline.Parse(glyph.Outline), glyph.Matrix ?? fixture.FontMatrix, actual, fontMatrix);
+            if (difference is not null)
+            {
+                differences.Add($"glyph {i}: {difference}");
+            }
+
+            if (!font.TryGetAdvanceWidth((ushort)i, out float width) || Math.Abs(width - glyph.Advance!.Value) > 0.001)
+            {
+                differences.Add($"glyph {i}: width {width}, expected {glyph.Advance}");
+            }
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
     public async Task CidKeyedFontHasNoBuiltInEncoding()
     {
         CffFont font = LoadCff(FontProgramFixture.Load("cff-cid-fdselect0").FontPath);

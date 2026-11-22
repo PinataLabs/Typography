@@ -4,6 +4,7 @@
 
 using System;
 using System.Buffers.Binary;
+using System.Numerics;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -20,7 +21,6 @@ internal sealed class CffFont
     // For each glyph its SID, or its CID in a CID-keyed font.
     private readonly ushort[] charset;
     private readonly int encodingOffset;
-    private readonly CffFontDict topPrivate;
     private readonly CffFontDict[] fontDicts;
     private readonly int fdSelectOffset;
 
@@ -31,8 +31,8 @@ internal sealed class CffFont
         CffIndex charStrings,
         ushort[] charset,
         bool isCidKeyed,
+        Matrix3x2 fontMatrix,
         int encodingOffset,
-        CffFontDict topPrivate,
         CffFontDict[] fontDicts,
         int fdSelectOffset)
     {
@@ -42,8 +42,8 @@ internal sealed class CffFont
         this.charStrings = charStrings;
         this.charset = charset;
         this.IsCidKeyed = isCidKeyed;
+        this.FontMatrix = fontMatrix;
         this.encodingOffset = encodingOffset;
-        this.topPrivate = topPrivate;
         this.fontDicts = fontDicts;
         this.fdSelectOffset = fdSelectOffset;
     }
@@ -54,6 +54,24 @@ internal sealed class CffFont
     /// Gets a value indicating whether the font is CID-keyed. Such a font has CIDs in place of glyph names.
     /// </summary>
     public bool IsCidKeyed { get; }
+
+    /// <summary>
+    /// Gets the matrix from glyph space to ems. It holds for every glyph: a glyph whose Font DICT has
+    /// another matrix is written in the glyph space of this one.
+    /// </summary>
+    public Matrix3x2 FontMatrix { get; }
+
+    /// <summary>
+    /// Gets the advance width that the charstring of a glyph gives, in glyph space.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="advanceWidth">The advance width.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
+    public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth)
+    {
+        advanceWidth = 0;
+        return this.TryGetGlyph(glyphId, out CffGlyphData glyph) && glyph.TryGetAdvanceWidth(out advanceWidth);
+    }
 
     /// <summary>
     /// Gets the name of a glyph.
@@ -145,18 +163,19 @@ internal sealed class CffFont
             return false;
         }
 
-        CffIndex localSubrs = this.topPrivate.LocalSubrs;
-        if (this.fdSelectOffset != 0 && this.data.Span[this.fdSelectOffset] == 3)
+        // A font without an FDSelect has one Font DICT.
+        int fontDict = 0;
+        if (this.fdSelectOffset != 0 && !this.TryGetFontDictIndex(glyphId, out fontDict))
         {
-            if (!this.TryGetFontDictIndex(glyphId, out int fontDict) || fontDict >= this.fontDicts.Length)
-            {
-                return false;
-            }
-
-            localSubrs = this.fontDicts[fontDict].LocalSubrs;
+            return false;
         }
 
-        glyph = new CffGlyphData((ushort)glyphId, this.globalSubrs, localSubrs, this.topPrivate.NominalWidthX, charString);
+        if (fontDict >= this.fontDicts.Length)
+        {
+            return false;
+        }
+
+        glyph = new CffGlyphData((ushort)glyphId, this.globalSubrs, in this.fontDicts[fontDict], charString);
         return true;
     }
 

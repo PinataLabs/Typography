@@ -4,6 +4,7 @@
 
 using System;
 using System.Buffers.Binary;
+using System.Numerics;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -19,6 +20,7 @@ internal static class CffParser
     private const int OpCharStrings = 17;
     private const int OpPrivate = 18;
     private const int OpCharstringType = 0x0C06;
+    private const int OpFontMatrix = 0x0C07;
     private const int OpRos = 0x0C1E;
     private const int OpFdArray = 0x0C24;
     private const int OpFdSelect = 0x0C25;
@@ -53,6 +55,7 @@ internal static class CffParser
             throw new InvalidFontFileException("The CFF table has no Top DICT.");
         }
 
+        Matrix3x2? topMatrix = null;
         int charsetOffset = 0;
         int encodingOffset = 0;
         bool isCidKeyed = false;
@@ -68,6 +71,9 @@ internal static class CffParser
         {
             switch (op)
             {
+                case OpFontMatrix when count >= 6:
+                    topMatrix = ToMatrix(operands);
+                    break;
                 case OpCharset when count >= 1:
                     charsetOffset = ToOffset(operands[0], span.Length);
                     break;
@@ -101,9 +107,11 @@ internal static class CffParser
             throw new InvalidFontFileException("The CFF table has no glyph data.");
         }
 
-        CffFontDict topPrivate = privateSize == 0 ? default : ReadPrivateDict(data, privateOffset, privateSize);
+        // The default FontMatrix scales 1000 units to the em.
+        Matrix3x2 fontMatrix = topMatrix ?? Matrix3x2.CreateScale(0.001F);
 
-        CffFontDict[] fontDicts = [];
+        // A font that is not CID-keyed has one Font DICT: its Top DICT.
+        CffFontDict[] fontDicts = [privateSize == 0 ? default : ReadPrivateDict(data, privateOffset, privateSize, null)];
         if (fdArrayOffset != 0)
         {
             CffIndex fdArray = CffIndex.Read(data, fdArrayOffset, 2, out _);
@@ -115,7 +123,7 @@ internal static class CffParser
                     throw new InvalidFontFileException("The CFF FDArray is malformed.");
                 }
 
-                fontDicts[i] = ReadFontDict(data, fontDict.Span);
+                fontDicts[i] = ReadFontDict(data, fontDict.Span, topMatrix, fontMatrix);
             }
         }
 
@@ -126,7 +134,7 @@ internal static class CffParser
 
         ushort[] charset = ReadCharset(span, charsetOffset, charStrings.Count, isCidKeyed);
 
-        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, encodingOffset, topPrivate, fontDicts, fdSelectOffset);
+        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, fontMatrix, encodingOffset, fontDicts, fdSelectOffset);
     }
 
     /// <summary>
@@ -208,23 +216,44 @@ internal static class CffParser
         return charset;
     }
 
-    private static CffFontDict ReadFontDict(ReadOnlyMemory<byte> data, ReadOnlySpan<byte> fontDict)
+    private static CffFontDict ReadFontDict(ReadOnlyMemory<byte> data, ReadOnlySpan<byte> fontDict, Matrix3x2? topMatrix, Matrix3x2 fontMatrix)
     {
+        int privateSize = 0;
+        int privateOffset = 0;
+        Matrix3x2? transform = null;
+
         Span<double> operands = stackalloc double[CffDictReader.MaxOperands];
         CffDictReader reader = new(fontDict);
-        CffFontDict result = default;
         while (reader.TryRead(operands, out int count, out int op))
         {
-            if (op == OpPrivate && count >= 2 && operands[0] != 0)
+            if (op == OpPrivate && count >= 2)
             {
-                result = ReadPrivateDict(data, ToOffset(operands[1], data.Length), ToOffset(operands[0], data.Length));
+                privateSize = ToOffset(operands[0], data.Length);
+                privateOffset = ToOffset(operands[1], data.Length);
+            }
+            else if (op == OpFontMatrix && count >= 6)
+            {
+                // The matrix of a Font DICT applies first. The Top DICT matrix follows when the font has one.
+                // The font reports one matrix for every glyph, so keep what is left after that matrix is removed.
+                Matrix3x2 glyphMatrix = ToMatrix(operands);
+                if (topMatrix is Matrix3x2 top)
+                {
+                    glyphMatrix *= top;
+                }
+
+                if (glyphMatrix != fontMatrix && Matrix3x2.Invert(fontMatrix, out Matrix3x2 inverse))
+                {
+                    transform = glyphMatrix * inverse;
+                }
             }
         }
 
-        return result;
+        return privateSize == 0
+            ? new CffFontDict(default, 0, 0, transform)
+            : ReadPrivateDict(data, privateOffset, privateSize, transform);
     }
 
-    private static CffFontDict ReadPrivateDict(ReadOnlyMemory<byte> data, int offset, int size)
+    private static CffFontDict ReadPrivateDict(ReadOnlyMemory<byte> data, int offset, int size, Matrix3x2? transform)
     {
         if ((long)offset + size > data.Length)
         {
@@ -259,8 +288,17 @@ internal static class CffParser
             }
         }
 
-        return new CffFontDict(localSubrs, defaultWidthX, nominalWidthX);
+        return new CffFontDict(localSubrs, defaultWidthX, nominalWidthX, transform);
     }
+
+    private static Matrix3x2 ToMatrix(ReadOnlySpan<double> operands)
+        => new(
+            (float)operands[0],
+            (float)operands[1],
+            (float)operands[2],
+            (float)operands[3],
+            (float)operands[4],
+            (float)operands[5]);
 
     private static int ToOffset(double value, int length)
     {

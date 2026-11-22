@@ -31,6 +31,7 @@ internal ref struct CffEvaluationEngine
     private readonly CffIndex localSubrs;
     private bool isOpen;
     private readonly float nominalWidthX;
+    private readonly float defaultWidthX;
     private readonly int[]? blendRegionCounts;
     private readonly int initialVsIndex;
     private int vsIndex;
@@ -44,6 +45,7 @@ internal ref struct CffEvaluationEngine
         CffIndex globalSubrs,
         CffIndex localSubrs,
         float nominalWidthX,
+        float defaultWidthX,
         int[]? blendRegionCounts = null,
         int vsIndex = 0)
     {
@@ -55,6 +57,7 @@ internal ref struct CffEvaluationEngine
         this.globalSubrs = globalSubrs;
         this.localSubrs = localSubrs;
         this.nominalWidthX = nominalWidthX;
+        this.defaultWidthX = defaultWidthX;
 
         this.globalBias = CalculateBias(this.globalSubrs.Count);
         this.localBias = CalculateBias(this.localSubrs.Count);
@@ -67,6 +70,11 @@ internal ref struct CffEvaluationEngine
         this.stack = new(50);
         this.isDisposed = false;
     }
+
+    /// <summary>
+    /// Gets the advance width of the charstring that was last evaluated.
+    /// </summary>
+    public readonly float Width => this.width ?? this.defaultWidthX;
 
     /// <summary>
     /// Writes the outline in glyph space. Each contour is a MoveTo, then segments, then a ClosePath.
