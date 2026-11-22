@@ -25,6 +25,16 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Font program API.** `FontProgram` reads the glyphs of a font by glyph ID, without text layout.
+  Use it to draw a font that another format selects and positions, such as a font embedded in a PDF file.
+  `FontProgram.Load` takes the font file as `ReadOnlyMemory<byte>` and does not copy it. It accepts
+  TrueType fonts and OpenType fonts with a `CFF ` table. `TryWriteOutline` writes the outline of a glyph
+  to an `IGlyphOutlineSink` in glyph space, and `FontMatrix` maps glyph space to ems.
+  `TryGetGlyphId`, `GetGlyphName` and `TryGetGlyphIdForCid` find glyphs by name and by CID,
+  `TryGetBuiltInEncoding` gives the glyph for each of the 256 codes of the encoding that the font carries,
+  and `TryGetAdvanceWidth` gives the advance width. A font program holds no state that changes after load,
+  so one instance can serve many threads. Malformed data makes `Load` throw `InvalidFontFileException`.
+  After load, a malformed glyph makes a method return `false`. (#71, #72)
 - **netstandard2.1 target.** The library targets `netstandard2.1` again, so a netstandard2.1
   project such as a Unity package can depend on it. On this target the package depends on
   `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.

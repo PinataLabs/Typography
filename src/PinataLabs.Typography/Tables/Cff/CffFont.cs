@@ -5,6 +5,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Numerics;
+using PinataLabs.Typography.FontPrograms;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -74,6 +75,17 @@ internal sealed class CffFont
     }
 
     /// <summary>
+    /// Writes the outline of a glyph in the glyph space of <see cref="FontMatrix"/>.
+    /// </summary>
+    /// <typeparam name="TSink">The type of the sink.</typeparam>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="sink">The sink that receives the outline.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
+    public bool TryWriteOutline<TSink>(ushort glyphId, ref TSink sink)
+        where TSink : IGlyphOutlineSink
+        => this.TryGetGlyph(glyphId, out CffGlyphData glyph) && glyph.TryWriteOutline(ref sink);
+
+    /// <summary>
     /// Gets the name of a glyph.
     /// </summary>
     /// <param name="glyphId">The glyph ID.</param>
@@ -96,15 +108,7 @@ internal sealed class CffFont
             return null;
         }
 
-        // Strings are single-byte. Each byte is the code point of its character.
-        return string.Create(name.Length, name, static (chars, bytes) =>
-        {
-            ReadOnlySpan<byte> span = bytes.Span;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                chars[i] = (char)span[i];
-            }
-        });
+        return FontDataReader.ToText(name);
     }
 
     /// <summary>
