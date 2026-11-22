@@ -180,9 +180,17 @@ internal class CffBoundsFinder : IGlyphRenderer
     }
 
     public Bounds GetBounds()
-        => new(
+    {
+        if (this.firstEval)
+        {
+            // No point was seen. The cast of the initial float limits to short differs between runtimes.
+            return Bounds.Empty;
+        }
+
+        return new(
             (short)Math.Floor(this.minX),
             (short)Math.Floor(this.minY),
             (short)Math.Ceiling(this.maxX),
             (short)Math.Ceiling(this.maxY));
+    }
 }
