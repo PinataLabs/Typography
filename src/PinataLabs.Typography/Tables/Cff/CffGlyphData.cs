@@ -37,6 +37,25 @@ internal struct CffGlyphData
 
     public Bounds GetBounds()
     {
+        CffBoundsFinder finder = default;
+        this.WriteOutline(ref finder);
+        return finder.GetBounds();
+    }
+
+    public void RenderTo(IGlyphRenderer renderer, Vector2 origin, Vector2 scale, Vector2 offset, Matrix3x2 transform)
+    {
+        TransformingGlyphRenderer adapter = new(renderer, origin, scale, offset, transform);
+        this.WriteOutline(ref adapter);
+    }
+
+    /// <summary>
+    /// Writes the outline of the glyph in glyph space.
+    /// </summary>
+    /// <typeparam name="TSink">The type of the sink.</typeparam>
+    /// <param name="sink">The sink that receives the outline.</param>
+    public void WriteOutline<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
         using var engine = new CffEvaluationEngine(
             this.charStrings,
             this.globalSubrBuffers,
@@ -45,19 +64,6 @@ internal struct CffGlyphData
             this.blendRegionCounts,
             this.vsIndex);
 
-        return engine.GetBounds();
-    }
-
-    public void RenderTo(IGlyphRenderer renderer, Vector2 origin, Vector2 scale, Vector2 offset, Matrix3x2 transform)
-    {
-        using var engine = new CffEvaluationEngine(
-             this.charStrings,
-             this.globalSubrBuffers,
-             this.localSubrBuffers,
-             this.nominalWidthX,
-             this.blendRegionCounts,
-             this.vsIndex);
-
-        engine.RenderTo(renderer, origin, scale, offset, transform);
+        engine.WriteOutline(ref sink);
     }
 }

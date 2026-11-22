@@ -29,7 +29,7 @@ internal ref struct CffEvaluationEngine
     private readonly ReadOnlySpan<byte> charStrings;
     private readonly ReadOnlySpan<byte[]> globalSubrBuffers;
     private readonly ReadOnlySpan<byte[]> localSubrBuffers;
-    private TransformingGlyphRenderer transforming;
+    private bool isOpen;
     private readonly int nominalWidthX;
     private readonly int[]? blendRegionCounts;
     private readonly int initialVsIndex;
@@ -47,7 +47,7 @@ internal ref struct CffEvaluationEngine
         int[]? blendRegionCounts = null,
         int vsIndex = 0)
     {
-        this.transforming = default;
+        this.isOpen = false;
         this.blendRegionCounts = blendRegionCounts;
         this.initialVsIndex = vsIndex;
         this.vsIndex = vsIndex;
@@ -68,45 +68,24 @@ internal ref struct CffEvaluationEngine
         this.isDisposed = false;
     }
 
-    public Bounds GetBounds()
+    /// <summary>
+    /// Writes the outline in glyph space. Each contour is a MoveTo, then segments, then a ClosePath.
+    /// </summary>
+    /// <typeparam name="TSink">The type of the sink.</typeparam>
+    /// <param name="sink">The sink that receives the outline.</param>
+    public void WriteOutline<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
     {
         this.Reset();
 
-        // TODO: It would be nice to avoid the allocation here.
-        CffBoundsFinder finder = new();
-
-        // Note: scale is passed with negative Y to flip the Y axis.
-        this.transforming = new(finder, Vector2.Zero, new Vector2(1, -1), Vector2.Zero, Matrix3x2.Identity);
-
-        // Boolean IGlyphRenderer.BeginGlyph(..) is handled by the caller.
-        this.Parse(this.charStrings);
+        this.Parse(this.charStrings, ref sink);
 
         // Some CFF end without closing the latest contour.
-        if (this.transforming.IsOpen)
-        {
-            this.transforming.EndFigure();
-        }
-
-        return finder.GetBounds();
+        this.ClosePath(ref sink);
     }
 
-    public void RenderTo(IGlyphRenderer renderer, Vector2 origin, Vector2 scale, Vector2 offset, Matrix3x2 transform)
-    {
-        this.Reset();
-
-        this.transforming = new(renderer, origin, scale, offset, transform);
-
-        // Boolean IGlyphRenderer.BeginGlyph(..) is handled by the caller.
-        this.Parse(this.charStrings);
-
-        // Some CFF end without closing the latest contour.
-        if (this.transforming.IsOpen)
-        {
-            this.transforming.EndFigure();
-        }
-    }
-
-    private void Parse(ReadOnlySpan<byte> buffer)
+    private void Parse<TSink>(ReadOnlySpan<byte> buffer, ref TSink sink)
+        where TSink : IGlyphOutlineSink
     {
         SimpleBinaryReader reader = new(buffer);
         bool endCharEncountered = false;
@@ -142,18 +121,19 @@ internal ref struct CffEvaluationEngine
                         }
 
                         this.y += this.stack.Shift();
-                        this.transforming.MoveTo(new Vector2(this.x, this.y));
+                        this.MoveTo(ref sink, new Vector2(this.x, this.y));
 
                         this.stack.Clear();
                         break;
 
                     case Type2Operator1.Rlineto:
 
+                        this.EnsureOpen(ref sink);
                         while (this.stack.Length >= 2)
                         {
                             this.x += this.stack.Shift();
                             this.y += this.stack.Shift();
-                            this.transforming.LineTo(new Vector2(this.x, this.y));
+                            sink.LineTo(new Vector2(this.x, this.y));
                         }
 
                         this.stack.Clear();
@@ -161,6 +141,7 @@ internal ref struct CffEvaluationEngine
 
                     case Type2Operator1.Hlineto:
                     case Type2Operator1.Vlineto:
+                        this.EnsureOpen(ref sink);
                         phase = oneByteOperator == Type2Operator1.Hlineto;
 
                         while (this.stack.Length >= 1)
@@ -174,7 +155,7 @@ internal ref struct CffEvaluationEngine
                                 this.y += this.stack.Shift();
                             }
 
-                            this.transforming.LineTo(new Vector2(this.x, this.y));
+                            sink.LineTo(new Vector2(this.x, this.y));
                             phase = !phase;
                         }
 
@@ -183,9 +164,10 @@ internal ref struct CffEvaluationEngine
 
                     case Type2Operator1.Rrcurveto:
 
+                        this.EnsureOpen(ref sink);
                         while (this.stack.Length > 0)
                         {
-                            this.transforming.CubicBezierTo(
+                            sink.CubicBezierTo(
                                 new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()),
                                 new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()),
                                 new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()));
@@ -200,7 +182,7 @@ internal ref struct CffEvaluationEngine
 
                         if (subr.Length > 0)
                         {
-                            this.Parse(subr);
+                            this.Parse(subr, ref sink);
                         }
 
                         break;
@@ -218,10 +200,7 @@ internal ref struct CffEvaluationEngine
                             this.CheckWidth();
                         }
 
-                        if (this.transforming.IsOpen)
-                        {
-                            this.transforming.EndFigure();
-                        }
+                        this.ClosePath(ref sink);
 
                         endCharEncountered = true;
                         break;
@@ -262,7 +241,7 @@ internal ref struct CffEvaluationEngine
 
                         this.x += this.stack.Shift();
                         this.y += this.stack.Shift();
-                        this.transforming.MoveTo(new Vector2(this.x, this.y));
+                        this.MoveTo(ref sink, new Vector2(this.x, this.y));
 
                         this.stack.Clear();
                         break;
@@ -275,33 +254,35 @@ internal ref struct CffEvaluationEngine
                         }
 
                         this.x += this.stack.Shift();
-                        this.transforming.MoveTo(new Vector2(this.x, this.y));
+                        this.MoveTo(ref sink, new Vector2(this.x, this.y));
 
                         this.stack.Clear();
                         break;
 
                     case Type2Operator1.Rcurveline:
 
+                        this.EnsureOpen(ref sink);
                         while (this.stack.Length >= 8)
                         {
-                            this.transforming.CubicBezierTo(
+                            sink.CubicBezierTo(
                                 new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()),
                                 new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()),
                                 new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()));
                         }
 
-                        this.transforming.LineTo(new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()));
+                        sink.LineTo(new Vector2(this.x += this.stack.Shift(), this.y += this.stack.Shift()));
 
                         this.stack.Clear();
                         break;
 
                     case Type2Operator1.Rlinecurve:
 
+                        this.EnsureOpen(ref sink);
                         while (this.stack.Length >= 8)
                         {
                             this.x += this.stack.Shift();
                             this.y += this.stack.Shift();
-                            this.transforming.LineTo(new Vector2(this.x, this.y));
+                            sink.LineTo(new Vector2(this.x, this.y));
                         }
 
                         c1x = this.x + this.stack.Shift();
@@ -311,7 +292,7 @@ internal ref struct CffEvaluationEngine
                         this.x = c2x + this.stack.Shift();
                         this.y = c2y + this.stack.Shift();
 
-                        this.transforming.CubicBezierTo(
+                        sink.CubicBezierTo(
                             new Vector2(c1x, c1y),
                             new Vector2(c2x, c2y),
                             new Vector2(this.x, this.y));
@@ -321,6 +302,7 @@ internal ref struct CffEvaluationEngine
 
                     case Type2Operator1.Vvcurveto:
 
+                        this.EnsureOpen(ref sink);
                         if (this.stack.Length % 2 != 0)
                         {
                             this.x += this.stack.Shift();
@@ -335,7 +317,7 @@ internal ref struct CffEvaluationEngine
                             this.x = c2x;
                             this.y = c2y + this.stack.Shift();
 
-                            this.transforming.CubicBezierTo(
+                            sink.CubicBezierTo(
                                 new Vector2(c1x, c1y),
                                 new Vector2(c2x, c2y),
                                 new Vector2(this.x, this.y));
@@ -346,6 +328,7 @@ internal ref struct CffEvaluationEngine
 
                     case Type2Operator1.Hhcurveto:
 
+                        this.EnsureOpen(ref sink);
                         if (this.stack.Length % 2 != 0)
                         {
                             this.y += this.stack.Shift();
@@ -360,7 +343,7 @@ internal ref struct CffEvaluationEngine
                             this.x = c2x + this.stack.Shift();
                             this.y = c2y;
 
-                            this.transforming.CubicBezierTo(
+                            sink.CubicBezierTo(
                                 new Vector2(c1x, c1y),
                                 new Vector2(c2x, c2y),
                                 new Vector2(this.x, this.y));
@@ -381,13 +364,14 @@ internal ref struct CffEvaluationEngine
 
                         if (subr.Length > 0)
                         {
-                            this.Parse(subr);
+                            this.Parse(subr, ref sink);
                         }
 
                         break;
 
                     case Type2Operator1.Vhcurveto:
                     case Type2Operator1.Hvcurveto:
+                        this.EnsureOpen(ref sink);
 
                         phase = oneByteOperator == Type2Operator1.Hvcurveto;
                         while (this.stack.Length >= 4)
@@ -411,7 +395,7 @@ internal ref struct CffEvaluationEngine
                                 this.y = c2y + (this.stack.Length == 1 ? this.stack.Shift() : 0);
                             }
 
-                            this.transforming.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
+                            sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(this.x, this.y));
                             phase = !phase;
                         }
 
@@ -594,6 +578,7 @@ internal ref struct CffEvaluationEngine
 
                             case Type2Operator2.Hflex:
 
+                                this.EnsureOpen(ref sink);
                                 c1x = this.x + this.stack.Shift();
                                 c1y = this.y;
                                 c2x = c1x + this.stack.Shift();
@@ -609,16 +594,17 @@ internal ref struct CffEvaluationEngine
                                 this.x = c6x;
                                 this.y = c6y;
 
-                                this.transforming.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
-                                this.transforming.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
+                                sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
+                                sink.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
 
                                 this.stack.Clear();
                                 break;
 
                             case Type2Operator2.Flex:
 
-                                this.transforming.CubicBezierTo(new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()));
-                                this.transforming.CubicBezierTo(new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()));
+                                this.EnsureOpen(ref sink);
+                                sink.CubicBezierTo(new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()));
+                                sink.CubicBezierTo(new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()), new Vector2(this.stack.Shift(), this.stack.Shift()));
 
                                 this.stack.Shift();
 
@@ -627,6 +613,7 @@ internal ref struct CffEvaluationEngine
 
                             case Type2Operator2.Hflex1:
 
+                                this.EnsureOpen(ref sink);
                                 c1x = this.x + this.stack.Shift();
                                 c1y = this.y + this.stack.Shift();
                                 c2x = c1x + this.stack.Shift();
@@ -642,14 +629,15 @@ internal ref struct CffEvaluationEngine
                                 this.x = c6x;
                                 this.y = c6y;
 
-                                this.transforming.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
-                                this.transforming.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
+                                sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
+                                sink.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
 
                                 this.stack.Clear();
                                 break;
 
                             case Type2Operator2.Flex1:
 
+                                this.EnsureOpen(ref sink);
                                 float startX = this.x;
                                 float startY = this.y;
 
@@ -683,8 +671,8 @@ internal ref struct CffEvaluationEngine
                                 this.x = c6x;
                                 this.y = c6y;
 
-                                this.transforming.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
-                                this.transforming.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
+                                sink.CubicBezierTo(new Vector2(c1x, c1y), new Vector2(c2x, c2y), new Vector2(c3x, c3y));
+                                sink.CubicBezierTo(new Vector2(c4x, c4y), new Vector2(c5x, c5y), new Vector2(c6x, c6y));
 
                                 this.stack.Clear();
                                 break;
@@ -769,6 +757,35 @@ internal ref struct CffEvaluationEngine
         this.stack.Clear();
     }
 
+    private void MoveTo<TSink>(ref TSink sink, Vector2 point)
+        where TSink : IGlyphOutlineSink
+    {
+        this.ClosePath(ref sink);
+        sink.MoveTo(point);
+        this.isOpen = true;
+    }
+
+    // A charstring that draws before its first moveto starts the contour at the current point.
+    private void EnsureOpen<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        if (!this.isOpen)
+        {
+            sink.MoveTo(new Vector2(this.x, this.y));
+            this.isOpen = true;
+        }
+    }
+
+    private void ClosePath<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        if (this.isOpen)
+        {
+            sink.ClosePath();
+            this.isOpen = false;
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CheckWidth()
         => this.width ??= this.stack.Shift() + this.nominalWidthX;
@@ -780,6 +797,7 @@ internal ref struct CffEvaluationEngine
         this.y = 0;
         this.width = null;
         this.nStems = 0;
+        this.isOpen = false;
         this.vsIndex = this.initialVsIndex;
         this.stack.Clear();
         this.trans.Clear();
