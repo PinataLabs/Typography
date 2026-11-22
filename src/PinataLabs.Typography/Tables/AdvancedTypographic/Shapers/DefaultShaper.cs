@@ -56,6 +56,10 @@ internal class DefaultShaper : BaseShaper
 
     protected static readonly Tag VKernTag = Tag.Parse("vkrn");
 
+    protected static readonly Tag VrtrTag = Tag.Parse("vrtr");
+
+    protected static readonly Tag Vrt2Tag = Tag.Parse("vrt2");
+
     private static readonly CodePoint FractionSlash = new(0x2044);
 
     private static readonly CodePoint Slash = new(0x002F);
@@ -132,6 +136,14 @@ internal class DefaultShaper : BaseShaper
                 this.AddFeature(collection, i, 1, RcltTag);
                 this.AddFeature(collection, i, 1, CursTag);
                 this.AddFeature(collection, i, 1, KernTag);
+
+                // Rotated glyphs in vertical mixed layout get `vrtr`. Its glyphs are designed to be
+                // rotated by the layout engine, so they are still rotated synthetically. See:
+                // https://learn.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vrtr
+                if (layoutMode.IsVerticalMixed())
+                {
+                    this.AddFeature(collection, i, 1, VrtrTag);
+                }
             }
             else
             {
@@ -151,10 +163,27 @@ internal class DefaultShaper : BaseShaper
         foreach (Tag feature in this.featureTags)
         {
             // We've already dealt with fractional features.
-            if (feature != FracTag && feature != NumrTag && feature != DnomTag)
+            if (feature == FracTag || feature == NumrTag || feature == DnomTag)
             {
-                this.AddFeature(collection, index, count, feature);
+                continue;
             }
+
+            // `vrt2` supplies pre-rotated glyphs. Glyphs that are rotated synthetically in vertical
+            // mixed layout must not get it, or they would be rotated twice.
+            if (feature == Vrt2Tag && layoutMode.IsVerticalMixed())
+            {
+                for (int i = index; i < index + count; i++)
+                {
+                    if (AdvancedTypographicUtils.IsVerticalGlyph(collection[i].CodePoint, layoutMode, collection[i].HasVerticalForm))
+                    {
+                        this.AddFeature(collection, i, 1, feature);
+                    }
+                }
+
+                continue;
+            }
+
+            this.AddFeature(collection, index, count, feature);
         }
     }
 

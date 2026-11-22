@@ -186,6 +186,11 @@ public class TextOptions
     /// <summary>
     /// Gets or sets the collection of additional feature tags to apply during glyph shaping.
     /// </summary>
+    /// <remarks>
+    /// In <see cref="LayoutMode.VerticalMixedLeftRight"/> and <see cref="LayoutMode.VerticalMixedRightLeft"/>
+    /// layouts the <c>vrt2</c> feature is only applied to upright glyphs. Its glyphs are pre-rotated, and
+    /// sideways glyphs are already rotated by the layout engine.
+    /// </remarks>
     public IReadOnlyList<Tag> FeatureTags { get; set; } = [];
 
     /// <summary>

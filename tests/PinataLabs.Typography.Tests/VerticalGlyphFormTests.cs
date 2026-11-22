@@ -30,10 +30,10 @@ public class VerticalGlyphFormTests
     private const ushort VerticalIdeographicComma = 21594;
     private const ushort VerticalProlongedSoundMark = 24724;
 
-    private static List<ushort> GlyphIds(string text, LayoutMode mode)
+    private static List<ushort> GlyphIds(string text, LayoutMode mode, params Tag[] featureTags)
     {
         FontFamily family = new FontCollection().Add(TestFonts.NotoSansKRRegular);
-        TextOptions options = new(family.CreateFont(30)) { LayoutMode = mode };
+        TextOptions options = new(family.CreateFont(30)) { LayoutMode = mode, FeatureTags = featureTags };
         GlyphRenderer renderer = new();
         TextRenderer.RenderTextTo(renderer, text, options);
         return renderer.GlyphKeys.Select(k => k.GlyphId).ToList();
@@ -225,12 +225,88 @@ public class VerticalGlyphFormTests
         await Assert.That(tags).DoesNotContain("kern");
     }
 
-    private static List<string> PlanTrGlyph(bool hasVerticalForm)
+    [Test]
+    public async Task RotatedGlyphIsShapedWithVrtrInVerticalMixedLayout()
     {
-        Font font = FakeFont.CreateFont("ー");
-        TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalMixedRightLeft };
+        List<string> tags = PlanTrGlyph(hasVerticalForm: false);
+
+        await Assert.That(tags).Contains("vrtr");
+    }
+
+    [Test]
+    [Arguments("ー", true)]
+    [Arguments("あ", false)]
+    public async Task UprightGlyphIsNotShapedWithVrtrInVerticalMixedLayout(string text, bool hasVerticalForm)
+    {
+        List<string> tags = PlanGlyph(text, LayoutMode.VerticalMixedRightLeft, hasVerticalForm);
+
+        await Assert.That(tags).Contains("vert");
+        await Assert.That(tags).DoesNotContain("vrtr");
+    }
+
+    [Test]
+    [Arguments(LayoutMode.HorizontalTopBottom)]
+    [Arguments(LayoutMode.VerticalRightLeft)]
+    [Arguments(LayoutMode.VerticalLeftRight)]
+    public async Task VrtrIsOnlyUsedInVerticalMixedLayout(LayoutMode mode)
+    {
+        List<string> tags = PlanGlyph("A", mode, false);
+
+        await Assert.That(tags).DoesNotContain("vrtr");
+    }
+
+    [Test]
+    [Arguments("A", LayoutMode.HorizontalTopBottom)]
+    [Arguments("A", LayoutMode.VerticalRightLeft)]
+    [Arguments("A", LayoutMode.VerticalMixedRightLeft)]
+    [Arguments("あ", LayoutMode.VerticalMixedRightLeft)]
+    public async Task Vrt2IsNotUsedByDefault(string text, LayoutMode mode)
+    {
+        List<string> tags = PlanGlyph(text, mode, false);
+
+        await Assert.That(tags).DoesNotContain("vrt2");
+    }
+
+    [Test]
+    public async Task UserVrt2IsNotUsedForRotatedGlyphInVerticalMixedLayout()
+    {
+        List<string> tags = PlanGlyph("A", LayoutMode.VerticalMixedRightLeft, false, Tag.Parse("vrt2"));
+
+        await Assert.That(tags).DoesNotContain("vrt2");
+    }
+
+    [Test]
+    [Arguments("あ", LayoutMode.VerticalMixedRightLeft)]
+    [Arguments("A", LayoutMode.VerticalRightLeft)]
+    public async Task UserVrt2IsUsedForUprightGlyph(string text, LayoutMode mode)
+    {
+        List<string> tags = PlanGlyph(text, mode, false, Tag.Parse("vrt2"));
+
+        await Assert.That(tags).Contains("vrt2");
+    }
+
+    [Test]
+    public async Task UserVrt2DoesNotRotateRotatedGlyphTwiceInVerticalMixedLayout()
+    {
+        // U+2026 HORIZONTAL ELLIPSIS has vertical orientation R. NotoSansKR's vrt2 substitutes a
+        // vertical glyph for it, otherwise this test proves nothing.
+        await Assert.That(GlyphIds("…", LayoutMode.HorizontalTopBottom, Tag.Parse("vrt2")))
+            .IsNotEquivalentTo(GlyphIds("…", LayoutMode.HorizontalTopBottom));
+
+        // In vertical mixed layout the ellipsis is rotated synthetically, so it must keep its horizontal glyph.
+        await Assert.That(GlyphIds("あ…い", LayoutMode.VerticalMixedRightLeft, Tag.Parse("vrt2")))
+            .IsEquivalentTo(GlyphIds("あ…い", LayoutMode.VerticalMixedRightLeft));
+    }
+
+    private static List<string> PlanTrGlyph(bool hasVerticalForm)
+        => PlanGlyph("ー", LayoutMode.VerticalMixedRightLeft, hasVerticalForm);
+
+    private static List<string> PlanGlyph(string text, LayoutMode mode, bool hasVerticalForm, params Tag[] featureTags)
+    {
+        Font font = FakeFont.CreateFont(text);
+        TextOptions options = new(font) { LayoutMode = mode, FeatureTags = featureTags };
         GlyphSubstitutionCollection collection = new(options);
-        collection.AddGlyph(1, new CodePoint(0x30FC), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1, Font = font }, 0);
+        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1, Font = font }, 0);
         collection[0].HasVerticalForm = hasVerticalForm;
 
         new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);

@@ -294,6 +294,11 @@ public static class TestFonts
         public static string Issue298File => GetFullPath("Issues/StyleScript.ttf");
     }
 
+    /// <summary>
+    /// Gets the full path of a file under the Fonts directory.
+    /// </summary>
+    public static string GetPath(string relativePath) => GetFullPath(relativePath);
+
     // Each call gets its own read-only stream over a shared byte array that is never
     // mutated, so tests that run in parallel never share a stream position.
     private static Stream OpenStream(string path)

@@ -7,182 +7,93 @@ using System.Numerics;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
-internal class CffBoundsFinder : IGlyphRenderer
+/// <summary>
+/// An outline sink that finds the bounds of a glyph. A curve is sampled, not solved.
+/// </summary>
+internal struct CffBoundsFinder : IGlyphOutlineSink
 {
+    private const int Steps = 3;
     private float minX;
     private float maxX;
     private float minY;
     private float maxY;
-    private Vector2 currentXY;
-    private readonly int nsteps;
-    private bool open;
-    private bool firstEval;
+    private Vector2 current;
+    private bool hasPoint;
 
-    public CffBoundsFinder()
+    public void MoveTo(Vector2 point)
     {
-        this.minX = float.MaxValue;
-        this.maxX = float.MinValue;
-        this.minY = float.MaxValue;
-        this.maxY = float.MinValue;
-        this.nsteps = 3;
-        this.currentXY = Vector2.Zero;
-        this.open = false;
-        this.firstEval = true;
-    }
-
-    public void BeginFigure()
-    {
-        // Do nothing.
-    }
-
-    public bool BeginGlyph(in FontRectangle bounds, in GlyphRendererParameters parameters)
-        => true; // Do nothing.
-
-    public void BeginText(in FontRectangle bounds)
-    {
-        // Do nothing.
-    }
-
-    public void EndFigure()
-    {
-        this.open = false;
-        this.currentXY = Vector2.Zero;
-    }
-
-    public void EndGlyph()
-    {
-        if (this.open)
-        {
-            this.EndFigure();
-        }
-    }
-
-    public void EndText()
-    {
-        if (this.open)
-        {
-            this.EndFigure();
-        }
+        this.current = point;
+        this.Include(point);
     }
 
     public void LineTo(Vector2 point)
     {
-        this.currentXY = point;
-        this.UpdateMinMax(point.X, point.Y);
-        this.open = true;
+        this.current = point;
+        this.Include(point);
     }
 
-    public void MoveTo(Vector2 point)
+    public void QuadraticBezierTo(Vector2 control, Vector2 point)
     {
-        if (this.open)
-        {
-            this.EndFigure();
-        }
+        const float step = 1F / Steps;
+        float t = step;
 
-        this.currentXY = point;
-        this.UpdateMinMax(point.X, point.Y);
-    }
-
-    public void CubicBezierTo(Vector2 secondControlPoint, Vector2 thirdControlPoint, Vector2 point)
-    {
-        float eachstep = 1F / this.nsteps;
-        float t = eachstep; // Start
-
-        for (int n = 1; n < this.nsteps; ++n)
+        for (int n = 1; n < Steps; ++n)
         {
             float c = 1F - t;
-            Vector2 xy = (this.currentXY * c * c * c) + (secondControlPoint * 3 * t * c * c) + (thirdControlPoint * 3 * t * t * c) + (point * t * t * t);
-            this.UpdateMinMax(xy.X, xy.Y);
-
-            t += eachstep;
+            this.Include((this.current * c * c) + (control * 2 * t * c) + (point * t * t));
+            t += step;
         }
 
-        this.currentXY = point;
-        this.UpdateMinMax(point.X, point.Y);
-        this.open = true;
+        this.current = point;
+        this.Include(point);
     }
 
-    public void QuadraticBezierTo(Vector2 secondControlPoint, Vector2 point)
+    public void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
     {
-        float eachstep = 1F / this.nsteps;
-        float t = eachstep; // Start
+        const float step = 1F / Steps;
+        float t = step;
 
-        for (int n = 1; n < this.nsteps; ++n)
+        for (int n = 1; n < Steps; ++n)
         {
             float c = 1F - t;
-            Vector2 xy = (this.currentXY * c * c) + (secondControlPoint * 2 * t * c) + (point * t * t);
-            this.UpdateMinMax(xy.X, xy.Y);
-
-            t += eachstep;
+            this.Include((this.current * c * c * c) + (control1 * 3 * t * c * c) + (control2 * 3 * t * t * c) + (point * t * t * t));
+            t += step;
         }
 
-        this.currentXY = point;
-        this.UpdateMinMax(point.X, point.Y);
-        this.open = true;
+        this.current = point;
+        this.Include(point);
     }
 
-    public TextDecorations EnabledDecorations()
-        => TextDecorations.None;
+    public void ClosePath()
+        => this.current = Vector2.Zero;
 
-    public void SetDecoration(TextDecorations textDecorations, Vector2 start, Vector2 end, float thickness)
+    public readonly Bounds GetBounds()
     {
-        // Do nothing.
-    }
-
-    private void UpdateMinMax(float x0, float y0)
-    {
-        if (this.firstEval)
+        if (!this.hasPoint)
         {
-            // 4 times
-            if (x0 < this.minX)
-            {
-                this.minX = x0;
-            }
-
-            if (x0 > this.maxX)
-            {
-                this.maxX = x0;
-            }
-
-            if (y0 < this.minY)
-            {
-                this.minY = y0;
-            }
-
-            if (y0 > this.maxY)
-            {
-                this.maxY = y0;
-            }
-
-            this.firstEval = false;
+            return Bounds.Empty;
         }
-        else
-        {
-            // 2 times
-            if (x0 < this.minX)
-            {
-                this.minX = x0;
-            }
-            else if (x0 > this.maxX)
-            {
-                this.maxX = x0;
-            }
 
-            if (y0 < this.minY)
-            {
-                this.minY = y0;
-            }
-            else if (y0 > this.maxY)
-            {
-                this.maxY = y0;
-            }
-        }
-    }
-
-    public Bounds GetBounds()
-        => new(
+        return new(
             (short)Math.Floor(this.minX),
             (short)Math.Floor(this.minY),
             (short)Math.Ceiling(this.maxX),
             (short)Math.Ceiling(this.maxY));
+    }
+
+    private void Include(Vector2 point)
+    {
+        if (!this.hasPoint)
+        {
+            this.minX = this.maxX = point.X;
+            this.minY = this.maxY = point.Y;
+            this.hasPoint = true;
+            return;
+        }
+
+        this.minX = MathF.Min(this.minX, point.X);
+        this.maxX = MathF.Max(this.maxX, point.X);
+        this.minY = MathF.Min(this.minY, point.Y);
+        this.maxY = MathF.Max(this.maxY, point.Y);
+    }
 }
