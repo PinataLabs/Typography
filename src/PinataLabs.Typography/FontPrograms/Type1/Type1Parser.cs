@@ -35,7 +35,7 @@ internal static class Type1Parser
             ReadOnlySpan<byte> key = tokenizer.GetBytes(token);
             if (key.SequenceEqual("FontMatrix"u8) && !hasFontMatrix)
             {
-                if (!TryReadNumbers(ref tokenizer, numbers))
+                if (!TryReadNumbers(ref tokenizer, numbers) || !FitSingle(numbers))
                 {
                     throw new InvalidFontFileException("The Type 1 font program has a malformed FontMatrix.");
                 }
@@ -180,6 +180,19 @@ internal static class Type1Parser
             if (!tokenizer.TryRead(out Type1Token token)
                 || token.Kind != Type1TokenKind.Word
                 || !Type1Tokenizer.TryParseNumber(tokenizer.GetBytes(token), out numbers[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool FitSingle(ReadOnlySpan<double> numbers)
+    {
+        foreach (double number in numbers)
+        {
+            if (!float.IsFinite((float)number))
             {
                 return false;
             }

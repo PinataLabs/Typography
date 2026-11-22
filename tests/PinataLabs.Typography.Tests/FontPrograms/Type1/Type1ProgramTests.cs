@@ -144,6 +144,18 @@ public class Type1ProgramTests
     }
 
     [Test]
+    [Arguments("[1e39 0 0 0.001 0 0]")]
+    [Arguments("[0.001 0 0 -1e39 0 0]")]
+    [Arguments("[0.001 0 0 0.001 0 4e38]")]
+    public async Task AFontMatrixThatOverflowsSinglePrecisionIsRejected(string matrix)
+    {
+        Type1FontBuilder builder = SquareFont();
+        builder.ClearTextBody = $"/FontMatrix {matrix} readonly def\n";
+
+        await Assert.That(() => builder.Load()).Throws<InvalidFontFileException>();
+    }
+
+    [Test]
     [Arguments("/Encoding StandardEncoding def\n", 65)]
     [Arguments("/Encoding 256 array\n0 1 255 {1 index exch /.notdef put} for\ndup 7 /A put\ndup 300 /A put\ndup 9 /missing put\nreadonly def\n", 7)]
     [Arguments("/Encoding [ /.notdef /.notdef /A ] def\n", 2)]
