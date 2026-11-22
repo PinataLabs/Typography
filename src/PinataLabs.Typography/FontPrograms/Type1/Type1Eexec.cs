@@ -112,8 +112,9 @@ internal static class Type1Eexec
     /// <returns>The decrypted private part.</returns>
     public static byte[] DecryptSection(ReadOnlySpan<byte> section, ref LoadBudget budget)
     {
+        // The format forbids only these four as the first byte of binary eexec data, so NUL and form feed can start it.
         int start = 0;
-        while (start < section.Length && Type1Tokenizer.IsWhiteSpace(section[start]))
+        while (start < section.Length && section[start] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
         {
             start++;
         }

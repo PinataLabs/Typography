@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -38,6 +39,39 @@ public class Type1ParityTests
         await Assert.That(font.IsCidKeyed).IsFalse();
         await Assert.That(fixture.Glyphs.Length).IsEqualTo(glyphCount);
         await Assert.That(Compare(font, fixture)).IsEmpty();
+    }
+
+    [Test]
+    [Arguments((byte)0x00, false)]
+    [Arguments((byte)0x0C, false)]
+    [Arguments((byte)0x00, true)]
+    [Arguments((byte)0x0C, true)]
+    public async Task AnEexecSectionMayStartWithAnyByteButSpaceTabOrALineEnd(byte firstCipherByte, bool hex)
+    {
+        FontProgram font = FontProgram.Load(Reencrypt("bchr8a.pfb", firstCipherByte, hex));
+
+        await Assert.That(Compare(font, Fixture.Read("bchr8a.json"))).IsEmpty();
+    }
+
+    // Writes a PFB again as a PFA, or as the stream of a PDF /FontFile, with a chosen first cipher byte.
+    private static byte[] Reencrypt(string pfbFile, byte firstCipherByte, bool hex)
+    {
+        byte[] pfb = Type1TestFonts.Read(pfbFile);
+        List<byte[]> segments = [];
+        for (int position = 0; pfb[position + 1] != 3;)
+        {
+            int length = BitConverter.ToInt32(pfb, position + 2);
+            segments.Add(pfb[(position + 6)..(position + 6 + length)]);
+            position += 6 + length;
+        }
+
+        byte[] cipher = Type1FontBuilder.EncryptEexec(Type1FontBuilder.DecryptEexec(segments[1]), firstCipherByte);
+        if (hex)
+        {
+            cipher = Encoding.Latin1.GetBytes(Convert.ToHexString(cipher));
+        }
+
+        return [.. segments[0], .. cipher, .. segments[2]];
     }
 
     private static List<string> Compare(FontProgram font, Fixture fixture)

@@ -136,7 +136,7 @@ internal sealed class Type1FontBuilder
 
         void Binary(byte[] charString)
         {
-            byte[] stored = this.LenIV is < 0 ? charString : Encrypt(charString, CharStringKey, this.LenIV ?? 4);
+            byte[] stored = this.LenIV is < 0 ? charString : Encrypt(charString, CharStringKey, new byte[this.LenIV ?? 4]);
             Text($"{stored.Length} {this.RD} ");
             stream.Write(stored);
         }
@@ -230,18 +230,45 @@ internal sealed class Type1FontBuilder
         return stream.ToArray();
     }
 
-    public static byte[] EncryptEexec(byte[] privatePart) => Encrypt(privatePart, EexecKey, 4);
+    public static byte[] EncryptEexec(byte[] privatePart) => Encrypt(privatePart, EexecKey, new byte[4]);
+
+    /// <summary>
+    /// Encrypts an eexec section whose first cipher byte is <paramref name="firstCipherByte"/>.
+    /// </summary>
+    /// <param name="privatePart">The private part.</param>
+    /// <param name="firstCipherByte">The first byte of the result.</param>
+    /// <returns>The eexec section.</returns>
+    public static byte[] EncryptEexec(byte[] privatePart, byte firstCipherByte)
+        => Encrypt(privatePart, EexecKey, [(byte)(firstCipherByte ^ (EexecKey >> 8)), 0, 0, 0]);
+
+    /// <summary>
+    /// Decrypts an eexec section and drops its 4 leading bytes.
+    /// </summary>
+    /// <param name="cipher">The eexec section.</param>
+    /// <returns>The private part.</returns>
+    public static byte[] DecryptEexec(ReadOnlySpan<byte> cipher)
+    {
+        byte[] plain = new byte[cipher.Length];
+        ushort r = EexecKey;
+        for (int i = 0; i < cipher.Length; i++)
+        {
+            plain[i] = (byte)(cipher[i] ^ (r >> 8));
+            r = (ushort)(((cipher[i] + r) * 52845) + 22719);
+        }
+
+        return plain[4..];
+    }
 
     private static byte[] Trailer()
         => Encoding.Latin1.GetBytes(string.Concat(Enumerable.Repeat(new string('0', 64) + "\n", 8)) + "cleartomark\n");
 
-    private static byte[] Encrypt(byte[] plain, ushort key, int prefixLength)
+    private static byte[] Encrypt(byte[] plain, ushort key, byte[] prefix)
     {
-        byte[] cipher = new byte[plain.Length + prefixLength];
+        byte[] cipher = new byte[plain.Length + prefix.Length];
         ushort r = key;
         for (int i = 0; i < cipher.Length; i++)
         {
-            byte value = i < prefixLength ? (byte)0 : plain[i - prefixLength];
+            byte value = i < prefix.Length ? prefix[i] : plain[i - prefix.Length];
             cipher[i] = (byte)(value ^ (r >> 8));
             r = (ushort)(((cipher[i] + r) * 52845) + 22719);
         }
