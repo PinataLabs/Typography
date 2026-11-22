@@ -68,11 +68,11 @@ public class FontProgramMemoryTests
         const int glyphs = 2;
         const int subrs = 3;
 
-        // Eight arrays: the decrypted private part, two for each of the two charstring tables,
-        // the name offsets and lengths, and the encoding.
-        long expected = (8 * ArrayHeaderBytes)
+        // Nine arrays: the decrypted private part, two for each of the two charstring tables,
+        // the name offsets, lengths and sorted order, and the encoding.
+        long expected = (9 * ArrayHeaderBytes)
             + builder.BuildPrivate().Length
-            + (glyphs * ((2 * sizeof(int)) + sizeof(int) + sizeof(byte)))
+            + (glyphs * ((2 * sizeof(int)) + sizeof(int) + sizeof(byte) + sizeof(ushort)))
             + (subrs * 2 * sizeof(int))
             + (256 * sizeof(ushort));
 

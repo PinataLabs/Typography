@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -122,6 +123,56 @@ public class Type1ProgramTests
     }
 
     [Test]
+    public async Task TheLowestGlyphIdWinsWhenTheFontDefinesANameTwice()
+    {
+        Type1FontBuilder builder = new Type1FontBuilder()
+            .AddGlyph("B", "0 500 hsbw endchar")
+            .AddGlyph("A", "0 500 hsbw endchar")
+            .AddGlyph("AB", "0 500 hsbw endchar")
+            .AddGlyph("A", "0 600 hsbw endchar")
+            .AddGlyph("é", "0 500 hsbw endchar")
+            .AddGlyph("z", "0 500 hsbw endchar");
+        builder.ClearTextBody = "/Encoding 256 array\ndup 7 /A put\nreadonly def\n";
+        Type1Program font = builder.Load();
+        ushort[] encoding = new ushort[256];
+
+        await Assert.That(Names(font)).IsEqualTo(".notdef B A AB A é z");
+        foreach ((string name, int expected) in (ValueTuple<string, int>[])[(".notdef", 0), ("B", 1), ("A", 2), ("AB", 3), ("é", 5), ("z", 6)])
+        {
+            await Assert.That(font.TryGetGlyphId(name, out ushort glyphId)).IsTrue();
+            await Assert.That(glyphId).IsEqualTo((ushort)expected);
+        }
+
+        foreach (string missing in (string[])[string.Empty, "AA", "C", "Ā", "zĀ", ".notdeff"])
+        {
+            await Assert.That(font.TryGetGlyphId(missing, out _)).IsFalse();
+        }
+
+        await Assert.That(font.TryGetBuiltInEncoding(encoding)).IsTrue();
+        await Assert.That(encoding[7]).IsEqualTo((ushort)2);
+    }
+
+    [Test]
+    public async Task AGlyphNameLookupBarelyGrowsWithTheGlyphCount()
+    {
+        Type1Program small = LongNamedFont(100);
+        Type1Program large = LongNamedFont(10000);
+        string missing = new string('a', 250) + "zzzzz";
+        double fastestSmall = double.MaxValue;
+        double fastestLarge = double.MaxValue;
+
+        // Interleaved rounds, so that both fonts get the same JIT tier at their fastest.
+        for (int round = 0; round < 5; round++)
+        {
+            fastestSmall = Math.Min(fastestSmall, TimeLookups(small, missing));
+            fastestLarge = Math.Min(fastestLarge, TimeLookups(large, missing));
+        }
+
+        // A scan of the names costs 100 times more with 100 times the glyphs. A binary search costs about twice as much.
+        await Assert.That(fastestLarge).IsLessThan(10 * fastestSmall);
+    }
+
+    [Test]
     public async Task TheCleartextGivesTheFontMatrixTheBBoxAndThePaintType()
     {
         Type1FontBuilder builder = SquareFont();
@@ -204,6 +255,35 @@ public class Type1ProgramTests
         => new Type1FontBuilder()
             .AddGlyph(".notdef", "0 500 hsbw endchar")
             .AddGlyph("A", "10 500 hsbw 100 vlineto 100 hlineto closepath endchar");
+
+    // The names share a 250-byte prefix, so a comparison of two names reads most of both.
+    private static Type1Program LongNamedFont(int glyphCount)
+    {
+        string prefix = new('a', 250);
+        Type1FontBuilder builder = new();
+        builder.AddGlyph(".notdef", "0 500 hsbw endchar");
+        byte[] charString = Type1FontBuilder.CharString("0 500 hsbw endchar");
+        for (int i = 0; i < glyphCount; i++)
+        {
+            builder.Glyphs.Add((prefix + i.ToString("x5"), charString));
+        }
+
+        return Type1TestFonts.Load(builder.BuildPfb());
+    }
+
+    private static double TimeLookups(Type1Program font, string name)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        for (int i = 0; i < 200; i++)
+        {
+            if (font.TryGetGlyphId(name, out _))
+            {
+                throw new InvalidOperationException("The font has no glyph of that name.");
+            }
+        }
+
+        return stopwatch.Elapsed.TotalMilliseconds;
+    }
 
     private static string Names(Type1Program font)
         => string.Join(" ", Enumerable.Range(0, font.GlyphCount).Select(x => font.GetGlyphName((ushort)x)));

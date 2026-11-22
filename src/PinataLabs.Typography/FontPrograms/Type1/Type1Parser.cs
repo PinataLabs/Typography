@@ -147,6 +147,7 @@ internal static class Type1Parser
             (2 * LoadBudget.SizeOf<int>(subrCount))
             + (3 * LoadBudget.SizeOf<int>(glyphCount))
             + LoadBudget.SizeOf<byte>(glyphCount)
+            + LoadBudget.SizeOf<ushort>(glyphCount)
             + (header.EncodingKind == Type1EncodingKind.None ? 0 : LoadBudget.SizeOf<ushort>(256)));
 
         Type1CharStringTable subrs = new(subrCount, ref budget);

@@ -34,6 +34,9 @@ internal sealed class Type1Program
     private readonly Type1CharStringTable subrs;
     private readonly int[] nameOffsets;
     private readonly byte[] nameLengths;
+
+    // The glyph IDs sorted by name in byte order, then by ID, so a search finds the lowest ID of a name.
+    private readonly ushort[] nameIndex;
     private readonly ushort[]? encoding;
 
     internal Type1Program(
@@ -51,6 +54,7 @@ internal sealed class Type1Program
         this.subrs = subrs;
         this.nameOffsets = nameOffsets;
         this.nameLengths = nameLengths;
+        this.nameIndex = this.BuildNameIndex(ref budget);
         this.FontMatrix = header.FontMatrix;
         this.FontBBox = header.FontBBox;
         this.PaintType = header.PaintType;
@@ -176,13 +180,25 @@ internal sealed class Type1Program
     /// <returns><see langword="true"/> if the font program has the glyph.</returns>
     public bool TryGetGlyphId(ReadOnlySpan<char> glyphName, out ushort glyphId)
     {
-        for (int i = 0; i < this.nameOffsets.Length; i++)
+        int low = 0;
+        int high = this.nameIndex.Length;
+        while (low < high)
         {
-            if (this.NameEquals(i, glyphName))
+            int middle = (int)((uint)(low + high) >> 1);
+            if (CompareName(this.GetName(this.nameIndex[middle]), glyphName) < 0)
             {
-                glyphId = (ushort)i;
-                return true;
+                low = middle + 1;
             }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        if (low < this.nameIndex.Length && CompareName(this.GetName(this.nameIndex[low]), glyphName) == 0)
+        {
+            glyphId = this.nameIndex[low];
+            return true;
         }
 
         glyphId = 0;
@@ -196,7 +212,7 @@ internal sealed class Type1Program
             return null;
         }
 
-        return this.IsSynthesizedNotdef(glyphId) ? Notdef : DecodeName(this.GetNameBytes(glyphId));
+        return this.IsSynthesizedNotdef(glyphId) ? Notdef : DecodeName(this.GetName(glyphId));
     }
 
     /// <summary>
@@ -253,33 +269,41 @@ internal sealed class Type1Program
     private static string StandardEncodingName(int code)
         => CffStandardStrings.GetName(CffPredefinedTables.StandardEncoding[code]);
 
-    private bool IsSynthesizedNotdef(int glyphId) => glyphId == 0 && this.nameOffsets[0] == SynthesizedName;
-
-    private ReadOnlySpan<byte> GetNameBytes(int glyphId)
-        => this.data.AsSpan(this.nameOffsets[glyphId], this.nameLengths[glyphId]);
-
-    private bool NameEquals(int glyphId, ReadOnlySpan<char> name)
+    // Orders a name of bytes against a name of characters as if each byte were the character with the same value.
+    private static int CompareName(ReadOnlySpan<byte> bytes, ReadOnlySpan<char> name)
     {
-        if (this.IsSynthesizedNotdef(glyphId))
+        int length = Math.Min(bytes.Length, name.Length);
+        for (int i = 0; i < length; i++)
         {
-            return name.SequenceEqual(Notdef);
-        }
-
-        ReadOnlySpan<byte> bytes = this.GetNameBytes(glyphId);
-        if (bytes.Length != name.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            if (bytes[i] != name[i])
+            int difference = bytes[i] - name[i];
+            if (difference != 0)
             {
-                return false;
+                return difference;
             }
         }
 
-        return true;
+        return bytes.Length - name.Length;
+    }
+
+    private bool IsSynthesizedNotdef(int glyphId) => glyphId == 0 && this.nameOffsets[0] == SynthesizedName;
+
+    private ReadOnlySpan<byte> GetName(int glyphId)
+        => this.IsSynthesizedNotdef(glyphId) ? ".notdef"u8 : this.data.AsSpan(this.nameOffsets[glyphId], this.nameLengths[glyphId]);
+
+    private ushort[] BuildNameIndex(ref LoadBudget budget)
+    {
+        ushort[] index = budget.Allocate<ushort>(this.nameOffsets.Length);
+        for (int i = 0; i < index.Length; i++)
+        {
+            index[i] = (ushort)i;
+        }
+
+        Array.Sort(index, (x, y) =>
+        {
+            int order = this.GetName(x).SequenceCompareTo(this.GetName(y));
+            return order != 0 ? order : x.CompareTo(y);
+        });
+        return index;
     }
 
     private ushort[]? ResolveEncoding(in Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)

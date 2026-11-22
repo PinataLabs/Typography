@@ -112,7 +112,7 @@ PR 3 (#73) adds `FontProgramFormat.Type1` and nothing else public. `Load` takes 
 - the private part: `byte[]`, its length known from the located eexec section before decryption (binary bytes, or hex digits / 2, less the 4 random bytes);
 - the glyph charstrings: two `int[GlyphCount]` (offset, length);
 - the subroutines: two `int[/Subrs count]`, with a count above the length of the private part refused;
-- the glyph names: `int[GlyphCount]` offsets into the private part and `byte[GlyphCount]` lengths;
+- the glyph names: `int[GlyphCount]` offsets into the private part, `byte[GlyphCount]` lengths, and `ushort[GlyphCount]` glyph IDs sorted by name bytes then by ID, which name lookups search, so a name defined twice finds its lowest ID;
 - the built-in encoding: `ushort[256]`, only when the font has an `/Encoding`.
 
 `GlyphCount` comes from the `/CharStrings` entries that the data holds, counted before any array is allocated, not from the declared dictionary size. The decrypted buffer is charged before it is allocated, so a cap below it refuses the font before decryption, and that refusal carries the size of the buffer, a lower bound of the full size. The loader then reads the `/Subrs` and `/CharStrings` counts and charges every other array in one call before it allocates any of them, so every other refusal carries the full retained size, and a load with that size as the cap succeeds. The cleartext header lives on the stack. Only a PFB that splits its cleartext over several segments makes a transient copy of the cleartext, which is no larger than the input.

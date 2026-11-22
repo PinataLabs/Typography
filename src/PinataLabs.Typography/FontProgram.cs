@@ -91,8 +91,9 @@ public sealed class FontProgram
     /// A TrueType program allocates no array. A CFF program allocates one array of 2 bytes per glyph
     /// for its charset and one array of Font DICT records, one record for each Font DICT.
     /// A Type 1 program allocates the decrypted private part of the font, which holds the glyphs, two arrays of
-    /// 4 bytes per glyph and two of 4 bytes per subroutine for where they lie in it, one array of 4 bytes and one of
-    /// 1 byte per glyph for the glyph names, and one array of 256 glyph IDs for its encoding when it has one.
+    /// 4 bytes per glyph and two of 4 bytes per subroutine for where they lie in it, one array of 4 bytes, one of
+    /// 1 byte and one of 2 bytes per glyph for the glyph names and their sorted order, and one array of 256 glyph IDs
+    /// for its encoding when it has one.
     /// The program makes no other allocation that outlives <c>Load</c>, and it never caches.
     /// </para>
     /// <para>
@@ -104,7 +105,7 @@ public sealed class FontProgram
     /// The size of each element, and of a Font DICT record, is what <c>Unsafe.SizeOf</c> gives on the running runtime.
     /// The array header is the 24 bytes of 64-bit CoreCLR. Another runtime, such as Mono, IL2CPP or a 32-bit process,
     /// may use a few bytes more or less for each array. A TrueType or CFF program has at most two arrays and a Type 1
-    /// program at most eight.
+    /// program at most nine.
     /// </para>
     /// <para>
     /// The objects of the program itself are not counted: the <see cref="FontProgram"/>, its TrueType, CFF or Type 1
