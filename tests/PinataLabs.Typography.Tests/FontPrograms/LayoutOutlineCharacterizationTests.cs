@@ -48,6 +48,35 @@ public class LayoutOutlineCharacterizationTests
         await Assert.That(differences).IsEmpty();
     }
 
+    /// <summary>
+    /// Compares the outline that the layout path draws for every glyph of a synthetic font with fontTools.
+    /// </summary>
+    [Test]
+    [Arguments("cff-type2")]
+    public async Task EveryGlyphOfASyntheticFontMatchesFontTools(string fixtureName)
+    {
+        FontProgramFixture fixture = FontProgramFixture.Load(fixtureName);
+        Font font = LayoutOutlineRecorder.LoadAtUnitScale(fixture.FontPath);
+        List<string> differences = [];
+
+        for (int i = 0; i < fixture.Glyphs.Length; i++)
+        {
+            string calls = LayoutOutlineRecorder.Render(font, (ushort)i);
+            string? difference = GlyphOutline.Compare(
+                GlyphOutline.Parse(fixture.Glyphs[i].Outline),
+                fixture.FontMatrix,
+                GlyphOutline.Parse(LayoutOutlineRecorder.ToGlyphSpaceOutline(calls)),
+                fixture.FontMatrix);
+
+            if (difference is not null)
+            {
+                differences.Add($"glyph {i}: {difference}");
+            }
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
     private static string SourceDirectory([CallerFilePath] string path = "")
         => Path.GetDirectoryName(path)!;
 }

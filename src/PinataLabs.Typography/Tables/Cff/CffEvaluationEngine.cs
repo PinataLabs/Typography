@@ -588,10 +588,12 @@ internal ref struct CffEvaluationEngine
                 c3y = c2y;
                 c4x = c3x + this.Shift();
                 c4y = c3y;
+
+                // The second curve returns to the height of the start point.
                 c5x = c4x + this.Shift();
-                c5y = c4y;
+                c5y = this.y;
                 c6x = c5x + this.Shift();
-                c6y = c5y;
+                c6y = this.y;
                 this.x = c6x;
                 this.y = c6y;
 
@@ -603,9 +605,9 @@ internal ref struct CffEvaluationEngine
 
             case Type2Operator2.Flex:
 
-                this.EnsureOpen(ref sink);
-                sink.CubicBezierTo(new Vector2(this.Shift(), this.Shift()), new Vector2(this.Shift(), this.Shift()), new Vector2(this.Shift(), this.Shift()));
-                sink.CubicBezierTo(new Vector2(this.Shift(), this.Shift()), new Vector2(this.Shift(), this.Shift()), new Vector2(this.Shift(), this.Shift()));
+                // Two curves of relative arguments. The last argument, the flex depth, is for hinting only.
+                this.RelativeCurveTo(ref sink);
+                this.RelativeCurveTo(ref sink);
 
                 this.Clear();
                 break;
@@ -624,7 +626,7 @@ internal ref struct CffEvaluationEngine
                 c5x = c4x + this.Shift();
                 c5y = c4y + this.Shift();
                 c6x = c5x + this.Shift();
-                c6y = c5y;
+                c6y = this.y;
                 this.x = c6x;
                 this.y = c6y;
 
@@ -651,7 +653,9 @@ internal ref struct CffEvaluationEngine
                 c5x = c4x + this.Shift();
                 c5y = c4y + this.Shift();
 
-                if (MathF.Abs(this.x - startX) > MathF.Abs(this.y - startY))
+                // The last argument moves along the axis that the first five points moved along the most.
+                // The end point returns to the start on the other axis.
+                if (MathF.Abs(c5x - startX) > MathF.Abs(c5y - startY))
                 {
                     c6x = c5x + this.Shift();
                     c6y = startY;
@@ -712,9 +716,7 @@ internal ref struct CffEvaluationEngine
                 return (short)((bytes[0] << 8) | bytes[1]);
             default:
                 // A 16.16 fixed point number.
-                float number = (short)((bytes[0] << 8) | bytes[1]);
-                float fraction = (short)((bytes[2] << 8) | bytes[3]) / 65536F;
-                return number + fraction;
+                return ((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) / 65536F;
         }
     }
 
