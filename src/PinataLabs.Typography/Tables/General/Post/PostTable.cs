@@ -137,21 +137,30 @@ internal class PostTable : Table
 
             ushort[] glyphIndices = reader.ReadUInt16Array(numGlyphs);
 
+            // An index from 258 selects a string by its position in the string data.
+            // Glyphs can use the strings in any order, share one, or leave one unused.
+            int stringCount = 0;
+            foreach (ushort glyphNameIndex in glyphIndices)
+            {
+                stringCount = Math.Max(stringCount, glyphNameIndex - 257);
+            }
+
+            string[] strings = new string[stringCount];
+            Array.Fill(strings, string.Empty);
+            for (int i = 0; i < stringCount && reader.BaseStream.Position < reader.BaseStream.Length; i++)
+            {
+                byte strLength = reader.ReadByte();
+                strings[i] = reader.ReadString(strLength, Encoding.ASCII);
+            }
+
             for (int i = 0; i < numGlyphs; i++)
             {
                 ushort glyphNameIndex = glyphIndices[i];
-                string name;
 
                 // < 258 is a standard fixed apple mapping
-                if (glyphNameIndex <= 257)
-                {
-                    name = AppleGlyphNameMap[glyphNameIndex];
-                }
-                else
-                {
-                    byte strLength = reader.ReadByte();
-                    name = reader.ReadString(strLength, Encoding.ASCII);
-                }
+                string name = glyphNameIndex <= 257
+                    ? AppleGlyphNameMap[glyphNameIndex]
+                    : strings[glyphNameIndex - 258];
 
                 records[i] = new PostNameRecord(glyphNameIndex, name);
             }
