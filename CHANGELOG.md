@@ -23,6 +23,13 @@ An additive or breaking public API change needs all of these:
 
 ## [Unreleased]
 
+### Added
+
+- **netstandard2.1 target.** The library targets `netstandard2.1` again, so a netstandard2.1
+  project such as a Unity package can depend on it. On this target the package depends on
+  `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
+  The public API is the same on every target. (#69)
+
 ## [0.1.0] - 2026-10-26
 
 ### Added

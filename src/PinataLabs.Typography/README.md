@@ -27,7 +27,7 @@ Read the [documentation](https://pinatalabs.github.io/Typography/) for guides, t
 dotnet add package PinataLabs.Typography
 ```
 
-Add `--prerelease` while only pre-release versions are published. The library targets `net8.0`, `net10.0` and `net11.0`.
+Add `--prerelease` while only pre-release versions are published. The library targets `netstandard2.1`, `net8.0`, `net10.0` and `net11.0`.
 
 ## Quick start
 
