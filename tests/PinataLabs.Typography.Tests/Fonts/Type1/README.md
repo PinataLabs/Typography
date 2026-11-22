@@ -11,7 +11,7 @@ Each `.pfb` file is an unmodified copy of the file at the given CTAN path, downl
 | `bchr8a.pfb` | Bitstream Charter Roman (`CharterBT-Roman`) | `fonts/charter/bchr8a.pfb` | Bitstream Charter licence, `LICENSE-Charter.txt` | StandardEncoding. 56 `seac` glyphs. CR line ends. |
 | `cmr10.pfb` | Computer Modern Roman 10pt (`CMR10` 003.002) | `fonts/amsfonts/pfb/cmr10.pfb` | SIL Open Font License 1.1, `LICENSE-AMSFonts-OFL.txt` | Custom encoding array. 90 flex calls in 47 glyphs. Hint replacement. |
 | `cmmi10.pfb` | Computer Modern Math Italic 10pt (`CMMI10` 003.002) | `fonts/amsfonts/pfb/cmmi10.pfb` | SIL Open Font License 1.1, `LICENSE-AMSFonts-OFL.txt` | Flex. `div` with a fractional side bearing. |
-| `qtmr.pfb` | TeX Gyre Termes Regular 2.004 | `fonts/tex-gyre/type1/qtmr.pfb` | GUST Font License, `LICENSE-TeXGyre-GUST.txt` | URW base-35 derived (Nimbus Roman No9 L). 1090 glyphs, 831 subroutines. |
+| `qtmr.pfb` | TeX Gyre Termes Regular 2.004 | `fonts/tex-gyre/type1/qtmr.pfb` | GUST Font License, `LICENSE-TeXGyre-GUST.txt`, and the LPPL 1.3c it builds on, `lppl.txt` | URW base-35 derived (Nimbus Roman No9 L). 1090 glyphs, 831 subroutines. |
 
 Licence notes:
 
@@ -25,6 +25,12 @@ Licence notes:
   is the LaTeX Project Public License 1.3c with one added request. `qtmr.pfb` is one unmodified file of
   the TeX Gyre Termes distribution. The complete distribution, with its manifest and readme, is at
   <https://ctan.org/pkg/tex-gyre-termes>.
+  The LPPL treats the distribution of only part of a Work as a modification (clause 2). So this single
+  unmodified file is distributed as a Derived Work under clause 6 of the LPPL. The complete Work is TeX
+  Gyre Termes, at `fonts/tex-gyre` on CTAN (<https://ctan.org/pkg/tex-gyre-termes>). The only change
+  from the Work is that the other files of the Work are left out. `lppl.txt` is the full text of LPPL
+  1.3c, from <https://www.latex-project.org/lppl/lppl-1-3c.txt>. `qtmr.json` is generated from
+  `qtmr.pfb`, as the next section describes.
 
 ## Derived files
 

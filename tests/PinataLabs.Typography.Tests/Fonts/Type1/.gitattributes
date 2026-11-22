@@ -4,3 +4,4 @@
 *.fontfile  binary
 # Licence texts stay byte for byte as their authors distribute them.
 LICENSE-*.txt -text
+lppl.txt -text
