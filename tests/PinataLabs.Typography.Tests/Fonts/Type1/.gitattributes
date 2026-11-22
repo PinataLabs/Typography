@@ -1,0 +1,6 @@
+# Font programs are bytes: the cleartext of some uses CR line ends, which must survive a checkout.
+*.pfb       binary
+*.pfa       binary
+*.fontfile  binary
+# Licence texts stay byte for byte as their authors distribute them.
+LICENSE-*.txt -text
