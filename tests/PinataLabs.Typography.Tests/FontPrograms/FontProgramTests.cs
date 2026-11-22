@@ -125,6 +125,17 @@ public class FontProgramTests
     }
 
     [Test]
+    [Arguments(2)]
+    [Arguments(3)]
+    public async Task SeacWithAMissingComponentFails(int glyphId)
+    {
+        FontProgram font = FontProgram.Load(File.ReadAllBytes(TestFonts.GetPath("FontPrograms/cff-seac-missing.otf")));
+        GlyphOutline outline = new();
+
+        await Assert.That(font.TryWriteOutline((ushort)glyphId, ref outline)).IsFalse();
+    }
+
+    [Test]
     public async Task ProgramReadsTheMemoryItWasLoadedFrom()
     {
         byte[] data = File.ReadAllBytes(FontProgramFixture.Load("tt-names").FontPath);

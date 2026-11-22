@@ -92,6 +92,12 @@ internal ref struct CffEvaluationEngine
         this.localBias = CalculateBias(localSubrs.Count);
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the outline failed only because the font has no glyph for the base
+    /// or the accent of a seac. The engine then writes neither component.
+    /// </summary>
+    public bool MissingSeacComponent { readonly get; private set; }
+
     private readonly int Count => this.top - this.bottom;
 
     /// <summary>
@@ -153,6 +159,7 @@ internal ref struct CffEvaluationEngine
         this.ended = false;
         this.failed = false;
         this.inSeac = false;
+        this.MissingSeacComponent = false;
         this.operatorCount = 0;
         this.randomState = 0x9E3779B9;
     }
@@ -756,21 +763,28 @@ internal ref struct CffEvaluationEngine
         int accentCode = (int)this.Shift();
         float ownWidth = this.width;
         bool hasOwnWidth = this.hasWidth;
+        if (this.font is null
+            || !this.font.TryGetSeacComponent(baseCode, out ReadOnlyMemory<byte> baseGlyph)
+            || !this.font.TryGetSeacComponent(accentCode, out ReadOnlyMemory<byte> accentGlyph))
+        {
+            this.failed = true;
+            this.MissingSeacComponent = true;
+            return;
+        }
 
         this.inSeac = true;
-        this.RunSeacComponent(baseCode, 0, 0, ref sink);
-        this.RunSeacComponent(accentCode, adx, ady, ref sink);
+        this.RunSeacComponent(baseGlyph, 0, 0, ref sink);
+        this.RunSeacComponent(accentGlyph, adx, ady, ref sink);
 
         this.width = ownWidth;
         this.hasWidth = hasOwnWidth;
     }
 
-    private void RunSeacComponent<TSink>(int code, float originX, float originY, ref TSink sink)
+    private void RunSeacComponent<TSink>(ReadOnlyMemory<byte> component, float originX, float originY, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
-        if (this.failed || this.font is null || !this.font.TryGetSeacComponent(code, out ReadOnlyMemory<byte> component))
+        if (this.failed)
         {
-            this.failed = true;
             return;
         }
 

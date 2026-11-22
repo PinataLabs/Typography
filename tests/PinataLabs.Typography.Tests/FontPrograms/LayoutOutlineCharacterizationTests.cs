@@ -82,6 +82,20 @@ public class LayoutOutlineCharacterizationTests
         await Assert.That(differences).IsEmpty();
     }
 
+    /// <summary>
+    /// A seac whose base or accent glyph is missing draws nothing in layout, as it did before seac
+    /// was supported, rather than throwing for the whole text.
+    /// </summary>
+    [Test]
+    public async Task SeacWithAMissingComponentDrawsNothing()
+    {
+        Font font = LayoutOutlineRecorder.LoadAtUnitScale(TestFonts.GetPath("FontPrograms/cff-seac-missing.otf"));
+
+        await Assert.That(LayoutOutlineRecorder.Render(font, 2)).IsEqualTo(string.Empty);
+        await Assert.That(LayoutOutlineRecorder.Render(font, 3)).IsEqualTo(string.Empty);
+        await Assert.That(LayoutOutlineRecorder.Render(font, 1)).IsNotEqualTo(string.Empty);
+    }
+
     private static string SourceDirectory([CallerFilePath] string path = "")
         => Path.GetDirectoryName(path)!;
 }

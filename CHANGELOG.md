@@ -50,7 +50,8 @@ An additive or breaking public API change needs all of these:
   changes the size. The arithmetic operators of a charstring take their operands in the right order.
 - **Malformed CFF fonts.** A CFF table or glyph that is malformed makes layout throw
   `InvalidFontFileException`. Before, it threw several exception types, and a subroutine that called
-  itself stopped the process with a stack overflow.
+  itself stopped the process with a stack overflow. An accented glyph whose `endchar` names a base or
+  accent glyph that the font does not have draws without the two glyphs, as before.
 - **Bounds of an empty CFF glyph.** A CFF glyph without an outline, such as a space, has a width and
   a height of 0 on every runtime. Before, the width was 1 on .NET 10 and later.
 

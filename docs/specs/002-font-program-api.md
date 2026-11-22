@@ -155,7 +155,7 @@ The implementation made these local choices where the spec was silent.
 - Text layout scales a CFF glyph by its matrix (the Font DICT matrix, else the font matrix) times the units per em of `head`, and skips the scale when the product is the identity. `FontProgram` reports the matrix instead.
 - A (3,0) cmap lookup tries the code, then 0xF000, 0xF100 and 0xF200.
 - CFF encoding format 0 treats code 0 as a real code, as Adobe TN5176 says. fontTools does not.
-- A seac component that is missing makes the glyph return `false`.
+- A seac component that is missing makes the glyph return `false`. Text layout draws such a glyph without its components instead of throwing, so one glyph does not fail the whole text.
 - `Load` dispatches strictly on the sfnt tag.
 - A CharstringType other than 2 is rejected.
 - Limits: about one million operators per charstring and 4096 components per outline.

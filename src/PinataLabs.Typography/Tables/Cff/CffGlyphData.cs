@@ -113,28 +113,39 @@ internal readonly struct CffGlyphData
     /// <returns><see langword="false"/> if the charstring is malformed. The sink may then hold a partial outline.</returns>
     public bool TryWriteOutline<TSink>(ref TSink sink)
         where TSink : IGlyphOutlineSink
+        => this.TryWriteOutline(ref sink, out _);
+
+    // Layout throws for a malformed glyph. A seac without its base or accent draws without them instead,
+    // as it did before layout drew seac components, so one such glyph does not fail the whole text.
+    private void WriteOutline<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        if (!this.TryWriteOutline(ref sink, out bool missingSeacComponent) && !missingSeacComponent)
+        {
+            throw new InvalidFontFileException($"The charstring of CFF glyph {this.GlyphIndex} is malformed.");
+        }
+    }
+
+    private bool TryWriteOutline<TSink>(ref TSink sink, out bool missingSeacComponent)
+        where TSink : IGlyphOutlineSink
     {
         Span<float> stack = stackalloc float[CffEvaluationEngine.StackSize];
         Span<float> transient = stackalloc float[CffEvaluationEngine.TransientSize];
         CffEvaluationEngine engine = this.CreateEngine(stack, transient);
+        bool result;
         if (this.transform is not Matrix3x2 matrix)
         {
-            return engine.TryWriteOutline(ref sink);
+            result = engine.TryWriteOutline(ref sink);
         }
-
-        TransformedSink<TSink> transformed = new(sink, matrix);
-        bool result = engine.TryWriteOutline(ref transformed);
-        sink = transformed.Inner;
-        return result;
-    }
-
-    private void WriteOutline<TSink>(ref TSink sink)
-        where TSink : IGlyphOutlineSink
-    {
-        if (!this.TryWriteOutline(ref sink))
+        else
         {
-            throw new InvalidFontFileException($"The charstring of CFF glyph {this.GlyphIndex} is malformed.");
+            TransformedSink<TSink> transformed = new(sink, matrix);
+            result = engine.TryWriteOutline(ref transformed);
+            sink = transformed.Inner;
         }
+
+        missingSeacComponent = engine.MissingSeacComponent;
+        return result;
     }
 
     // A FontMatrix of 0.001 and 1000 units per em can multiply to a little more or less than 1.

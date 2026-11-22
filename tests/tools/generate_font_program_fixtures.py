@@ -439,6 +439,18 @@ def seac_font(file_name, tables=True):
     return build_cff(file_name, glyphs, private={"defaultWidthX": 480, "nominalWidthX": 600}, tables=tables)
 
 
+def seac_missing_font(file_name):
+    # fontTools cannot draw these glyphs, so the font has no fixture.
+    glyphs = [
+        (".notdef", ["endchar"]),
+        ("A", [0, 0, "rmoveto", 300, 700, "rlineto", 300, -700, "rlineto", "endchar"]),
+        # 202 is ring and 66 is B in the Standard Encoding. The font has neither.
+        ("Aring", [150, 230, 65, 202, "endchar"]),
+        ("Bacute", [150, 230, 66, 65, "endchar"]),
+    ]
+    return build_cff(file_name, glyphs)
+
+
 def cid_font(file_name, select_format, top_matrix=None, fd_matrices=None, units_per_em=1000, tables=False):
     # (FontMatrix or None, defaultWidthX, nominalWidthX)
     font_dicts = [
@@ -708,6 +720,8 @@ def main():
     for path, encoding_override in built:
         count = write_fixture(path, encoding_override)
         print("%-40s %5d glyphs" % (os.path.basename(path), count))
+
+    print(os.path.basename(seac_missing_font("cff-seac-missing.otf")))
 
 
 if __name__ == "__main__":
