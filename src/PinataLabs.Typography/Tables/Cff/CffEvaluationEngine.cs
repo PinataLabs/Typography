@@ -538,7 +538,7 @@ internal ref struct CffEvaluationEngine
 
                 float second = this.Pop();
                 float first = this.Pop();
-                this.Push(first == second ? 1 : 0);
+                this.Push(first == second ? 1 : 0); // NOSONAR: the Type 2 eq operator compares exactly.
                 break;
 
             case Type2Operator2.Drop:
