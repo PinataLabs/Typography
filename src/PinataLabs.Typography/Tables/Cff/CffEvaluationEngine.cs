@@ -536,7 +536,9 @@ internal ref struct CffEvaluationEngine
 
             case Type2Operator2.Eq:
 
-                this.Push(this.Pop() == this.Pop() ? 1 : 0);
+                float second = this.Pop();
+                float first = this.Pop();
+                this.Push(first == second ? 1 : 0);
                 break;
 
             case Type2Operator2.Drop:
