@@ -3,6 +3,7 @@
 
 using System;
 using System.Numerics;
+using PinataLabs.Typography.Tables.Cff;
 
 namespace PinataLabs.Typography.FontPrograms.Type1;
 
@@ -244,9 +245,13 @@ internal sealed class Type1Program
     {
         charString = default;
         return (uint)code < 256
-            && this.TryGetGlyphId(Type1StandardEncoding.GetName(code), out ushort glyphId)
+            && this.TryGetGlyphId(StandardEncodingName(code), out ushort glyphId)
             && this.glyphs.TryGet(this.data, glyphId, out charString);
     }
+
+    // Adobe StandardEncoding is the same in Type 1 and CFF, so the CFF table of string IDs serves both.
+    private static string StandardEncodingName(int code)
+        => CffStandardStrings.GetName(CffPredefinedTables.StandardEncoding[code]);
 
     private bool IsSynthesizedNotdef(int glyphId) => glyphId == 0 && this.nameOffsets[0] == SynthesizedName;
 
@@ -291,7 +296,7 @@ internal sealed class Type1Program
             ushort glyphId;
             if (header.EncodingKind == Type1EncodingKind.Standard)
             {
-                this.TryGetGlyphId(Type1StandardEncoding.GetName(code), out glyphId);
+                this.TryGetGlyphId(StandardEncodingName(code), out glyphId);
             }
             else
             {
