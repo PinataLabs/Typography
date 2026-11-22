@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers.Binary;
 
 namespace PinataLabs.Typography.FontPrograms.Type1;
 
@@ -206,7 +207,7 @@ internal static class Type1Eexec
             return false;
         }
 
-        uint length = (uint)(pfb[position + 2] | (pfb[position + 3] << 8) | (pfb[position + 4] << 16) | (pfb[position + 5] << 24));
+        uint length = BinaryPrimitives.ReadUInt32LittleEndian(pfb.Slice(position + 2));
         int start = position + PfbSegmentHeaderLength;
 
         // A truncated file ends inside its last segment.
