@@ -46,7 +46,8 @@ public class EmptyGlyphLoaderTests
         using BlockingGlyphTable table = new(glyphZeroBounds, empty);
 
         // The first thread blocks inside GetGlyph(0) until the second thread has finished.
-        Task<GlyphVector> first = Task.Run(() => empty.CreateGlyph(table));
+        // It runs on its own thread, so a thread pool busy with other tests cannot delay its start.
+        Task<GlyphVector> first = Task.Factory.StartNew(() => empty.CreateGlyph(table), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         await Assert.That(table.FirstCallStarted.Wait(TimeSpan.FromSeconds(10))).IsTrue();
 
         GlyphVector second = await Task.Run(() => empty.CreateGlyph(table));

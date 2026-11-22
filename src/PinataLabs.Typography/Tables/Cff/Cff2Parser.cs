@@ -42,7 +42,7 @@ internal static class Cff2Parser
         }
 
         List<DictEntry> topDict = ReadDict(data, headerSize, topDictLength);
-        byte[][] globalSubrs = ReadIndex(data, headerSize + topDictLength, out _);
+        CffIndex globalSubrs = CffIndex.Read(data, headerSize + topDictLength, 4, out _);
 
         int charStringsOffset = GetOffset(topDict, OpCharStrings);
         int fdArrayOffset = GetOffset(topDict, OpFdArray);
@@ -54,14 +54,14 @@ internal static class Cff2Parser
         int fdSelectOffset = GetOffset(topDict, OpFdSelect);
         int vstoreOffset = GetOffset(topDict, OpVstore);
 
-        byte[][] charStrings = ReadIndex(data, charStringsOffset, out _);
+        CffIndex charStrings = CffIndex.Read(data, charStringsOffset, 4, out _);
         int[] regionCounts = vstoreOffset > 0 ? ReadRegionCounts(data, vstoreOffset) : [];
         FontDictData[] fonts = ReadFontDicts(data, fdArrayOffset);
         ushort[] fdSelect = fdSelectOffset > 0
-            ? ReadFdSelect(data, fdSelectOffset, charStrings.Length)
-            : new ushort[charStrings.Length];
+            ? ReadFdSelect(data, fdSelectOffset, charStrings.Count)
+            : new ushort[charStrings.Count];
 
-        CffGlyphData[] glyphs = new CffGlyphData[charStrings.Length];
+        CffGlyphData[] glyphs = new CffGlyphData[charStrings.Count];
         for (int i = 0; i < glyphs.Length; i++)
         {
             int fd = fdSelect[i];
@@ -70,8 +70,13 @@ internal static class Cff2Parser
                 throw new InvalidFontFileException($"CFF2 FDSelect refers to missing Font DICT {fd}.");
             }
 
+            if (!charStrings.TryGet(i, out ReadOnlyMemory<byte> charString))
+            {
+                throw new InvalidFontFileException("Invalid CFF2 INDEX offsets.");
+            }
+
             FontDictData font = fonts[fd];
-            glyphs[i] = new CffGlyphData((ushort)i, globalSubrs, font.LocalSubrs, 0, charStrings[i], regionCounts, font.VsIndex);
+            glyphs[i] = new CffGlyphData((ushort)i, globalSubrs, font.LocalSubrs, 0, charString, regionCounts, font.VsIndex);
         }
 
         return glyphs;
@@ -108,12 +113,17 @@ internal static class Cff2Parser
 
     private static FontDictData[] ReadFontDicts(byte[] data, int fdArrayOffset)
     {
-        byte[][] dicts = ReadIndex(data, fdArrayOffset, out _);
-        FontDictData[] fonts = new FontDictData[dicts.Length];
-        for (int i = 0; i < dicts.Length; i++)
+        CffIndex dicts = CffIndex.Read(data, fdArrayOffset, 4, out _);
+        FontDictData[] fonts = new FontDictData[dicts.Count];
+        for (int i = 0; i < fonts.Length; i++)
         {
-            List<DictEntry> fontDict = ReadDict(dicts[i], 0, dicts[i].Length);
-            byte[][] localSubrs = [];
+            if (!dicts.TryGetRange(i, out int dictOffset, out int dictLength))
+            {
+                throw new InvalidFontFileException("Invalid CFF2 INDEX offsets.");
+            }
+
+            List<DictEntry> fontDict = ReadDict(data, dictOffset, dictLength);
+            CffIndex localSubrs = default;
             int vsIndex = 0;
 
             foreach (DictEntry entry in fontDict)
@@ -132,7 +142,7 @@ internal static class Cff2Parser
                         if (priv.Operator == OpSubrs && priv.Operands.Count == 1)
                         {
                             // Relative to the start of the Private DICT.
-                            localSubrs = ReadIndex(data, offset + (int)priv.Operands[0], out _);
+                            localSubrs = CffIndex.Read(data, offset + (int)priv.Operands[0], 4, out _);
                         }
                         else if (priv.Operator == OpVsIndex && priv.Operands.Count == 1)
                         {
@@ -226,62 +236,6 @@ internal static class Cff2Parser
         return 0;
     }
 
-    /// <summary>
-    /// Reads a CFF2 INDEX (32-bit count) at the given offset.
-    /// </summary>
-    private static byte[][] ReadIndex(byte[] data, int offset, out int endOffset)
-    {
-        Cursor c = new(data, offset);
-        uint count = c.ReadUInt32();
-        if (count == 0)
-        {
-            endOffset = c.Position;
-            return [];
-        }
-
-        int offSize = c.ReadByte();
-        if (offSize is < 1 or > 4)
-        {
-            throw new InvalidFontFileException("Invalid CFF2 INDEX offset size.");
-        }
-
-        if (count > data.Length)
-        {
-            throw new InvalidFontFileException("Invalid CFF2 INDEX count.");
-        }
-
-        int n = (int)count;
-        long[] offsets = new long[n + 1];
-        for (int i = 0; i <= n; i++)
-        {
-            long value = 0;
-            for (int b = 0; b < offSize; b++)
-            {
-                value = (value << 8) | c.ReadByte();
-            }
-
-            offsets[i] = value;
-        }
-
-        // Offsets are relative to the byte preceding the object data.
-        long dataStart = c.Position - 1;
-        byte[][] objects = new byte[n][];
-        for (int i = 0; i < n; i++)
-        {
-            long start = dataStart + offsets[i];
-            long end = dataStart + offsets[i + 1];
-            if (offsets[i] < 1 || end < start || end > data.Length)
-            {
-                throw new InvalidFontFileException("Invalid CFF2 INDEX offsets.");
-            }
-
-            objects[i] = data.AsSpan((int)start, (int)(end - start)).ToArray();
-        }
-
-        endOffset = (int)(dataStart + offsets[n]);
-        return objects;
-    }
-
     private static List<DictEntry> ReadDict(byte[] data, int offset, int length)
     {
         if (offset < 0 || length < 0 || (long)offset + length > data.Length)
@@ -346,7 +300,7 @@ internal static class Cff2Parser
 
     private readonly record struct DictEntry(int Operator, List<double> Operands);
 
-    private readonly record struct FontDictData(byte[][] LocalSubrs, int VsIndex);
+    private readonly record struct FontDictData(CffIndex LocalSubrs, int VsIndex);
 
     private struct Cursor
     {

@@ -16,8 +16,16 @@
     <PackageReference Include="TUnit" />
   </ItemGroup>
 
+  <!--
+    Pass -p:TestNetStandard=true with -f net8.0 to run the tests against the library's netstandard2.1 asset,
+    the one a netstandard2.1 consumer such as Unity loads. Without it a net8.0 test project binds the net8.0 asset.
+  -->
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\PinataLabs.Typography\PinataLabs.Typography.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\PinataLabs.Typography\PinataLabs.Typography.csproj"
+                      SetTargetFramework="TargetFramework=netstandard2.1"
+                      Condition="'$(TestNetStandard)' == 'true'" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\PinataLabs.Typography\PinataLabs.Typography.csproj"
+                      Condition="'$(TestNetStandard)' != 'true'" />
   </ItemGroup>
 
 </Project>

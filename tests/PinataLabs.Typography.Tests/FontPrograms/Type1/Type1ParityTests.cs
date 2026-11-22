@@ -1,0 +1,162 @@
+// Copyright (c) PinataLabs.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace PinataLabs.Typography.Tests.FontPrograms.Type1;
+
+/// <summary>
+/// Compares every glyph of the Type 1 test fonts, read through <see cref="FontProgram"/>, with fontTools.
+/// tests/tools/type1/generate_fixtures.py writes the fixtures.
+/// </summary>
+public class Type1ParityTests
+{
+    /// <summary>
+    /// The largest accepted difference for a coordinate or an advance, in glyph units.
+    /// fontTools computes in double precision and the sink takes single precision.
+    /// </summary>
+    private const float Tolerance = 0.001F;
+
+    [Test]
+    [Arguments("bchr8a.pfb", "bchr8a.json", 229)]
+    [Arguments("cmr10.pfb", "cmr10.json", 132)]
+    [Arguments("cmmi10.pfb", "cmmi10.json", 130)]
+    [Arguments("qtmr.pfb", "qtmr.json", 1090)]
+    [Arguments("bchr8a.pfa", "bchr8a.json", 229)]
+    [Arguments("bchr8a.fontfile", "bchr8a.json", 229)]
+    public async Task EveryGlyphMatchesFontTools(string fontFile, string fixtureFile, int glyphCount)
+    {
+        FontProgram font = FontProgram.Load(Type1TestFonts.Read(fontFile));
+        Fixture fixture = Fixture.Read(fixtureFile);
+
+        await Assert.That(font.Format).IsEqualTo(FontProgramFormat.Type1);
+        await Assert.That(font.IsCidKeyed).IsFalse();
+        await Assert.That(fixture.Glyphs.Length).IsEqualTo(glyphCount);
+        await Assert.That(Compare(font, fixture)).IsEmpty();
+    }
+
+    [Test]
+    [Arguments((byte)0x00, false)]
+    [Arguments((byte)0x0C, false)]
+    [Arguments((byte)0x00, true)]
+    [Arguments((byte)0x0C, true)]
+    public async Task AnEexecSectionMayStartWithAnyByteButSpaceTabOrALineEnd(byte firstCipherByte, bool hex)
+    {
+        FontProgram font = FontProgram.Load(Reencrypt("bchr8a.pfb", firstCipherByte, hex));
+
+        await Assert.That(Compare(font, Fixture.Read("bchr8a.json"))).IsEmpty();
+    }
+
+    // Writes a PFB again as a PFA, or as the stream of a PDF /FontFile, with a chosen first cipher byte.
+    private static byte[] Reencrypt(string pfbFile, byte firstCipherByte, bool hex)
+    {
+        byte[] pfb = Type1TestFonts.Read(pfbFile);
+        List<byte[]> segments = [];
+        for (int position = 0; pfb[position + 1] != 3;)
+        {
+            int length = BitConverter.ToInt32(pfb, position + 2);
+            segments.Add(pfb[(position + 6)..(position + 6 + length)]);
+            position += 6 + length;
+        }
+
+        byte[] cipher = Type1FontBuilder.EncryptEexec(Type1FontBuilder.DecryptEexec(segments[1]), firstCipherByte);
+        if (hex)
+        {
+            cipher = Encoding.Latin1.GetBytes(Convert.ToHexString(cipher));
+        }
+
+        return [.. segments[0], .. cipher, .. segments[2]];
+    }
+
+    private static List<string> Compare(FontProgram font, Fixture fixture)
+    {
+        List<string> failures = [];
+        float[] matrix = [font.FontMatrix.M11, font.FontMatrix.M12, font.FontMatrix.M21, font.FontMatrix.M22, font.FontMatrix.M31, font.FontMatrix.M32];
+        if (!matrix.SequenceEqual(fixture.FontMatrix.Select(x => (float)x)))
+        {
+            failures.Add($"FontMatrix: expected {string.Join(" ", fixture.FontMatrix)}, got {string.Join(" ", matrix)}");
+        }
+
+        // Glyph 0 is .notdef; the other glyphs keep the /CharStrings order that fontTools reports.
+        Dictionary<string, ushort> glyphIds = [];
+        ushort next = 1;
+        foreach (FixtureGlyph glyph in fixture.Glyphs)
+        {
+            glyphIds.Add(glyph.Name, glyph.Name == ".notdef" ? (ushort)0 : next++);
+        }
+
+        if (font.GlyphCount != fixture.Glyphs.Length)
+        {
+            failures.Add($"GlyphCount: expected {fixture.Glyphs.Length}, got {font.GlyphCount}");
+        }
+
+        foreach (FixtureGlyph glyph in fixture.Glyphs)
+        {
+            ushort glyphId = glyphIds[glyph.Name];
+            if (font.GetGlyphName(glyphId) != glyph.Name
+                || !font.TryGetGlyphId(glyph.Name, out ushort found)
+                || found != glyphId)
+            {
+                failures.Add($"{glyph.Name}: expected glyph ID {glyphId}, which is named {font.GetGlyphName(glyphId)}");
+                continue;
+            }
+
+            GlyphOutline actual = new();
+            if (!font.TryWriteOutline(glyphId, ref actual))
+            {
+                failures.Add($"{glyph.Name}: no outline");
+                continue;
+            }
+
+            string? difference = GlyphOutline.Compare(GlyphOutline.Parse(glyph.Outline), GlyphOutline.Identity, actual, GlyphOutline.Identity, Tolerance);
+            if (difference is not null)
+            {
+                failures.Add($"{glyph.Name}: {difference}");
+            }
+
+            if (!font.TryGetAdvanceWidth(glyphId, out float advance) || !(MathF.Abs(advance - (float)glyph.Advance) <= Tolerance))
+            {
+                failures.Add($"{glyph.Name}: expected advance {glyph.Advance}, got {advance}");
+            }
+
+            if (!font.TryGetGlyphIdForCid(glyphId, out ushort byCid) || byCid != glyphId)
+            {
+                failures.Add($"{glyph.Name}: CID {glyphId} gives glyph {byCid}");
+            }
+        }
+
+        ushort[] encoding = new ushort[256];
+        if (!font.TryGetBuiltInEncoding(encoding))
+        {
+            failures.Add("no built-in encoding");
+        }
+
+        for (int code = 0; code < 256; code++)
+        {
+            glyphIds.TryGetValue(fixture.Encoding[code], out ushort expected);
+            if (encoding[code] != expected)
+            {
+                failures.Add($"code {code} ({fixture.Encoding[code]}): expected glyph {expected}, got {encoding[code]}");
+            }
+        }
+
+        return failures;
+    }
+
+    private sealed record FixtureGlyph(string Name, double Advance, string Outline);
+
+    private sealed record Fixture(double[] FontMatrix, string[] Encoding, FixtureGlyph[] Glyphs)
+    {
+        private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
+
+        public static Fixture Read(string fileName)
+            => JsonSerializer.Deserialize<Fixture>(File.ReadAllText(Type1TestFonts.GetPath(fileName)), Options)
+                ?? throw new InvalidDataException(fileName);
+    }
+}
