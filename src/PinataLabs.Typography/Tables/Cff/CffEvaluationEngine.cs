@@ -27,10 +27,10 @@ internal ref struct CffEvaluationEngine
     private float y;
     private RefStack<float> stack;
     private readonly ReadOnlySpan<byte> charStrings;
-    private readonly ReadOnlySpan<byte[]> globalSubrBuffers;
-    private readonly ReadOnlySpan<byte[]> localSubrBuffers;
+    private readonly CffIndex globalSubrs;
+    private readonly CffIndex localSubrs;
     private bool isOpen;
-    private readonly int nominalWidthX;
+    private readonly float nominalWidthX;
     private readonly int[]? blendRegionCounts;
     private readonly int initialVsIndex;
     private int vsIndex;
@@ -41,9 +41,9 @@ internal ref struct CffEvaluationEngine
 
     public CffEvaluationEngine(
         ReadOnlySpan<byte> charStrings,
-        ReadOnlySpan<byte[]> globalSubrBuffers,
-        ReadOnlySpan<byte[]> localSubrBuffers,
-        int nominalWidthX,
+        CffIndex globalSubrs,
+        CffIndex localSubrs,
+        float nominalWidthX,
         int[]? blendRegionCounts = null,
         int vsIndex = 0)
     {
@@ -52,12 +52,12 @@ internal ref struct CffEvaluationEngine
         this.initialVsIndex = vsIndex;
         this.vsIndex = vsIndex;
         this.charStrings = charStrings;
-        this.globalSubrBuffers = globalSubrBuffers;
-        this.localSubrBuffers = localSubrBuffers;
+        this.globalSubrs = globalSubrs;
+        this.localSubrs = localSubrs;
         this.nominalWidthX = nominalWidthX;
 
-        this.globalBias = CalculateBias(this.globalSubrBuffers.Length);
-        this.localBias = CalculateBias(this.localSubrBuffers.Length);
+        this.globalBias = CalculateBias(this.globalSubrs.Count);
+        this.localBias = CalculateBias(this.localSubrs.Count);
         this.trans = [];
 
         this.x = 0;
@@ -178,7 +178,7 @@ internal ref struct CffEvaluationEngine
 
                     case Type2Operator1.Callsubr:
                         index = (int)this.stack.Pop() + this.localBias;
-                        subr = this.localSubrBuffers[index];
+                        subr = GetSubr(this.localSubrs, index);
 
                         if (subr.Length > 0)
                         {
@@ -360,7 +360,7 @@ internal ref struct CffEvaluationEngine
                     case Type2Operator1.Callgsubr:
 
                         index = (int)this.stack.Pop() + this.globalBias;
-                        subr = this.globalSubrBuffers[index];
+                        subr = GetSubr(this.globalSubrs, index);
 
                         if (subr.Length > 0)
                         {
@@ -722,6 +722,16 @@ internal ref struct CffEvaluationEngine
         }
 
         return (count < 1240) ? 107 : (count < 33900) ? 1131 : 32768;
+    }
+
+    private static ReadOnlySpan<byte> GetSubr(CffIndex subrs, int index)
+    {
+        if (!subrs.TryGet(index, out ReadOnlyMemory<byte> subr))
+        {
+            throw new InvalidFontFileException($"Invalid subroutine index {index} in a charstring.");
+        }
+
+        return subr.Span;
     }
 
     private void Blend()

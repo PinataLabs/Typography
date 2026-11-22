@@ -2,38 +2,39 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Numerics;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
-internal struct CffGlyphData
+internal readonly struct CffGlyphData
 {
-    private readonly byte[][] globalSubrBuffers;
-    private readonly byte[][] localSubrBuffers;
-    private readonly byte[] charStrings;
-    private readonly int nominalWidthX;
+    private readonly CffIndex globalSubrs;
+    private readonly CffIndex localSubrs;
+    private readonly ReadOnlyMemory<byte> charString;
+    private readonly float nominalWidthX;
     private readonly int[]? blendRegionCounts;
     private readonly int vsIndex;
 
     public CffGlyphData(
         ushort glyphIndex,
-        byte[][] globalSubrBuffers,
-        byte[][] localSubrBuffers,
-        int nominalWidthX,
-        byte[] charStrings,
+        CffIndex globalSubrs,
+        CffIndex localSubrs,
+        float nominalWidthX,
+        ReadOnlyMemory<byte> charString,
         int[]? blendRegionCounts = null,
         int vsIndex = 0)
     {
         this.blendRegionCounts = blendRegionCounts;
         this.vsIndex = vsIndex;
         this.GlyphIndex = glyphIndex;
-        this.globalSubrBuffers = globalSubrBuffers;
-        this.localSubrBuffers = localSubrBuffers;
+        this.globalSubrs = globalSubrs;
+        this.localSubrs = localSubrs;
         this.nominalWidthX = nominalWidthX;
-        this.charStrings = charStrings;
+        this.charString = charString;
     }
 
-    public readonly ushort GlyphIndex { get; }
+    public ushort GlyphIndex { get; }
 
     public Bounds GetBounds()
     {
@@ -57,9 +58,9 @@ internal struct CffGlyphData
         where TSink : IGlyphOutlineSink
     {
         using var engine = new CffEvaluationEngine(
-            this.charStrings,
-            this.globalSubrBuffers,
-            this.localSubrBuffers,
+            this.charString.Span,
+            this.globalSubrs,
+            this.localSubrs,
             this.nominalWidthX,
             this.blendRegionCounts,
             this.vsIndex);
