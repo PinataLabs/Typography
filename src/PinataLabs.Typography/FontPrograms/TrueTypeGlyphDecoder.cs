@@ -392,24 +392,28 @@ internal static class TrueTypeGlyphDecoder
             }
 
             int start = this.reader.Position;
-            this.Failed = !this.reader.TryReadUInt16(out ushort flags) | !this.reader.TryReadUInt16(out ushort glyphId);
+            bool read = this.reader.TryReadUInt16(out ushort flags);
+            read &= this.reader.TryReadUInt16(out ushort glyphId);
 
             int argument1;
             int argument2;
             bool signed = (flags & ArgsAreXYValues) != 0;
             if ((flags & ArgsAreWords) != 0)
             {
-                this.Failed |= !this.reader.TryReadUInt16(out ushort word1) | !this.reader.TryReadUInt16(out ushort word2);
+                read &= this.reader.TryReadUInt16(out ushort word1);
+                read &= this.reader.TryReadUInt16(out ushort word2);
                 argument1 = signed ? (short)word1 : word1;
                 argument2 = signed ? (short)word2 : word2;
             }
             else
             {
-                this.Failed |= !this.reader.TryReadByte(out byte byte1) | !this.reader.TryReadByte(out byte byte2);
+                read &= this.reader.TryReadByte(out byte byte1);
+                read &= this.reader.TryReadByte(out byte byte2);
                 argument1 = signed ? (sbyte)byte1 : byte1;
                 argument2 = signed ? (sbyte)byte2 : byte2;
             }
 
+            this.Failed = !read;
             Matrix3x2 transform = Matrix3x2.Identity;
             if ((flags & HasScale) != 0)
             {
