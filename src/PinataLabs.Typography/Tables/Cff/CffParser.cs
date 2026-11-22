@@ -111,7 +111,7 @@ internal static class CffParser
                 case OpFdSelect when count >= 1:
                     fdSelectOffset = ToOffset(operands[0], span.Length);
                     break;
-                case OpCharstringType when count >= 1 && operands[0] != 2:
+                case OpCharstringType when count >= 1 && operands[0] != 2: // NOSONAR: CharstringType is an integer, so the comparison is exact.
                     throw new InvalidFontFileException("Only Type 2 charstrings are supported in a CFF table.");
             }
         }
