@@ -1,1 +1,7 @@
 #nullable enable
+PinataLabs.Typography.IGlyphOutlineSink
+PinataLabs.Typography.IGlyphOutlineSink.ClosePath() -> void
+PinataLabs.Typography.IGlyphOutlineSink.CubicBezierTo(System.Numerics.Vector2 control1, System.Numerics.Vector2 control2, System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphOutlineSink.LineTo(System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphOutlineSink.MoveTo(System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphOutlineSink.QuadraticBezierTo(System.Numerics.Vector2 control, System.Numerics.Vector2 point) -> void
