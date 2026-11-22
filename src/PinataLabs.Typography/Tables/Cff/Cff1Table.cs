@@ -2,7 +2,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
+using PinataLabs.Typography.Tables.General;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -10,64 +10,45 @@ internal sealed class Cff1Table : Table, ICffTable
 {
     internal const string TableName = "CFF "; // 4 chars
 
-    private readonly CffGlyphData[] glyphs;
+    private readonly ushort unitsPerEm;
 
-    public Cff1Table(CffFont cff1Font) => this.glyphs = cff1Font.Glyphs;
+    public Cff1Table(CffFont font, ushort unitsPerEm)
+    {
+        this.Font = font;
+        this.unitsPerEm = unitsPerEm;
+    }
 
-    public int GlyphCount => this.glyphs.Length;
+    public CffFont Font { get; }
+
+    public int GlyphCount => this.Font.GlyphCount;
 
     public CffGlyphData GetGlyph(int index)
     {
         // An out-of-range glyph id resolves to glyph 0 (.notdef).
-        if ((uint)index >= (uint)this.glyphs.Length)
+        if ((uint)index >= (uint)this.GlyphCount)
         {
             index = 0;
         }
 
-        return this.glyphs[index];
+        if (!this.Font.TryGetGlyph(index, out CffGlyphData glyph))
+        {
+            throw new InvalidFontFileException($"The data of CFF glyph {index} is malformed.");
+        }
+
+        return glyph.InUnitsPerEm(this.unitsPerEm);
     }
 
     public static Cff1Table? Load(FontReader fontReader)
     {
-        if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader))
+        if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader, out TableHeader? header))
         {
             return null;
         }
 
         using (binaryReader)
         {
-            return Load(binaryReader);
-        }
-    }
-
-    public static Cff1Table Load(BigEndianBinaryReader reader)
-    {
-        // +------+---------------+----------------------------------------+
-        // | Type | Name          | Description                            |
-        // +======+===============+========================================+
-        // | byte | majorVersion  | Format major version. Set to 1.        |
-        // +------+---------------+----------------------------------------+
-        // | byte | minorVersion  | Format minor version. Set to zero.     |
-        // +------+---------------+----------------------------------------+
-        // | byte | headerSize    | Header size (bytes).                   |
-        // +------+---------------+----------------------------------------+
-        // | byte | topDictLength | Length of Top DICT structure in bytes. |
-        // +------+---------------+----------------------------------------+
-        long position = reader.BaseStream.Position;
-        byte[] header = reader.ReadBytes(4);
-        byte major = header[0];
-        byte minor = header[1];
-        byte hdrSize = header[2];
-        byte offSize = header[3];
-
-        switch (major)
-        {
-            case 1:
-                CffParser parser = new();
-                return new(parser.Load(reader, position));
-
-            default:
-                throw new NotSupportedException();
+            CffFont font = CffParser.Load(binaryReader.ReadBytes((int)header.Length));
+            return new(font, fontReader.GetTable<HeadTable>().UnitsPerEm);
         }
     }
 }

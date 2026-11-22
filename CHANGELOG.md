@@ -23,6 +23,38 @@ An additive or breaking public API change needs all of these:
 
 ## [Unreleased]
 
+### Added
+
+- **Font program API.** `FontProgram` reads the glyphs of a font by glyph ID, without text layout.
+  Use it to draw a font that another format selects and positions, such as a font embedded in a PDF file.
+  `FontProgram.Load` takes the font file as `ReadOnlyMemory<byte>` and does not copy it. It accepts
+  TrueType fonts and OpenType fonts with a `CFF ` table. `TryWriteOutline` writes the outline of a glyph
+  to an `IGlyphOutlineSink` in glyph space, and `FontMatrix` maps glyph space to ems.
+  `TryGetGlyphId`, `GetGlyphName` and `TryGetGlyphIdForCid` find glyphs by name and by CID,
+  `TryGetBuiltInEncoding` gives the glyph for each of the 256 codes of the encoding that the font carries,
+  and `TryGetAdvanceWidth` gives the advance width. A font program holds no state that changes after load,
+  so one instance can serve many threads. Malformed data makes `Load` throw `InvalidFontFileException`.
+  After load, a malformed glyph makes a method return `false`. (#71, #72)
+- **Type 1 font programs.** `FontProgram.Load` reads a Type 1 font as a PFB file, a PFA file, or the stream of
+  a PDF `/FontFile`, and `Format` gives `FontProgramFormat.Type1`. It finds the encrypted part itself, so the
+  `/Length1`, `/Length2` and `/Length3` of the PDF stream do not need to be correct. Glyph 0 is `.notdef`, and the
+  other glyphs follow in the order of the `/CharStrings` dictionary. A font without `.notdef` gets an empty one.
+  `TryGetBuiltInEncoding` gives the glyphs of its `/Encoding`, StandardEncoding or its own. A Type 1 program does not
+  keep the data that it was loaded from. It keeps a decrypted copy of the part that holds the glyphs, and
+  `RetainedByteCount` counts that copy and its arrays, not the data. (#73)
+- **Memory bound for font programs.** `FontProgram.RetainedByteCount` gives the bytes that a font program
+  keeps reachable: the length of the data that was passed to `Load` when the program keeps it, plus the arrays
+  that the program allocated.
+  The value is fixed at load, and it does not change when the program is used. A TrueType program allocates no array.
+  `FontProgram.Load(data, options)` takes a `FontProgramOptions` with `MaxRetainedBytes`. It checks the limit before
+  each allocation and before it parses anything, and it throws `FontProgramTooLargeException`, a subclass of
+  `InvalidFontFileException`, instead of retaining more. The exception carries `RetainedByteCount` and `MaxRetainedBytes`.
+  Use this to keep one budget for the fonts of a document. (#75)
+- **netstandard2.1 target.** The library targets `netstandard2.1` again, so a netstandard2.1
+  project such as a Unity package can depend on it. On this target the package depends on
+  `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
+  The public API is the same on every target. (#69)
+
 ### Changed
 
 - **`vrtr` in vertical mixed layout.** Glyphs that are rotated in `VerticalMixedLeftRight` and
@@ -32,6 +64,23 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- **CFF glyph outlines.** Text layout draws these CFF glyphs correctly now: a glyph that uses a
+  `flex`, `hflex`, `hflex1` or `flex1` operator, a glyph with fractional coordinates, and an accented glyph
+  that an `endchar` with four arguments builds from two other glyphs. In a CID-keyed font, each glyph
+  uses the subroutines and the FontMatrix of its own Font DICT. Layout draws a glyph at the size that its
+  FontMatrix and the units per em of the `head` table give, so a FontMatrix other than 1/unitsPerEm
+  changes the size. The arithmetic operators of a charstring take their operands in the right order.
+- **Malformed CFF fonts.** A CFF table or glyph that is malformed makes layout throw
+  `InvalidFontFileException`. Before, it threw several exception types, and a subroutine that called
+  itself stopped the process with a stack overflow. An accented glyph whose `endchar` names a base or
+  accent glyph that the font does not have draws without the two glyphs, as before. A charstring in a
+  `CFF ` table with more than 48 arguments on its stack, the Type 2 limit, is malformed, and so is an
+  outline of more than a million segments.
+- **CID-keyed CFF fonts.** A CID-keyed font with an FDArray keeps its Private DICTs in the Font DICTs,
+  so the font loads even when the Private entry of its Top DICT is out of range. Before, such a font made
+  layout throw `InvalidFontFileException`.
+- **Bounds of an empty CFF glyph.** A CFF glyph without an outline, such as a space, has a width and
+  a height of 0 on every runtime. Before, the width was 1 on .NET 10 and later.
 - **`vrt2` in vertical mixed layout.** A `vrt2` feature requested in `TextOptions.FeatureTags` is no
   longer applied to glyphs that are rotated in vertical mixed layout. Its glyphs are pre-rotated, so
   before, these glyphs were rotated twice. `vrt2` is still never applied by default. (#51)

@@ -23,7 +23,7 @@ Read the [documentation](https://pinatalabs.github.io/Typography/) for guides, t
 
 ## Requirements
 
-- The library targets `net8.0`, `net10.0` and `net11.0`.
+- The library targets `netstandard2.1`, `net8.0`, `net10.0` and `net11.0`.
 - To build the repository, you must install the **.NET 11 SDK, RC2 or later** (`11.0.100-rc.2`). `global.json` pins this SDK. If it is not installed, `dotnet build` stops with an SDK-not-found error.
 
 ## Install
