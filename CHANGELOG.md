@@ -35,8 +35,16 @@ An additive or breaking public API change needs all of these:
   and `TryGetAdvanceWidth` gives the advance width. A font program holds no state that changes after load,
   so one instance can serve many threads. Malformed data makes `Load` throw `InvalidFontFileException`.
   After load, a malformed glyph makes a method return `false`. (#71, #72)
+- **Type 1 font programs.** `FontProgram.Load` reads a Type 1 font as a PFB file, a PFA file, or the stream of
+  a PDF `/FontFile`, and `Format` gives `FontProgramFormat.Type1`. It finds the encrypted part itself, so the
+  `/Length1`, `/Length2` and `/Length3` of the PDF stream do not need to be correct. Glyph 0 is `.notdef`, and the
+  other glyphs follow in the order of the `/CharStrings` dictionary. A font without `.notdef` gets an empty one.
+  `TryGetBuiltInEncoding` gives the glyphs of its `/Encoding`, StandardEncoding or its own. A Type 1 program does not
+  keep the data that it was loaded from. It keeps a decrypted copy of the part that holds the glyphs, and
+  `RetainedByteCount` counts that copy and its arrays, not the data. (#73)
 - **Memory bound for font programs.** `FontProgram.RetainedByteCount` gives the bytes that a font program
-  keeps reachable: the length of the data that was passed to `Load`, plus the arrays that the program allocated.
+  keeps reachable: the length of the data that was passed to `Load` when the program keeps it, plus the arrays
+  that the program allocated.
   The value is fixed at load, and it does not change when the program is used. A TrueType program allocates no array.
   `FontProgram.Load(data, options)` takes a `FontProgramOptions` with `MaxRetainedBytes`. It checks the limit before
   each allocation and before it parses anything, and it throws `FontProgramTooLargeException`, a subclass of

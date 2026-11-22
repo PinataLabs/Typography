@@ -17,4 +17,10 @@ public enum FontProgramFormat
     /// Compact Font Format outlines: cubic curves in Type 2 charstrings.
     /// </summary>
     Cff = 1,
+
+    /// <summary>
+    /// Type 1 outlines: cubic curves in Type 1 charstrings, from a PFB file, a PFA file, or the
+    /// <c>/FontFile</c> stream of a PDF file.
+    /// </summary>
+    Type1 = 2,
 }

@@ -21,16 +21,20 @@ internal struct LoadBudget
 
     private readonly long? maxRetainedBytes;
 
+    // Bytes charged by Reserve that no Allocate has taken yet.
+    private long reserved;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LoadBudget"/> struct and charges the font data.
     /// </summary>
-    /// <param name="dataLength">The length of the font data, which the program keeps alive.</param>
+    /// <param name="dataLength">The length of the font data when the program keeps it alive, else 0.</param>
     /// <param name="maxRetainedBytes">The cap, or <see langword="null"/> for none.</param>
     /// <exception cref="FontProgramTooLargeException">The data alone is larger than the cap.</exception>
     public LoadBudget(int dataLength, long? maxRetainedBytes)
     {
         this.maxRetainedBytes = maxRetainedBytes;
         this.RetainedBytes = 0;
+        this.reserved = 0;
         this.Charge(dataLength);
     }
 
@@ -48,24 +52,31 @@ internal struct LoadBudget
     /// <exception cref="FontProgramTooLargeException">The array does not fit under the cap.</exception>
     public T[] Allocate<T>(int length)
     {
-        this.Charge(ArrayOverhead + ((long)length * Unsafe.SizeOf<T>()));
+        long size = SizeOf<T>(length);
+        long fromReserve = Math.Min(size, this.reserved);
+        this.reserved -= fromReserve;
+        this.Charge(size - fromReserve);
         return new T[length];
     }
 
     /// <summary>
-    /// Allocates two arrays that the program keeps, after it checks the cap once for both.
-    /// A refusal then carries the size of both, so a retry with that size as the cap succeeds.
+    /// Gets the bytes that <see cref="Allocate{T}"/> charges for an array.
     /// </summary>
-    /// <typeparam name="TFirst">The element type of the first array.</typeparam>
-    /// <typeparam name="TSecond">The element type of the second array.</typeparam>
-    /// <param name="firstLength">The number of elements of the first array.</param>
-    /// <param name="secondLength">The number of elements of the second array.</param>
-    /// <returns>The new arrays.</returns>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <param name="length">The number of elements.</param>
+    /// <returns>The array header plus the size of the elements.</returns>
+    public static long SizeOf<T>(int length) => ArrayOverhead + ((long)length * Unsafe.SizeOf<T>());
+
+    /// <summary>
+    /// Charges, in one check, arrays that later calls to <see cref="Allocate{T}"/> take without charging again.
+    /// A refusal then carries the size of all of them, so a retry with that size as the cap succeeds.
+    /// </summary>
+    /// <param name="bytes">The sum of <see cref="SizeOf{T}"/> for the arrays.</param>
     /// <exception cref="FontProgramTooLargeException">The arrays do not fit under the cap.</exception>
-    public (TFirst[] First, TSecond[] Second) Allocate<TFirst, TSecond>(int firstLength, int secondLength)
+    public void Reserve(long bytes)
     {
-        this.Charge(ArrayOverhead + ((long)firstLength * Unsafe.SizeOf<TFirst>()) + ArrayOverhead + ((long)secondLength * Unsafe.SizeOf<TSecond>()));
-        return (new TFirst[firstLength], new TSecond[secondLength]);
+        this.Charge(bytes);
+        this.reserved += bytes;
     }
 
     private void Charge(long bytes)

@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Threading.Tasks;
+using PinataLabs.Typography.FontPrograms;
 
 namespace PinataLabs.Typography.Tests.FontPrograms;
 
@@ -95,7 +95,7 @@ public class FontProgramRobustnessTests
             // Damage can raise the glyph count to 65535, so take glyphs from both ends.
             for (int i = 0; i < font.GlyphCount; i = i < 64 ? i + 1 : Math.Max(i + 1, font.GlyphCount - 8))
             {
-                DiscardingSink sink = default;
+                NullGlyphOutlineSink sink = default;
                 font.TryWriteOutline((ushort)i, ref sink);
                 font.TryGetAdvanceWidth((ushort)i, out _);
                 font.GetGlyphName((ushort)i);
@@ -104,29 +104,6 @@ public class FontProgramRobustnessTests
         catch (Exception e)
         {
             failures.Add($"{damage}: a call after load threw {e.GetType().Name}: {e.StackTrace?.Split('\n')[0].Trim()}");
-        }
-    }
-
-    private struct DiscardingSink : IGlyphOutlineSink
-    {
-        public readonly void MoveTo(Vector2 point)
-        {
-        }
-
-        public readonly void LineTo(Vector2 point)
-        {
-        }
-
-        public readonly void QuadraticBezierTo(Vector2 control, Vector2 point)
-        {
-        }
-
-        public readonly void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
-        {
-        }
-
-        public readonly void ClosePath()
-        {
         }
     }
 }

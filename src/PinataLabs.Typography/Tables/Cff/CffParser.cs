@@ -129,7 +129,10 @@ internal static class CffParser
         CffIndex fdArray = fdArrayOffset == 0 ? default : CffIndex.Read(data, fdArrayOffset, 2, out _);
 
         // Both counts are known before either array exists, so a refusal reports the whole size.
-        (CffFontDict[] fontDicts, ushort[] charset) = budget.Allocate<CffFontDict, ushort>(fdArrayOffset == 0 ? 1 : fdArray.Count, charStrings.Count);
+        int fontDictCount = fdArrayOffset == 0 ? 1 : fdArray.Count;
+        budget.Reserve(LoadBudget.SizeOf<CffFontDict>(fontDictCount) + LoadBudget.SizeOf<ushort>(charStrings.Count));
+        CffFontDict[] fontDicts = budget.Allocate<CffFontDict>(fontDictCount);
+        ushort[] charset = budget.Allocate<ushort>(charStrings.Count);
         if (fdArrayOffset == 0)
         {
             fontDicts[0] = privateSize == 0 ? default : ReadPrivateDict(data, privateOffset, privateSize, null, null);

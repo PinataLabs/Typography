@@ -19,9 +19,11 @@ public sealed class FontProgramTooLargeException : InvalidFontFileException
 
     /// <summary>
     /// Gets the bytes that the font program would have retained.
-    /// A load with <see cref="MaxRetainedBytes"/> set to this value succeeds, except in one case.
-    /// A font whose data alone is larger than the limit is refused before it is read, so this is the length of its data.
-    /// For a CFF font, which also retains arrays, that is a lower bound of the full size.
+    /// A load with <see cref="MaxRetainedBytes"/> set to this value succeeds, except in two cases.
+    /// A TrueType or CFF font whose data alone is larger than the limit is refused before it is read, so this is the
+    /// length of its data. For a CFF font, which also retains arrays, that is a lower bound of the full size.
+    /// A Type 1 font whose decrypted private part alone is larger than the limit is refused before it is decrypted,
+    /// so this is the size of that part, a lower bound of the full size.
     /// </summary>
     public long RetainedByteCount { get; }
 

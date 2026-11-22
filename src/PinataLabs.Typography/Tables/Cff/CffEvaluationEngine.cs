@@ -4,6 +4,7 @@
 
 using System;
 using System.Numerics;
+using PinataLabs.Typography.FontPrograms;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -133,7 +134,7 @@ internal ref struct CffEvaluationEngine
     {
         this.Reset();
         this.widthOnly = true;
-        NoSink sink = default;
+        NullGlyphOutlineSink sink = default;
         this.Run(this.charString, ref sink, 0);
         advanceWidth = this.hasWidth ? this.width : this.defaultWidthX;
         return !this.failed;
@@ -1045,28 +1046,5 @@ internal ref struct CffEvaluationEngine
     {
         this.bottom = 0;
         this.top = 0;
-    }
-
-    private struct NoSink : IGlyphOutlineSink
-    {
-        public readonly void MoveTo(Vector2 point)
-        {
-        }
-
-        public readonly void LineTo(Vector2 point)
-        {
-        }
-
-        public readonly void QuadraticBezierTo(Vector2 control, Vector2 point)
-        {
-        }
-
-        public readonly void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
-        {
-        }
-
-        public readonly void ClosePath()
-        {
-        }
     }
 }
