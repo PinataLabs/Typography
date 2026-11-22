@@ -35,6 +35,13 @@ An additive or breaking public API change needs all of these:
   and `TryGetAdvanceWidth` gives the advance width. A font program holds no state that changes after load,
   so one instance can serve many threads. Malformed data makes `Load` throw `InvalidFontFileException`.
   After load, a malformed glyph makes a method return `false`. (#71, #72)
+- **Memory bound for font programs.** `FontProgram.RetainedByteCount` gives the bytes that a font program
+  keeps reachable: the length of the data that was passed to `Load`, plus the arrays that the program allocated.
+  The value is fixed at load, and it does not change when the program is used. A TrueType program allocates no array.
+  `FontProgram.Load(data, options)` takes a `FontProgramOptions` with `MaxRetainedBytes`. It checks the limit before
+  each allocation and before it parses anything, and it throws `FontProgramTooLargeException`, a subclass of
+  `InvalidFontFileException`, instead of retaining more. The exception carries `RetainedByteCount` and `MaxRetainedBytes`.
+  Use this to keep one budget for the fonts of a document. (#75)
 - **netstandard2.1 target.** The library targets `netstandard2.1` again, so a netstandard2.1
   project such as a Unity package can depend on it. On this target the package depends on
   `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
