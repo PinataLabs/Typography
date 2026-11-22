@@ -37,7 +37,7 @@ internal sealed class Type1Program
 
     internal Type1Program(
         byte[] data,
-        Type1Header header,
+        in Type1Header header,
         ReadOnlySpan<byte> clearText,
         Type1CharStringTable glyphs,
         int[] nameOffsets,
@@ -53,7 +53,7 @@ internal sealed class Type1Program
         this.FontMatrix = header.FontMatrix;
         this.FontBBox = header.FontBBox;
         this.PaintType = header.PaintType;
-        this.encoding = this.ResolveEncoding(header, clearText, ref budget);
+        this.encoding = this.ResolveEncoding(in header, clearText, ref budget);
     }
 
     /// <summary>
@@ -100,7 +100,8 @@ internal sealed class Type1Program
             privatePart = Type1Eexec.DecryptPfbBinary(file, binaryPosition, ref budget);
         }
 
-        Type1Header header = Type1Parser.ParseHeader(clearText);
+        Type1Header header = new(stackalloc int[256], stackalloc int[256]);
+        Type1Parser.ParseHeader(clearText, ref header);
         if (privatePart is null)
         {
             int start = header.EexecEnd;
@@ -112,7 +113,7 @@ internal sealed class Type1Program
             privatePart = Type1Eexec.DecryptSection(clearText.Slice(start), ref budget);
         }
 
-        return Type1Parser.ParsePrivate(privatePart, header, clearText, ref budget);
+        return Type1Parser.ParsePrivate(privatePart, in header, clearText, ref budget);
     }
 
     /// <summary>
@@ -276,7 +277,7 @@ internal sealed class Type1Program
         return true;
     }
 
-    private ushort[]? ResolveEncoding(Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)
+    private ushort[]? ResolveEncoding(in Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)
     {
         if (header.EncodingKind == Type1EncodingKind.None)
         {

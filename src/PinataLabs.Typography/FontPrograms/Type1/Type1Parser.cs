@@ -14,9 +14,8 @@ internal static class Type1Parser
 {
     private const int MaxGlyphCount = ushort.MaxValue + 1;
 
-    public static Type1Header ParseHeader(ReadOnlySpan<byte> clearText)
+    public static void ParseHeader(ReadOnlySpan<byte> clearText, ref Type1Header header)
     {
-        Type1Header header = new();
         Type1Tokenizer tokenizer = new(clearText);
         bool hasFontMatrix = false;
         Span<double> numbers = stackalloc double[6];
@@ -66,11 +65,9 @@ internal static class Type1Parser
             }
             else if (key.SequenceEqual("Encoding"u8) && header.EncodingKind == Type1EncodingKind.None)
             {
-                ReadEncoding(ref tokenizer, header);
+                ReadEncoding(ref tokenizer, ref header);
             }
         }
-
-        return header;
     }
 
     /// <summary>
@@ -82,7 +79,7 @@ internal static class Type1Parser
     /// <param name="clearText">The cleartext that <paramref name="header"/> refers to.</param>
     /// <param name="budget">The budget that the arrays of the program are charged to.</param>
     /// <returns>The font program.</returns>
-    public static Type1Program ParsePrivate(byte[] data, Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)
+    public static Type1Program ParsePrivate(byte[] data, in Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)
     {
         Type1Tokenizer tokenizer = new(data);
         int lenIV = 4;
@@ -129,7 +126,7 @@ internal static class Type1Parser
         subrs ??= new Type1CharStringTable(0, ref budget);
         subrs.Decrypt(data, lenIV);
         glyphs.Decrypt(data, lenIV);
-        return new Type1Program(data, header, clearText, glyphs, nameOffsets, nameLengths, subrs, ref budget);
+        return new Type1Program(data, in header, clearText, glyphs, nameOffsets, nameLengths, subrs, ref budget);
     }
 
     private static bool TryReadNumbers(ref Type1Tokenizer tokenizer, scoped Span<double> numbers)
@@ -153,7 +150,7 @@ internal static class Type1Parser
         return true;
     }
 
-    private static void ReadEncoding(ref Type1Tokenizer tokenizer, Type1Header header)
+    private static void ReadEncoding(ref Type1Tokenizer tokenizer, ref Type1Header header)
     {
         int saved = tokenizer.Position;
         if (!tokenizer.TryRead(out Type1Token token))
