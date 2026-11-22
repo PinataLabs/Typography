@@ -76,12 +76,26 @@ internal sealed class Type1Program
     public int GlyphCount => this.glyphs.Count;
 
     /// <summary>
-    /// Tells whether data starts like a Type 1 font program: a PFB segment, or a PostScript <c>%!</c> comment.
+    /// Tells whether data starts like a Type 1 font program: a PFB segment, or a PostScript <c>%!</c> comment
+    /// after any PostScript white space.
     /// </summary>
     /// <param name="data">The font file.</param>
     /// <returns><see langword="true"/> if <see cref="Load"/> should be tried.</returns>
     public static bool IsType1(ReadOnlySpan<byte> data)
-        => Type1Eexec.IsPfb(data) || (data.Length >= 2 && data[0] == (byte)'%' && data[1] == (byte)'!');
+    {
+        if (Type1Eexec.IsPfb(data))
+        {
+            return true;
+        }
+
+        int start = 0;
+        while (start < data.Length && Type1Tokenizer.IsWhiteSpace(data[start]))
+        {
+            start++;
+        }
+
+        return data.Slice(start).StartsWith("%!"u8);
+    }
 
     /// <summary>
     /// Loads a Type 1 font program from PFB, PFA or PDF <c>/FontFile</c> data.

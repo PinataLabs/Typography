@@ -238,6 +238,21 @@ public class Type1ProgramTests
     }
 
     [Test]
+    [Arguments("0A")]
+    [Arguments("20090D0A")]
+    [Arguments("0C")]
+    [Arguments("0000")]
+    public async Task WhiteSpaceBeforeThePostScriptCommentStillLoadsAsType1(string whiteSpaceHex)
+    {
+        byte[] data = [.. Convert.FromHexString(whiteSpaceHex), .. SquareFont().BuildPfa(hex: false, trailer: false)];
+
+        FontProgram font = FontProgram.Load(data);
+
+        await Assert.That(font.Format).IsEqualTo(FontProgramFormat.Type1);
+        await Assert.That(font.GlyphCount).IsEqualTo(2);
+    }
+
+    [Test]
     [Arguments("")]
     [Arguments("%!PS-AdobeFont-1.0\n/FontName /X def\n")]
     [Arguments("%!PS-AdobeFont-1.0\ncurrentfile eexec\n")]
