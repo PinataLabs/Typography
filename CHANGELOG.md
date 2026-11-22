@@ -55,6 +55,13 @@ An additive or breaking public API change needs all of these:
   `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
   The public API is the same on every target. (#69)
 
+### Changed
+
+- **`vrtr` in vertical mixed layout.** Glyphs that are rotated in `VerticalMixedLeftRight` and
+  `VerticalMixedRightLeft` layouts now get the OpenType `vrtr` feature. The font's `vrtr` glyphs are
+  designed to be rotated by the layout engine, so they are still rotated. Fonts without `vrtr` are
+  not affected. (#51)
+
 ### Fixed
 
 - **CFF glyph outlines.** Text layout draws these CFF glyphs correctly now: a glyph that uses a
@@ -74,6 +81,9 @@ An additive or breaking public API change needs all of these:
   layout throw `InvalidFontFileException`.
 - **Bounds of an empty CFF glyph.** A CFF glyph without an outline, such as a space, has a width and
   a height of 0 on every runtime. Before, the width was 1 on .NET 10 and later.
+- **`vrt2` in vertical mixed layout.** A `vrt2` feature requested in `TextOptions.FeatureTags` is no
+  longer applied to glyphs that are rotated in vertical mixed layout. Its glyphs are pre-rotated, so
+  before, these glyphs were rotated twice. `vrt2` is still never applied by default. (#51)
 
 ## [0.1.0] - 2026-10-26
 
