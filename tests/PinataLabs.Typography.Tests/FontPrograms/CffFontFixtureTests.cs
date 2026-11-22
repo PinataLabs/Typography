@@ -144,7 +144,7 @@ public class CffFontFixtureTests
                 continue;
             }
 
-            data.WriteOutline(ref actual);
+            data.TryWriteOutline(ref actual);
             string? difference = GlyphOutline.Compare(GlyphOutline.Parse(glyph.Outline), glyph.Matrix ?? fixture.FontMatrix, actual, fontMatrix);
             if (difference is not null)
             {

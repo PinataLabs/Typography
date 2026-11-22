@@ -65,14 +65,15 @@ internal readonly struct CffGlyphData
     /// Gets the advance width that the charstring gives, in the glyph space of the font.
     /// </summary>
     /// <param name="advanceWidth">The advance width.</param>
-    /// <returns><see langword="true"/>.</returns>
+    /// <returns><see langword="false"/> if the charstring is malformed.</returns>
     public bool TryGetAdvanceWidth(out float advanceWidth)
     {
-        NullSink sink = default;
-        using CffEvaluationEngine engine = this.CreateEngine();
-        engine.WriteOutline(ref sink);
-        advanceWidth = engine.Width * (this.transform?.M11 ?? 1);
-        return true;
+        Span<float> stack = stackalloc float[CffEvaluationEngine.StackSize];
+        Span<float> transient = stackalloc float[CffEvaluationEngine.TransientSize];
+        CffEvaluationEngine engine = this.CreateEngine(stack, transient);
+        bool result = engine.TryGetWidth(out advanceWidth);
+        advanceWidth *= this.transform?.M11 ?? 1;
+        return result;
     }
 
     /// <summary>
@@ -80,51 +81,43 @@ internal readonly struct CffGlyphData
     /// </summary>
     /// <typeparam name="TSink">The type of the sink.</typeparam>
     /// <param name="sink">The sink that receives the outline.</param>
-    public void WriteOutline<TSink>(ref TSink sink)
+    /// <returns><see langword="false"/> if the charstring is malformed. The sink may then hold a partial outline.</returns>
+    public bool TryWriteOutline<TSink>(ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
-        using CffEvaluationEngine engine = this.CreateEngine();
+        Span<float> stack = stackalloc float[CffEvaluationEngine.StackSize];
+        Span<float> transient = stackalloc float[CffEvaluationEngine.TransientSize];
+        CffEvaluationEngine engine = this.CreateEngine(stack, transient);
         if (this.transform is not Matrix3x2 matrix)
         {
-            engine.WriteOutline(ref sink);
-            return;
+            return engine.TryWriteOutline(ref sink);
         }
 
         TransformedSink<TSink> transformed = new(sink, matrix);
-        engine.WriteOutline(ref transformed);
+        bool result = engine.TryWriteOutline(ref transformed);
         sink = transformed.Inner;
+        return result;
     }
 
-    private CffEvaluationEngine CreateEngine()
+    // Layout reports a malformed glyph as an exception.
+    private void WriteOutline<TSink>(ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        if (!this.TryWriteOutline(ref sink))
+        {
+            throw new InvalidFontFileException($"The charstring of CFF glyph {this.GlyphIndex} is malformed.");
+        }
+    }
+
+    private CffEvaluationEngine CreateEngine(Span<float> stack, Span<float> transient)
         => new(
             this.charString.Span,
             this.globalSubrs,
             this.localSubrs,
             this.nominalWidthX,
             this.defaultWidthX,
+            stack,
+            transient,
             this.blendRegionCounts,
             this.vsIndex);
-
-    private struct NullSink : IGlyphOutlineSink
-    {
-        public readonly void MoveTo(Vector2 point)
-        {
-        }
-
-        public readonly void LineTo(Vector2 point)
-        {
-        }
-
-        public readonly void QuadraticBezierTo(Vector2 control, Vector2 point)
-        {
-        }
-
-        public readonly void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
-        {
-        }
-
-        public readonly void ClosePath()
-        {
-        }
-    }
 }

@@ -20,10 +20,12 @@ public class LayoutOutlineCharacterizationTests
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
     [Arguments("OpenSans-Regular.ttf")]
+    [Arguments("FontPrograms/cff-type2.otf")]
+    [Arguments("FontPrograms/cff-seac.otf")]
     public async Task EveryGlyphMatchesTheRecordedBaseline(string fontFile)
     {
         string[] actual = LayoutOutlineRecorder.Describe(TestFonts.GetPath(fontFile));
-        string baselineName = Path.ChangeExtension(fontFile, ".txt");
+        string baselineName = Path.GetFileNameWithoutExtension(fontFile) + ".txt";
 
         if (Environment.GetEnvironmentVariable("UPDATE_LAYOUT_OUTLINES") == "1")
         {
