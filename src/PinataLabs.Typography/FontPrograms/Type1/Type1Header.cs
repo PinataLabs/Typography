@@ -29,10 +29,12 @@ internal ref struct Type1Header
     /// <summary>
     /// Initializes a new instance of the <see cref="Type1Header"/> struct.
     /// </summary>
-    /// <param name="encodingNameStarts">256 elements for <see cref="EncodingNameStarts"/>, all zero.</param>
-    /// <param name="encodingNameLengths">256 elements for <see cref="EncodingNameLengths"/>, all zero.</param>
+    /// <param name="encodingNameStarts">256 elements for <see cref="EncodingNameStarts"/>. The header clears them.</param>
+    /// <param name="encodingNameLengths">256 elements for <see cref="EncodingNameLengths"/>. The header clears them.</param>
     public Type1Header(Span<int> encodingNameStarts, Span<int> encodingNameLengths)
     {
+        encodingNameStarts.Clear();
+        encodingNameLengths.Clear();
         this.EncodingNameStarts = encodingNameStarts;
         this.EncodingNameLengths = encodingNameLengths;
         this.FontMatrix = Matrix3x2.CreateScale(0.001F);
