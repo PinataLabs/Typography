@@ -17,6 +17,15 @@ namespace PinataLabs.Typography.Tests.FontPrograms;
 public class FontProgramRobustnessTests
 {
     [Test]
+    public async Task ACidFontIgnoresTheBadPrivateOffsetOfItsTopDict()
+    {
+        FontProgram font = FontProgram.Load(FontWithBadTopPrivate.Create());
+
+        await Assert.That(font.GlyphCount).IsGreaterThan(0);
+        await Assert.That(font.TryGetGlyphIdForCid(1, out _)).IsTrue();
+    }
+
+    [Test]
     [Arguments("FontPrograms/cff-type2.otf")]
     [Arguments("FontPrograms/cff-type2-widths.otf")]
     [Arguments("FontPrograms/cff-seac.otf")]
