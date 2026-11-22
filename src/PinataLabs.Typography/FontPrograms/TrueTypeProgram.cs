@@ -16,6 +16,9 @@ internal sealed class TrueTypeProgram
 
     private const int PostHeaderSize = 32;
 
+    // A name index is 16 bits, so a string past this one cannot name a glyph.
+    private const int MaxNameIndex = ushort.MaxValue;
+
     private readonly ReadOnlyMemory<byte> loca;
     private readonly ReadOnlyMemory<byte> glyf;
     private readonly ReadOnlyMemory<byte> post;
@@ -162,34 +165,65 @@ internal sealed class TrueTypeProgram
     public bool TryGetGlyphId(ReadOnlySpan<char> glyphName, out ushort glyphId)
     {
         glyphId = 0;
-        int best = int.MaxValue;
-
-        // The name can be a standard name, a string of the table, or both. Find the first glyph that uses each.
+        int standardIndex = -1;
         for (int i = 0; i < MacGlyphNameCount; i++)
         {
             if (glyphName.SequenceEqual(MacGlyphNames.Names[i].AsSpan()))
             {
-                best = this.FindFirstGlyphWithNameIndex(i, best);
+                standardIndex = i;
                 break;
             }
         }
 
+        switch (this.GetPostFormat())
+        {
+            case 1 when standardIndex >= 0 && standardIndex < this.GlyphCount:
+                glyphId = (ushort)standardIndex;
+                return true;
+            case 2:
+                break;
+            default:
+                return false;
+        }
+
+        // The name can be a standard name and any number of strings of the table. Mark each name index
+        // that has the name, then find the first glyph with a marked index, so the work is linear in the table size.
+        Span<byte> marked = stackalloc byte[(MaxNameIndex + 1) / 8];
+        marked.Clear();
+        bool any = standardIndex >= 0;
+        if (any)
+        {
+            Mark(marked, standardIndex);
+        }
+
         ReadOnlySpan<byte> strings = this.GetPostStrings();
-        for (int i = MacGlyphNameCount; TryReadPascalString(ref strings, out ReadOnlySpan<byte> name); i++)
+        for (int i = MacGlyphNameCount; i <= MaxNameIndex && TryReadPascalString(ref strings, out ReadOnlySpan<byte> name); i++)
         {
             if (NameEquals(name, glyphName))
             {
-                best = this.FindFirstGlyphWithNameIndex(i, best);
+                Mark(marked, i);
+                any = true;
             }
         }
 
-        if (best == int.MaxValue)
+        if (!any)
         {
             return false;
         }
 
-        glyphId = (ushort)best;
-        return true;
+        ReadOnlySpan<byte> indices = this.post.Span.Slice(PostHeaderSize + 2);
+        int count = this.GetPostNameCount();
+        for (int i = 0; i < count; i++)
+        {
+            int nameIndex = BinaryPrimitives.ReadUInt16BigEndian(indices.Slice(i * 2));
+            if ((marked[nameIndex >> 3] & (1 << (nameIndex & 7))) != 0)
+            {
+                glyphId = (ushort)i;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -229,6 +263,9 @@ internal sealed class TrueTypeProgram
 
         return false;
     }
+
+    private static void Mark(Span<byte> marked, int nameIndex)
+        => marked[nameIndex >> 3] |= (byte)(1 << (nameIndex & 7));
 
     private static bool NameEquals(ReadOnlySpan<byte> name, ReadOnlySpan<char> other)
     {
@@ -314,29 +351,6 @@ internal sealed class TrueTypeProgram
                 return true;
             default:
                 return false;
-        }
-    }
-
-    private int FindFirstGlyphWithNameIndex(int nameIndex, int best)
-    {
-        switch (this.GetPostFormat())
-        {
-            case 1:
-                return nameIndex < this.GlyphCount ? Math.Min(best, nameIndex) : best;
-            case 2:
-                ReadOnlySpan<byte> indices = this.post.Span.Slice(PostHeaderSize + 2);
-                int count = Math.Min(this.GetPostNameCount(), best);
-                for (int i = 0; i < count; i++)
-                {
-                    if (BinaryPrimitives.ReadUInt16BigEndian(indices.Slice(i * 2)) == nameIndex)
-                    {
-                        return i;
-                    }
-                }
-
-                return best;
-            default:
-                return best;
         }
     }
 
