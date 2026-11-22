@@ -166,7 +166,7 @@ internal ref struct Type1CharStringEngine
         if (value is >= int.MinValue and <= int.MaxValue)
         {
             result = (int)value;
-            return result == value;
+            return result == value; // NOSONAR: tests that the operand is an exact integer.
         }
 
         result = 0;
