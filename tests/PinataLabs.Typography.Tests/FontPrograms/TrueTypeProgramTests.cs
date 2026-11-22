@@ -35,4 +35,23 @@ public class TrueTypeProgramTests
         // A scan for each matching string took seconds. One pass over the strings and one over the glyphs takes about a millisecond.
         await Assert.That(stopwatch.ElapsedMilliseconds).IsLessThan(500);
     }
+
+    [Test]
+    public async Task FlagRepeatPastThePointCountFails()
+    {
+        byte[] glyph =
+        [
+            0, 1, 0, 0, 0, 0, 0, 10, 0, 10, // one contour and a bounding box
+            0, 2, // the contour ends at point 2, so the glyph has 3 points
+            0, 0, // no instructions
+            0x3F, 5, // on curve, short positive x and y, repeated 5 more times: 6 points
+            1, 2, 3, 4, 5, 6, // x
+            1, 2, 3, 4, 5, 6, // y
+            0, 0, 0, 0, // padding
+        ];
+        FontProgram font = FontProgram.Load(TrueTypeBuilder.Build([[], glyph]));
+        GlyphOutline outline = new();
+
+        await Assert.That(font.TryWriteOutline(1, ref outline)).IsFalse();
+    }
 }

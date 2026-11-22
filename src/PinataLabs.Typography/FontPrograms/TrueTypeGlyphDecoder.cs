@@ -500,6 +500,12 @@ internal static class TrueTypeGlyphDecoder
                     run += repeat;
                 }
 
+                // FreeType rejects a run past the last point. Reading on would take the coordinates of the wrong points.
+                if (i + run > count)
+                {
+                    return false;
+                }
+
                 // A coordinate is one byte, or two bytes, or absent when it repeats the last one.
                 xLength += run * ((flags & XShort) != 0 ? 1 : (flags & XSameOrPositive) != 0 ? 0 : 2);
                 yLength += run * ((flags & YShort) != 0 ? 1 : (flags & YSameOrPositive) != 0 ? 0 : 2);
