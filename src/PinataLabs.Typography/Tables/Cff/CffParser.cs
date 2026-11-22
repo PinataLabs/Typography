@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers.Binary;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -13,9 +14,11 @@ namespace PinataLabs.Typography.Tables.Cff;
 internal static class CffParser
 {
     // Top DICT operators.
+    private const int OpCharset = 15;
     private const int OpCharStrings = 17;
     private const int OpPrivate = 18;
     private const int OpCharstringType = 0x0C06;
+    private const int OpRos = 0x0C1E;
     private const int OpFdArray = 0x0C24;
     private const int OpFdSelect = 0x0C25;
 
@@ -41,7 +44,7 @@ internal static class CffParser
         // Header, Name INDEX, Top DICT INDEX, String INDEX, Global Subr INDEX.
         CffIndex.Read(data, span[2], 2, out int position);
         CffIndex topDicts = CffIndex.Read(data, position, 2, out position);
-        CffIndex.Read(data, position, 2, out position);
+        CffIndex strings = CffIndex.Read(data, position, 2, out position);
         CffIndex globalSubrs = CffIndex.Read(data, position, 2, out _);
 
         if (!topDicts.TryGet(0, out ReadOnlyMemory<byte> topDict))
@@ -49,6 +52,8 @@ internal static class CffParser
             throw new InvalidFontFileException("The CFF table has no Top DICT.");
         }
 
+        int charsetOffset = 0;
+        bool isCidKeyed = false;
         int charStringsOffset = 0;
         int privateSize = 0;
         int privateOffset = 0;
@@ -61,6 +66,12 @@ internal static class CffParser
         {
             switch (op)
             {
+                case OpCharset when count >= 1:
+                    charsetOffset = ToOffset(operands[0], span.Length);
+                    break;
+                case OpRos:
+                    isCidKeyed = true;
+                    break;
                 case OpCharStrings when count >= 1:
                     charStringsOffset = ToOffset(operands[0], span.Length);
                     break;
@@ -108,7 +119,88 @@ internal static class CffParser
             CffFont.ValidateFdSelect(span, fdSelectOffset, charStrings.Count);
         }
 
-        return new CffFont(data, globalSubrs, charStrings, topPrivate, fontDicts, fdSelectOffset);
+        ushort[] charset = ReadCharset(span, charsetOffset, charStrings.Count, isCidKeyed);
+
+        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, topPrivate, fontDicts, fdSelectOffset);
+    }
+
+    /// <summary>
+    /// Reads the charset: for each glyph its SID, or its CID in a CID-keyed font. Glyph 0 is always 0.
+    /// </summary>
+    private static ushort[] ReadCharset(ReadOnlySpan<byte> data, int offset, int glyphCount, bool isCidKeyed)
+    {
+        ushort[] charset = new ushort[glyphCount];
+        if (offset <= 2)
+        {
+            // Offsets 0, 1 and 2 name the predefined charsets. They do not apply to a CID-keyed font,
+            // which then maps each CID to the glyph with the same ID.
+            ReadOnlySpan<ushort> predefined = offset switch
+            {
+                1 when !isCidKeyed => CffPredefinedTables.ExpertCharset,
+                2 when !isCidKeyed => CffPredefinedTables.ExpertSubsetCharset,
+                _ => default,
+            };
+
+            int identity = isCidKeyed ? glyphCount : offset == 0 ? CffPredefinedTables.IsoAdobeCharsetLength : 0;
+            for (int i = 0; i < glyphCount; i++)
+            {
+                charset[i] = i < predefined.Length ? predefined[i] : i < identity ? (ushort)i : (ushort)0;
+            }
+
+            return charset;
+        }
+
+        ReadOnlySpan<byte> table = data.Slice(offset);
+        if (table.IsEmpty)
+        {
+            throw new InvalidFontFileException("The CFF charset is out of range.");
+        }
+
+        int format = table[0];
+        int position = 1;
+        int glyph = 1;
+        switch (format)
+        {
+            case 0:
+                if (table.Length < 1 + (2L * (glyphCount - 1)))
+                {
+                    throw new InvalidFontFileException("The CFF charset is truncated.");
+                }
+
+                for (; glyph < glyphCount; glyph++, position += 2)
+                {
+                    charset[glyph] = BinaryPrimitives.ReadUInt16BigEndian(table.Slice(position));
+                }
+
+                break;
+
+            case 1:
+            case 2:
+                // Ranges of consecutive values: the first value, then the number of values that follow it.
+                int rangeSize = format == 1 ? 3 : 4;
+                while (glyph < glyphCount)
+                {
+                    if (position + rangeSize > table.Length)
+                    {
+                        throw new InvalidFontFileException("The CFF charset is truncated.");
+                    }
+
+                    int first = BinaryPrimitives.ReadUInt16BigEndian(table.Slice(position));
+                    int left = format == 1 ? table[position + 2] : BinaryPrimitives.ReadUInt16BigEndian(table.Slice(position + 2));
+                    position += rangeSize;
+                    for (int i = 0; i <= left && glyph < glyphCount; i++)
+                    {
+                        charset[glyph++] = (ushort)(first + i);
+                    }
+                }
+
+                break;
+
+            default:
+                throw new InvalidFontFileException($"CFF charset format {format} is not supported.");
+        }
+
+        return charset;
     }
 
     private static CffFontDict ReadFontDict(ReadOnlyMemory<byte> data, ReadOnlySpan<byte> fontDict)

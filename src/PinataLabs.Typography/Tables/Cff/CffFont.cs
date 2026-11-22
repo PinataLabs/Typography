@@ -13,29 +13,120 @@ namespace PinataLabs.Typography.Tables.Cff;
 internal sealed class CffFont
 {
     private readonly ReadOnlyMemory<byte> data;
+    private readonly CffIndex strings;
     private readonly CffIndex globalSubrs;
     private readonly CffIndex charStrings;
+
+    // For each glyph its SID, or its CID in a CID-keyed font.
+    private readonly ushort[] charset;
     private readonly CffFontDict topPrivate;
     private readonly CffFontDict[] fontDicts;
     private readonly int fdSelectOffset;
 
     internal CffFont(
         ReadOnlyMemory<byte> data,
+        CffIndex strings,
         CffIndex globalSubrs,
         CffIndex charStrings,
+        ushort[] charset,
+        bool isCidKeyed,
         CffFontDict topPrivate,
         CffFontDict[] fontDicts,
         int fdSelectOffset)
     {
         this.data = data;
+        this.strings = strings;
         this.globalSubrs = globalSubrs;
         this.charStrings = charStrings;
+        this.charset = charset;
+        this.IsCidKeyed = isCidKeyed;
         this.topPrivate = topPrivate;
         this.fontDicts = fontDicts;
         this.fdSelectOffset = fdSelectOffset;
     }
 
     public int GlyphCount => this.charStrings.Count;
+
+    /// <summary>
+    /// Gets a value indicating whether the font is CID-keyed. Such a font has CIDs in place of glyph names.
+    /// </summary>
+    public bool IsCidKeyed { get; }
+
+    /// <summary>
+    /// Gets the name of a glyph.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <returns>The name, or <see langword="null"/> if the glyph has none.</returns>
+    public string? GetGlyphName(ushort glyphId)
+    {
+        if (this.IsCidKeyed || glyphId >= this.charset.Length)
+        {
+            return null;
+        }
+
+        int sid = this.charset[glyphId];
+        if (sid < CffStandardStrings.Count)
+        {
+            return CffStandardStrings.GetName(sid);
+        }
+
+        if (!this.strings.TryGet(sid - CffStandardStrings.Count, out ReadOnlyMemory<byte> name))
+        {
+            return null;
+        }
+
+        // Strings are single-byte. Each byte is the code point of its character.
+        return string.Create(name.Length, name, static (chars, bytes) =>
+        {
+            ReadOnlySpan<byte> span = bytes.Span;
+            for (int i = 0; i < chars.Length; i++)
+            {
+                chars[i] = (char)span[i];
+            }
+        });
+    }
+
+    /// <summary>
+    /// Finds the glyph with the given name. The lowest glyph ID wins.
+    /// </summary>
+    /// <param name="glyphName">The glyph name, compared by ordinal.</param>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <returns><see langword="false"/> if no glyph has the name.</returns>
+    public bool TryGetGlyphId(ReadOnlySpan<char> glyphName, out ushort glyphId)
+    {
+        glyphId = 0;
+        if (this.IsCidKeyed)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < this.charset.Length; i++)
+        {
+            if (this.NameEquals(this.charset[i], glyphName))
+            {
+                glyphId = (ushort)i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Finds the glyph for a CID. A font that is not CID-keyed maps each CID to the glyph with the same ID.
+    /// </summary>
+    /// <param name="cid">The CID.</param>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <returns><see langword="false"/> if the font has no glyph for the CID.</returns>
+    public bool TryGetGlyphIdForCid(int cid, out ushort glyphId)
+    {
+        int index = this.IsCidKeyed
+            ? (uint)cid <= ushort.MaxValue ? this.charset.AsSpan().IndexOf((ushort)cid) : -1
+            : (uint)cid < (uint)this.GlyphCount ? cid : -1;
+
+        glyphId = index < 0 ? (ushort)0 : (ushort)index;
+        return index >= 0;
+    }
 
     /// <summary>
     /// Gets what the evaluation of one glyph needs.
@@ -88,6 +179,30 @@ internal sealed class CffFont
         {
             throw new InvalidFontFileException("The CFF FDSelect is truncated.");
         }
+    }
+
+    private bool NameEquals(int sid, ReadOnlySpan<char> name)
+    {
+        if (sid < CffStandardStrings.Count)
+        {
+            return name.SequenceEqual(CffStandardStrings.GetName(sid).AsSpan());
+        }
+
+        if (!this.strings.TryGet(sid - CffStandardStrings.Count, out ReadOnlyMemory<byte> item) || item.Length != name.Length)
+        {
+            return false;
+        }
+
+        ReadOnlySpan<byte> bytes = item.Span;
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            if (bytes[i] != name[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private bool TryGetFontDictIndex(int glyphId, out int fontDict)
