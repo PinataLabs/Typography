@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using PinataLabs.Typography.FontPrograms;
 using PinataLabs.Typography.Tests.FontPrograms.Type1;
 
 namespace PinataLabs.Typography.Tests.FontPrograms;
@@ -380,7 +380,7 @@ public class FontProgramMemoryTests
 
     private static void Use(FontProgram font)
     {
-        NullSink sink = default;
+        NullGlyphOutlineSink sink = default;
         Span<ushort> encoding = stackalloc ushort[256];
         for (int glyph = 0; glyph < font.GlyphCount; glyph++)
         {
@@ -473,29 +473,6 @@ public class FontProgramMemoryTests
                     VisitElement(field.GetValue(value), field.FieldType, data, seen, ref total);
                 }
             }
-        }
-    }
-
-    private struct NullSink : IGlyphOutlineSink
-    {
-        public void MoveTo(Vector2 point)
-        {
-        }
-
-        public void LineTo(Vector2 point)
-        {
-        }
-
-        public void QuadraticBezierTo(Vector2 control, Vector2 point)
-        {
-        }
-
-        public void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
-        {
-        }
-
-        public void ClosePath()
-        {
         }
     }
 }

@@ -121,7 +121,7 @@ internal ref struct Type1CharStringEngine
     public bool TryGetAdvanceWidth(ReadOnlySpan<byte> charString, out float advanceWidth)
     {
         this.widthOnly = true;
-        NullSink sink = default;
+        NullGlyphOutlineSink sink = default;
         Status status = this.Execute(charString, 0, ref sink);
         advanceWidth = this.advanceWidth;
         return status == Status.Done && this.hasWidth;
@@ -614,29 +614,6 @@ internal ref struct Type1CharStringEngine
         {
             sink.ClosePath();
             this.contourOpen = false;
-        }
-    }
-
-    private struct NullSink : IGlyphOutlineSink
-    {
-        public readonly void MoveTo(Vector2 point)
-        {
-        }
-
-        public readonly void LineTo(Vector2 point)
-        {
-        }
-
-        public readonly void QuadraticBezierTo(Vector2 control, Vector2 point)
-        {
-        }
-
-        public readonly void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
-        {
-        }
-
-        public readonly void ClosePath()
-        {
         }
     }
 }
