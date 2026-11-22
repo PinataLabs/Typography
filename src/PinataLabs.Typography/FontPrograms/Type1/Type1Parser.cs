@@ -80,8 +80,9 @@ internal static class Type1Parser
     /// <param name="data">The decrypted private part. The program takes ownership of it.</param>
     /// <param name="header">The cleartext values.</param>
     /// <param name="clearText">The cleartext that <paramref name="header"/> refers to.</param>
+    /// <param name="budget">The budget that the arrays of the program are charged to.</param>
     /// <returns>The font program.</returns>
-    public static Type1Program ParsePrivate(byte[] data, Type1Header header, ReadOnlySpan<byte> clearText)
+    public static Type1Program ParsePrivate(byte[] data, Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)
     {
         Type1Tokenizer tokenizer = new(data);
         int lenIV = 4;
@@ -112,11 +113,11 @@ internal static class Type1Parser
             }
             else if (subrs is null && key.SequenceEqual("Subrs"u8) && tokenizer.TryReadInt(out int subrCount))
             {
-                subrs = ReadSubrs(ref tokenizer, subrCount, data.Length);
+                subrs = ReadSubrs(ref tokenizer, subrCount, data.Length, ref budget);
             }
             else if (glyphs is null && key.SequenceEqual("CharStrings"u8) && tokenizer.TryReadInt(out _))
             {
-                glyphs = ReadCharStrings(ref tokenizer, out nameOffsets, out nameLengths);
+                glyphs = ReadCharStrings(ref tokenizer, out nameOffsets, out nameLengths, ref budget);
             }
         }
 
@@ -125,10 +126,10 @@ internal static class Type1Parser
             throw new InvalidFontFileException("The Type 1 font program has no CharStrings dictionary.");
         }
 
-        subrs ??= new Type1CharStringTable(0);
+        subrs ??= new Type1CharStringTable(0, ref budget);
         subrs.Decrypt(data, lenIV);
         glyphs.Decrypt(data, lenIV);
-        return new Type1Program(data, header, clearText, glyphs, nameOffsets, nameLengths, subrs);
+        return new Type1Program(data, header, clearText, glyphs, nameOffsets, nameLengths, subrs, ref budget);
     }
 
     private static bool TryReadNumbers(ref Type1Tokenizer tokenizer, scoped Span<double> numbers)
@@ -228,7 +229,7 @@ internal static class Type1Parser
         }
     }
 
-    private static Type1CharStringTable ReadSubrs(ref Type1Tokenizer tokenizer, int count, int dataLength)
+    private static Type1CharStringTable ReadSubrs(ref Type1Tokenizer tokenizer, int count, int dataLength, ref LoadBudget budget)
     {
         // Every entry takes text, so a count above the data length is not a count.
         if (count < 0 || count > dataLength)
@@ -236,7 +237,7 @@ internal static class Type1Parser
             throw new InvalidFontFileException("The Type 1 font program has a malformed Subrs array.");
         }
 
-        Type1CharStringTable subrs = new(count);
+        Type1CharStringTable subrs = new(count, ref budget);
         while (true)
         {
             int saved = tokenizer.Position;
@@ -276,9 +277,10 @@ internal static class Type1Parser
     private static Type1CharStringTable ReadCharStrings(
         ref Type1Tokenizer tokenizer,
         out int[] nameOffsets,
-        out byte[] nameLengths)
+        out byte[] nameLengths,
+        ref LoadBudget budget)
     {
-        // The dictionary size the font declares is a hint. Count the entries, then read them.
+        // The declared dictionary size is not trusted: the arrays are sized from the entries the data holds.
         int first = tokenizer.Position;
         int entries = 0;
         int notdef = -1;
@@ -299,9 +301,9 @@ internal static class Type1Parser
             throw new InvalidFontFileException("The Type 1 font program has no glyphs, or too many.");
         }
 
-        Type1CharStringTable glyphs = new(count);
-        nameOffsets = new int[count];
-        nameLengths = new byte[count];
+        Type1CharStringTable glyphs = new(count, ref budget);
+        nameOffsets = budget.Allocate<int>(count);
+        nameLengths = budget.Allocate<byte>(count);
         if (notdef < 0)
         {
             nameOffsets[0] = Type1Program.SynthesizedName;

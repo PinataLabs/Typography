@@ -42,7 +42,8 @@ internal sealed class Type1Program
         Type1CharStringTable glyphs,
         int[] nameOffsets,
         byte[] nameLengths,
-        Type1CharStringTable subrs)
+        Type1CharStringTable subrs,
+        ref LoadBudget budget)
     {
         this.data = data;
         this.glyphs = glyphs;
@@ -52,7 +53,7 @@ internal sealed class Type1Program
         this.FontMatrix = header.FontMatrix;
         this.FontBBox = header.FontBBox;
         this.PaintType = header.PaintType;
-        this.encoding = this.ResolveEncoding(header, clearText);
+        this.encoding = this.ResolveEncoding(header, clearText, ref budget);
     }
 
     /// <summary>
@@ -70,21 +71,10 @@ internal sealed class Type1Program
     public int GlyphCount => this.glyphs.Count;
 
     /// <summary>
-    /// Gets the exact number of bytes that the program keeps alive: its buffer and its arrays.
-    /// </summary>
-    public long RetainedByteCount
-        => this.data.Length
-        + this.glyphs.RetainedByteCount
-        + this.subrs.RetainedByteCount
-        + ((long)sizeof(int) * this.nameOffsets.Length)
-        + this.nameLengths.Length
-        + ((long)sizeof(ushort) * (this.encoding?.Length ?? 0));
-
-    /// <summary>
     /// Tells whether data starts like a Type 1 font program: a PFB segment, or a PostScript <c>%!</c> comment.
     /// </summary>
     /// <param name="data">The font file.</param>
-    /// <returns><see langword="true"/> if <see cref="Load(ReadOnlyMemory{byte})"/> should be tried.</returns>
+    /// <returns><see langword="true"/> if <see cref="Load"/> should be tried.</returns>
     public static bool IsType1(ReadOnlySpan<byte> data)
         => Type1Eexec.IsPfb(data) || (data.Length >= 2 && data[0] == (byte)'%' && data[1] == (byte)'!');
 
@@ -92,9 +82,14 @@ internal sealed class Type1Program
     /// Loads a Type 1 font program from PFB, PFA or PDF <c>/FontFile</c> data.
     /// </summary>
     /// <param name="data">The font file. The program does not keep it.</param>
+    /// <param name="budget">
+    /// The budget that every array the program keeps is charged to, before it is allocated.
+    /// The data is not charged, because the program does not keep it.
+    /// </param>
     /// <returns>The font program.</returns>
     /// <exception cref="InvalidFontFileException">The data is not a Type 1 font program, or is malformed.</exception>
-    public static Type1Program Load(ReadOnlyMemory<byte> data)
+    /// <exception cref="FontProgramTooLargeException">The program does not fit under the cap of the budget.</exception>
+    public static Type1Program Load(ReadOnlyMemory<byte> data, ref LoadBudget budget)
     {
         ReadOnlySpan<byte> file = data.Span;
         byte[]? privatePart = null;
@@ -102,7 +97,7 @@ internal sealed class Type1Program
         if (Type1Eexec.IsPfb(file))
         {
             clearText = Type1Eexec.GetPfbClearText(file, out int binaryPosition);
-            privatePart = Type1Eexec.DecryptPfbBinary(file, binaryPosition);
+            privatePart = Type1Eexec.DecryptPfbBinary(file, binaryPosition, ref budget);
         }
 
         Type1Header header = Type1Parser.ParseHeader(clearText);
@@ -114,10 +109,10 @@ internal sealed class Type1Program
                 throw new InvalidFontFileException("The data is not a Type 1 font program: it has no eexec section.");
             }
 
-            privatePart = Type1Eexec.DecryptSection(clearText.Slice(start));
+            privatePart = Type1Eexec.DecryptSection(clearText.Slice(start), ref budget);
         }
 
-        return Type1Parser.ParsePrivate(privatePart, header, clearText);
+        return Type1Parser.ParsePrivate(privatePart, header, clearText, ref budget);
     }
 
     /// <summary>
@@ -281,14 +276,14 @@ internal sealed class Type1Program
         return true;
     }
 
-    private ushort[]? ResolveEncoding(Type1Header header, ReadOnlySpan<byte> clearText)
+    private ushort[]? ResolveEncoding(Type1Header header, ReadOnlySpan<byte> clearText, ref LoadBudget budget)
     {
         if (header.EncodingKind == Type1EncodingKind.None)
         {
             return null;
         }
 
-        ushort[] glyphIds = new ushort[256];
+        ushort[] glyphIds = budget.Allocate<ushort>(256);
         Span<char> name = stackalloc char[byte.MaxValue];
         for (int code = 0; code < glyphIds.Length; code++)
         {

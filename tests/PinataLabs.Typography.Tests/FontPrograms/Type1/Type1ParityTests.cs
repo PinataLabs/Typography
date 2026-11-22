@@ -32,7 +32,7 @@ public class Type1ParityTests
     [Arguments("bchr8a.fontfile", "bchr8a.json", 229)]
     public async Task EveryGlyphMatchesFontTools(string fontFile, string fixtureFile, int glyphCount)
     {
-        Type1Program font = Type1Program.Load(Type1TestFonts.Read(fontFile));
+        Type1Program font = Type1TestFonts.Load(Type1TestFonts.Read(fontFile));
         Fixture fixture = Fixture.Read(fixtureFile);
 
         await Assert.That(fixture.Glyphs.Length).IsEqualTo(glyphCount);

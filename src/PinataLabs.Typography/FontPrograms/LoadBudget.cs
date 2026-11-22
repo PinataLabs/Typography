@@ -24,7 +24,7 @@ internal struct LoadBudget
     /// <summary>
     /// Initializes a new instance of the <see cref="LoadBudget"/> struct and charges the font data.
     /// </summary>
-    /// <param name="dataLength">The length of the font data, which the program keeps alive.</param>
+    /// <param name="dataLength">The length of the font data when the program keeps it alive, else 0.</param>
     /// <param name="maxRetainedBytes">The cap, or <see langword="null"/> for none.</param>
     /// <exception cref="FontProgramTooLargeException">The data alone is larger than the cap.</exception>
     public LoadBudget(int dataLength, long? maxRetainedBytes)

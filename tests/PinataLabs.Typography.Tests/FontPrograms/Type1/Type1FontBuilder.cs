@@ -120,7 +120,7 @@ internal sealed class Type1FontBuilder
         return this;
     }
 
-    public Type1Program Load() => Type1Program.Load(this.BuildPfa());
+    public Type1Program Load() => Type1TestFonts.Load(this.BuildPfa());
 
     public byte[] BuildClearText()
         => Encoding.Latin1.GetBytes("%!PS-AdobeFont-1.0: Synthetic 001.000\n11 dict begin\n" + this.ClearTextBody + "currentdict end\ncurrentfile eexec\n");

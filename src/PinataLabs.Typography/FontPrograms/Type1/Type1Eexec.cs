@@ -72,8 +72,9 @@ internal static class Type1Eexec
     /// </summary>
     /// <param name="pfb">The PFB file.</param>
     /// <param name="binaryPosition">The position of the first binary segment.</param>
+    /// <param name="budget">The budget that the decrypted private part is charged to.</param>
     /// <returns>The decrypted private part, or <see langword="null"/> when the file has no binary segment.</returns>
-    public static byte[]? DecryptPfbBinary(ReadOnlySpan<byte> pfb, int binaryPosition)
+    public static byte[]? DecryptPfbBinary(ReadOnlySpan<byte> pfb, int binaryPosition, ref LoadBudget budget)
     {
         int position = binaryPosition;
         int total = 0;
@@ -87,7 +88,7 @@ internal static class Type1Eexec
             return null;
         }
 
-        byte[] plain = AllocatePlain(total);
+        byte[] plain = AllocatePlain(total, ref budget);
         ushort r = EexecKey;
         int written = -EexecPrefixLength;
         position = binaryPosition;
@@ -106,8 +107,9 @@ internal static class Type1Eexec
     /// Decrypts an eexec section that is not in PFB binary segments.
     /// </summary>
     /// <param name="section">The data that follows the <c>eexec</c> operator, to the end of the file.</param>
+    /// <param name="budget">The budget that the decrypted private part is charged to.</param>
     /// <returns>The decrypted private part.</returns>
-    public static byte[] DecryptSection(ReadOnlySpan<byte> section)
+    public static byte[] DecryptSection(ReadOnlySpan<byte> section, ref LoadBudget budget)
     {
         int start = 0;
         while (start < section.Length && Type1Tokenizer.IsWhiteSpace(section[start]))
@@ -122,7 +124,7 @@ internal static class Type1Eexec
         int written = -EexecPrefixLength;
         if (!IsHex(section))
         {
-            byte[] binary = AllocatePlain(section.Length);
+            byte[] binary = AllocatePlain(section.Length, ref budget);
             foreach (byte cipher in section)
             {
                 Decrypt(cipher, binary, ref r, ref written);
@@ -131,7 +133,7 @@ internal static class Type1Eexec
             return binary;
         }
 
-        byte[] plain = AllocatePlain(CountHexDigits(section) / 2);
+        byte[] plain = AllocatePlain(CountHexDigits(section) / 2, ref budget);
         int high = -1;
         foreach (byte value in section)
         {
@@ -186,14 +188,14 @@ internal static class Type1Eexec
         r = (ushort)(((cipher + r) * C1) + C2);
     }
 
-    private static byte[] AllocatePlain(int cipherLength)
+    private static byte[] AllocatePlain(int cipherLength, ref LoadBudget budget)
     {
         if (cipherLength <= EexecPrefixLength)
         {
             throw new InvalidFontFileException("The Type 1 font program has an empty eexec section.");
         }
 
-        return new byte[cipherLength - EexecPrefixLength];
+        return budget.Allocate<byte>(cipherLength - EexecPrefixLength);
     }
 
     private static bool TryReadPfbSegment(ReadOnlySpan<byte> pfb, byte kind, scoped ref int position, out ReadOnlySpan<byte> segment)

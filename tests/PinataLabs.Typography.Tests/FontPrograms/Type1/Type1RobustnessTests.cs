@@ -169,7 +169,7 @@ public class Type1RobustnessTests
         Type1Program font;
         try
         {
-            font = Type1Program.Load(data);
+            font = Type1TestFonts.Load(data);
         }
         catch (InvalidFontFileException)
         {

@@ -15,16 +15,14 @@ internal sealed class Type1CharStringTable
     private readonly int[] offsets;
     private readonly int[] lengths;
 
-    public Type1CharStringTable(int count)
+    public Type1CharStringTable(int count, ref LoadBudget budget)
     {
-        this.offsets = new int[count];
-        this.lengths = new int[count];
+        this.offsets = budget.Allocate<int>(count);
+        this.lengths = budget.Allocate<int>(count);
         this.lengths.AsSpan().Fill(Missing);
     }
 
     public int Count => this.offsets.Length;
-
-    public long RetainedByteCount => 2L * sizeof(int) * this.offsets.Length;
 
     public void Set(int index, int offset, int length)
     {

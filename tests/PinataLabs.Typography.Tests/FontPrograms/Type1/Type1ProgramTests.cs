@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using PinataLabs.Typography.FontPrograms;
 using PinataLabs.Typography.FontPrograms.Type1;
 
 namespace PinataLabs.Typography.Tests.FontPrograms.Type1;
@@ -30,7 +31,7 @@ public class Type1ProgramTests
 
         foreach (byte[] container in containers)
         {
-            Type1Program font = Type1Program.Load(container);
+            Type1Program font = Type1TestFonts.Load(container);
 
             await Assert.That(font.GlyphCount).IsEqualTo(2);
             await Assert.That(Type1CharStringEngineTests.Outline(font, "A")).IsEqualTo(Square);
@@ -43,7 +44,7 @@ public class Type1ProgramTests
         byte[] pfa = SquareFont().BuildPfa(hex: true);
         byte[] pfb = [0x80, 1, (byte)pfa.Length, (byte)(pfa.Length >> 8), 0, 0, .. pfa, 0x80, 3];
 
-        await Assert.That(Type1CharStringEngineTests.Outline(Type1Program.Load(pfb), "A")).IsEqualTo(Square);
+        await Assert.That(Type1CharStringEngineTests.Outline(Type1TestFonts.Load(pfb), "A")).IsEqualTo(Square);
     }
 
     [Test]
@@ -163,7 +164,7 @@ public class Type1ProgramTests
         => await Assert.That(() => SquareFont().Load().TryGetBuiltInEncoding(new ushort[255])).Throws<ArgumentException>();
 
     [Test]
-    public async Task RetainedByteCountIsTheBufferAndTheArrays()
+    public async Task TheBudgetIsChargedTheBufferAndTheArrays()
     {
         Type1FontBuilder builder = SquareFont();
         builder.AddSubr("return");
@@ -171,13 +172,20 @@ public class Type1ProgramTests
         builder.AddSubr("return");
         const int glyphs = 2;
         const int subrs = 3;
-        long expected = builder.BuildPrivate().Length
+
+        // Eight arrays: the buffer, two for each of the two charstring tables, the name offsets and lengths, and the encoding.
+        long expected = (8 * LoadBudget.ArrayOverhead)
+            + builder.BuildPrivate().Length
             + (glyphs * ((2 * sizeof(int)) + sizeof(int) + sizeof(byte)))
             + (subrs * 2 * sizeof(int))
             + (256 * sizeof(ushort));
 
-        await Assert.That(builder.Load().RetainedByteCount).IsEqualTo(expected);
-        await Assert.That(Type1Program.Load(builder.BuildPfb()).RetainedByteCount).IsEqualTo(expected);
+        foreach (byte[] container in (byte[][])[builder.BuildPfa(), builder.BuildPfa(hex: false), builder.BuildPfb()])
+        {
+            LoadBudget budget = new(0, null);
+            Type1Program.Load(container, ref budget);
+            await Assert.That(budget.RetainedBytes).IsEqualTo(expected);
+        }
     }
 
     [Test]
@@ -200,7 +208,7 @@ public class Type1ProgramTests
     [Arguments("%!PS-AdobeFont-1.0\ncurrentfile eexec\n0123456789abcdef0123456789abcdef")]
     [Arguments("%!PS-AdobeFont-1.0\n/FontMatrix [0.001 0 0 oops 0 0] def currentfile eexec\n0123456789abcdef")]
     public async Task DataThatIsNotATypeOneFontIsRejected(string text)
-        => await Assert.That(() => Type1Program.Load(Encoding.Latin1.GetBytes(text))).Throws<InvalidFontFileException>();
+        => await Assert.That(() => Type1TestFonts.Load(Encoding.Latin1.GetBytes(text))).Throws<InvalidFontFileException>();
 
     [Test]
     public async Task AFontWithoutGlyphsIsRejected()
