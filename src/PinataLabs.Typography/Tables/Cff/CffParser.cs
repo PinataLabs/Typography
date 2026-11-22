@@ -126,16 +126,16 @@ internal static class CffParser
         Matrix3x2 fontMatrix = topMatrix ?? Matrix3x2.CreateScale(0.001F);
 
         // A font that is not CID-keyed has one Font DICT: its Top DICT.
-        CffFontDict[] fontDicts;
+        CffIndex fdArray = fdArrayOffset == 0 ? default : CffIndex.Read(data, fdArrayOffset, 2, out _);
+
+        // Both counts are known before either array exists, so a refusal reports the whole size.
+        (CffFontDict[] fontDicts, ushort[] charset) = budget.Allocate<CffFontDict, ushort>(fdArrayOffset == 0 ? 1 : fdArray.Count, charStrings.Count);
         if (fdArrayOffset == 0)
         {
-            fontDicts = budget.Allocate<CffFontDict>(1);
             fontDicts[0] = privateSize == 0 ? default : ReadPrivateDict(data, privateOffset, privateSize, null, null);
         }
         else
         {
-            CffIndex fdArray = CffIndex.Read(data, fdArrayOffset, 2, out _);
-            fontDicts = budget.Allocate<CffFontDict>(fdArray.Count);
             for (int i = 0; i < fontDicts.Length; i++)
             {
                 if (!fdArray.TryGet(i, out ReadOnlyMemory<byte> fontDict))
@@ -152,15 +152,15 @@ internal static class CffParser
             CffFont.ValidateFdSelect(span, fdSelectOffset, charStrings.Count);
         }
 
-        ushort[] charset = ReadCharset(span, charsetOffset, budget.Allocate<ushort>(charStrings.Count), isCidKeyed);
+        ReadCharset(span, charsetOffset, charset, isCidKeyed);
 
         return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, fontMatrix, encodingOffset, fontDicts, fdSelectOffset);
     }
 
     /// <summary>
-    /// Reads the charset: for each glyph its SID, or its CID in a CID-keyed font. Glyph 0 is always 0.
+    /// Reads the charset into the array: for each glyph its SID, or its CID in a CID-keyed font. Glyph 0 is always 0.
     /// </summary>
-    private static ushort[] ReadCharset(ReadOnlySpan<byte> data, int offset, ushort[] charset, bool isCidKeyed)
+    private static void ReadCharset(ReadOnlySpan<byte> data, int offset, ushort[] charset, bool isCidKeyed)
     {
         int glyphCount = charset.Length;
         if (offset <= 2)
@@ -180,7 +180,7 @@ internal static class CffParser
                 charset[i] = i < predefined.Length ? predefined[i] : i < identity ? (ushort)i : (ushort)0;
             }
 
-            return charset;
+            return;
         }
 
         ReadOnlySpan<byte> table = data.Slice(offset);
@@ -232,8 +232,6 @@ internal static class CffParser
             default:
                 throw new InvalidFontFileException($"CFF charset format {format} is not supported.");
         }
-
-        return charset;
     }
 
     private static CffFontDict ReadFontDict(ReadOnlyMemory<byte> data, ReadOnlySpan<byte> fontDict, Matrix3x2? topMatrix, Matrix3x2 fontMatrix)

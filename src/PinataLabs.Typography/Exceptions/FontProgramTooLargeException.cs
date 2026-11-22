@@ -18,9 +18,10 @@ public sealed class FontProgramTooLargeException : InvalidFontFileException
     }
 
     /// <summary>
-    /// Gets the bytes that the font program would have retained at the allocation that was refused.
-    /// This is a lower bound of its full size: the load stops there.
-    /// A font that is larger than the limit by its data alone reports the length of its data.
+    /// Gets the bytes that the font program would have retained.
+    /// A load with <see cref="MaxRetainedBytes"/> set to this value succeeds, except in one case.
+    /// A font whose data alone is larger than the limit is refused before it is read, so this is the length of its data.
+    /// For a CFF font, which also retains arrays, that is a lower bound of the full size.
     /// </summary>
     public long RetainedByteCount { get; }
 

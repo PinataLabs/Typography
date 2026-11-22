@@ -52,6 +52,22 @@ internal struct LoadBudget
         return new T[length];
     }
 
+    /// <summary>
+    /// Allocates two arrays that the program keeps, after it checks the cap once for both.
+    /// A refusal then carries the size of both, so a retry with that size as the cap succeeds.
+    /// </summary>
+    /// <typeparam name="TFirst">The element type of the first array.</typeparam>
+    /// <typeparam name="TSecond">The element type of the second array.</typeparam>
+    /// <param name="firstLength">The number of elements of the first array.</param>
+    /// <param name="secondLength">The number of elements of the second array.</param>
+    /// <returns>The new arrays.</returns>
+    /// <exception cref="FontProgramTooLargeException">The arrays do not fit under the cap.</exception>
+    public (TFirst[] First, TSecond[] Second) Allocate<TFirst, TSecond>(int firstLength, int secondLength)
+    {
+        this.Charge(ArrayOverhead + ((long)firstLength * Unsafe.SizeOf<TFirst>()) + ArrayOverhead + ((long)secondLength * Unsafe.SizeOf<TSecond>()));
+        return (new TFirst[firstLength], new TSecond[secondLength]);
+    }
+
     private void Charge(long bytes)
     {
         long total = this.RetainedBytes + bytes;

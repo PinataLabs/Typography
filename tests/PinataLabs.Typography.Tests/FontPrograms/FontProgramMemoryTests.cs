@@ -124,6 +124,26 @@ public class FontProgramMemoryTests
     }
 
     [Test]
+    [Arguments("SourceSansPro-Regular.otf")]
+    [Arguments("FDArrayTest257.otf")]
+    public async Task ARefusalCarriesTheSizeThatLoads(string fontFile)
+    {
+        byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
+        long size = FontProgram.Load(data).RetainedByteCount;
+        long[] limits = [data.Length, data.Length + 1, data.Length + ((size - data.Length) / 2), size - ArrayHeaderBytes - 1, size - 1];
+
+        foreach (long limit in limits)
+        {
+            FontProgramTooLargeException refusal = (await Assert.That(
+                () => FontProgram.Load(data, new FontProgramOptions { MaxRetainedBytes = limit }))
+                .Throws<FontProgramTooLargeException>())!;
+
+            await Assert.That(refusal.RetainedByteCount).IsEqualTo(size);
+            await Assert.That(FontProgram.Load(data, new FontProgramOptions { MaxRetainedBytes = refusal.RetainedByteCount }).RetainedByteCount).IsEqualTo(size);
+        }
+    }
+
+    [Test]
     public async Task ALimitBelowTheDataLengthRefusesBeforeParsing()
     {
         // Zeros are not a font, so a parse would throw the base exception. Only the size check throws the derived one.
