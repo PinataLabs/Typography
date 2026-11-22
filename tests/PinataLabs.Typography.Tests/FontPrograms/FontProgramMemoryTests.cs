@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -74,12 +75,14 @@ public class FontProgramMemoryTests
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
         FontProgram font = FontProgram.Load(data);
         long before = font.RetainedByteCount;
-        long reachableBefore = MeasureOwnedBytes(font, data);
+        long bytesBefore = Walk(font, data, out HashSet<object> objectsBefore);
 
         Use(font);
 
+        long bytesAfter = Walk(font, data, out HashSet<object> objectsAfter);
         await Assert.That(font.RetainedByteCount).IsEqualTo(before);
-        await Assert.That(MeasureOwnedBytes(font, data)).IsEqualTo(reachableBefore);
+        await Assert.That(bytesAfter).IsEqualTo(bytesBefore);
+        await Assert.That(objectsAfter.SetEquals(objectsBefore)).IsTrue();
     }
 
     [Test]
@@ -183,6 +186,91 @@ public class FontProgramMemoryTests
         GC.KeepAlive(warm);
     }
 
+    [Test]
+    public async Task StaticFieldsHoldOnlyReadOnlyTables()
+    {
+        List<string> offenders = [];
+        foreach (Type type in FontProgramTypes())
+        {
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+            {
+                string name = $"{(type.DeclaringType is null ? type.Name : type.DeclaringType.Name + "+" + type.Name)}.{field.Name}";
+                if (field.IsLiteral || type.Name == "<>c" || HoldsNoReferences(field.FieldType) || (ReadOnlyTables.Contains(name) && field.IsInitOnly && IsImmutableTable(field.FieldType)))
+                {
+                    continue;
+                }
+
+                offenders.Add(name);
+            }
+        }
+
+        await Assert.That(offenders).IsEmpty();
+    }
+
+    // A static of a type with no references is a fixed number of bytes, so it cannot grow.
+    // The compiler caches each static lambda in one delegate for the process, whatever the number of fonts.
+    // A static that use writes is memory that RetainedByteCount does not count and the walk cannot see.
+    // These tables are filled once by their initializer and never written, and their elements are values or strings.
+    private static readonly HashSet<string> ReadOnlyTables =
+    [
+        "MacGlyphNames.Names",
+        "CffPredefinedTables.ExpertCharset",
+        "CffPredefinedTables.ExpertSubsetCharset",
+        "CffPredefinedTables.StandardEncoding",
+        "CffPredefinedTables.ExpertEncoding",
+        "CffStandardStrings.StringIdentifierToString",
+        "CffStandardStrings.<Count>k__BackingField",
+    ];
+
+    private static bool HoldsNoReferences(Type type)
+        => type.IsPrimitive
+        || type.IsEnum
+        || (type.IsValueType && type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).All(f => HoldsNoReferences(f.FieldType)));
+
+    private static bool IsImmutableTable(Type type)
+    {
+        Type item = type.IsArray ? type.GetElementType()! : type;
+        return item.IsPrimitive || item == typeof(string);
+    }
+
+    private static HashSet<Type> FontProgramTypes()
+    {
+        Assembly assembly = typeof(FontProgram).Assembly;
+        HashSet<Type> types = [];
+        Queue<Type> pending = new(assembly.GetTypes().Where(t =>
+            t.Namespace is "PinataLabs.Typography.FontPrograms" or "PinataLabs.Typography.Tables.Cff" || t == typeof(FontProgram)));
+        while (pending.Count > 0)
+        {
+            Type type = pending.Dequeue();
+            if (type.Assembly != assembly || !types.Add(type))
+            {
+                continue;
+            }
+
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+            {
+                Type fieldType = field.FieldType;
+                while (fieldType.HasElementType)
+                {
+                    fieldType = fieldType.GetElementType()!;
+                }
+
+                pending.Enqueue(fieldType.IsGenericType ? fieldType.GetGenericTypeDefinition() : fieldType);
+                foreach (Type argument in fieldType.IsGenericType ? fieldType.GetGenericArguments() : [])
+                {
+                    pending.Enqueue(argument);
+                }
+            }
+
+            if (type.BaseType is not null)
+            {
+                pending.Enqueue(type.BaseType);
+            }
+        }
+
+        return types;
+    }
+
     private static long FontDictRecordSize()
     {
         Type record = typeof(FontProgram).Assembly.GetType("PinataLabs.Typography.Tables.Cff.CffFontDict")!;
@@ -209,41 +297,45 @@ public class FontProgramMemoryTests
         font.TryGetBuiltInEncoding(encoding);
     }
 
-    // Sums the array headers and elements reachable from the program, not counting the font data.
-    // It reads the fields, so a field that a later change adds is counted here and the test fails if the property misses it.
+    // Walks the instance fields from the program and sums the array headers and elements it reaches, not counting the font data.
+    // It sees a reference that a field holds, so a cache in an instance field fails the test when use changes the objects reachable.
+    // It cannot see a static field, so StaticFieldsHoldOnlyReadOnlyTables covers those.
     private static long MeasureOwnedBytes(FontProgram font, byte[] data)
+        => Walk(font, data, out _);
+
+    private static long Walk(FontProgram font, byte[] data, out HashSet<object> reachable)
     {
-        HashSet<object> seen = new(ReferenceEqualityComparer.Instance) { data };
+        reachable = new(ReferenceEqualityComparer.Instance) { data };
         long total = 0;
-        Visit(font, seen, ref total);
+        Visit(font, reachable, ref total);
         return total;
     }
 
     private static void Visit(object? value, HashSet<object> seen, ref long total)
     {
-        if (value is null || value is Type or Delegate)
-        {
-            return;
-        }
-
-        if (!value.GetType().IsValueType && !seen.Add(value))
+        if (value is null || !seen.Add(value))
         {
             return;
         }
 
         switch (value)
         {
+            case Type:
+                break;
+            case Delegate action:
+                Visit(action.Target, seen, ref total);
+                break;
             case string text:
                 total += ArrayHeaderBytes + (2L * text.Length);
                 break;
             case Array array:
                 Type element = array.GetType().GetElementType()!;
                 total += ArrayHeaderBytes + ((long)array.Length * (int)SizeOfMethod.MakeGenericMethod(element).Invoke(null, null)!);
-                if (!element.IsPrimitive)
+                if (!element.IsPrimitive && !element.IsEnum)
                 {
                     foreach (object? item in array)
                     {
-                        Visit(item, seen, ref total);
+                        VisitElement(item, element, seen, ref total);
                     }
                 }
 
@@ -254,21 +346,28 @@ public class FontProgramMemoryTests
         }
     }
 
+    // A value read from a value-typed slot is a fresh box on every read, so only the references inside it count.
+    private static void VisitElement(object? value, Type declared, HashSet<object> seen, ref long total)
+    {
+        if (!declared.IsValueType)
+        {
+            Visit(value, seen, ref total);
+        }
+        else if (value is not null)
+        {
+            VisitFields(value, seen, ref total);
+        }
+    }
+
     private static void VisitFields(object value, HashSet<object> seen, ref long total)
     {
-        Type type = value.GetType();
-        if (type.IsPrimitive || type.IsEnum)
-        {
-            return;
-        }
-
-        for (Type? t = type; t is not null; t = t.BaseType)
+        for (Type? t = value.GetType(); t is not null; t = t.BaseType)
         {
             foreach (FieldInfo field in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
             {
-                if (!field.FieldType.IsPrimitive && !field.FieldType.IsEnum)
+                if (!field.FieldType.IsPrimitive && !field.FieldType.IsEnum && !field.FieldType.IsPointer)
                 {
-                    Visit(field.GetValue(value), seen, ref total);
+                    VisitElement(field.GetValue(value), field.FieldType, seen, ref total);
                 }
             }
         }
