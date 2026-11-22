@@ -48,9 +48,10 @@ Namespace `PinataLabs.Typography`.
 public sealed class FontProgram
 {
     // Sniffs the format from the bytes, never from the caller. PR 1: sfnt with glyf (TrueType)
-    // and sfnt 'OTTO' with a 'CFF ' table. Rejects WOFF, WOFF2, TTC, CFF2 and anything else.
-    // Retains `data` and reads it on every call. Does not copy. The caller must not mutate
-    // or recycle the buffer while the font is reachable.
+    // and sfnt 'OTTO' with a 'CFF ' table. PR 3: Type 1 (PFB, PFA, PDF /FontFile).
+    // Rejects WOFF, WOFF2, TTC, CFF2 and anything else.
+    // TrueType and CFF retain `data` and read it on every call. They do not copy. The caller must
+    // not mutate or recycle the buffer while the font is reachable. Type 1 does not retain `data`.
     // Throws InvalidFontFileException, and no other type, for unsupported or malformed data.
     public static FontProgram Load(ReadOnlyMemory<byte> data);
 
@@ -58,7 +59,7 @@ public sealed class FontProgram
     public bool IsCidKeyed { get; }          // CID-keyed CFF. Such a program has no glyph names.
     public int GlyphCount { get; }           // glyph IDs are 0 .. GlyphCount - 1
     public Matrix3x2 FontMatrix { get; }     // glyph space -> em. TrueType Scale(1/unitsPerEm);
-                                             // CFF Top DICT FontMatrix (default 0.001).
+                                             // CFF Top DICT FontMatrix, Type 1 /FontMatrix (default 0.001).
                                              // Holds for every glyph (see "One matrix").
 
     // Unhinted outline in glyph space, y up. Each contour is MoveTo, segments, ClosePath.
@@ -66,15 +67,16 @@ public sealed class FontProgram
     // malformed glyph data; the sink may then hold a partial outline. Never throws for bad data.
     public bool TryWriteOutline<TSink>(ushort glyphId, ref TSink sink) where TSink : IGlyphOutlineSink;
 
-    public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth); // hmtx, else charstring width
+    public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth); // hmtx, else charstring width (Type 1: hsbw/sbw)
     public bool TryGetGlyphId(ReadOnlySpan<char> glyphName, out ushort glyphId); // ordinal; lowest ID wins
     public string? GetGlyphName(ushort glyphId);                                // null when unnamed
     public bool TryGetGlyphIdForCid(int cid, out ushort glyphId); // charset when CID-keyed, else identity
 
     // Fills glyphIds[0..256) with the glyph for each code under the program's own encoding,
     // 0 where unencoded. CFF: Standard, Expert or custom (formats 0/1, supplements) through the
-    // charset. TrueType: cmap (3,0) by low byte, else (1,0). False and nothing written when
-    // the program has none (CID-keyed CFF, no such cmap). Throws ArgumentException if glyphIds.Length < 256.
+    // charset. TrueType: cmap (3,0) by low byte, else (1,0). Type 1: /Encoding, StandardEncoding or
+    // the font's own array. False and nothing written when the program has none (CID-keyed CFF,
+    // no such cmap, no /Encoding). Throws ArgumentException if glyphIds.Length < 256.
     public bool TryGetBuiltInEncoding(Span<ushort> glyphIds);
 }
 
@@ -87,7 +89,7 @@ public interface IGlyphOutlineSink
     void ClosePath();
 }
 
-public enum FontProgramFormat { TrueType = 0, Cff = 1 } // PR 3 adds Type1 = 2
+public enum FontProgramFormat { TrueType = 0, Cff = 1, Type1 = 2 } // Type1 added by PR 3
 ```
 
 PR 2 (#75) adds the following. The guarantee covers `FontProgram` only. The layout API keeps a cache that grows after load and has no such bound.
@@ -103,7 +105,19 @@ public sealed class FontProgramTooLargeException : InvalidFontFileException
 }
 ```
 
-`RetainedByteCount` is `data.Length`, plus for each array the program allocated, 24 bytes of array header plus the size of its elements. A slice of a larger array keeps the whole array alive, and only the slice is counted. A TrueType program has no array. A CFF program has the charset (`ushort[GlyphCount]`) and one `CffFontDict[]` with one record per Font DICT. The objects of the program (the `FontProgram`, its TrueType or CFF program and the parsed CFF font) are not counted. They are a fixed amount per font: a load allocated under 320 bytes for them on 64-bit CoreCLR, and callers can add 1024 bytes per font. The element and record sizes are `Unsafe.SizeOf` on the running runtime. Only the 24-byte array header is the 64-bit CoreCLR figure, and another runtime (Mono, IL2CPP, 32-bit) may differ by a few bytes per array. Every array on the load path comes from one internal `LoadBudget`, which charges it before it allocates and throws when the charge passes the cap. `data.Length` is charged first, so a font larger than the cap is refused before any parsing. A CFF font charges its charset and its Font DICT array in one call after it reads both counts, so every other refusal carries the full retained size, and a load with that size as the cap succeeds. A refusal on the data length alone carries `data.Length`, a lower bound for a CFF font. A test sums the arrays reachable from a loaded program by reflection and compares the sum with the property, so a cached field that a later change adds fails it. PR 3 (#73) adds `FontProgramFormat.Type1` and nothing else. Bare CFF (#70) adds nothing public.
+`RetainedByteCount` is `data.Length` when the program retains the input buffer, plus for each array the program allocated, 24 bytes of array header plus the size of its elements. A slice of a larger array keeps the whole array alive, and only the slice is counted. A TrueType program has no array. A CFF program has the charset (`ushort[GlyphCount]`) and one `CffFontDict[]` with one record per Font DICT. The objects of the program (the `FontProgram`, its TrueType, CFF or Type 1 program and the parsed CFF font) are not counted. They are a fixed amount per font: a load allocated under 320 bytes for them on 64-bit CoreCLR, and callers can add 1024 bytes per font. The element and record sizes are `Unsafe.SizeOf` on the running runtime. Only the 24-byte array header is the 64-bit CoreCLR figure, and another runtime (Mono, IL2CPP, 32-bit) may differ by a few bytes per array. Every array on the load path comes from one internal `LoadBudget`, which charges it before it allocates and throws when the charge passes the cap. For TrueType and CFF, `data.Length` is charged first, so a font larger than the cap is refused before any parsing. A CFF font charges its charset and its Font DICT array in one call after it reads both counts, so every other refusal carries the full retained size, and a load with that size as the cap succeeds. A refusal on the data length alone carries `data.Length`, a lower bound for a CFF font. A test sums the arrays reachable from a loaded program by reflection, plus `data.Length` when the program reaches the input, and compares the sum with the property, so a cached field that a later change adds fails it. Bare CFF (#70) adds nothing public.
+
+PR 3 (#73) adds `FontProgramFormat.Type1` and nothing else public. `Load` takes Type 1 when the data starts with a PFB segment marker (`0x80 0x01`) or with `%!`. No sfnt tag starts with either, so the order of the checks does not change the result. The loader finds the `eexec` section itself, so a PDF `/FontFile` stream loads whatever its `/Length1`, `/Length2` and `/Length3` say, and `Load` takes no lengths. A Type 1 program does not retain the input. It owns one buffer, the decrypted private part with each charstring decrypted in place, and arrays of offsets into it:
+
+- the private part: `byte[]`, its length known from the located eexec section before decryption (binary bytes, or hex digits / 2, less the 4 random bytes);
+- the glyph charstrings: two `int[GlyphCount]` (offset, length);
+- the subroutines: two `int[/Subrs count]`, with a count above the length of the private part refused;
+- the glyph names: `int[GlyphCount]` offsets into the private part and `byte[GlyphCount]` lengths;
+- the built-in encoding: `ushort[256]`, only when the font has an `/Encoding`.
+
+`GlyphCount` comes from the `/CharStrings` entries that the data holds, counted before any array is allocated, not from the declared dictionary size. Each array is charged to the budget before it is allocated, so the cap refuses a Type 1 font at the decrypted buffer, before decryption. The cleartext header lives on the stack. Only a PFB that splits its cleartext over several segments makes a transient copy of the cleartext, which is no larger than the input.
+
+Type 1 glyph IDs: glyph 0 is `.notdef`, then the other glyphs in `/CharStrings` order. A font without `.notdef` gets an empty synthesized one at glyph 0, with no outline and advance 0. `TryGetGlyphIdForCid` is identity and `IsCidKeyed` is false. The font name, `/PaintType` and `/FontBBox` are not exposed.
 
 ## Load-bearing decisions
 
@@ -134,6 +148,10 @@ src/PinataLabs.Typography/
     TrueTypeGlyphDecoder.cs   streams glyf to the sink, no allocation; composites depth <= 16
     TransformedSink.cs
     MacGlyphNames.cs          the 258 standard Macintosh glyph names (post formats 1 and 2)
+    LoadBudget.cs             charges each retained array before it is allocated (PR 2)
+    NullGlyphOutlineSink.cs   discards an outline, for a charstring run only for its width
+    Type1/                    PR 3: Type1Program, eexec decryption, cleartext and private-part
+                              parser, tokenizer, Type 1 charstring engine (flex OtherSubrs, seac)
   Tables/Cff/
     CffParser.cs              refactored in place: parses over memory into CffIndex views, keeps
                               FontMatrix (top and per FD), per-FD widths and subrs, charset as SID
@@ -189,4 +207,3 @@ The implementation made these local choices where the spec was silent.
 ## Open
 
 - Unicode cmap (3,1) lookup for non-symbolic TrueType in PDFs is not covered by #71 or #72. Tracked as its own issue.
-- Type 1 glyph ID order: `.notdef` first, then `/CharStrings` order. fontTools keys Type 1 glyphs by name, so PR 3 pins and documents this.
