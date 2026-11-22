@@ -4,6 +4,7 @@
 using System;
 using System.Numerics;
 using PinataLabs.Typography.FontPrograms;
+using PinataLabs.Typography.FontPrograms.Type1;
 
 namespace PinataLabs.Typography;
 
@@ -17,13 +18,14 @@ namespace PinataLabs.Typography;
 /// glyph lookup by name and by CID, and the encoding that the font carries.
 /// </para>
 /// <para>
-/// A font program keeps the data that it was loaded from and reads that data on each call.
-/// It holds no state that changes after load, so one instance can serve many threads at once.
+/// A TrueType or CFF font program keeps the data that it was loaded from and reads that data on each call.
+/// A Type 1 font program keeps a decrypted copy of the part that holds its glyphs, and not the data.
+/// A font program holds no state that changes after load, so one instance can serve many threads at once.
 /// </para>
 /// </remarks>
 public sealed class FontProgram
 {
-    // A TrueTypeProgram or a CffProgram. Each member selects on the type, because a generic virtual
+    // A TrueTypeProgram, a CffProgram or a Type1Program. Each member selects on the type, because a generic virtual
     // method with a struct type argument does not work with every ahead-of-time compiler.
     private readonly object program;
 
@@ -46,6 +48,15 @@ public sealed class FontProgram
         this.IsCidKeyed = program.Font.IsCidKeyed;
     }
 
+    private FontProgram(Type1Program program, long retainedByteCount)
+    {
+        this.RetainedByteCount = retainedByteCount;
+        this.program = program;
+        this.Format = FontProgramFormat.Type1;
+        this.GlyphCount = program.GlyphCount;
+        this.FontMatrix = program.FontMatrix;
+    }
+
     /// <summary>
     /// Gets the format of the outlines.
     /// </summary>
@@ -65,7 +76,8 @@ public sealed class FontProgram
     /// <summary>
     /// Gets the matrix that maps glyph space to ems. It holds for every glyph of the program.
     /// For TrueType it scales by one over the units per em.
-    /// For CFF it is the FontMatrix of the Top DICT, which by default scales by 0.001.
+    /// For CFF it is the FontMatrix of the Top DICT, and for Type 1 the <c>/FontMatrix</c> of the font.
+    /// Both scale by 0.001 by default.
     /// </summary>
     public Matrix3x2 FontMatrix { get; }
 
@@ -74,24 +86,29 @@ public sealed class FontProgram
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The value is the length of the data that was passed to <c>Load</c>, plus, for each array that the
-    /// program allocated, 24 bytes for the array header plus the size of its elements.
+    /// The value is the length of the data that was passed to <c>Load</c> when the program keeps that data,
+    /// plus, for each array that the program allocated, 24 bytes for the array header plus the size of its elements.
     /// A TrueType program allocates no array. A CFF program allocates one array of 2 bytes per glyph
     /// for its charset and one array of Font DICT records, one record for each Font DICT.
+    /// A Type 1 program allocates the decrypted private part of the font, which holds the glyphs, two arrays of
+    /// 4 bytes per glyph and two of 4 bytes per subroutine for where they lie in it, one array of 4 bytes and one of
+    /// 1 byte per glyph for the glyph names, and one array of 256 glyph IDs for its encoding when it has one.
     /// The program makes no other allocation that outlives <c>Load</c>, and it never caches.
     /// </para>
     /// <para>
-    /// The program keeps the memory that it was given, so it counts the length of that memory.
+    /// A TrueType or CFF program keeps the memory that it was given, so it counts the length of that memory.
     /// When the memory is a slice of a larger array, the whole array stays alive and only the slice is counted.
+    /// A Type 1 program does not keep the memory, so it does not count it.
     /// </para>
     /// <para>
     /// The size of each element, and of a Font DICT record, is what <c>Unsafe.SizeOf</c> gives on the running runtime.
     /// The array header is the 24 bytes of 64-bit CoreCLR. Another runtime, such as Mono, IL2CPP or a 32-bit process,
-    /// may use a few bytes more or less for each array, and a program has at most two.
+    /// may use a few bytes more or less for each array. A TrueType or CFF program has at most two arrays and a Type 1
+    /// program at most eight.
     /// </para>
     /// <para>
-    /// The objects of the program itself are not counted: the <see cref="FontProgram"/>, its TrueType or CFF program,
-    /// and the parsed CFF font. They are a fixed amount for each font whatever its size.
+    /// The objects of the program itself are not counted: the <see cref="FontProgram"/>, its TrueType, CFF or Type 1
+    /// program, and the parsed CFF font. They are a fixed amount for each font whatever its size.
     /// Measured on 64-bit CoreCLR, a load allocated under 320 bytes for them, whatever the font.
     /// A caller that bounds the memory of many fonts can add 1024 bytes for each font.
     /// </para>
@@ -102,12 +119,16 @@ public sealed class FontProgram
     /// Loads a font program. The format is detected from the data.
     /// </summary>
     /// <remarks>
-    /// The supported formats are an sfnt file with TrueType outlines in a 'glyf' table, and an
-    /// OpenType file with a 'CFF ' table. WOFF, WOFF2, font collections and CFF2 are not supported.
+    /// The supported formats are an sfnt file with TrueType outlines in a 'glyf' table, an
+    /// OpenType file with a 'CFF ' table, and a Type 1 font as a PFB file, a PFA file or the stream of a
+    /// PDF <c>/FontFile</c>. WOFF, WOFF2, font collections and CFF2 are not supported.
+    /// A Type 1 font is found from its data alone, so the <c>/Length1</c>, <c>/Length2</c> and <c>/Length3</c>
+    /// of a PDF stream are not needed.
     /// </remarks>
     /// <param name="data">
-    /// The font file. The program keeps this memory and reads it on each call. It does not copy it.
-    /// Do not change or reuse the memory while the program is in use.
+    /// The font file. A TrueType or CFF program keeps this memory and reads it on each call. It does not copy it.
+    /// Do not change or reuse the memory while the program is in use. A Type 1 program does not keep the memory
+    /// after <c>Load</c> returns.
     /// </param>
     /// <returns>The <see cref="FontProgram"/>.</returns>
     /// <exception cref="InvalidFontFileException">The data is malformed or is not in a supported format.</exception>
@@ -138,6 +159,11 @@ public sealed class FontProgram
 
     private static FontProgram LoadCore(ReadOnlyMemory<byte> data, long? maxRetainedBytes)
     {
+        if (Type1Program.IsType1(data.Span))
+        {
+            return LoadType1(data, maxRetainedBytes);
+        }
+
         LoadBudget budget = new(data.Length, maxRetainedBytes);
         SfntDirectory directory = SfntDirectory.Read(data);
         return directory.Version switch
@@ -171,6 +197,7 @@ public sealed class FontProgram
         {
             TrueTypeProgram trueType => TrueTypeGlyphDecoder.TryWriteOutline(trueType, glyphId, ref sink),
             CffProgram cff => cff.Font.TryWriteOutline(glyphId, ref sink),
+            Type1Program type1 => type1.TryWriteOutline(glyphId, ref sink),
             _ => false,
         };
 
@@ -180,9 +207,17 @@ public sealed class FontProgram
         return new FontProgram(program, budget.RetainedBytes);
     }
 
+    private static FontProgram LoadType1(ReadOnlyMemory<byte> data, long? maxRetainedBytes)
+    {
+        LoadBudget budget = new(0, maxRetainedBytes);
+        Type1Program program = Type1Program.Load(data, ref budget);
+        return new FontProgram(program, budget.RetainedBytes);
+    }
+
     /// <summary>
     /// Gets the advance width of a glyph in glyph space.
     /// The width comes from the 'hmtx' table, or from the charstring of a CFF glyph when the font has no 'hmtx' table.
+    /// For Type 1 it comes from the <c>hsbw</c> or <c>sbw</c> of the charstring.
     /// </summary>
     /// <param name="glyphId">The glyph ID.</param>
     /// <param name="advanceWidth">The advance width.</param>
@@ -197,6 +232,7 @@ public sealed class FontProgram
         {
             TrueTypeProgram trueType => trueType.TryGetAdvanceWidth(glyphId, out advanceWidth),
             CffProgram cff => cff.TryGetAdvanceWidth(glyphId, out advanceWidth),
+            Type1Program type1 => type1.TryGetAdvanceWidth(glyphId, out advanceWidth),
             _ => false,
         };
     }
@@ -218,6 +254,7 @@ public sealed class FontProgram
         {
             TrueTypeProgram trueType => trueType.TryGetGlyphId(glyphName, out glyphId),
             CffProgram cff => cff.Font.TryGetGlyphId(glyphName, out glyphId),
+            Type1Program type1 => type1.TryGetGlyphId(glyphName, out glyphId),
             _ => false,
         };
     }
@@ -232,6 +269,7 @@ public sealed class FontProgram
         {
             TrueTypeProgram trueType => trueType.GetGlyphName(glyphId),
             CffProgram cff => cff.Font.GetGlyphName(glyphId),
+            Type1Program type1 => type1.GetGlyphName(glyphId),
             _ => null,
         };
 
@@ -261,13 +299,15 @@ public sealed class FontProgram
     /// <remarks>
     /// A CFF program uses its Standard, Expert or custom encoding.
     /// A TrueType program uses its (3,0) 'cmap' subtable by the low byte of each code, or else its (1,0) subtable.
+    /// A Type 1 program uses its <c>/Encoding</c>: StandardEncoding, or the array of glyph names that it defines.
     /// </remarks>
     /// <param name="glyphIds">
     /// Receives the glyph ID for each code in its first 256 elements, 0 where a code has no glyph.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if the program has an encoding. <see langword="false"/>, with nothing written,
-    /// if it has none: a CID-keyed program, or a TrueType program without either subtable.
+    /// if it has none: a CID-keyed program, a TrueType program without either subtable, or a Type 1 program
+    /// without an <c>/Encoding</c>.
     /// </returns>
     /// <exception cref="ArgumentException"><paramref name="glyphIds"/> has fewer than 256 elements.</exception>
     public bool TryGetBuiltInEncoding(Span<ushort> glyphIds)
@@ -281,6 +321,7 @@ public sealed class FontProgram
         {
             TrueTypeProgram trueType => trueType.TryGetBuiltInEncoding(glyphIds),
             CffProgram cff => cff.Font.TryGetBuiltInEncoding(glyphIds),
+            Type1Program type1 => type1.TryGetBuiltInEncoding(glyphIds),
             _ => false,
         };
     }

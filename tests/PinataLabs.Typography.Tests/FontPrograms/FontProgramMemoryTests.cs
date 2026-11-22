@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tests.FontPrograms.Type1;
 
 namespace PinataLabs.Typography.Tests.FontPrograms;
 
@@ -22,13 +23,19 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("Type1/bchr8a.pfb")]
+    [Arguments("Type1/bchr8a.pfa")]
+    [Arguments("Type1/bchr8a.fontfile")]
+    [Arguments("Type1/cmr10.pfb")]
+    [Arguments("Type1/cmmi10.pfb")]
+    [Arguments("Type1/qtmr.pfb")]
     public async Task RetainedByteCountEqualsTheBytesReachableFromTheProgram(string fontFile)
     {
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
 
         FontProgram font = FontProgram.Load(data);
 
-        await Assert.That(font.RetainedByteCount).IsEqualTo(data.Length + MeasureOwnedBytes(font, data));
+        await Assert.That(font.RetainedByteCount).IsEqualTo(Walk(font, data, out _));
     }
 
     [Test]
@@ -55,6 +62,40 @@ public class FontProgramMemoryTests
     }
 
     [Test]
+    public async Task AType1ProgramRetainsItsDecryptedPartAndItsArraysButNotItsData()
+    {
+        Type1FontBuilder builder = Type1Font();
+        const int glyphs = 2;
+        const int subrs = 3;
+
+        // Eight arrays: the decrypted private part, two for each of the two charstring tables,
+        // the name offsets and lengths, and the encoding.
+        long expected = (8 * ArrayHeaderBytes)
+            + builder.BuildPrivate().Length
+            + (glyphs * ((2 * sizeof(int)) + sizeof(int) + sizeof(byte)))
+            + (subrs * 2 * sizeof(int))
+            + (256 * sizeof(ushort));
+
+        foreach (byte[] data in (byte[][])[builder.BuildPfa(hex: true), builder.BuildPfa(hex: false), builder.BuildPfb()])
+        {
+            await Assert.That(FontProgram.Load(data).RetainedByteCount).IsEqualTo(expected);
+        }
+    }
+
+    [Test]
+    public async Task ALimitBelowTheDecryptedPartRefusesAType1FontBeforeItDecrypts()
+    {
+        Type1FontBuilder builder = Type1Font();
+        long decrypted = ArrayHeaderBytes + builder.BuildPrivate().Length;
+
+        FontProgramTooLargeException exception = (await Assert.That(
+            () => FontProgram.Load(builder.BuildPfb(), new FontProgramOptions { MaxRetainedBytes = decrypted - 1 }))
+            .Throws<FontProgramTooLargeException>())!;
+
+        await Assert.That(exception.RetainedByteCount).IsEqualTo(decrypted);
+    }
+
+    [Test]
     public async Task ASliceCountsOnlyTheSlice()
     {
         byte[] font = File.ReadAllBytes(TestFonts.OpenSansFile);
@@ -70,6 +111,12 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("Type1/bchr8a.pfb")]
+    [Arguments("Type1/bchr8a.pfa")]
+    [Arguments("Type1/bchr8a.fontfile")]
+    [Arguments("Type1/cmr10.pfb")]
+    [Arguments("Type1/cmmi10.pfb")]
+    [Arguments("Type1/qtmr.pfb")]
     public async Task RetainedByteCountDoesNotChangeAfterUse(string fontFile)
     {
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
@@ -89,6 +136,12 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("Type1/bchr8a.pfb")]
+    [Arguments("Type1/bchr8a.pfa")]
+    [Arguments("Type1/bchr8a.fontfile")]
+    [Arguments("Type1/cmr10.pfb")]
+    [Arguments("Type1/cmmi10.pfb")]
+    [Arguments("Type1/qtmr.pfb")]
     public async Task ALimitEqualToTheRetainedByteCountLoads(string fontFile)
     {
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
@@ -103,6 +156,12 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("Type1/bchr8a.pfb")]
+    [Arguments("Type1/bchr8a.pfa")]
+    [Arguments("Type1/bchr8a.fontfile")]
+    [Arguments("Type1/cmr10.pfb")]
+    [Arguments("Type1/cmmi10.pfb")]
+    [Arguments("Type1/qtmr.pfb")]
     public async Task ALimitBelowTheRetainedByteCountRefuses(string fontFile)
     {
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
@@ -191,6 +250,12 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("Type1/bchr8a.pfb")]
+    [Arguments("Type1/bchr8a.pfa")]
+    [Arguments("Type1/bchr8a.fontfile")]
+    [Arguments("Type1/cmr10.pfb")]
+    [Arguments("Type1/cmmi10.pfb")]
+    [Arguments("Type1/qtmr.pfb")]
     public async Task LoadAllocatesLittleBeyondTheCountedArrays(string fontFile)
     {
         byte[] data = File.ReadAllBytes(TestFonts.GetPath(fontFile));
@@ -206,7 +271,7 @@ public class FontProgramMemoryTests
             allocated = Math.Min(allocated, GC.GetAllocatedBytesForCurrentThread() - start);
         }
 
-        long owned = font.RetainedByteCount - data.Length;
+        long owned = font.RetainedByteCount - (font.Format == FontProgramFormat.Type1 ? 0 : data.Length);
         Console.WriteLine($"{fontFile}: data {data.Length}, owned {owned}, retained {font.RetainedByteCount}, allocated during Load {allocated}");
         await Assert.That(allocated - owned).IsLessThan(1024);
     }
@@ -263,7 +328,7 @@ public class FontProgramMemoryTests
         Assembly assembly = typeof(FontProgram).Assembly;
         HashSet<Type> types = [];
         Queue<Type> pending = new(assembly.GetTypes().Where(t =>
-            t.Namespace is "PinataLabs.Typography.FontPrograms" or "PinataLabs.Typography.Tables.Cff" || t == typeof(FontProgram)));
+            t.Namespace is "PinataLabs.Typography.FontPrograms" or "PinataLabs.Typography.FontPrograms.Type1" or "PinataLabs.Typography.Tables.Cff" || t == typeof(FontProgram)));
         while (pending.Count > 0)
         {
             Type type = pending.Dequeue();
@@ -296,6 +361,17 @@ public class FontProgramMemoryTests
         return types;
     }
 
+    private static Type1FontBuilder Type1Font()
+    {
+        Type1FontBuilder builder = new Type1FontBuilder()
+            .AddGlyph(".notdef", "0 500 hsbw endchar")
+            .AddGlyph("A", "10 500 hsbw 0 callsubr 100 hlineto closepath endchar");
+        builder.AddSubr("100 vlineto return");
+        builder.AddSubr("return");
+        builder.AddSubr("return");
+        return builder;
+    }
+
     private static long FontDictRecordSize()
     {
         Type record = typeof(FontProgram).Assembly.GetType("PinataLabs.Typography.Tables.Cff.CffFontDict")!;
@@ -322,21 +398,20 @@ public class FontProgramMemoryTests
         font.TryGetBuiltInEncoding(encoding);
     }
 
-    // Walks the instance fields from the program and sums the array headers and elements it reaches, not counting the font data.
-    // It sees a reference that a field holds, so a cache in an instance field fails the test when use changes the objects reachable.
+    // Sums the array headers and elements reachable from the program, plus the length of the font data when the
+    // program reaches it, and records each object it reaches by reference. It reads the fields, so a field that a
+    // later change adds is counted here and the test fails if the property misses it. It sees a reference that a
+    // field holds, so a cache in an instance field fails the test when use changes the objects reachable.
     // It cannot see a static field, so StaticFieldsHoldOnlyReadOnlyTables covers those.
-    private static long MeasureOwnedBytes(FontProgram font, byte[] data)
-        => Walk(font, data, out _);
-
     private static long Walk(FontProgram font, byte[] data, out HashSet<object> reachable)
     {
-        reachable = new(ReferenceEqualityComparer.Instance) { data };
+        reachable = new(ReferenceEqualityComparer.Instance);
         long total = 0;
-        Visit(font, reachable, ref total);
+        Visit(font, data, reachable, ref total);
         return total;
     }
 
-    private static void Visit(object? value, HashSet<object> seen, ref long total)
+    private static void Visit(object? value, byte[] data, HashSet<object> seen, ref long total)
     {
         if (value is null || !seen.Add(value))
         {
@@ -348,7 +423,10 @@ public class FontProgramMemoryTests
             case Type:
                 break;
             case Delegate action:
-                Visit(action.Target, seen, ref total);
+                Visit(action.Target, data, seen, ref total);
+                break;
+            case byte[] bytes when ReferenceEquals(bytes, data):
+                total += data.Length;
                 break;
             case string text:
                 total += ArrayHeaderBytes + (2L * text.Length);
@@ -360,31 +438,31 @@ public class FontProgramMemoryTests
                 {
                     foreach (object? item in array)
                     {
-                        VisitElement(item, element, seen, ref total);
+                        VisitElement(item, element, data, seen, ref total);
                     }
                 }
 
                 break;
             default:
-                VisitFields(value, seen, ref total);
+                VisitFields(value, data, seen, ref total);
                 break;
         }
     }
 
     // A value read from a value-typed slot is a fresh box on every read, so only the references inside it count.
-    private static void VisitElement(object? value, Type declared, HashSet<object> seen, ref long total)
+    private static void VisitElement(object? value, Type declared, byte[] data, HashSet<object> seen, ref long total)
     {
         if (!declared.IsValueType)
         {
-            Visit(value, seen, ref total);
+            Visit(value, data, seen, ref total);
         }
         else if (value is not null)
         {
-            VisitFields(value, seen, ref total);
+            VisitFields(value, data, seen, ref total);
         }
     }
 
-    private static void VisitFields(object value, HashSet<object> seen, ref long total)
+    private static void VisitFields(object value, byte[] data, HashSet<object> seen, ref long total)
     {
         for (Type? t = value.GetType(); t is not null; t = t.BaseType)
         {
@@ -392,7 +470,7 @@ public class FontProgramMemoryTests
             {
                 if (!field.FieldType.IsPrimitive && !field.FieldType.IsEnum && !field.FieldType.IsPointer)
                 {
-                    VisitElement(field.GetValue(value), field.FieldType, seen, ref total);
+                    VisitElement(field.GetValue(value), field.FieldType, data, seen, ref total);
                 }
             }
         }

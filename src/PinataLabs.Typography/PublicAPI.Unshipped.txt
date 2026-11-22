@@ -19,6 +19,7 @@ PinataLabs.Typography.FontProgram.TryWriteOutline<TSink>(ushort glyphId, ref TSi
 PinataLabs.Typography.FontProgramFormat
 PinataLabs.Typography.FontProgramFormat.Cff = 1 -> PinataLabs.Typography.FontProgramFormat
 PinataLabs.Typography.FontProgramFormat.TrueType = 0 -> PinataLabs.Typography.FontProgramFormat
+PinataLabs.Typography.FontProgramFormat.Type1 = 2 -> PinataLabs.Typography.FontProgramFormat
 static PinataLabs.Typography.FontProgram.Load(System.ReadOnlyMemory<byte> data) -> PinataLabs.Typography.FontProgram!
 PinataLabs.Typography.FontProgram.RetainedByteCount.get -> long
 PinataLabs.Typography.FontProgramOptions

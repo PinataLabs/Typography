@@ -7,12 +7,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using PinataLabs.Typography.FontPrograms.Type1;
 
 namespace PinataLabs.Typography.Tests.FontPrograms.Type1;
 
 /// <summary>
-/// Compares every glyph of the Type 1 test fonts with fontTools.
+/// Compares every glyph of the Type 1 test fonts, read through <see cref="FontProgram"/>, with fontTools.
 /// tests/tools/type1/generate_fixtures.py writes the fixtures.
 /// </summary>
 public class Type1ParityTests
@@ -32,14 +31,16 @@ public class Type1ParityTests
     [Arguments("bchr8a.fontfile", "bchr8a.json", 229)]
     public async Task EveryGlyphMatchesFontTools(string fontFile, string fixtureFile, int glyphCount)
     {
-        Type1Program font = Type1TestFonts.Load(Type1TestFonts.Read(fontFile));
+        FontProgram font = FontProgram.Load(Type1TestFonts.Read(fontFile));
         Fixture fixture = Fixture.Read(fixtureFile);
 
+        await Assert.That(font.Format).IsEqualTo(FontProgramFormat.Type1);
+        await Assert.That(font.IsCidKeyed).IsFalse();
         await Assert.That(fixture.Glyphs.Length).IsEqualTo(glyphCount);
         await Assert.That(Compare(font, fixture)).IsEmpty();
     }
 
-    private static List<string> Compare(Type1Program font, Fixture fixture)
+    private static List<string> Compare(FontProgram font, Fixture fixture)
     {
         List<string> failures = [];
         float[] matrix = [font.FontMatrix.M11, font.FontMatrix.M12, font.FontMatrix.M21, font.FontMatrix.M22, font.FontMatrix.M31, font.FontMatrix.M32];
@@ -88,6 +89,11 @@ public class Type1ParityTests
             if (!font.TryGetAdvanceWidth(glyphId, out float advance) || !(MathF.Abs(advance - (float)glyph.Advance) <= Tolerance))
             {
                 failures.Add($"{glyph.Name}: expected advance {glyph.Advance}, got {advance}");
+            }
+
+            if (!font.TryGetGlyphIdForCid(glyphId, out ushort byCid) || byCid != glyphId)
+            {
+                failures.Add($"{glyph.Name}: CID {glyphId} gives glyph {byCid}");
             }
         }
 

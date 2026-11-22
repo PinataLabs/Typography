@@ -6,7 +6,6 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using PinataLabs.Typography.FontPrograms;
 using PinataLabs.Typography.FontPrograms.Type1;
 
 namespace PinataLabs.Typography.Tests.FontPrograms.Type1;
@@ -162,31 +161,6 @@ public class Type1ProgramTests
     [Test]
     public async Task TheBuiltInEncodingNeeds256GlyphIds()
         => await Assert.That(() => SquareFont().Load().TryGetBuiltInEncoding(new ushort[255])).Throws<ArgumentException>();
-
-    [Test]
-    public async Task TheBudgetIsChargedTheBufferAndTheArrays()
-    {
-        Type1FontBuilder builder = SquareFont();
-        builder.AddSubr("return");
-        builder.AddSubr("return");
-        builder.AddSubr("return");
-        const int glyphs = 2;
-        const int subrs = 3;
-
-        // Eight arrays: the buffer, two for each of the two charstring tables, the name offsets and lengths, and the encoding.
-        long expected = (8 * LoadBudget.ArrayOverhead)
-            + builder.BuildPrivate().Length
-            + (glyphs * ((2 * sizeof(int)) + sizeof(int) + sizeof(byte)))
-            + (subrs * 2 * sizeof(int))
-            + (256 * sizeof(ushort));
-
-        foreach (byte[] container in (byte[][])[builder.BuildPfa(), builder.BuildPfa(hex: false), builder.BuildPfb()])
-        {
-            LoadBudget budget = new(0, null);
-            Type1Program.Load(container, ref budget);
-            await Assert.That(budget.RetainedBytes).IsEqualTo(expected);
-        }
-    }
 
     [Test]
     public async Task TheSniffAcceptsPfbAndPostScriptAndNothingElse()

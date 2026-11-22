@@ -4,13 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PinataLabs.Typography.FontPrograms.Type1;
 
 namespace PinataLabs.Typography.Tests.FontPrograms.Type1;
 
 /// <summary>
-/// Damaged font programs either fail to load with <see cref="InvalidFontFileException"/> or load and
-/// return <see langword="false"/> for the glyphs they cannot draw. No other exception escapes.
+/// Damaged Type 1 fonts either fail <see cref="FontProgram.Load(ReadOnlyMemory{byte})"/> with
+/// <see cref="InvalidFontFileException"/> or load and return <see langword="false"/> for the glyphs they cannot draw.
+/// No other exception escapes.
 /// </summary>
 public class Type1RobustnessTests
 {
@@ -166,10 +166,10 @@ public class Type1RobustnessTests
 
     private static void Exercise(ReadOnlyMemory<byte> data, ref Tally tally)
     {
-        Type1Program font;
+        FontProgram font;
         try
         {
-            font = Type1TestFonts.Load(data);
+            font = FontProgram.Load(data);
         }
         catch (InvalidFontFileException)
         {
@@ -186,6 +186,7 @@ public class Type1RobustnessTests
             bool drawn = font.TryWriteOutline((ushort)glyphId, ref recorder);
             font.TryGetAdvanceWidth((ushort)glyphId, out _);
             font.TryGetGlyphId(font.GetGlyphName((ushort)glyphId), out _);
+            font.TryGetGlyphIdForCid(glyphId, out _);
             if (drawn)
             {
                 tally.DrawnGlyphs++;
