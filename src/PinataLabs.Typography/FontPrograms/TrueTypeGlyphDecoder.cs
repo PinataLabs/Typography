@@ -15,13 +15,11 @@ internal static class TrueTypeGlyphDecoder
 {
     private const int HeaderSize = 10;
 
-    // The limit on components within components.
     private const int MaxDepth = 16;
 
     // Components can repeat work without a limit on the glyph size, so bound the number of components per outline.
     private const int MaxComponents = 4096;
 
-    // Simple glyph flags.
     private const int OnCurve = 0x01;
     private const int XShort = 0x02;
     private const int YShort = 0x04;
@@ -29,7 +27,6 @@ internal static class TrueTypeGlyphDecoder
     private const int XSameOrPositive = 0x10;
     private const int YSameOrPositive = 0x20;
 
-    // Composite glyph flags.
     private const int ArgsAreWords = 0x0001;
     private const int ArgsAreXYValues = 0x0002;
     private const int HasScale = 0x0008;
@@ -82,7 +79,6 @@ internal static class TrueTypeGlyphDecoder
             return TryWriteSimple(glyph, contourCount, ref sink);
         }
 
-        // One wrapper for the whole chain of components: the matrix already combines every level.
         TransformedSink<TSink> transformed = new(sink, matrix);
         bool result = TryWriteSimple(glyph, contourCount, ref transformed);
         sink = transformed.Inner;
@@ -148,9 +144,7 @@ internal static class TrueTypeGlyphDecoder
         return true;
     }
 
-    // Finds a point of a glyph by its number. A composite numbers the points of its components in order.
-    // The index becomes -1 when the point is found. Otherwise the glyph has too few points, and the index
-    // is reduced by the number of points of the glyph. The result is false if the glyph is malformed.
+    // A composite numbers the points of its components in order.
     private static bool TryFindPoint(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref int budget, ref int index, out Vector2 point)
     {
         point = default;
@@ -196,7 +190,6 @@ internal static class TrueTypeGlyphDecoder
         return true;
     }
 
-    // Searches the components that start before the given position of the composite glyph data.
     private static bool TryFindCompositePoint(TrueTypeProgram font, ReadOnlySpan<byte> glyph, int end, Matrix3x2 matrix, int depth, ref int budget, ref int index, out Vector2 point)
     {
         point = default;
@@ -279,11 +272,9 @@ internal static class TrueTypeGlyphDecoder
 
         sink.MoveTo(start);
 
-        // The off-curve point that waits for the end point of its curve.
         Vector2 control = default;
         bool hasControl = false;
 
-        // Write the points after the start point, and then the points up to it.
         for (int pass = 0; pass < 2; pass++)
         {
             points = contourStart;
@@ -313,7 +304,6 @@ internal static class TrueTypeGlyphDecoder
                 }
                 else if (i != firstOnCurve)
                 {
-                    // ClosePath draws the line back to the start point.
                     sink.LineTo(point);
                 }
             }
@@ -388,8 +378,8 @@ internal static class TrueTypeGlyphDecoder
             int start = this.reader.Position;
             this.Failed = !this.reader.TryReadUInt16(out ushort flags) | !this.reader.TryReadUInt16(out ushort glyphId);
 
-            int argument1 = 0;
-            int argument2 = 0;
+            int argument1;
+            int argument2;
             bool signed = (flags & ArgsAreXYValues) != 0;
             if ((flags & ArgsAreWords) != 0)
             {
@@ -478,7 +468,6 @@ internal static class TrueTypeGlyphDecoder
                 return true;
             }
 
-            // The end point of each contour, then the instructions, then the flags.
             FontDataReader reader = new(glyph, HeaderSize);
             if (!reader.TrySkip((contourCount - 1) * 2)
                 || !reader.TryReadUInt16(out ushort lastPoint)

@@ -373,7 +373,6 @@ internal sealed class CffFont
         }
 
         // Format 3: Range3 { Card16 first; Card8 fd } [nRanges], then a Card16 sentinel.
-        // Find the last range whose first glyph is not after the glyph.
         int rangeCount = BinaryPrimitives.ReadUInt16BigEndian(select.Slice(1));
         ReadOnlySpan<byte> ranges = select.Slice(3);
         int low = 0;

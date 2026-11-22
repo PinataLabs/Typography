@@ -107,8 +107,6 @@ public class FontProgramTests
         await Assert.That(() => font.TryGetBuiltInEncoding(new ushort[255])).ThrowsExactly<ArgumentException>();
     }
 
-    // A struct sink is passed by reference, so it must hold the whole outline afterwards. The glyphs here
-    // go through a transform: the components of a composite, and a Font DICT with its own matrix.
     [Test]
     [Arguments("tt-composite", 8)]
     [Arguments("cff-cid-fdselect0", 4)]
@@ -135,7 +133,6 @@ public class FontProgramTests
         GlyphOutline after = new();
         font.TryWriteOutline(1, ref before);
 
-        // The font does not copy its data, so the data must stay unchanged while the font is in use.
         Array.Clear(data, 12, data.Length - 12);
 
         await Assert.That(before.ToString()).IsNotEqualTo(string.Empty);
@@ -176,7 +173,6 @@ public class FontProgramTests
         return $"{font.GetGlyphName((ushort)glyphId)} {advance} {outline}";
     }
 
-    // Changes the tag of a table in the directory, so the font no longer has that table.
     private static byte[] RenameTable(byte[] data, string tag)
     {
         int tableCount = (data[4] << 8) | data[5];

@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using PinataLabs.Typography.Tables.Cff;
 
 namespace PinataLabs.Typography.FontPrograms;
@@ -26,7 +27,7 @@ internal sealed class CffProgram
     /// <exception cref="InvalidFontFileException">The file has no 'CFF ' table, or the table is malformed.</exception>
     public static CffProgram Load(SfntDirectory directory)
     {
-        if (!directory.TryGetTable(SfntDirectory.Cff, out System.ReadOnlyMemory<byte> cff))
+        if (!directory.TryGetTable(SfntDirectory.Cff, out ReadOnlyMemory<byte> cff))
         {
             throw new InvalidFontFileException(directory.TryGetTable(SfntDirectory.Cff2, out _)
                 ? "A font program with a 'CFF2' table is not supported."

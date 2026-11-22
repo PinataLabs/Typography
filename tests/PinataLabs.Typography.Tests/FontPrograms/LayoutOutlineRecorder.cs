@@ -156,8 +156,6 @@ internal sealed class LayoutOutlineRecorder : IGlyphRenderer
     }
 
     private static GlyphMetrics GetMetrics(Font font, ushort glyphId)
-
-        // The code point only decides whether the glyph is drawn. 'A' always is.
         => font.FontMetrics.GetGlyphMetrics(
             new CodePoint('A'),
             glyphId,

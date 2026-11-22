@@ -143,7 +143,6 @@ public class FontProgramParityTests
             }
         }
 
-        // A CID that no glyph has. For a program that is not CID-keyed it is the glyph count.
         HashSet<int> cids = [.. fixture.Glyphs.Select((x, i) => x.Cid ?? i)];
         int absent = Enumerable.Range(0, cids.Count + 1).First(x => !cids.Contains(x));
 
@@ -165,7 +164,6 @@ public class FontProgramParityTests
 
         await Assert.That(found).IsEqualTo(fixture.Encoding is not null);
 
-        // A program without an encoding writes nothing.
         int[] expected = fixture.Encoding ?? Enumerable.Repeat((int)ushort.MaxValue, 256).ToArray();
         List<string> differences = [];
         for (int code = 0; code < glyphIds.Length; code++)

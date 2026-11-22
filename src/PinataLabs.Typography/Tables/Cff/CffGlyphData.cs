@@ -102,7 +102,6 @@ internal readonly struct CffGlyphData
         return result;
     }
 
-    // Layout reports a malformed glyph as an exception.
     private void WriteOutline<TSink>(ref TSink sink)
         where TSink : IGlyphOutlineSink
     {

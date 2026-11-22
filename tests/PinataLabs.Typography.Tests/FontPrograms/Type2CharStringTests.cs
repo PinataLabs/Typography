@@ -64,7 +64,6 @@ public class Type2CharStringTests
     [Test]
     public async Task SubroutinesNestTenDeep()
     {
-        // Subroutine i calls subroutine i + 1. The last one draws.
         byte[][] subrs = new byte[10][];
         for (int i = 0; i < subrs.Length - 1; i++)
         {
@@ -108,7 +107,6 @@ public class Type2CharStringTests
         await Assert.That(Evaluate(charString)).IsNull();
     }
 
-    // Each expression leaves one number, which becomes the x of the start point.
     [Test]
     [Arguments("10 3 sub", 7)]
     [Arguments("20 4 div", 5)]

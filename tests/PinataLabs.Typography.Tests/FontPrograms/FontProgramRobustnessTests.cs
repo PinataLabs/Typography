@@ -36,7 +36,6 @@ public class FontProgramRobustnessTests
         List<string> failures = [];
         int step = Math.Max(1, original.Length / 2000);
 
-        // The same damage on every run.
         Random random = new(20261122);
         byte[] data = (byte[])original.Clone();
         for (int position = 0; position < original.Length; position += step)

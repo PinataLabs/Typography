@@ -48,7 +48,6 @@ internal ref struct CffEvaluationEngine
     private readonly Span<float> stack;
     private readonly Span<float> transient;
 
-    // The arguments are stack[bottom..top). Most operators take theirs from the bottom.
     private int bottom;
     private int top;
     private float x;
@@ -604,7 +603,6 @@ internal ref struct CffEvaluationEngine
                 c4x = c3x + this.Shift();
                 c4y = c3y;
 
-                // The second curve returns to the height of the start point.
                 c5x = c4x + this.Shift();
                 c5y = this.y;
                 c6x = c5x + this.Shift();
@@ -730,7 +728,6 @@ internal ref struct CffEvaluationEngine
             case 2:
                 return (short)((bytes[0] << 8) | bytes[1]);
             default:
-                // A 16.16 fixed point number.
                 return ((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) / 65536F;
         }
     }
@@ -956,7 +953,6 @@ internal ref struct CffEvaluationEngine
         this.stack[this.top++] = value;
     }
 
-    // Removes the last argument.
     private float Pop()
     {
         if (this.top <= this.bottom)
@@ -968,7 +964,6 @@ internal ref struct CffEvaluationEngine
         return this.stack[--this.top];
     }
 
-    // Removes the first argument.
     private float Shift()
     {
         if (this.bottom >= this.top)

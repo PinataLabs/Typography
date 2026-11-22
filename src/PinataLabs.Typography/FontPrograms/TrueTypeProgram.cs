@@ -14,7 +14,6 @@ internal sealed class TrueTypeProgram
 {
     private const int MacGlyphNameCount = 258;
 
-    // The header of a 'post' table, before the data of format 2.
     private const int PostHeaderSize = 32;
 
     private readonly ReadOnlyMemory<byte> loca;
@@ -249,7 +248,6 @@ internal sealed class TrueTypeProgram
         return true;
     }
 
-    // A Pascal string is a length byte and then that many characters.
     private static bool TryReadPascalString(ref ReadOnlySpan<byte> strings, out ReadOnlySpan<byte> value)
     {
         if (strings.IsEmpty || strings.Length < 1 + strings[0])
@@ -285,7 +283,6 @@ internal sealed class TrueTypeProgram
         };
     }
 
-    // The number of glyphs that format 2 of 'post' has a name index for.
     private int GetPostNameCount()
     {
         ReadOnlySpan<byte> table = this.post.Span;
@@ -373,7 +370,6 @@ internal sealed class TrueTypeProgram
         return false;
     }
 
-    // Maps a code through a subtable of format 0, 4 or 6. A read outside the subtable gives glyph 0.
     private ushort MapCode(ReadOnlySpan<byte> subtable, int code)
     {
         int glyphId = 0;

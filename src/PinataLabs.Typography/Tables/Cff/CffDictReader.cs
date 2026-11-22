@@ -104,7 +104,6 @@ internal ref struct CffDictReader
         return this.data[this.position++];
     }
 
-    // A real number is a sequence of nibbles: 0-9 digits, a '.', b 'E', c 'E-', e '-', f end.
     private double ReadReal()
     {
         Span<char> text = stackalloc char[64];
