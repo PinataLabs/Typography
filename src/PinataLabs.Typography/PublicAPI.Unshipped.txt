@@ -20,3 +20,12 @@ PinataLabs.Typography.FontProgramFormat
 PinataLabs.Typography.FontProgramFormat.Cff = 1 -> PinataLabs.Typography.FontProgramFormat
 PinataLabs.Typography.FontProgramFormat.TrueType = 0 -> PinataLabs.Typography.FontProgramFormat
 static PinataLabs.Typography.FontProgram.Load(System.ReadOnlyMemory<byte> data) -> PinataLabs.Typography.FontProgram!
+PinataLabs.Typography.FontProgram.RetainedByteCount.get -> long
+PinataLabs.Typography.FontProgramOptions
+PinataLabs.Typography.FontProgramOptions.FontProgramOptions() -> void
+PinataLabs.Typography.FontProgramOptions.MaxRetainedBytes.get -> long?
+PinataLabs.Typography.FontProgramOptions.MaxRetainedBytes.init -> void
+PinataLabs.Typography.FontProgramTooLargeException
+PinataLabs.Typography.FontProgramTooLargeException.MaxRetainedBytes.get -> long
+PinataLabs.Typography.FontProgramTooLargeException.RetainedByteCount.get -> long
+static PinataLabs.Typography.FontProgram.Load(System.ReadOnlyMemory<byte> data, PinataLabs.Typography.FontProgramOptions! options) -> PinataLabs.Typography.FontProgram!

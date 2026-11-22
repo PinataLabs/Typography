@@ -25,7 +25,8 @@ internal sealed class CffProgram
     /// Loads the program from an OpenType file.
     /// </summary>
     /// <exception cref="InvalidFontFileException">The file has no 'CFF ' table, or the table is malformed.</exception>
-    public static CffProgram Load(SfntDirectory directory)
+    /// <exception cref="FontProgramTooLargeException">The program does not fit under the cap of the budget.</exception>
+    public static CffProgram Load(SfntDirectory directory, ref LoadBudget budget)
     {
         if (!directory.TryGetTable(SfntDirectory.Cff, out ReadOnlyMemory<byte> cff))
         {
@@ -34,7 +35,7 @@ internal sealed class CffProgram
                 : "The font has no 'CFF ' table.");
         }
 
-        return new CffProgram(CffParser.Load(cff), SfntAdvances.Read(directory));
+        return new CffProgram(CffParser.Load(cff, ref budget), SfntAdvances.Read(directory));
     }
 
     public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth)

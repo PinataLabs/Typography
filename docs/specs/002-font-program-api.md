@@ -90,7 +90,20 @@ public interface IGlyphOutlineSink
 public enum FontProgramFormat { TrueType = 0, Cff = 1 } // PR 3 adds Type1 = 2
 ```
 
-PR 2 (#75) adds `FontProgramOptions { long? MaxRetainedBytes }`, a `Load(ReadOnlyMemory<byte>, FontProgramOptions)` overload, `long RetainedByteCount`, and `FontProgramTooLargeException : InvalidFontFileException`. PR 3 (#73) adds `FontProgramFormat.Type1` and nothing else. Bare CFF (#70) adds nothing public.
+PR 2 (#75) adds the following. The guarantee covers `FontProgram` only. The layout API keeps a cache that grows after load and has no such bound.
+
+```csharp
+public sealed class FontProgramOptions { public long? MaxRetainedBytes { get; init; } } // negative throws
+public static FontProgram Load(ReadOnlyMemory<byte> data, FontProgramOptions options);
+public long RetainedByteCount { get; } // on FontProgram, fixed at load, never changes
+public sealed class FontProgramTooLargeException : InvalidFontFileException
+{
+    public long RetainedByteCount { get; } // bytes the font would retain; loads with this as the cap, except when only data.Length was checked
+    public long MaxRetainedBytes { get; }
+}
+```
+
+`RetainedByteCount` is `data.Length`, plus for each array the program allocated, 24 bytes of array header plus the size of its elements. A slice of a larger array keeps the whole array alive, and only the slice is counted. A TrueType program has no array. A CFF program has the charset (`ushort[GlyphCount]`) and one `CffFontDict[]` with one record per Font DICT. The objects of the program (the `FontProgram`, its TrueType or CFF program and the parsed CFF font) are not counted. They are a fixed amount per font: a load allocated under 320 bytes for them on 64-bit CoreCLR, and callers can add 1024 bytes per font. The element and record sizes are `Unsafe.SizeOf` on the running runtime. Only the 24-byte array header is the 64-bit CoreCLR figure, and another runtime (Mono, IL2CPP, 32-bit) may differ by a few bytes per array. Every array on the load path comes from one internal `LoadBudget`, which charges it before it allocates and throws when the charge passes the cap. `data.Length` is charged first, so a font larger than the cap is refused before any parsing. A CFF font charges its charset and its Font DICT array in one call after it reads both counts, so every other refusal carries the full retained size, and a load with that size as the cap succeeds. A refusal on the data length alone carries `data.Length`, a lower bound for a CFF font. A test sums the arrays reachable from a loaded program by reflection and compares the sum with the property, so a cached field that a later change adds fails it. PR 3 (#73) adds `FontProgramFormat.Type1` and nothing else. Bare CFF (#70) adds nothing public.
 
 ## Load-bearing decisions
 

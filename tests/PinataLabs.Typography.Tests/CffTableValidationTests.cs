@@ -35,4 +35,17 @@ public class CffTableValidationTests
             collection.Add(new MemoryStream(data));
         }).Throws<InvalidFontFileException>();
     }
+
+    [Test]
+    public async Task ACidFontIgnoresTheBadPrivateOffsetOfItsTopDict()
+    {
+        byte[] data = FontWithBadTopPrivate.Create();
+
+        Font font = new FontCollection().Add(new MemoryStream(data)).CreateFont(8);
+        ColorGlyphRenderer renderer = new();
+
+        TextRenderer.RenderTextTo(renderer, "A", new TextOptions(font));
+
+        await Assert.That(renderer.GlyphKeys).HasSingleItem();
+    }
 }
