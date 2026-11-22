@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.IO;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.Cff;
@@ -37,12 +38,11 @@ public class OutOfRangeIndexTests
     [Test]
     public async Task Cff1GlyphIdAboveGlyphCountReturnsNotdef()
     {
-        Cff1Table table = new(new CffFont(
-            "test",
-            new CffTopDictionary(),
-            [CreateCffGlyph(0), CreateCffGlyph(1)]));
+        using FileStream stream = File.OpenRead(TestFonts.FDArrayTest257File);
+        FontReader reader = new(stream);
+        Cff1Table table = reader.GetTable<Cff1Table>();
 
-        CffGlyphData glyph = table.GetGlyph(50);
+        CffGlyphData glyph = table.GetGlyph(5000);
 
         await Assert.That(glyph.GlyphIndex).IsEqualTo((ushort)0);
     }
@@ -95,9 +95,6 @@ public class OutOfRangeIndexTests
         await Assert.That(table.GetLeftSideBearing(1)).IsEqualTo((short)22);
         await Assert.That(table.GetLeftSideBearing(9)).IsEqualTo((short)11);
     }
-
-    private static CffGlyphData CreateCffGlyph(ushort id)
-        => new(id, [], [], 0, []);
 
     // One script (DFLT) with a default LangSys referencing feature indices [7, 0]; only feature 0 exists.
     // Feature 0 ('kern') references lookup indices [9, 0]; only lookup 0 exists (it has no subtables).

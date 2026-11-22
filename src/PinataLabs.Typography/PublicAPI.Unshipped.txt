@@ -1,1 +1,32 @@
 #nullable enable
+PinataLabs.Typography.IGlyphOutlineSink
+PinataLabs.Typography.IGlyphOutlineSink.ClosePath() -> void
+PinataLabs.Typography.IGlyphOutlineSink.CubicBezierTo(System.Numerics.Vector2 control1, System.Numerics.Vector2 control2, System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphOutlineSink.LineTo(System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphOutlineSink.MoveTo(System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.IGlyphOutlineSink.QuadraticBezierTo(System.Numerics.Vector2 control, System.Numerics.Vector2 point) -> void
+PinataLabs.Typography.FontProgram
+PinataLabs.Typography.FontProgram.FontMatrix.get -> System.Numerics.Matrix3x2
+PinataLabs.Typography.FontProgram.Format.get -> PinataLabs.Typography.FontProgramFormat
+PinataLabs.Typography.FontProgram.GetGlyphName(ushort glyphId) -> string?
+PinataLabs.Typography.FontProgram.GlyphCount.get -> int
+PinataLabs.Typography.FontProgram.IsCidKeyed.get -> bool
+PinataLabs.Typography.FontProgram.TryGetAdvanceWidth(ushort glyphId, out float advanceWidth) -> bool
+PinataLabs.Typography.FontProgram.TryGetBuiltInEncoding(System.Span<ushort> glyphIds) -> bool
+PinataLabs.Typography.FontProgram.TryGetGlyphId(System.ReadOnlySpan<char> glyphName, out ushort glyphId) -> bool
+PinataLabs.Typography.FontProgram.TryGetGlyphIdForCid(int cid, out ushort glyphId) -> bool
+PinataLabs.Typography.FontProgram.TryWriteOutline<TSink>(ushort glyphId, ref TSink sink) -> bool
+PinataLabs.Typography.FontProgramFormat
+PinataLabs.Typography.FontProgramFormat.Cff = 1 -> PinataLabs.Typography.FontProgramFormat
+PinataLabs.Typography.FontProgramFormat.TrueType = 0 -> PinataLabs.Typography.FontProgramFormat
+PinataLabs.Typography.FontProgramFormat.Type1 = 2 -> PinataLabs.Typography.FontProgramFormat
+static PinataLabs.Typography.FontProgram.Load(System.ReadOnlyMemory<byte> data) -> PinataLabs.Typography.FontProgram!
+PinataLabs.Typography.FontProgram.RetainedByteCount.get -> long
+PinataLabs.Typography.FontProgramOptions
+PinataLabs.Typography.FontProgramOptions.FontProgramOptions() -> void
+PinataLabs.Typography.FontProgramOptions.MaxRetainedBytes.get -> long?
+PinataLabs.Typography.FontProgramOptions.MaxRetainedBytes.init -> void
+PinataLabs.Typography.FontProgramTooLargeException
+PinataLabs.Typography.FontProgramTooLargeException.MaxRetainedBytes.get -> long
+PinataLabs.Typography.FontProgramTooLargeException.RetainedByteCount.get -> long
+static PinataLabs.Typography.FontProgram.Load(System.ReadOnlyMemory<byte> data, PinataLabs.Typography.FontProgramOptions! options) -> PinataLabs.Typography.FontProgram!
