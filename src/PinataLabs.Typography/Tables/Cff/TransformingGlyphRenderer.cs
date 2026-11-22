@@ -8,9 +8,10 @@ using System.Runtime.CompilerServices;
 namespace PinataLabs.Typography.Tables.Cff;
 
 /// <summary>
-/// Used to apply a transform against any glyphs rendered by the engine.
+/// Adapts an <see cref="IGlyphRenderer"/> to <see cref="IGlyphOutlineSink"/> for layout.
+/// It maps each glyph space point to the render surface, and each contour to a figure.
 /// </summary>
-internal struct TransformingGlyphRenderer : IGlyphRenderer
+internal struct TransformingGlyphRenderer : IGlyphOutlineSink
 {
     private static readonly Vector2 YInverter = new(1, -1);
     private readonly IGlyphRenderer renderer;
@@ -26,82 +27,25 @@ internal struct TransformingGlyphRenderer : IGlyphRenderer
         this.scale = scale;
         this.offset = offset;
         this.transform = transform;
-        this.IsOpen = false;
-    }
-
-    public bool IsOpen { get; set; }
-
-    public void BeginFigure()
-    {
-        this.IsOpen = true;
-        this.renderer.BeginFigure();
-    }
-
-    public bool BeginGlyph(in FontRectangle bounds, in GlyphRendererParameters parameters)
-    {
-        this.IsOpen = false;
-        return this.renderer.BeginGlyph(in bounds, in parameters);
-    }
-
-    public void BeginText(in FontRectangle bounds)
-    {
-        this.IsOpen = false;
-        this.renderer.BeginText(in bounds);
-    }
-
-    public void EndFigure()
-    {
-        this.IsOpen = false;
-        this.renderer.EndFigure();
-    }
-
-    public void EndGlyph()
-    {
-        this.IsOpen = false;
-        this.renderer.EndGlyph();
-    }
-
-    public void EndText()
-    {
-        this.IsOpen = false;
-        this.renderer.EndText();
-    }
-
-    public void LineTo(Vector2 point)
-    {
-        this.IsOpen = true;
-        this.renderer.LineTo(this.Transform(point));
     }
 
     public void MoveTo(Vector2 point)
     {
-        if (this.IsOpen)
-        {
-            this.EndFigure();
-        }
-
-        this.BeginFigure();
+        this.renderer.BeginFigure();
         this.renderer.MoveTo(this.Transform(point));
-        this.IsOpen = true;
     }
 
-    public void CubicBezierTo(Vector2 secondControlPoint, Vector2 thirdControlPoint, Vector2 point)
-    {
-        this.IsOpen = true;
-        this.renderer.CubicBezierTo(this.Transform(secondControlPoint), this.Transform(thirdControlPoint), this.Transform(point));
-    }
+    public void LineTo(Vector2 point)
+        => this.renderer.LineTo(this.Transform(point));
 
-    public void QuadraticBezierTo(Vector2 secondControlPoint, Vector2 point)
-    {
-        this.IsOpen = true;
-        this.renderer.QuadraticBezierTo(this.Transform(secondControlPoint), this.Transform(point));
-    }
+    public void QuadraticBezierTo(Vector2 control, Vector2 point)
+        => this.renderer.QuadraticBezierTo(this.Transform(control), this.Transform(point));
 
-    public TextDecorations EnabledDecorations()
-        => this.renderer.EnabledDecorations();
+    public void CubicBezierTo(Vector2 control1, Vector2 control2, Vector2 point)
+        => this.renderer.CubicBezierTo(this.Transform(control1), this.Transform(control2), this.Transform(point));
 
-    public void SetDecoration(TextDecorations textDecorations, Vector2 start, Vector2 end, float thickness)
-        => this.renderer.SetDecoration(textDecorations, this.Transform(start), this.Transform(end), thickness);
+    public void ClosePath()
+        => this.renderer.EndFigure();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Vector2 Transform(Vector2 point)

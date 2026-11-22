@@ -25,10 +25,37 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Font program API.** `FontProgram` reads the glyphs of a font by glyph ID, without text layout.
+  Use it to draw a font that another format selects and positions, such as a font embedded in a PDF file.
+  `FontProgram.Load` takes the font file as `ReadOnlyMemory<byte>` and does not copy it. It accepts
+  TrueType fonts and OpenType fonts with a `CFF ` table. `TryWriteOutline` writes the outline of a glyph
+  to an `IGlyphOutlineSink` in glyph space, and `FontMatrix` maps glyph space to ems.
+  `TryGetGlyphId`, `GetGlyphName` and `TryGetGlyphIdForCid` find glyphs by name and by CID,
+  `TryGetBuiltInEncoding` gives the glyph for each of the 256 codes of the encoding that the font carries,
+  and `TryGetAdvanceWidth` gives the advance width. A font program holds no state that changes after load,
+  so one instance can serve many threads. Malformed data makes `Load` throw `InvalidFontFileException`.
+  After load, a malformed glyph makes a method return `false`. (#71, #72)
 - **netstandard2.1 target.** The library targets `netstandard2.1` again, so a netstandard2.1
   project such as a Unity package can depend on it. On this target the package depends on
   `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
   The public API is the same on every target. (#69)
+
+### Fixed
+
+- **CFF glyph outlines.** Text layout draws these CFF glyphs correctly now: a glyph that uses a
+  `flex`, `hflex`, `hflex1` or `flex1` operator, a glyph with fractional coordinates, and an accented glyph
+  that an `endchar` with four arguments builds from two other glyphs. In a CID-keyed font, each glyph
+  uses the subroutines and the FontMatrix of its own Font DICT. Layout draws a glyph at the size that its
+  FontMatrix and the units per em of the `head` table give, so a FontMatrix other than 1/unitsPerEm
+  changes the size. The arithmetic operators of a charstring take their operands in the right order.
+- **Malformed CFF fonts.** A CFF table or glyph that is malformed makes layout throw
+  `InvalidFontFileException`. Before, it threw several exception types, and a subroutine that called
+  itself stopped the process with a stack overflow. An accented glyph whose `endchar` names a base or
+  accent glyph that the font does not have draws without the two glyphs, as before. A charstring in a
+  `CFF ` table with more than 48 arguments on its stack, the Type 2 limit, is malformed, and so is an
+  outline of more than a million segments.
+- **Bounds of an empty CFF glyph.** A CFF glyph without an outline, such as a space, has a width and
+  a height of 0 on every runtime. Before, the width was 1 on .NET 10 and later.
 
 ## [0.1.0] - 2026-10-26
 
