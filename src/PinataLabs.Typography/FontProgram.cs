@@ -83,8 +83,17 @@ public sealed class FontProgram
     /// <para>
     /// The program keeps the memory that it was given, so it counts the length of that memory.
     /// When the memory is a slice of a larger array, the whole array stays alive and only the slice is counted.
-    /// The objects of the program itself, a fixed amount for each font whatever its size, are not counted.
-    /// The array header size and the size of a Font DICT record are the figures of a 64-bit runtime.
+    /// </para>
+    /// <para>
+    /// The size of each element, and of a Font DICT record, is what <c>Unsafe.SizeOf</c> gives on the running runtime.
+    /// The array header is the 24 bytes of 64-bit CoreCLR. Another runtime, such as Mono, IL2CPP or a 32-bit process,
+    /// may use a few bytes more or less for each array, and a program has at most two.
+    /// </para>
+    /// <para>
+    /// The objects of the program itself are not counted: the <see cref="FontProgram"/>, its TrueType or CFF program,
+    /// and the parsed CFF font. They are a fixed amount for each font whatever its size.
+    /// Measured on 64-bit CoreCLR, a load allocated under 320 bytes for them, whatever the font.
+    /// A caller that bounds the memory of many fonts can add 1024 bytes for each font.
     /// </para>
     /// </remarks>
     public long RetainedByteCount { get; }

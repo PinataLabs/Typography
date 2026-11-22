@@ -13,8 +13,9 @@ namespace PinataLabs.Typography.FontPrograms;
 internal struct LoadBudget
 {
     /// <summary>
-    /// The bytes that the header of an array adds to its elements on a 64-bit runtime:
+    /// The bytes that the header of an array adds to its elements on 64-bit CoreCLR:
     /// the object header, the method table pointer and the length.
+    /// The size of an element is <c>Unsafe.SizeOf</c> on the running runtime. Another runtime may use a few bytes more or less for the header.
     /// </summary>
     public const int ArrayOverhead = 24;
 
