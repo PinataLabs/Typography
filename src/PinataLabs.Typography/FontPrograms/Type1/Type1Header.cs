@@ -40,6 +40,7 @@ internal ref struct Type1Header
         this.FontMatrix = Matrix3x2.CreateScale(0.001F);
         this.FontBBox = default;
         this.PaintType = 0;
+        this.StrokeWidth = 0;
         this.EncodingKind = Type1EncodingKind.None;
         this.EexecEnd = -1;
     }
@@ -49,6 +50,8 @@ internal ref struct Type1Header
     public Bounds FontBBox { get; set; }
 
     public int PaintType { get; set; }
+
+    public float StrokeWidth { get; set; }
 
     public Type1EncodingKind EncodingKind { get; set; }
 

@@ -58,6 +58,7 @@ internal sealed class Type1Program
         this.FontMatrix = header.FontMatrix;
         this.FontBBox = header.FontBBox;
         this.PaintType = header.PaintType;
+        this.StrokeWidth = header.StrokeWidth;
         this.encoding = this.ResolveEncoding(in header, clearText, ref budget);
     }
 
@@ -72,6 +73,11 @@ internal sealed class Type1Program
     /// Gets the <c>/PaintType</c>: 0 for filled glyphs, 2 for stroked ones.
     /// </summary>
     public int PaintType { get; }
+
+    /// <summary>
+    /// Gets the <c>/StrokeWidth</c> in glyph space units, 0 when the font gives none.
+    /// </summary>
+    public float StrokeWidth { get; }
 
     public int GlyphCount => this.glyphs.Count;
 

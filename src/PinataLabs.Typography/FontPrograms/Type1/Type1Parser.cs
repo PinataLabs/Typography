@@ -63,6 +63,13 @@ internal static class Type1Parser
                     header.PaintType = paintType;
                 }
             }
+            else if (key.SequenceEqual("StrokeWidth"u8))
+            {
+                if (tokenizer.TryReadNumber(out double strokeWidth))
+                {
+                    header.StrokeWidth = FontPrograms.StrokeWidth.Sanitize(strokeWidth);
+                }
+            }
             else if (key.SequenceEqual("Encoding"u8) && header.EncodingKind == Type1EncodingKind.None)
             {
                 ReadEncoding(ref tokenizer, ref header);

@@ -35,7 +35,9 @@ internal sealed class CffFont
         Matrix3x2 fontMatrix,
         int encodingOffset,
         CffFontDict[] fontDicts,
-        int fdSelectOffset)
+        int fdSelectOffset,
+        bool isStroked,
+        float strokeWidth)
     {
         this.data = data;
         this.strings = strings;
@@ -47,6 +49,8 @@ internal sealed class CffFont
         this.encodingOffset = encodingOffset;
         this.fontDicts = fontDicts;
         this.fdSelectOffset = fdSelectOffset;
+        this.IsStroked = isStroked;
+        this.StrokeWidth = strokeWidth;
     }
 
     public int GlyphCount => this.charStrings.Count;
@@ -61,6 +65,16 @@ internal sealed class CffFont
     /// another matrix is written in the glyph space of this one.
     /// </summary>
     public Matrix3x2 FontMatrix { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the Top DICT PaintType is 2, which means stroked.
+    /// </summary>
+    public bool IsStroked { get; }
+
+    /// <summary>
+    /// Gets the Top DICT StrokeWidth in glyph space units, 0 when the font gives none.
+    /// </summary>
+    public float StrokeWidth { get; }
 
     /// <summary>
     /// Gets the advance width that the charstring of a glyph gives, in glyph space.
