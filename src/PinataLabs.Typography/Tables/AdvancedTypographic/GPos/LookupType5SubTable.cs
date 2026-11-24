@@ -90,7 +90,7 @@ internal static class LookupType5SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {

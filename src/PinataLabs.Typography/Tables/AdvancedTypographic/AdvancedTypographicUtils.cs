@@ -94,7 +94,7 @@ internal static class AdvancedTypographicUtils
     public static bool ApplyLookupList(
         FontMetrics fontMetrics,
         GPosTable table,
-        Tag feature,
+        LookupFeatures features,
         LookupFlags lookupFlags,
         SequenceLookupRecord[] records,
         GlyphPositioningCollection collection,
@@ -110,7 +110,7 @@ internal static class AdvancedTypographicUtils
             iterator.Index = index;
             iterator.Increment(sequenceIndex);
             LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-            hasChanged |= lookup.TryUpdatePosition(fontMetrics, table, collection, feature, iterator.Index, count - (iterator.Index - index));
+            hasChanged |= lookup.TryUpdatePosition(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
         }
 
         return hasChanged;

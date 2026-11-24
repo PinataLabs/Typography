@@ -3,7 +3,6 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
@@ -160,50 +159,43 @@ internal class GPosTable : Table
 
             // Plan positioning features for each glyph.
             shaper.Plan(collection, index, count);
-            IReadOnlyList<ShapingStage> shapingStages = shaper.GetShapingStages();
-            SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
-            foreach (ShapingStage stage in shapingStages)
+
+            // Positioning has no stage boundaries. The shapers pause only between substitutions, and
+            // their stage actions act on substitution collections alone, so the lookups of every
+            // planned feature are applied together.
+            List<Tag> features = [];
+            foreach (ShapingStage stage in shaper.GetShapingStages())
             {
-                stage.PreProcessFeatures(collection, index, count);
+                features.AddRange(stage.FeatureTags);
+            }
 
-                // Unlike substitution, positioning applies the features of a stage one after the other.
-                foreach (Tag featureTag in stage.FeatureTags)
+            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, out List<(ushort Index, LookupFeatures Features)>? lookups))
+            {
+                SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
+                foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
                 {
-                    if (!this.TryGetFeatureLookups(in featureTag, current, out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? lookups))
-                    {
-                        continue;
-                    }
+                    LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
+                    bool isKerning = lookupFeatures.Contains(KernTag) || lookupFeatures.Contains(VKernTag);
+                    iterator.Reset(index, lookupTable.LookupFlags);
 
-                    // Apply features in order.
-                    foreach ((Tag Feature, ushort Index, LookupTable LookupTable) featureLookup in lookups)
+                    while (iterator.Index < index + count)
                     {
-                        Tag feature = featureLookup.Feature;
-                        iterator.Reset(index, featureLookup.LookupTable.LookupFlags);
-
-                        while (iterator.Index < index + count)
+                        if (currentOperations++ >= maxOperationsCount)
                         {
-                            if (currentOperations++ >= maxOperationsCount)
-                            {
-                                maxOperationsReached = true;
-                                goto EndLookups;
-                            }
-
-                            List<TagEntry> glyphFeatures = collection[iterator.Index].Features;
-                            if (!HasFeature(glyphFeatures, in feature))
-                            {
-                                iterator.Next();
-                                continue;
-                            }
-
-                            bool success = featureLookup.LookupTable.TryUpdatePosition(fontMetrics, this, collection, featureLookup.Feature, iterator.Index, count - (iterator.Index - index));
-                            kerned |= success && (feature == KernTag || feature == VKernTag);
-                            updated |= success;
-                            iterator.Next();
+                            maxOperationsReached = true;
+                            goto EndLookups;
                         }
+
+                        if (lookupFeatures.AnyEnabledOn(collection[iterator.Index].Features))
+                        {
+                            bool success = lookupTable.TryUpdatePosition(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
+                            kerned |= success && isKerning;
+                            updated |= success;
+                        }
+
+                        iterator.Next();
                     }
                 }
-
-                stage.PostProcessFeatures(collection, index, count);
             }
 
             EndLookups:
@@ -225,39 +217,6 @@ internal class GPosTable : Table
         return updated;
     }
 
-    internal bool TryGetFeatureLookups(
-        in Tag stageFeature,
-        ScriptClass script,
-        [NotNullWhen(true)] out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? value)
-    {
-        if (this.ScriptList is null)
-        {
-            value = null;
-            return false;
-        }
-
-        ScriptListTable scriptListTable = this.ScriptList.Default();
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
-        {
-            if (this.ScriptList.TryGetValue(tags[i].Value, out ScriptListTable? table))
-            {
-                scriptListTable = table;
-                break;
-            }
-        }
-
-        LangSysTable? defaultLangSysTable = scriptListTable.DefaultLangSysTable;
-        if (defaultLangSysTable != null)
-        {
-            value = this.GetFeatureLookups(stageFeature, defaultLangSysTable);
-            return value.Count > 0;
-        }
-
-        value = this.GetFeatureLookups(stageFeature, scriptListTable.LangSysTables);
-        return value.Count > 0;
-    }
-
     private Tag GetUnicodeScriptTag(ScriptClass script)
     {
         if (this.ScriptList is null)
@@ -275,63 +234,6 @@ internal class GPosTable : Table
         }
 
         return default;
-    }
-
-    private List<(Tag Feature, ushort Index, LookupTable LookupTable)> GetFeatureLookups(in Tag stageFeature, params LangSysTable[] langSysTables)
-    {
-        List<(Tag Feature, ushort Index, LookupTable LookupTable)> lookups = [];
-        for (int i = 0; i < langSysTables.Length; i++)
-        {
-            ushort[] featureIndices = langSysTables[i].FeatureIndices;
-            for (int j = 0; j < featureIndices.Length; j++)
-            {
-                // Skip feature indices that fall outside the feature list.
-                if (featureIndices[j] >= this.FeatureList.FeatureTables.Length)
-                {
-                    continue;
-                }
-
-                FeatureTable featureTable = this.FeatureList.FeatureTables[featureIndices[j]];
-                Tag feature = featureTable.FeatureTag;
-
-                if (stageFeature != feature)
-                {
-                    continue;
-                }
-
-                ushort[] lookupListIndices = featureTable.LookupListIndices;
-                for (int k = 0; k < lookupListIndices.Length; k++)
-                {
-                    ushort lookupIndex = lookupListIndices[k];
-
-                    // Skip lookup indices that fall outside the lookup list.
-                    if (lookupIndex >= this.LookupList.LookupTables.Length)
-                    {
-                        continue;
-                    }
-
-                    LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-                    lookups.Add(new(feature, lookupIndex, lookupTable));
-                }
-            }
-        }
-
-        lookups.Sort((x, y) => x.Index - y.Index);
-        return lookups;
-    }
-
-    private static bool HasFeature(List<TagEntry> glyphFeatures, in Tag feature)
-    {
-        for (int i = 0; i < glyphFeatures.Count; i++)
-        {
-            TagEntry entry = glyphFeatures[i];
-            if (entry.Tag == feature && entry.Enabled)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static void FixCursiveAttachment(GlyphPositioningCollection collection, int index, int count)

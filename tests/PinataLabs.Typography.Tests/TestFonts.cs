@@ -39,6 +39,11 @@ public static class TestFonts
     // Built by tests/tools/generate_gsub_lookup_order_font.py.
     public static string GsubLookupOrderFile => GetFullPath("GsubLookupOrder.ttf");
 
+    // Built by tests/tools/generate_gpos_lookup_order_font.py, which also writes the HarfBuzz reference.
+    public static string GposLookupOrderFile => GetFullPath("GposLookupOrder.ttf");
+
+    public static string GposLookupOrderHarfBuzzReference => GetFullPath("GposLookupOrder.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");
