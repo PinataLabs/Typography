@@ -10,6 +10,8 @@ using PinataLabs.Typography.Tables.General.Kern;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tables.General.Post;
 using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
+using PinataLabs.Typography.Tests.FontPrograms;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests.Fakes;
@@ -37,16 +39,15 @@ internal class FakeFontInstance : StreamFontMetrics
         NameTable name = GenerateNameTable(fontName);
         MaximumProfileTable maxp = GenerateMaxpTable(glyphs);
         CMapTable cmap = GenerateCMapTable(glyphs);
-        var glyf = new FakeGlyphTable(glyphs);
+        GlyphTable glyf = GenerateGlyphTable(glyphs);
         PostTable post = GeneratePostTable();
         var kern = new KerningTable(Array.Empty<KerningSubTable>());
         OS2Table os2 = GenerateOS2TableWithVaryingVerticalFontMetrics();
         HorizontalMetricsTable htmx = GenerateHorizontalMetricsTable(glyphs);
         VerticalHeadTable vhea = GenerateVerticalHeadTable();
         VerticalMetricsTable vmtx = GenerateVerticalMetricsTable(glyphs);
-        IndexLocationTable loca = GenerateIndexLocationTable(glyphs);
 
-        TrueTypeFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf, loca)
+        TrueTypeFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf)
         {
             Kern = kern,
             Vhea = vhea,
@@ -64,16 +65,15 @@ internal class FakeFontInstance : StreamFontMetrics
         NameTable name = GenerateNameTable(fontName);
         MaximumProfileTable maxp = GenerateMaxpTable(glyphs);
         CMapTable cmap = GenerateCMapTable(glyphs);
-        var glyf = new FakeGlyphTable(glyphs);
+        GlyphTable glyf = GenerateGlyphTable(glyphs);
         PostTable post = GeneratePostTable();
         var kern = new KerningTable(Array.Empty<KerningSubTable>());
         OS2Table os2 = GenerateOS2Table();
         HorizontalMetricsTable htmx = GenerateHorizontalMetricsTable(glyphs);
         VerticalHeadTable vhea = GenerateVerticalHeadTable();
         VerticalMetricsTable vmtx = GenerateVerticalMetricsTable(glyphs);
-        IndexLocationTable loca = GenerateIndexLocationTable(glyphs);
 
-        return new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf, loca)
+        return new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf)
         {
             Kern = kern,
             Vhea = vhea,
@@ -132,8 +132,9 @@ internal class FakeFontInstance : StreamFontMetrics
     private static VerticalMetricsTable GenerateVerticalMetricsTable(List<FakeGlyphSource> glyphs)
         => new(glyphs.Select(_ => (ushort)30).ToArray(), glyphs.Select(_ => (short)10).ToArray());
 
-    private static IndexLocationTable GenerateIndexLocationTable(List<FakeGlyphSource> glyphs)
-        => new(new uint[glyphs.Count + 1]);
+    // Every glyph is the same square.
+    private static GlyphTable GenerateGlyphTable(List<FakeGlyphSource> glyphs)
+        => TrueTypeBuilder.GlyphTable([.. glyphs.Select(_ => TrueTypeBuilder.SimpleGlyph([(10, 10, true), (10, 20, true), (20, 20, true), (20, 10, true)]))]);
 
     private static HeadTable GenerateHeadTable()
         => new(

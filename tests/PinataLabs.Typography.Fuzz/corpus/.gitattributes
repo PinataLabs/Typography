@@ -1,0 +1,2 @@
+# Fuzz inputs are bytes. Line-end normalization would change them.
+* binary

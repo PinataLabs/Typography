@@ -24,8 +24,7 @@ internal sealed class TrueTypeFontTables : IFontTables
         NameTable name,
         OS2Table os2,
         PostTable post,
-        GlyphTable glyph,
-        IndexLocationTable loca)
+        GlyphTable glyph)
     {
         this.Cmap = cmap;
         this.Head = head;
@@ -36,7 +35,6 @@ internal sealed class TrueTypeFontTables : IFontTables
         this.Os2 = os2;
         this.Post = post;
         this.Glyf = glyph;
-        this.Loca = loca;
     }
 
     public CMapTable Cmap { get; set; }
@@ -92,8 +90,6 @@ internal sealed class TrueTypeFontTables : IFontTables
     public FpgmTable? Fpgm { get; set; }
 
     public GlyphTable Glyf { get; set; }
-
-    public IndexLocationTable Loca { get; set; }
 
     public PrepTable? Prep { get; set; }
 }

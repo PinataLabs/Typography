@@ -70,7 +70,7 @@ internal partial class StreamFontMetrics
                 float scaleFactor = pixelSize / this.UnitsPerEm;
                 this.interpreter.SetControlValueTable(cvt?.ControlValues, scaleFactor, pixelSize, prep?.Instructions);
 
-                GlyphVector.Hint(hintingMode, ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
+                GlyphVector.Hint(ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
             }
             catch (Exception)
             {
@@ -98,7 +98,6 @@ internal partial class StreamFontMetrics
         FpgmTable? fpgm = reader.TryGetTable<FpgmTable>();
         PrepTable? prep = reader.TryGetTable<PrepTable>();
         CvtTable? cvt = reader.TryGetTable<CvtTable>();
-        IndexLocationTable loca = reader.GetTable<IndexLocationTable>();
         GlyphTable glyf = reader.GetTable<GlyphTable>();
         KerningTable? kern = reader.TryGetTable<KerningTable>();
         NameTable name = reader.GetTable<NameTable>();
@@ -118,7 +117,7 @@ internal partial class StreamFontMetrics
         ColrTable? colr = reader.TryGetTable<ColrTable>();
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
 
-        TrueTypeFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf, loca)
+        TrueTypeFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf)
         {
             Fpgm = fpgm,
             Prep = prep,
@@ -150,8 +149,7 @@ internal partial class StreamFontMetrics
         HorizontalMetricsTable htmx = tables.Htmx;
         VerticalMetricsTable? vtmx = tables.Vmtx;
 
-        GlyphVector vector = glyf.GetGlyph(glyphId);
-        Bounds bounds = vector.Bounds;
+        Bounds bounds = glyf.GetBounds(glyphId);
         ushort advanceWidth = htmx.GetAdvancedWidth(glyphId);
         short lsb = htmx.GetLeftSideBearing(glyphId);
 
@@ -179,7 +177,8 @@ internal partial class StreamFontMetrics
             this,
             glyphId,
             codePoint,
-            vector,
+            glyf,
+            bounds,
             advanceWidth,
             advancedHeight,
             lsb,

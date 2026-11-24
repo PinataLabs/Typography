@@ -83,6 +83,7 @@
 #   treat as binary
 ###############################################################################
 *.basis             binary
+*.cff               binary
 *.dll               binary
 *.eot               binary
 *.exe               binary

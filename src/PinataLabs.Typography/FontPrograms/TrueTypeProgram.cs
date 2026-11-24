@@ -19,36 +19,36 @@ internal sealed class TrueTypeProgram
     // A name index is 16 bits, so a string past this one cannot name a glyph.
     private const int MaxNameIndex = ushort.MaxValue;
 
-    private readonly ReadOnlyMemory<byte> loca;
-    private readonly ReadOnlyMemory<byte> glyf;
     private readonly ReadOnlyMemory<byte> post;
     private readonly ReadOnlyMemory<byte> cmap;
     private readonly SfntAdvances advances;
-    private readonly bool longOffsets;
 
     private TrueTypeProgram(
-        ReadOnlyMemory<byte> loca,
-        ReadOnlyMemory<byte> glyf,
-        ReadOnlyMemory<byte> post,
-        ReadOnlyMemory<byte> cmap,
-        SfntAdvances advances,
-        bool longOffsets,
-        int glyphCount,
+        TrueTypeGlyphData glyphs,
+        SfntOptionalTables tables,
         int unitsPerEm)
     {
-        this.loca = loca;
-        this.glyf = glyf;
-        this.post = post;
-        this.cmap = cmap;
-        this.advances = advances;
-        this.longOffsets = longOffsets;
-        this.GlyphCount = glyphCount;
+        this.Glyphs = glyphs;
+        this.post = tables.Post;
+        this.cmap = tables.Cmap;
+        this.advances = tables.Advances;
+        this.MissingTables = tables.Missing;
+        this.MalformedTables = tables.Malformed;
         this.UnitsPerEm = unitsPerEm;
     }
 
-    public int GlyphCount { get; }
+    /// <summary>
+    /// Gets the 'loca' and 'glyf' tables.
+    /// </summary>
+    public TrueTypeGlyphData Glyphs { get; }
+
+    public int GlyphCount => this.Glyphs.GlyphCount;
 
     public int UnitsPerEm { get; }
+
+    public OptionalFontTables MissingTables { get; }
+
+    public OptionalFontTables MalformedTables { get; }
 
     /// <summary>
     /// Loads the program from an sfnt file. The 'head', 'maxp', 'loca' and 'glyf' tables are required.
@@ -72,56 +72,14 @@ internal sealed class TrueTypeProgram
             throw new InvalidFontFileException("The font has zero units per em.");
         }
 
-        // 'loca' has one more offset than the font has glyphs. A subset can declare more glyphs than it has offsets for.
         bool longOffsets = BinaryPrimitives.ReadInt16BigEndian(head.Slice(50)) != 0;
-        int glyphCount = Math.Min(
-            BinaryPrimitives.ReadUInt16BigEndian(maxp.Slice(4)),
-            (loca.Length / (longOffsets ? 4 : 2)) - 1);
-
-        if (glyphCount < 1)
+        TrueTypeGlyphData glyphs = new(loca, glyf, longOffsets, BinaryPrimitives.ReadUInt16BigEndian(maxp.Slice(4)));
+        if (glyphs.GlyphCount < 1)
         {
             throw new InvalidFontFileException("The font has no glyphs.");
         }
 
-        directory.TryGetTable(SfntDirectory.Post, out ReadOnlyMemory<byte> post);
-        directory.TryGetTable(SfntDirectory.Cmap, out ReadOnlyMemory<byte> cmap);
-        return new TrueTypeProgram(loca, glyf, post, cmap, SfntAdvances.Read(directory), longOffsets, glyphCount, unitsPerEm);
-    }
-
-    /// <summary>
-    /// Gets the 'glyf' data of a glyph. An empty glyph has no data.
-    /// </summary>
-    /// <returns><see langword="false"/> if the glyph ID or the location of the glyph is out of range.</returns>
-    public bool TryGetGlyphData(int glyphId, out ReadOnlySpan<byte> glyph)
-    {
-        glyph = default;
-        if ((uint)glyphId >= (uint)this.GlyphCount)
-        {
-            return false;
-        }
-
-        ReadOnlySpan<byte> offsets = this.loca.Span;
-        uint start;
-        uint end;
-        if (this.longOffsets)
-        {
-            start = BinaryPrimitives.ReadUInt32BigEndian(offsets.Slice(glyphId * 4));
-            end = BinaryPrimitives.ReadUInt32BigEndian(offsets.Slice((glyphId + 1) * 4));
-        }
-        else
-        {
-            // Short offsets are stored divided by two.
-            start = BinaryPrimitives.ReadUInt16BigEndian(offsets.Slice(glyphId * 2)) * 2U;
-            end = BinaryPrimitives.ReadUInt16BigEndian(offsets.Slice((glyphId + 1) * 2)) * 2U;
-        }
-
-        if (end < start || end > (uint)this.glyf.Length)
-        {
-            return false;
-        }
-
-        glyph = this.glyf.Span.Slice((int)start, (int)(end - start));
-        return true;
+        return new TrueTypeProgram(glyphs, SfntOptionalTables.Read(directory), unitsPerEm);
     }
 
     public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth)

@@ -3,7 +3,6 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
@@ -12,25 +11,6 @@ namespace PinataLabs.Typography.Tests.Tables.General.Glyphs;
 
 public class GlyphVectorTests
 {
-    [Test]
-    public async Task CloneIsDeep()
-    {
-        // arrange
-        ControlPoint[] controlPoints = { new(new Vector2(1.0f), true), new(new Vector2(2.0f), false) };
-        ushort[] endPoints = { 1, 2, 3 };
-        var bounds = new Bounds(1.0f, 2.0f, 3.0f, 4.0f);
-        var outline = new GlyphVector(controlPoints, endPoints, bounds, Array.Empty<byte>(), false);
-
-        // act
-        var clone = GlyphVector.DeepClone(outline);
-
-        // assert
-        await Assert.That(outline.ControlPoints.Equals(clone.ControlPoints)).IsFalse();
-        await Assert.That(outline.ControlPoints.SequenceEqual(clone.ControlPoints)).IsTrue();
-        await Assert.That(outline.EndPoints.Equals(clone.EndPoints)).IsFalse();
-        await Assert.That(outline.EndPoints.SequenceEqual(clone.EndPoints)).IsTrue();
-    }
-
     [Test]
     public async Task TtfOffsetXy_Works()
     {

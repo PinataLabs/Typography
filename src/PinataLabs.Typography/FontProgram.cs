@@ -22,6 +22,90 @@ namespace PinataLabs.Typography;
 /// A Type 1 font program keeps a decrypted copy of the part that holds its glyphs, and not the data.
 /// A font program holds no state that changes after load, so one instance can serve many threads at once.
 /// </para>
+/// <para>
+/// A font program can read untrusted data, such as a font that a PDF file embeds.
+/// For malformed data, <c>Load</c> throws <see cref="InvalidFontFileException"/> or a type that derives from it,
+/// and no other type. After a font program loads, its methods do not throw for malformed data:
+/// they return <see langword="false"/> or <see langword="null"/>, so a malformed glyph fails alone.
+/// These guarantees apply to <see cref="FontProgram"/> only, not to the text layout API.
+/// </para>
+/// <para>These limits apply to one glyph:</para>
+/// <list type="table">
+/// <listheader><term>Limit</term><description>Value</description></listheader>
+/// <item>
+/// <term>Charstring operand stack</term>
+/// <description>CFF: 48 operands, the Type 2 limit. Type 1: 24 operands. A charstring that pushes more fails.</description>
+/// </item>
+/// <item>
+/// <term>Subroutine nesting</term>
+/// <description>CFF and Type 1: 10 levels of subroutine calls.</description>
+/// </item>
+/// <item>
+/// <term>Charstring operators</term>
+/// <description>
+/// CFF: 1,048,576. Type 1: 100,000. The count includes the operators of subroutines and of the two components
+/// of a <c>seac</c> glyph. A <c>seac</c> component cannot itself be a <c>seac</c> glyph.
+/// </description>
+/// </item>
+/// <item>
+/// <term>Composite glyphs</term>
+/// <description>
+/// TrueType: 16 levels of nesting, and 4,096 components for each outline. The components that a point lookup
+/// reads to place a component on a point of another count too.
+/// </description>
+/// </item>
+/// <item>
+/// <term>Points</term>
+/// <description>
+/// TrueType and CFF: 1,000,000 calls to the sink for each outline. A TrueType point lookup counts each point
+/// that it reads as a call. Type 1: at most 3 calls for each operator, so at most 300,000.
+/// A simple TrueType glyph has at most 65,536 points, because its contour ends are 16-bit numbers.
+/// </description>
+/// </item>
+/// </list>
+/// <para>These limits apply to the font data:</para>
+/// <list type="table">
+/// <listheader><term>Limit</term><description>Value</description></listheader>
+/// <item>
+/// <term>CFF INDEX</term>
+/// <description>
+/// At most 65,535 objects, from the 16-bit count. The offset size is 1 to 4 bytes. <c>Load</c> refuses an INDEX
+/// whose offset array, or whose last offset, is past the end of the table, so the count is proven by the data
+/// before any array is sized from it. The offsets of each object are checked again when it is read.
+/// </description>
+/// </item>
+/// <item>
+/// <term>CFF DICT</term>
+/// <description>
+/// At most 48 operands for each operator. A real number is read from at most 64 characters. A DICT is no larger than its
+/// INDEX object, or than the Private DICT size, which must lie in the table.
+/// </description>
+/// </item>
+/// <item>
+/// <term>CFF Font DICTs</term>
+/// <description>At most 256 are read, because FDSelect selects a Font DICT with one byte.</description>
+/// </item>
+/// <item>
+/// <term>Glyph count</term>
+/// <description>
+/// TrueType: the smaller of the 'maxp' count and the 'loca' entries less one. CFF: the CharStrings INDEX count.
+/// Type 1: the <c>/CharStrings</c> entries that the data holds, at most 65,536, not the declared size. A Type 1 glyph name has at most 255 bytes.
+/// </description>
+/// </item>
+/// <item>
+/// <term>Type 1 subroutines</term>
+/// <description>
+/// The declared <c>/Subrs</c> count is at most the length of the decrypted private part. The table holds the
+/// highest index that the data defines, plus one.
+/// </description>
+/// </item>
+/// </list>
+/// <para>
+/// <c>Load</c> allocates the arrays that <see cref="RetainedByteCount"/> counts, a copy of the cleartext of a PFB file
+/// that splits its cleartext over more than one segment, and less than 64 KiB more. <see cref="RetainedByteCount"/> is
+/// at most the data length for TrueType, 3 times the data length plus 32 KiB for CFF, and 12 times the data length
+/// plus 32 KiB for Type 1. After load, only <see cref="GetGlyphName"/> allocates, for the string that it returns.
+/// </para>
 /// </remarks>
 public sealed class FontProgram
 {
@@ -36,6 +120,8 @@ public sealed class FontProgram
         this.Format = FontProgramFormat.TrueType;
         this.GlyphCount = program.GlyphCount;
         this.FontMatrix = Matrix3x2.CreateScale(1F / program.UnitsPerEm);
+        this.MissingOptionalTables = program.MissingTables;
+        this.MalformedOptionalTables = program.MalformedTables;
     }
 
     private FontProgram(CffProgram program, long retainedByteCount)
@@ -46,6 +132,8 @@ public sealed class FontProgram
         this.GlyphCount = program.Font.GlyphCount;
         this.FontMatrix = program.Font.FontMatrix;
         this.IsCidKeyed = program.Font.IsCidKeyed;
+        this.MissingOptionalTables = program.MissingTables;
+        this.MalformedOptionalTables = program.MalformedTables;
     }
 
     private FontProgram(Type1Program program, long retainedByteCount)
@@ -82,6 +170,45 @@ public sealed class FontProgram
     public Matrix3x2 FontMatrix { get; }
 
     /// <summary>
+    /// Gets the optional tables that the font does not have, for diagnostics. The value is fixed at load.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A font subset, such as one embedded in a PDF file, often leaves out tables that reading outlines does not need.
+    /// <see cref="Load(ReadOnlyMemory{byte})"/> accepts such a font. A table that is missing is treated as absent,
+    /// so for example a TrueType program without a 'post' table has no glyph names, and one without 'hhea' and 'hmtx' has no advance widths.
+    /// </para>
+    /// <para>
+    /// This property and <see cref="MalformedOptionalTables"/> never have a table in common. A Type 1 program and a bare CFF program have no sfnt tables
+    /// and report <see cref="OptionalFontTables.None"/>. A table that the font has but that cannot be used is in
+    /// <see cref="MalformedOptionalTables"/>.
+    /// </para>
+    /// </remarks>
+    public OptionalFontTables MissingOptionalTables { get; }
+
+    /// <summary>
+    /// Gets the optional tables that the font has but that were ignored because they are too damaged to use,
+    /// for diagnostics. The value is fixed at load.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A table is malformed when its header is truncated, or when the structure that reading it needs does not fit in its data.
+    /// A malformed table is treated as absent and never fails the load.
+    /// The 'name' and 'OS/2' tables are never read, so the check for them covers only the header size.
+    /// The 'hhea' table is malformed when it is shorter than 36 bytes or says the font has no metrics,
+    /// and 'hmtx' when it is shorter than one metric. A font has advance widths only when both are usable.
+    /// The 'post' table is malformed when it is shorter than its header or has a version that the OpenType specification does not define.
+    /// The 'cmap' table is malformed when its version is not 0 or its list of encoding records does not fit.
+    /// The check does not read the data that those tables hold, so a damaged entry inside a usable table makes a lookup fail, as before.
+    /// </para>
+    /// <para>
+    /// The 'head', 'maxp', 'loca' and 'glyf' tables of TrueType, and the 'CFF ' table of an OpenType file, are required.
+    /// A font without one, or with one that is malformed, fails to load.
+    /// </para>
+    /// </remarks>
+    public OptionalFontTables MalformedOptionalTables { get; }
+
+    /// <summary>
     /// Gets the bytes that this font program keeps reachable. The value is fixed at load and never changes.
     /// </summary>
     /// <remarks>
@@ -89,7 +216,7 @@ public sealed class FontProgram
     /// The value is the length of the data that was passed to <c>Load</c> when the program keeps that data,
     /// plus, for each array that the program allocated, 24 bytes for the array header plus the size of its elements.
     /// A TrueType program allocates no array. A CFF program allocates one array of 2 bytes per glyph
-    /// for its charset and one array of Font DICT records, one record for each Font DICT.
+    /// for its charset and one array of Font DICT records, one record for each Font DICT up to 256.
     /// A Type 1 program allocates the decrypted private part of the font, which holds the glyphs, two arrays of
     /// 4 bytes per glyph and two of 4 bytes per subroutine index, up to the highest that the font defines, for where
     /// they lie in it, one array of 4 bytes, one of
@@ -122,7 +249,8 @@ public sealed class FontProgram
     /// </summary>
     /// <remarks>
     /// The supported formats are an sfnt file with TrueType outlines in a 'glyf' table, an
-    /// OpenType file with a 'CFF ' table, and a Type 1 font as a PFB file, a PFA file or the stream of a
+    /// OpenType file with a 'CFF ' table, a bare CFF font as the stream of a PDF <c>/FontFile3</c>
+    /// (name-keyed or CID-keyed), and a Type 1 font as a PFB file, a PFA file or the stream of a
     /// PDF <c>/FontFile</c>. WOFF, WOFF2, font collections and CFF2 are not supported.
     /// A Type 1 font is found from its data alone, so the <c>/Length1</c>, <c>/Length2</c> and <c>/Length3</c>
     /// of a PDF stream are not needed.
@@ -167,6 +295,16 @@ public sealed class FontProgram
         }
 
         LoadBudget budget = new(data.Length, maxRetainedBytes);
+        if (CffProgram.IsBareCff(data.Span))
+        {
+            return new FontProgram(CffProgram.LoadBare(data, ref budget), budget.RetainedBytes);
+        }
+
+        if (CffProgram.IsBareCff2(data.Span))
+        {
+            throw new InvalidFontFileException("A CFF2 font program is not supported.");
+        }
+
         SfntDirectory directory = SfntDirectory.Read(data);
         return directory.Version switch
         {
@@ -197,7 +335,7 @@ public sealed class FontProgram
         where TSink : IGlyphOutlineSink
         => this.program switch
         {
-            TrueTypeProgram trueType => TrueTypeGlyphDecoder.TryWriteOutline(trueType, glyphId, ref sink),
+            TrueTypeProgram trueType => TrueTypeGlyphDecoder.TryWriteOutline(trueType.Glyphs, glyphId, ref sink),
             CffProgram cff => cff.Font.TryWriteOutline(glyphId, ref sink),
             Type1Program type1 => type1.TryWriteOutline(glyphId, ref sink),
             _ => false,

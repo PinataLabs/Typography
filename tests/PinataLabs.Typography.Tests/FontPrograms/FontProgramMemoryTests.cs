@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,8 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("FontPrograms/bare-SourceSansPro-Regular.cff")]
+    [Arguments("FontPrograms/bare-FDArrayTest257.cff")]
     [Arguments("Type1/bchr8a.pfb")]
     [Arguments("Type1/bchr8a.pfa")]
     [Arguments("Type1/bchr8a.fontfile")]
@@ -59,6 +62,20 @@ public class FontProgramMemoryTests
         long charset = ArrayHeaderBytes + (2L * font.GlyphCount);
         long fontDicts = ArrayHeaderBytes + FontDictRecordSize();
         await Assert.That(font.RetainedByteCount).IsEqualTo(data.Length + charset + fontDicts);
+    }
+
+    [Test]
+    public async Task ACffProgramKeepsOnlyTheFontDictsThatFdSelectCanSelect()
+    {
+        // 65,535 Font DICTs in 65,604 bytes. FDSelect selects a Font DICT with one byte, so only the first 256 count.
+        byte[] data = OpenTypeWithManyFontDicts();
+
+        FontProgram font = FontProgram.Load(data);
+
+        long charset = ArrayHeaderBytes + (2L * font.GlyphCount);
+        long fontDicts = ArrayHeaderBytes + (256 * FontDictRecordSize());
+        await Assert.That(font.RetainedByteCount).IsEqualTo(data.Length + charset + fontDicts);
+        await Assert.That(font.TryGetGlyphIdForCid(0, out _)).IsTrue();
     }
 
     [Test]
@@ -385,6 +402,44 @@ public class FontProgramMemoryTests
         }
 
         return types;
+    }
+
+    // A CID-keyed OpenType CFF font with one glyph and an FDArray of 65,535 Font DICTs, all empty but the last.
+    private static byte[] OpenTypeWithManyFontDicts()
+    {
+        const int charStrings = 50;
+        const int fdSelect = 56;
+        const int fdArray = 64;
+        List<byte> cff = [1, 0, 4, 1, 0, 1, 1, 1, 2, (byte)'A'];
+
+        // Top DICT INDEX: ROS 0 0 0, CharStrings, FDArray and FDSelect, each offset as a 32-bit number.
+        List<byte> topDict = [0x1C, 0, 0, 0x1C, 0, 0, 0x1C, 0, 0, 12, 30];
+        topDict.AddRange([0x1D, 0, 0, 0, charStrings, 17]);
+        topDict.AddRange([0x1D, 0, 0, 0, fdArray, 12, 36]);
+        topDict.AddRange([0x1D, 0, 0, 0, fdSelect, 12, 37]);
+        cff.AddRange([0, 1, 1, 1, (byte)(1 + topDict.Count)]);
+        cff.AddRange(topDict);
+
+        // String INDEX and Global Subr INDEX, both empty. Then one charstring, endchar.
+        cff.AddRange([0, 0, 0, 0]);
+        cff.AddRange([0, 1, 1, 1, 2, 14]);
+
+        // FDSelect format 3: one range from glyph 0 to Font DICT 0, then the sentinel.
+        cff.AddRange([3, 0, 1, 0, 0, 0, 0, 1]);
+
+        cff.AddRange([0xFF, 0xFF, 1]);
+        cff.AddRange(Enumerable.Repeat((byte)1, 0xFFFF));
+        cff.AddRange([2, 0]);
+
+        // An sfnt directory with one table: 'CFF ' at offset 28.
+        byte[] font = new byte[28 + cff.Count];
+        "OTTO"u8.CopyTo(font);
+        font[5] = 1;
+        "CFF "u8.CopyTo(font.AsSpan(12));
+        BinaryPrimitives.WriteInt32BigEndian(font.AsSpan(20), 28);
+        BinaryPrimitives.WriteInt32BigEndian(font.AsSpan(24), cff.Count);
+        cff.CopyTo(font, 28);
+        return font;
     }
 
     private static Type1FontBuilder Type1Font()

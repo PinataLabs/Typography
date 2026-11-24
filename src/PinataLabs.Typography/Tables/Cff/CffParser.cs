@@ -26,6 +26,9 @@ internal static class CffParser
     private const int OpFdArray = 0x0C24;
     private const int OpFdSelect = 0x0C25;
 
+    // The most Font DICTs that FDSelect can select.
+    private const int MaxFontDicts = 256;
+
     // Private DICT operators.
     private const int OpSubrs = 19;
     private const int OpDefaultWidthX = 20;
@@ -128,8 +131,10 @@ internal static class CffParser
         // A font that is not CID-keyed has one Font DICT: its Top DICT.
         CffIndex fdArray = fdArrayOffset == 0 ? default : CffIndex.Read(data, fdArrayOffset, 2, out _);
 
+        // FDSelect gives the Font DICT of a glyph in one byte, so a Font DICT after the first 256 is never used
+        // and is not read. Each record is larger than the INDEX entry that it comes from.
         // Both counts are known before either array exists, so a refusal reports the whole size.
-        int fontDictCount = fdArrayOffset == 0 ? 1 : fdArray.Count;
+        int fontDictCount = fdArrayOffset == 0 ? 1 : Math.Min(fdArray.Count, MaxFontDicts);
         budget.Reserve(LoadBudget.SizeOf<CffFontDict>(fontDictCount) + LoadBudget.SizeOf<ushort>(charStrings.Count));
         CffFontDict[] fontDicts = budget.Allocate<CffFontDict>(fontDictCount);
         ushort[] charset = budget.Allocate<ushort>(charStrings.Count);

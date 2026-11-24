@@ -18,6 +18,7 @@ a feature (encoding supplements), the expected value is the one the script built
 The output is deterministic, so a second run changes no file.
 """
 
+import io
 import json
 import os
 import struct
@@ -42,6 +43,16 @@ OUT = os.path.join(FONTS, "FontPrograms")
 
 # Shipped fonts that get a fixture. The path is relative to the Fonts directory.
 SHIPPED = ["SourceSansPro-Regular.otf", "FDArrayTest257.otf", "OpenSans-Regular.ttf", "SixLaborsSampleAB.ttf"]
+
+# Fonts whose 'CFF ' table is also written as a bare CFF program: (source font, bare file name).
+BARE_CFF = [
+    ("SourceSansPro-Regular.otf", "bare-SourceSansPro-Regular.cff"),
+    ("FDArrayTest257.otf", "bare-FDArrayTest257.cff"),
+    ("cff-cid-fdselect0.otf", "bare-cff-cid-fdselect0.cff"),
+    ("cff-cid-fdselect3.otf", "bare-cff-cid-fdselect3.cff"),
+    ("cff-type2-widths.otf", "bare-cff-type2-widths.cff"),
+    ("cff-seac-widths.otf", "bare-cff-seac-widths.cff"),
+]
 
 # Expert Encoding, from Adobe Technical Note #5176, Appendix B: code -> glyph name.
 EXPERT_ENCODING = {
@@ -187,13 +198,15 @@ def truetype_names(font):
 
 
 def cff_fixture(font, encoding_override):
-    top = font["CFF "].cff.topDictIndex[0]
-    order = font.getGlyphOrder()
+    return cff_table_fixture(font["CFF "].cff, font.getGlyphOrder(), font["hmtx"] if "hmtx" in font else None, encoding_override)
+
+
+def cff_table_fixture(font_set, order, hmtx, encoding_override):
+    top = font_set.topDictIndex[0]
     is_cid = hasattr(top, "ROS")
     has_top_matrix = "FontMatrix" in top.rawDict
     font_matrix = list(top.FontMatrix)
     char_strings = top.CharStrings
-    hmtx = font["hmtx"] if "hmtx" in font else None
 
     if is_cid:
         encoding = None
@@ -265,8 +278,15 @@ def truetype_fixture(font):
 
 
 def write_fixture(font_path, encoding_override=None):
-    font = TTFont(font_path)
-    fixture = truetype_fixture(font) if "glyf" in font else cff_fixture(font, encoding_override)
+    if font_path.endswith(".cff"):
+        # A bare CFF font program: fontTools reads the same bytes that FontProgram loads.
+        font_set = cffLib.CFFFontSet()
+        with open(font_path, "rb") as stream:
+            font_set.decompile(io.BytesIO(stream.read()), None)
+        fixture = cff_table_fixture(font_set, list(font_set.topDictIndex[0].charset), None, encoding_override)
+    else:
+        font = TTFont(font_path)
+        fixture = truetype_fixture(font) if "glyf" in font else cff_fixture(font, encoding_override)
     name = os.path.splitext(os.path.basename(font_path))[0]
     relative = os.path.relpath(font_path, OUT).replace(os.sep, "/")
     lines = ["{"]
@@ -678,6 +698,14 @@ def names_font(file_name):
     return build_truetype(file_name, glyphs, [(1, 0, 0, mac), (3, 0, 4, symbol)], post_format2(indices, pool))
 
 
+def bare_cff(font_path, file_name):
+    """Writes the 'CFF ' table of an OpenType font as a bare CFF font program, as a PDF embeds it in /FontFile3."""
+    path = os.path.join(OUT, file_name)
+    with open(path, "wb") as stream:
+        stream.write(TTFont(font_path).getTableData("CFF "))
+    return path
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     expert = list(cffLib.cffIExpertStrings)
@@ -716,6 +744,11 @@ def main():
         (names_font("tt-names.ttf"), None),
     ]
     built += [(os.path.join(FONTS, name), None) for name in SHIPPED]
+
+    # Bare CFF programs: name-keyed, CID-keyed, and CID-keyed with a Font DICT matrix and a Top DICT matrix.
+    for source, file_name in BARE_CFF:
+        directory = FONTS if source in SHIPPED else OUT
+        built.append((bare_cff(os.path.join(directory, source), file_name), None))
 
     for path, encoding_override in built:
         count = write_fixture(path, encoding_override)
