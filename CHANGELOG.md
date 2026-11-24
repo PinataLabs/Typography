@@ -106,6 +106,20 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- Text in N'Ko, Lao, Vai, Yi, Hiragana and Katakana or Hiragana uses the `nko `, `lao `, `vai `, `yi  ` and `kana`
+  scripts of the font. Before, shaping looked for `nkoo`, `laoo`, `vaii`, `yiii`, `hira` and `hrkt`, which fonts do not
+  use, and fell back to `DFLT`. Indic scripts try the version 3 tags such as `dev3` and `knd3` before the version 2 and
+  old tags, and the Indic shaper treats a version 3 tag as new-spec. A test checks the tags of every script against
+  HarfBuzz 15.0.0. (#98)
+- A space that the font lacks (U+00A0, U+2000 to U+200A, U+202F, U+205F, U+3000) is drawn with the glyph of U+0020 and
+  the width of that space, and U+2011 with the glyph of U+2010, as in HarfBuzz. Line breaking does not change. (#99)
+- A Hebrew letter and point compose to the presentation form that the font has when the font has no GPOS `mark`
+  feature for Hebrew. A meteg or a mark below the base moves before a sheva or hiriq that follows a patah or qamats. (#99)
+- The shaper of each script runs in a font without a GSUB table, so Hangul jamo compose and syllables decompose there.
+  A Hangul run that does not start the text composes and decomposes the correct glyphs. (#99)
+- In a font without a GPOS table, a mark takes no advance and is placed on its base from the glyph boxes, as in
+  HarfBuzz. With a GPOS table and no GDEF glyph classes, the glyph of a non-spacing mark takes no advance. (#99)
+- Dives Akuru and 29 more scripts use the universal shaper, as in HarfBuzz. (#99)
 - The required feature of the chosen language system is applied to every glyph, as HarfBuzz does. GSUB applies it
   in the stage of the shaper feature with the same tag, or else in the first stage. `KerningMode.None` still turns off
   a required `kern` or `vkrn` feature, which HarfBuzz does not. (#93)
