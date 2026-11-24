@@ -36,6 +36,8 @@ public sealed class FontProgram
         this.Format = FontProgramFormat.TrueType;
         this.GlyphCount = program.GlyphCount;
         this.FontMatrix = Matrix3x2.CreateScale(1F / program.UnitsPerEm);
+        this.MissingOptionalTables = program.MissingTables;
+        this.MalformedOptionalTables = program.MalformedTables;
     }
 
     private FontProgram(CffProgram program, long retainedByteCount)
@@ -46,6 +48,8 @@ public sealed class FontProgram
         this.GlyphCount = program.Font.GlyphCount;
         this.FontMatrix = program.Font.FontMatrix;
         this.IsCidKeyed = program.Font.IsCidKeyed;
+        this.MissingOptionalTables = program.MissingTables;
+        this.MalformedOptionalTables = program.MalformedTables;
     }
 
     private FontProgram(Type1Program program, long retainedByteCount)
@@ -80,6 +84,45 @@ public sealed class FontProgram
     /// Both scale by 0.001 by default.
     /// </summary>
     public Matrix3x2 FontMatrix { get; }
+
+    /// <summary>
+    /// Gets the optional tables that the font does not have, for diagnostics. The value is fixed at load.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A font subset, such as one embedded in a PDF file, often leaves out tables that reading outlines does not need.
+    /// <see cref="Load(ReadOnlyMemory{byte})"/> accepts such a font. A table that is missing is treated as absent,
+    /// so for example a TrueType program without a 'post' table has no glyph names, and one without 'hhea' and 'hmtx' has no advance widths.
+    /// </para>
+    /// <para>
+    /// This property and <see cref="MalformedOptionalTables"/> never have a table in common. A Type 1 program has no sfnt tables
+    /// and reports <see cref="OptionalFontTables.None"/>. A table that the font has but that cannot be used is in
+    /// <see cref="MalformedOptionalTables"/>.
+    /// </para>
+    /// </remarks>
+    public OptionalFontTables MissingOptionalTables { get; }
+
+    /// <summary>
+    /// Gets the optional tables that the font has but that were ignored because they are too damaged to use,
+    /// for diagnostics. The value is fixed at load.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A table is malformed when its header is truncated, or when the structure that reading it needs does not fit in its data.
+    /// A malformed table is treated as absent and never fails the load.
+    /// The 'name' and 'OS/2' tables are never read, so the check for them covers only the header size.
+    /// The 'hhea' table is malformed when it is shorter than 36 bytes or says the font has no metrics,
+    /// and 'hmtx' when it is shorter than one metric. A font has advance widths only when both are usable.
+    /// The 'post' table is malformed when it is shorter than its header or has a version that the OpenType specification does not define.
+    /// The 'cmap' table is malformed when its version is not 0 or its list of encoding records does not fit.
+    /// The check does not read the data that those tables hold, so a damaged entry inside a usable table makes a lookup fail, as before.
+    /// </para>
+    /// <para>
+    /// The 'head', 'maxp', 'loca' and 'glyf' tables of TrueType, and the 'CFF ' table of an OpenType file, are required.
+    /// A font without one, or with one that is malformed, fails to load.
+    /// </para>
+    /// </remarks>
+    public OptionalFontTables MalformedOptionalTables { get; }
 
     /// <summary>
     /// Gets the bytes that this font program keeps reachable. The value is fixed at load and never changes.

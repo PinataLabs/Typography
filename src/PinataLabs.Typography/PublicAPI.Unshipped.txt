@@ -30,3 +30,13 @@ PinataLabs.Typography.FontProgramTooLargeException
 PinataLabs.Typography.FontProgramTooLargeException.MaxRetainedBytes.get -> long
 PinataLabs.Typography.FontProgramTooLargeException.RetainedByteCount.get -> long
 static PinataLabs.Typography.FontProgram.Load(System.ReadOnlyMemory<byte> data, PinataLabs.Typography.FontProgramOptions! options) -> PinataLabs.Typography.FontProgram!
+PinataLabs.Typography.FontProgram.MalformedOptionalTables.get -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.FontProgram.MissingOptionalTables.get -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.Cmap = 8 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.Hhea = 16 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.Hmtx = 32 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.Name = 1 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.None = 0 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.Os2 = 2 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.OptionalFontTables.Post = 4 -> PinataLabs.Typography.OptionalFontTables

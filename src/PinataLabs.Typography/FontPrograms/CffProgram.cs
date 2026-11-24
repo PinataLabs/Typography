@@ -13,13 +13,19 @@ internal sealed class CffProgram
 {
     private readonly SfntAdvances advances;
 
-    private CffProgram(CffFont font, SfntAdvances advances)
+    private CffProgram(CffFont font, SfntOptionalTables tables)
     {
         this.Font = font;
-        this.advances = advances;
+        this.advances = tables.Advances;
+        this.MissingTables = tables.Missing;
+        this.MalformedTables = tables.Malformed;
     }
 
     public CffFont Font { get; }
+
+    public OptionalFontTables MissingTables { get; }
+
+    public OptionalFontTables MalformedTables { get; }
 
     /// <summary>
     /// Loads the program from an OpenType file.
@@ -35,7 +41,7 @@ internal sealed class CffProgram
                 : "The font has no 'CFF ' table.");
         }
 
-        return new CffProgram(CffParser.Load(cff, ref budget), SfntAdvances.Read(directory));
+        return new CffProgram(CffParser.Load(cff, ref budget), SfntOptionalTables.Read(directory));
     }
 
     public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth)

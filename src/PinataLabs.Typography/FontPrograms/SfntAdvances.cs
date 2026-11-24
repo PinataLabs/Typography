@@ -25,17 +25,16 @@ internal readonly struct SfntAdvances
     /// </summary>
     public bool IsEmpty => this.metricCount == 0;
 
-    public static SfntAdvances Read(SfntDirectory directory)
+    /// <summary>
+    /// Creates the advances from checked tables: an 'hhea' table of at least 36 bytes and an 'hmtx' table.
+    /// </summary>
+    /// <param name="hhea">The 'hhea' table.</param>
+    /// <param name="hmtx">The 'hmtx' table.</param>
+    /// <returns>The <see cref="SfntAdvances"/>.</returns>
+    public static SfntAdvances Create(ReadOnlySpan<byte> hhea, ReadOnlyMemory<byte> hmtx)
     {
-        if (!directory.TryGetTable(SfntDirectory.Hhea, out ReadOnlyMemory<byte> hhea)
-            || !directory.TryGetTable(SfntDirectory.Hmtx, out ReadOnlyMemory<byte> hmtx)
-            || hhea.Length < 36)
-        {
-            return default;
-        }
-
         // numberOfHMetrics is the last field of 'hhea'. Each metric is an advance and a side bearing.
-        int metricCount = BinaryPrimitives.ReadUInt16BigEndian(hhea.Span.Slice(34));
+        int metricCount = BinaryPrimitives.ReadUInt16BigEndian(hhea.Slice(34));
         return new SfntAdvances(hmtx, Math.Min(metricCount, hmtx.Length / 4));
     }
 
