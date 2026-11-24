@@ -24,6 +24,9 @@ internal static class TextLayout
     private const float SpaceFallbackEmFraction = 0.25F;
 
     public static IReadOnlyList<GlyphLayout> GenerateLayout(ReadOnlySpan<char> text, TextOptions options)
+        => GenerateLayout(text, options, options.Origin);
+
+    public static IReadOnlyList<GlyphLayout> GenerateLayout(ReadOnlySpan<char> text, TextOptions options, Vector2 origin)
     {
         if (text.IsEmpty)
         {
@@ -31,7 +34,7 @@ internal static class TextLayout
         }
 
         TextBox textBox = ProcessText(text, options);
-        return LayoutText(textBox, options);
+        return LayoutText(textBox, options, origin);
     }
 
     public static IReadOnlyList<TextRun> BuildTextRuns(ReadOnlySpan<char> text, TextOptions options)
@@ -210,12 +213,12 @@ internal static class TextLayout
         return BreakLines(text, options, paragraphDirection, bidiRuns, bidiMap, positionings, layoutMode);
     }
 
-    private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options)
+    private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options, Vector2 origin)
     {
         LayoutMode layoutMode = options.LayoutMode;
         List<GlyphLayout> glyphs = [];
 
-        Vector2 boxLocation = options.Origin / options.Dpi;
+        Vector2 boxLocation = origin / options.Dpi;
         Vector2 penLocation = boxLocation;
 
         TextDirection direction = textBox.TextDirection();
