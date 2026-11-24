@@ -40,3 +40,8 @@ PinataLabs.Typography.OptionalFontTables.Name = 1 -> PinataLabs.Typography.Optio
 PinataLabs.Typography.OptionalFontTables.None = 0 -> PinataLabs.Typography.OptionalFontTables
 PinataLabs.Typography.OptionalFontTables.Os2 = 2 -> PinataLabs.Typography.OptionalFontTables
 PinataLabs.Typography.OptionalFontTables.Post = 4 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.GlyphPaintType.Filled = 0 -> PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.GlyphPaintType.Stroked = 2 -> PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.FontProgram.PaintType.get -> PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.FontProgram.StrokeWidth.get -> float

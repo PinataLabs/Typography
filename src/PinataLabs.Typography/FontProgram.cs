@@ -131,6 +131,8 @@ public sealed class FontProgram
         this.Format = FontProgramFormat.Cff;
         this.GlyphCount = program.Font.GlyphCount;
         this.FontMatrix = program.Font.FontMatrix;
+        this.PaintType = program.Font.IsStroked ? GlyphPaintType.Stroked : GlyphPaintType.Filled;
+        this.StrokeWidth = program.Font.StrokeWidth;
         this.IsCidKeyed = program.Font.IsCidKeyed;
         this.MissingOptionalTables = program.MissingTables;
         this.MalformedOptionalTables = program.MalformedTables;
@@ -143,6 +145,8 @@ public sealed class FontProgram
         this.Format = FontProgramFormat.Type1;
         this.GlyphCount = program.GlyphCount;
         this.FontMatrix = program.FontMatrix;
+        this.PaintType = program.PaintType == 2 ? GlyphPaintType.Stroked : GlyphPaintType.Filled;
+        this.StrokeWidth = program.StrokeWidth;
     }
 
     /// <summary>
@@ -168,6 +172,21 @@ public sealed class FontProgram
     /// Both scale by 0.001 by default.
     /// </summary>
     public Matrix3x2 FontMatrix { get; }
+
+    /// <summary>
+    /// Gets how the outlines are meant to be painted.
+    /// A TrueType program is always <see cref="GlyphPaintType.Filled"/>.
+    /// A CFF program reports the PaintType of its Top DICT, and a Type 1 program its <c>/PaintType</c>.
+    /// The value 2 is <see cref="GlyphPaintType.Stroked"/>. Every other value, or a missing one, is <see cref="GlyphPaintType.Filled"/>.
+    /// </summary>
+    public GlyphPaintType PaintType { get; }
+
+    /// <summary>
+    /// Gets the line width for <see cref="GlyphPaintType.Stroked"/> outlines, in glyph space units, so
+    /// <see cref="FontMatrix"/> scales it to ems. It is 0 when the font gives none or gives a width that is negative or not finite,
+    /// and for TrueType. It has no use for a <see cref="GlyphPaintType.Filled"/> program, but it reports what the font declares.
+    /// </summary>
+    public float StrokeWidth { get; }
 
     /// <summary>
     /// Gets the optional tables that the font does not have, for diagnostics. The value is fixed at load.
