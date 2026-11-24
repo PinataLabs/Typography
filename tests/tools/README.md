@@ -254,7 +254,14 @@ after the letter. The features that HarfBuzz applies, and what it does with the 
 only the universal shaper applies both `nukt` and `pref`, and only the default and Arabic shapers place the mark.
 
 The reference holds the glyph IDs and positions that HarfBuzz gives for the letter and the mark of each script, in
-each font that has a tag for the script. `ShaperChoiceTests` checks that the library gives the same.
+each font that has a tag for the script.
+
+The script also builds `ShaperChoicePositioning.ttf`. Its GSUB and GPOS tables have only `DFLT`, and its GPOS
+features `abvm`, `blwm` and `dist` move the letter by 1, 2 and 4 units. Every shaper of HarfBuzz applies the three,
+so the reference has each letter 7 units from its place. It has no Hebrew letter for this font: HarfBuzz does not
+use the GPOS table of a font that has no `hebr` script for Hebrew text.
+
+`ShaperChoiceTests` checks that the library gives the same.
 
 To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
 repository root. Run `derive_harfbuzz_script_tags.py` first when the script tags can have changed:

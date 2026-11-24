@@ -39,9 +39,6 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly Tag PresTag = Tag.Parse("pres");
     private static readonly Tag PstsTag = Tag.Parse("psts");
     private static readonly Tag HalnTag = Tag.Parse("haln");
-    private static readonly Tag DistTag = Tag.Parse("dist");
-    private static readonly Tag AbvmTag = Tag.Parse("abvm");
-    private static readonly Tag BlwmTag = Tag.Parse("blwm");
 
     private const int DottedCircle = 0x25cc;
 

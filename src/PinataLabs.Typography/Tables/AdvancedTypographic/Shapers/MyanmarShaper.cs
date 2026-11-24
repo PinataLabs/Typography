@@ -35,9 +35,6 @@ internal sealed class MyanmarShaper : DefaultShaper
     private static readonly Tag AbvsTag = Tag.Parse("abvs");
     private static readonly Tag BlwsTag = Tag.Parse("blws");
     private static readonly Tag PstsTag = Tag.Parse("psts");
-    private static readonly Tag DistTag = Tag.Parse("dist");
-    private static readonly Tag AbvmTag = Tag.Parse("abvm");
-    private static readonly Tag BlwmTag = Tag.Parse("blwm");
 
     public MyanmarShaper(ScriptClass script, TextOptions textOptions)
        : base(script, MarkZeroingMode.PreGPos, textOptions)

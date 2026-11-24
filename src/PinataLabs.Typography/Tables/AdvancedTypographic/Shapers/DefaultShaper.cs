@@ -52,6 +52,12 @@ internal class DefaultShaper : BaseShaper
 
     protected static readonly Tag KernTag = Tag.Parse("kern");
 
+    protected static readonly Tag DistTag = Tag.Parse("dist");
+
+    protected static readonly Tag AbvmTag = Tag.Parse("abvm");
+
+    protected static readonly Tag BlwmTag = Tag.Parse("blwm");
+
     protected static readonly Tag VertTag = Tag.Parse("vert");
 
     protected static readonly Tag VKernTag = Tag.Parse("vkrn");
@@ -141,6 +147,12 @@ internal class DefaultShaper : BaseShaper
                 this.AddFeature(collection, i, 1, RcltTag);
                 this.AddFeature(collection, i, 1, CursTag);
                 this.AddFeature(collection, i, 1, KernTag);
+
+                // Every shaper of HarfBuzz applies these three, so a font whose only script is DFLT can
+                // place the marks of a script that has a shaper of its own.
+                this.AddFeature(collection, i, 1, DistTag);
+                this.AddFeature(collection, i, 1, AbvmTag);
+                this.AddFeature(collection, i, 1, BlwmTag);
 
                 // Rotated glyphs in vertical mixed layout get `vrtr`. Its glyphs are designed to be
                 // rotated by the layout engine, so they are still rotated synthetically. See:

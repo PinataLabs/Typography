@@ -30,7 +30,14 @@ own after the letter. What HarfBuzz does with the letter and the mark shows its 
 * The Myanmar shaper applies `pref` and `pres`, and takes the advance of the mark away.
 
 The reference holds the glyph IDs and positions that HarfBuzz gives for the letter and the mark of each script, in
-each font that has a tag for the script. ShaperChoiceTests reads the reference.
+each font that has a tag for the script.
+
+The script also builds ShaperChoicePositioning.ttf. Its GSUB and GPOS tables have only `DFLT`, and its GPOS features
+`abvm`, `blwm` and `dist` move the letter by 1, 2 and 4 units. Every shaper of HarfBuzz applies the three, so each
+letter moves by 7 units. The reference has no Hebrew letter for this font: HarfBuzz does not use the GPOS table of
+a font that has no `hebr` script for Hebrew text.
+
+ShaperChoiceTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
@@ -52,6 +59,8 @@ SCRIPT_TAGS = os.path.join(FONTS, "ScriptTags.harfbuzz.json")
 REFERENCE = os.path.join(FONTS, "ShaperChoice.harfbuzz.json")
 
 MARK = 0x0301
+POSITIONING_FONT = "ShaperChoicePositioning.ttf"
+POSITIONING_FEATURES = ["abvm", "blwm", "dist"]
 FEATURES = ["nukt", "pref", "pres", "haln", "isol"]
 NO_SCRIPT = "zzzz"
 
@@ -76,10 +85,13 @@ def read_scripts():
     return {name: (*letter, tags[name]) for name, letter in letters.items()}
 
 
-def build(file_name, letters, script_tags):
+def build(file_name, letters, script_tags, positioning=False):
     names = [".notdef", "letter", "mark"] + FEATURES
     features = "languagesystem DFLT dflt;\n"
     features += "".join(f"feature {tag} {{ sub letter by letter {tag}; }} {tag};\n" for tag in FEATURES)
+    if positioning:
+        features += "".join(
+            f"feature {tag} {{ pos letter <{1 << i} 0 0 0>; }} {tag};\n" for i, tag in enumerate(POSITIONING_FEATURES))
 
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(names)
@@ -126,6 +138,16 @@ def main():
                 "font": file_name,
                 "text": text,
                 "glyphs": shape_positions(font, text, direction),
+            })
+
+    font = build(POSITIONING_FONT, letters, {"DFLT"}, positioning=True)
+    for name, (letter, direction, _) in scripts.items():
+        if name != "Hebrew":
+            cases.append({
+                "name": f"{name}, positioning",
+                "font": POSITIONING_FONT,
+                "text": chr(letter),
+                "glyphs": shape_positions(font, chr(letter), direction),
             })
 
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:

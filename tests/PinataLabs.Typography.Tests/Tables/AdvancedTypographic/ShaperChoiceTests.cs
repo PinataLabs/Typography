@@ -24,6 +24,7 @@ public class ShaperChoiceTests
         Options)!;
 
     // Each case is one letter and a mark, in a font whose features and missing GPOS table show the shaper.
+    // The cases of the last font are one letter, which the GPOS features that every shaper applies move.
     [Test]
     public async Task EveryScriptHasTheShaperThatHarfBuzzChoosesForTheScriptTagOfTheFont()
     {
