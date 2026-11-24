@@ -13,7 +13,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// Before GSUB, the characters of the text are composed and decomposed to the glyphs that the font has,
-/// and each run of marks is sorted, as in HarfBuzz.
+/// and each run of marks is sorted, as in HarfBuzz. A font without GPOS also places its marks as HarfBuzz does.
 /// </summary>
 public class NormalizationTests
 {

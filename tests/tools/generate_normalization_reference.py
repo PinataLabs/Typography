@@ -11,7 +11,10 @@ Before GSUB, HarfBuzz maps the characters of the text to the glyphs that the fon
 base and a mark with the precomposed character when the font has it, it replaces a character that the
 font lacks with its canonical decomposition when the font has the parts, and it sorts each run of marks.
 
-The script builds four fonts in tests/PinataLabs.Typography.Tests/Fonts:
+The same step draws a space that the font lacks with the glyph of U+0020. And when the font has no GPOS
+table, HarfBuzz takes the advance of each mark away and places the mark on its base.
+
+The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
 
 * Normalization.ttf has a small character set chosen for the named cases below. For example it has
   o, U+0301 and U+00F3, and it has T and U+0327 but not U+0162. Its GSUB table has only a `hang` script
@@ -22,11 +25,25 @@ The script builds four fonts in tests/PinataLabs.Typography.Tests/Fonts:
 * NormalizationParts.ttf has the same characters, except those that have a canonical decomposition.
 * NormalizationBase.ttf has a, e, o, q and U+0323 only. The tests use it as a primary font that lacks marks,
   with Normalization.ttf as its fallback font. HarfBuzz has no font fallback, so the reference has no case for it.
+* NormalizationHebrew.ttf, NormalizationHebrewMark.ttf and NormalizationHebrewKern.ttf have the Hebrew letters,
+  points and presentation forms. They differ in the GPOS `mark` feature that decides whether a letter and a
+  point compose.
+* NormalizationHangul.ttf, NormalizationHangulGsub.ttf and NormalizationHangulJamo.ttf have Hangul jamo, with and
+  without syllables and a GSUB table.
+* NormalizationSpace.ttf and NormalizationSpaceBare.ttf have U+0020 and lack the other spaces.
+* NormalizationMarks.ttf, NormalizationMarksGdef.ttf and NormalizationMarksKern.ttf have a base and marks of
+  eight scripts. They differ in their GDEF and GPOS tables.
+* NormalizationScripts.ttf has the first letter of every script and U+0301.
+
+The comment above the cases of each group says what the group shows.
 
 The glyphs of the two scan fonts have no outline. The scan shapes each character alone in both fonts,
 the two parts of each decomposition and the full decomposition in NormalizationScan.ttf, and each pair of
-combining classes after a base. The reference holds the glyph IDs that HarfBuzz gives, in the order of
-its output. NormalizationTests reads it.
+combining classes after a base.
+
+The reference holds four lists, in the order of the HarfBuzz output. `cases` and `scan` hold the glyph IDs
+that HarfBuzz gives. `positioned` and `scripts` also hold where HarfBuzz draws each glyph, in font units from
+the start of the line. NormalizationTests reads the reference.
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """

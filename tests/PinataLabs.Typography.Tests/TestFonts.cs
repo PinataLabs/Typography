@@ -47,7 +47,7 @@ public static class TestFonts
     // Written by tests/tools/generate_default_langsys_reference.py.
     public static string DefaultLangSysHarfBuzzReference => GetFullPath("DefaultLangSys.harfbuzz.json");
 
-    // Written by tests/tools/generate_normalization_reference.py, with the four Normalization fonts.
+    // Written by tests/tools/generate_normalization_reference.py, with the Normalization fonts.
     public static string NormalizationHarfBuzzReference => GetFullPath("Normalization.harfbuzz.json");
 
     public static string NormalizationBaseFile => GetFullPath("NormalizationBase.ttf");
