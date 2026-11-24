@@ -70,7 +70,7 @@ internal abstract class BaseShaper
     /// <param name="count">The number of elements to assign.</param>
     protected abstract void AssignFeatures(IGlyphShapingCollection collection, int index, int count);
 
-    public abstract IEnumerable<ShapingStage> GetShapingStages();
+    public abstract IReadOnlyList<ShapingStage> GetShapingStages();
 
     private static void RecalculateCount(IGlyphShapingCollection collection, ref int oldCount, ref int count)
     {

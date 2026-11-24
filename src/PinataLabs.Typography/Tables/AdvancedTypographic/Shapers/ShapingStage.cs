@@ -3,40 +3,36 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 /// <summary>
 /// An individual shaping stage.
-/// Each stage must have a feature tag but can also contain pre and post feature processing operations.
+/// A stage holds the features whose lookups are applied together, in LookupList order.
+/// It can also contain pre and post processing operations, which run before and after those lookups.
 /// </summary>
-/// <remarks>
-/// For comparison purposes we only care about the feature tag as we want to avoid duplication.
-/// </remarks>
-internal readonly struct ShapingStage : IEquatable<ShapingStage>
+internal sealed class ShapingStage
 {
+    private readonly List<Tag> featureTags = [];
     private readonly Action<IGlyphShapingCollection, int, int>? preAction;
-    private readonly Action<IGlyphShapingCollection, int, int>? postAction;
+    private Action<IGlyphShapingCollection, int, int>? postAction;
 
-    public ShapingStage(Tag featureTag, Action<IGlyphShapingCollection, int, int>? preAction, Action<IGlyphShapingCollection, int, int>? postAction)
-    {
-        this.FeatureTag = featureTag;
-        this.preAction = preAction;
-        this.postAction = postAction;
-    }
+    public ShapingStage(Action<IGlyphShapingCollection, int, int>? preAction)
+        => this.preAction = preAction;
 
-    public Tag FeatureTag { get; }
+    /// <summary>
+    /// Gets the features of the stage, in the order in which the shaper planned them.
+    /// </summary>
+    public IReadOnlyList<Tag> FeatureTags => this.featureTags;
 
-    public void PreProcessFeature(IGlyphShapingCollection collection, int index, int count)
+    public void AddFeature(Tag featureTag) => this.featureTags.Add(featureTag);
+
+    public void SetPostAction(Action<IGlyphShapingCollection, int, int> action) => this.postAction = action;
+
+    public void PreProcessFeatures(IGlyphShapingCollection collection, int index, int count)
         => this.preAction?.Invoke(collection, index, count);
 
-    public void PostProcessFeature(IGlyphShapingCollection collection, int index, int count)
+    public void PostProcessFeatures(IGlyphShapingCollection collection, int index, int count)
         => this.postAction?.Invoke(collection, index, count);
-
-    public override bool Equals(object? obj)
-        => obj is ShapingStage stage && this.Equals(stage);
-
-    public bool Equals(ShapingStage other) => this.FeatureTag.Equals(other.FeatureTag);
-
-    public override int GetHashCode() => HashCode.Combine(this.FeatureTag);
 }
