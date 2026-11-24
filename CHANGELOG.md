@@ -116,9 +116,18 @@ An additive or breaking public API change needs all of these:
 - A Hebrew letter and point compose to the presentation form that the font has when the font has no GPOS `mark`
   feature for Hebrew. A meteg or a mark below the base moves before a sheva or hiriq that follows a patah or qamats. (#99)
 - The shaper of each script runs in a font without a GSUB table, so Hangul jamo compose and syllables decompose there.
+  The Indic shaper also reorders each syllable there, and gives a broken syllable a dotted circle.
   A Hangul run that does not start the text composes and decomposes the correct glyphs. (#99)
 - In a font without a GPOS table, a mark takes no advance and is placed on its base from the glyph boxes, as in
-  HarfBuzz. With a GPOS table and no GDEF glyph classes, the glyph of a non-spacing mark takes no advance. (#99)
+  HarfBuzz. A mark of Mongolian, N'Ko, Phags-pa, Mandaic, Manichaean or Psalter Pahlavi text only loses its advance.
+  With a GPOS table and no GDEF glyph classes, the glyph of a non-spacing mark takes no advance. (#99)
+- The `kern` table of a font kerns as in HarfBuzz. Each glyph of a pair takes half of the kerning and the second
+  glyph moves, a pair is two glyphs with nothing but marks between them, and right-to-left text looks for the pair
+  in the order of the line. Only text of the default, Arabic, Hebrew and Hangul shapers is kerned, and only when the
+  GPOS table has no `kern` feature for the script. Before, the kerning moved the glyphs after the pair, and it also
+  applied when the GPOS `kern` feature had no pair for the text. (#99)
+- Text runs that have the same font position its glyphs once. Before, each text run applied the GPOS adjustments and
+  the mark offsets of the font again. (#99)
 - Dives Akuru and 29 more scripts use the universal shaper, as in HarfBuzz. (#99)
 - The required feature of the chosen language system is applied to every glyph, as HarfBuzz does. GSUB applies it
   in the stage of the shaper feature with the same tag, or else in the first stage. `KerningMode.None` still turns off

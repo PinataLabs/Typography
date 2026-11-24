@@ -148,24 +148,30 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
   and the third has a `mark` feature that only `latn` lists. A letter and a point compose in the first and third.
 - `NormalizationHangul.ttf`, `NormalizationHangulGsub.ttf` and `NormalizationHangulJamo.ttf` have Hangul jamo.
   The first two also have two syllables, and only the second has a GSUB table.
+- `NormalizationDevanagari.ttf` has Devanagari letters and signs and the dotted circle, and no GSUB table.
 - `NormalizationSpace.ttf` and `NormalizationSpaceBare.ttf` have U+0020 and lack the other spaces.
 - `NormalizationMarks.ttf`, `NormalizationMarksGdef.ttf` and `NormalizationMarksKern.ttf` have a base and marks of
   eight scripts. The first has no GPOS and no GDEF table, the second has GDEF glyph classes, and the third has a
   GPOS table that only kerns.
+- `NormalizationMarksLegacyKern.ttf` and `NormalizationMarksBothKern.ttf` have the same glyphs and a `kern` table.
+  The second also has the GPOS table that only kerns.
 - `NormalizationScripts.ttf` has the first letter of every script of `Scripts.txt` and U+0301.
+  `NormalizationScriptsKern.ttf` also has a `kern` table with the pair of each letter and itself.
 
-The reference holds four lists:
+The reference holds five lists:
 
 - `cases` has the glyph IDs that HarfBuzz gives for each named text.
 - `scan` has the glyph IDs for 6427 texts: each character alone in both scan fonts, the two parts of each
   decomposition, the full decomposition, and each pair of combining classes after a base.
-- `positioned` has the glyph IDs and where HarfBuzz draws each glyph, for the spaces that a font lacks and for
-  marks in a font without GPOS.
+- `positioned` has the glyph IDs and where HarfBuzz draws each glyph, for the spaces that a font lacks, for
+  marks in a font without GPOS, and for text that a `kern` table kerns.
 - `scripts` has the same for one letter and a mark of each script. What happens to the mark shows the shaper
   that HarfBuzz gives the script.
+- `kernedScripts` has the same for two letters of each script in the font with the `kern` table. Only the shapers
+  that place a mark without GPOS kern with that table.
 
-`NormalizationTests` checks that the library gives the same glyphs in the same places. For `scripts` it names
-the six scripts that the library gives another shaper.
+`NormalizationTests` checks that the library gives the same glyphs in the same places. It lays out each
+`positioned` text a second time as two text runs.
 
 To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
 repository root:
