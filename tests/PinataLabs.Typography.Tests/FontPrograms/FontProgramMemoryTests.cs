@@ -23,6 +23,8 @@ public class FontProgramMemoryTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("SourceSansPro-Regular.otf")]
     [Arguments("FDArrayTest257.otf")]
+    [Arguments("FontPrograms/bare-SourceSansPro-Regular.cff")]
+    [Arguments("FontPrograms/bare-FDArrayTest257.cff")]
     [Arguments("Type1/bchr8a.pfb")]
     [Arguments("Type1/bchr8a.pfa")]
     [Arguments("Type1/bchr8a.fontfile")]
