@@ -273,7 +273,6 @@ internal sealed class IndicShaper : DefaultShaper
         int max = index + count;
         int start = index;
         int end = NextSyllable(substitutionCollection, index, max);
-        Span<ushort> glyphs = stackalloc ushort[2];
         while (start < max)
         {
             GlyphShapingData data = substitutionCollection[start];
@@ -290,30 +289,25 @@ internal sealed class IndicShaper : DefaultShaper
 
             if (dataInfo != null && type == "broken_cluster" && fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
             {
-                // Insert after possible Repha.
+                // As in HarfBuzz, the dotted circle is the base of the cluster. It goes after a repha and before
+                // every other glyph. The glyphs that go in front of the base are then moved in front of it.
                 int i = start;
-                GlyphShapingData current = substitutionCollection[i];
-                for (i = start; i < end; i++)
+                while (i < end && substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.Repha)
                 {
-                    if (current.IndicShapingEngineInfo?.Category != Categories.Repha)
-                    {
-                        break;
-                    }
-
-                    current = substitutionCollection[i];
+                    i++;
                 }
 
-                glyphs[0] = current.GlyphId;
-                glyphs[1] = id;
+                CodePoint dottedCircle = new(DottedCircle);
+                substitutionCollection.InsertGlyph(i, id, dottedCircle);
+                substitutionCollection[i].IndicShapingEngineInfo = new(
+                    (Categories)(1 << IndicShapingCategory(dottedCircle)),
+                    (Positions)IndicShapingPosition(dottedCircle),
+                    dataInfo.SyllableType,
+                    dataInfo.Syllable);
 
-                substitutionCollection.Replace(i, glyphs);
-
-                // Update shaping info for newly inserted data.
-                GlyphShapingData dotted = substitutionCollection[i + 1];
-                var dottedCategory = (Categories)(1 << IndicShapingCategory(dotted.CodePoint));
-                var dottedPosition = (Positions)IndicShapingPosition(dotted.CodePoint);
-                dotted.IndicShapingEngineInfo = new(dottedCategory, dottedPosition, dataInfo.SyllableType, dataInfo.Syllable);
-
+                // The first glyph of the syllable may have changed.
+                data = substitutionCollection[start];
+                dataInfo = data.IndicShapingEngineInfo;
                 end++;
                 max++;
             }

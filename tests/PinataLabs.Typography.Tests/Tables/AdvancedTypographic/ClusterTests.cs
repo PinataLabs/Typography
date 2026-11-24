@@ -12,8 +12,8 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// A sign that has no letter of its script before it gets the base that HarfBuzz gives it. The universal shaper
-/// takes a space, a digit or a full stop before the sign as its base. Without one, it puts a dotted circle before
-/// the sign, and moves a sign that goes in front of its base before it.
+/// takes a space, a digit or a full stop before the sign as its base. Without one, both the universal and the
+/// Indic shaper put a dotted circle before the sign, and move a sign that goes in front of its base before it.
 /// </summary>
 public class ClusterTests
 {

@@ -270,22 +270,28 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 `generate_cluster_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Clusters.harfbuzz.json`. It holds how
 HarfBuzz shapes a sign that has no letter of its script before it.
 
-The script builds `ClustersBalinese.ttf`, which has no GSUB table, so only the shaper changes the order and the
-number of the glyphs. The font has Balinese letters and signs, the dotted circle, and the characters of the Basic
-Latin block and some others that have the script Common. HarfBuzz shapes Balinese text with its universal shaper.
+The script builds two fonts that have no GSUB table, so only the shaper changes the order and the number of the
+glyphs:
+
+- `ClustersBalinese.ttf` has Balinese letters and signs, the dotted circle, and the characters of the Basic Latin
+  block and some others that have the script Common. HarfBuzz shapes Balinese text with its universal shaper.
+- `ClustersDevanagari.ttf` has the same for Devanagari, which HarfBuzz shapes with its Indic shaper.
 
 The reference holds the glyph IDs that HarfBuzz gives, and where it draws each glyph, for:
 
 - each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and HarfBuzz
   gives it a dotted circle as its base.
 - each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next to
-  it in one cluster, and the library does not.
+  it in one cluster, and the library does not. They do not start with the sign that goes in front of the base: the
+  Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
 - each Common character before a vowel sign that goes above or after the base, and before one that goes in front of
   it. The universal shaper takes most of these characters as the base of the sign.
 
+The fonts have no U+2015, U+2022 or U+25FB. They are bases in the Indic shaper of HarfBuzz and not in the library.
+
 `ClusterTests` checks that the library gives the same glyphs in the same places.
 
-To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
 repository root:
 
 ```

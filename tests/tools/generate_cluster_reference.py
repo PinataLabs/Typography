@@ -7,19 +7,24 @@ Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
 
     python tests/tools/generate_cluster_reference.py
 
-The script does not read the HarfBuzz source. It builds ClustersBalinese.ttf, which has no GSUB table, so only the
-shaper changes the order and the number of the glyphs. The font has Balinese letters and signs, the dotted circle,
-and the characters of the Basic Latin block and some others that have the script Common. HarfBuzz shapes Balinese
-text with its universal shaper.
+The script does not read the HarfBuzz source. It builds two fonts that have no GSUB table, so only the shaper
+changes the order and the number of the glyphs:
+
+* ClustersBalinese.ttf has Balinese letters and signs, the dotted circle, and the characters of the Basic Latin
+  block and some others that have the script Common. HarfBuzz shapes Balinese text with its universal shaper.
+* ClustersDevanagari.ttf has the same for Devanagari, which HarfBuzz shapes with its Indic shaper.
 
 The reference holds the glyph IDs that HarfBuzz gives, and where it draws each glyph, for:
 
 * each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and
   HarfBuzz gives it a dotted circle as its base.
 * each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next
-  to it in one cluster, and the library does not.
+  to it in one cluster, and the library does not. They do not start with the sign that goes in front of the base:
+  the Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
 * each Common character before a vowel sign that goes above or after the base, and before one that goes in front
   of it. The universal shaper takes most of these characters as the base of the sign.
+
+The fonts have no U+2015, U+2022 or U+25FB. They are bases in the Indic shaper of HarfBuzz and not in the library.
 
 ClusterTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -42,13 +47,17 @@ DOTTED_CIRCLE = 0x25CC
 SPACE = 0x20
 
 # Characters of the script Common. A caller of HarfBuzz gives them the script of the text around them.
-# The universal shaper does not take a right square or curly bracket as a base.
+# NO-BREAK SPACE and the dashes are bases in the Unicode data of both shapers. The universal shaper does not take
+# a right square or curly bracket as a base.
 COMMON = [c for c in range(0x20, 0x7F) if not chr(c).isalpha()] + [0xA0, 0xD7, 0x2010, 0x2013, 0x2014, 0x27E7, 0x3000]
 
 # (font, ISO 15924 code, letter, sign above or after the base, sign in front of the base, other signs, virama)
 SCRIPTS = [
     # KA, the vowel signs ULU and TALING, the signs SURANG, BISAH, REREKAN and SUKU, and ADEG ADEG.
     ("ClustersBalinese.ttf", "Bali", 0x1B13, 0x1B36, 0x1B3E, [0x1B03, 0x1B04, 0x1B34, 0x1B38], 0x1B44),
+
+    # KA, the vowel signs AA and I, the signs ANUSVARA, NUKTA, II and U, and VIRAMA.
+    ("ClustersDevanagari.ttf", "Deva", 0x0915, 0x093E, 0x093F, [0x0902, 0x093C, 0x0940, 0x0941], 0x094D),
 ]
 
 
@@ -94,7 +103,7 @@ def main():
         for sign in [*signs, virama]:
             texts += [[sign], [sign, letter], [letter, SPACE, sign]]
         for sign in signs:
-            texts += [[other, sign] for other in signs]
+            texts += [[other, sign] for other in signs if other != front]
         for character in COMMON:
             texts += [[character, after], [character, front]]
         for text in dict.fromkeys("".join(map(chr, text)) for text in texts):
