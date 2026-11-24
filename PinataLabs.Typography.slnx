@@ -11,6 +11,7 @@
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
     <File Path="tests/.globalconfig" />
+    <Project Path="tests/PinataLabs.Typography.AotSmoke/PinataLabs.Typography.AotSmoke.csproj" />
     <Project Path="tests/PinataLabs.Typography.Benchmarks/PinataLabs.Typography.Benchmarks.csproj" />
     <Project Path="tests/PinataLabs.Typography.Fuzz/PinataLabs.Typography.Fuzz.csproj" />
     <Project Path="tests/PinataLabs.Typography.Tests/PinataLabs.Typography.Tests.csproj" />
