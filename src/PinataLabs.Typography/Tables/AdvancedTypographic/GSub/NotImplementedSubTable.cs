@@ -15,7 +15,7 @@ internal class NotImplementedSubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
         => false;

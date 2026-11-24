@@ -129,13 +129,13 @@ internal sealed class LookupTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
         foreach (LookupSubTable subTable in this.LookupSubTables)
         {
-            if (subTable.TrySubstitution(fontMetrics, table, collection, feature, index, count))
+            if (subTable.TrySubstitution(fontMetrics, table, collection, features, index, count))
             {
                 // A lookup is finished for a glyph after the client locates the target
                 // glyph or glyph context and performs a substitution, if specified.
@@ -171,7 +171,7 @@ internal abstract class LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count);
 }

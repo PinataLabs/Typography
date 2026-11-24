@@ -36,6 +36,9 @@ public static class TestFonts
 
     public static string SimpleFontFileWoff => GetFullPath("SixLaborsSampleAB.woff");
 
+    // Built by tests/tools/generate_gsub_lookup_order_font.py.
+    public static string GsubLookupOrderFile => GetFullPath("GsubLookupOrder.ttf");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");
@@ -226,6 +229,11 @@ public static class TestFonts
     public static string NotoSansSCThinFile => GetFullPath("NotoSansSC-Thin.ttf");
 
     public static string NotoSansKRRegular => GetFullPath("NotoSansKR-Regular.otf");
+
+    /// <summary>
+    /// Gets an asymmetric-metric font built by tests/tools/central_baseline/build_font.py.
+    /// </summary>
+    public static string CentralBaselineTestFile => GetFullPath("CentralBaselineTest.ttf");
 
     public static string NotoSansBalineseRegular => GetFullPath("NotoSansBalinese-Regular.ttf");
 

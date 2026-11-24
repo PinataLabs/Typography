@@ -60,7 +60,7 @@ internal static class AdvancedTypographicUtils
     public static bool ApplyLookupList(
         FontMetrics fontMetrics,
         GSubTable table,
-        Tag feature,
+        LookupFeatures features,
         LookupFlags lookupFlags,
         SequenceLookupRecord[] records,
         GlyphSubstitutionCollection collection,
@@ -78,7 +78,7 @@ internal static class AdvancedTypographicUtils
             iterator.Index = index;
             iterator.Increment(sequenceIndex);
             GSub.LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-            hasChanged |= lookup.TrySubstitution(fontMetrics, table, collection, feature, iterator.Index, count - (iterator.Index - index));
+            hasChanged |= lookup.TrySubstitution(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
 
             // Account for substitutions changing the length of the collection.
             if (collection.Count != currentCount)
@@ -116,34 +116,13 @@ internal static class AdvancedTypographicUtils
         return hasChanged;
     }
 
-    public static bool MatchInputSequence(SkippingGlyphIterator iterator, Tag feature, ushort increment, ushort[] sequence, Span<int> matches)
+    public static bool MatchInputSequence(SkippingGlyphIterator iterator, LookupFeatures features, ushort increment, ushort[] sequence, Span<int> matches)
         => Match(
             increment,
             sequence,
             iterator,
-            (component, data) =>
-            {
-                if (!ContainsFeatureTag(data.Features, feature))
-                {
-                    return false;
-                }
-
-                return component == data.GlyphId;
-            },
+            (component, data) => component == data.GlyphId && features.AnyEnabledOn(data.Features),
             matches);
-
-    private static bool ContainsFeatureTag(List<TagEntry> featureList, Tag feature)
-    {
-        foreach (TagEntry tagEntry in featureList)
-        {
-            if (tagEntry.Tag == feature && tagEntry.Enabled)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     public static bool MatchSequence(SkippingGlyphIterator iterator, int increment, ushort[] sequence)
         => Match(

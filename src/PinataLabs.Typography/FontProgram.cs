@@ -131,6 +131,8 @@ public sealed class FontProgram
         this.Format = FontProgramFormat.Cff;
         this.GlyphCount = program.Font.GlyphCount;
         this.FontMatrix = program.Font.FontMatrix;
+        this.PaintType = program.Font.IsStroked ? GlyphPaintType.Stroked : GlyphPaintType.Filled;
+        this.StrokeWidth = program.Font.StrokeWidth;
         this.IsCidKeyed = program.Font.IsCidKeyed;
         this.MissingOptionalTables = program.MissingTables;
         this.MalformedOptionalTables = program.MalformedTables;
@@ -143,6 +145,8 @@ public sealed class FontProgram
         this.Format = FontProgramFormat.Type1;
         this.GlyphCount = program.GlyphCount;
         this.FontMatrix = program.FontMatrix;
+        this.PaintType = program.PaintType == 2 ? GlyphPaintType.Stroked : GlyphPaintType.Filled;
+        this.StrokeWidth = program.StrokeWidth;
     }
 
     /// <summary>
@@ -168,6 +172,21 @@ public sealed class FontProgram
     /// Both scale by 0.001 by default.
     /// </summary>
     public Matrix3x2 FontMatrix { get; }
+
+    /// <summary>
+    /// Gets how the outlines are meant to be painted.
+    /// A TrueType program is always <see cref="GlyphPaintType.Filled"/>.
+    /// A CFF program reports the PaintType of its Top DICT, and a Type 1 program its <c>/PaintType</c>.
+    /// The value 2 is <see cref="GlyphPaintType.Stroked"/>. Every other value, or a missing one, is <see cref="GlyphPaintType.Filled"/>.
+    /// </summary>
+    public GlyphPaintType PaintType { get; }
+
+    /// <summary>
+    /// Gets the line width for <see cref="GlyphPaintType.Stroked"/> outlines, in glyph space units, so
+    /// <see cref="FontMatrix"/> scales it to ems. It is 0 when the font gives none or gives a width that is negative or not finite,
+    /// and for TrueType. It has no use for a <see cref="GlyphPaintType.Filled"/> program, but it reports what the font declares.
+    /// </summary>
+    public float StrokeWidth { get; }
 
     /// <summary>
     /// Gets the optional tables that the font does not have, for diagnostics. The value is fixed at load.
@@ -431,6 +450,38 @@ public sealed class FontProgram
         bool found = (uint)cid < (uint)this.GlyphCount;
         glyphId = found ? (ushort)cid : (ushort)0;
         return found;
+    }
+
+    /// <summary>
+    /// Maps a character code to a glyph through the 'cmap' subtable for a platform and encoding, reading the table in place.
+    /// </summary>
+    /// <remarks>
+    /// Subtable formats 0, 2, 4, 6, 10, 12 and 13 are read, with bounds checks, and the formats 4, 12 and 13 by binary search.
+    /// When several encoding records share a platform and encoding, the first in the table is used.
+    /// A TrueType program and an OpenType CFF program have a 'cmap' table. A bare CFF program and a Type 1 program
+    /// have none, so this method returns <see langword="false"/> for them. It never throws for the data of the font.
+    /// </remarks>
+    /// <param name="platformId">The platform ID of the encoding record, such as 3 for Windows or 1 for Macintosh.</param>
+    /// <param name="encodingId">The encoding ID of the encoding record, such as 1 for Unicode BMP or 0 for symbol.</param>
+    /// <param name="code">The character code, in the encoding of the subtable. Negative codes have no glyph.</param>
+    /// <param name="glyphId">Receives the glyph ID, or 0 when the method returns <see langword="false"/>.</param>
+    /// <returns>
+    /// <see langword="true"/> if the subtable maps the code to a glyph other than glyph 0. <see langword="false"/> if
+    /// the font has no 'cmap' table, no subtable of that platform and encoding, or only one in an unsupported or
+    /// malformed format; and when the code is unmapped, maps to glyph 0, or maps to a glyph the font does not have.
+    /// </returns>
+    public bool TryGetGlyphIdFromCmap(ushort platformId, ushort encodingId, int code, out ushort glyphId)
+    {
+        switch (this.program)
+        {
+            case TrueTypeProgram trueType:
+                return trueType.TryGetGlyphIdFromCmap(platformId, encodingId, code, out glyphId);
+            case CffProgram cff:
+                return cff.TryGetGlyphIdFromCmap(platformId, encodingId, code, out glyphId);
+            default:
+                glyphId = 0;
+                return false;
+        }
     }
 
     /// <summary>

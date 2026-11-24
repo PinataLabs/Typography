@@ -83,7 +83,19 @@ public sealed class FontProgram
     // Fixed at load, no retained array. The two sets never overlap. Type 1 and bare CFF report None.
     public OptionalFontTables MissingOptionalTables { get; }
     public OptionalFontTables MalformedOptionalTables { get; }
+
+    // #83. Type 1 /PaintType and /StrokeWidth, CFF Top DICT 12 5 and 12 8. Only 2 is Stroked; any other value is
+    // Filled. StrokeWidth in glyph space units, 0 when missing, negative or not finite. TrueType: Filled, 0.
+    public GlyphPaintType PaintType { get; }
+    public float StrokeWidth { get; }
+
+    // #79. Maps a code through the cmap subtable (platformId, encodingId), read in place. Formats 0, 2, 4, 6, 10, 12,
+    // 13. First record wins. TrueType and OpenType CFF only. False with glyphId 0 for a missing, unsupported or
+    // malformed subtable, an unmapped code, glyph 0 or a glyph >= GlyphCount. Never throws.
+    public bool TryGetGlyphIdFromCmap(ushort platformId, ushort encodingId, int code, out ushort glyphId);
 }
+
+public enum GlyphPaintType { Filled = 0, Stroked = 2 }
 
 [Flags]
 public enum OptionalFontTables { None = 0, Name = 1, Os2 = 2, Post = 4, Cmap = 8, Hhea = 16, Hmtx = 32 }
@@ -226,4 +238,4 @@ The implementation made these local choices where the spec was silent.
 
 ## Open
 
-- Unicode cmap (3,1) lookup for non-symbolic TrueType in PDFs is not covered by #71 or #72. Tracked as its own issue.
+- Unicode cmap (3,1) lookup for non-symbolic TrueType in PDFs: done by `TryGetGlyphIdFromCmap` (#79).

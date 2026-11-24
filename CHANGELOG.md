@@ -25,6 +25,21 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Paint type of font programs.** `FontProgram.PaintType` (`GlyphPaintType.Filled` or `GlyphPaintType.Stroked`)
+  and `FontProgram.StrokeWidth` report whether the outlines are filled or stroked, and the stroke width in glyph space
+  units. They come from the Type 1 `/PaintType` and `/StrokeWidth` and the CFF Top DICT PaintType and StrokeWidth.
+  Only paint type 2 is `Stroked`. TrueType is always `Filled` with width 0. (#83)
+- **cmap lookup in font programs.** `FontProgram.TryGetGlyphIdFromCmap(platformId, encodingId, code, out glyphId)`
+  maps a code through the named 'cmap' subtable of a TrueType or OpenType CFF program, read in place. It supports
+  subtable formats 0, 2, 4, 6, 10, 12 and 13, and uses the first record when several share a platform and encoding.
+  It returns `false` for a missing, unsupported or malformed subtable, an unmapped code or glyph 0, and for bare CFF
+  and Type 1 programs. (#79)
+- **Trimming and Native AOT.** The net8.0 and later assets are marked `IsTrimmable` and `IsAotCompatible`, and the
+  trim, AOT and single-file analyzers report no warnings. CI publishes a Native AOT smoke app on Linux that loads
+  TrueType, CFF and Type 1 fonts from bytes, writes outlines and measures text. A test fails on any writable static
+  field in the library. (#76)
+- **Variable font design.** `docs/adr/0001-variable-font-instances.md` proposes the variable font instance API and
+  the order of the work. `GLOSSARY.md` defines its terms. (#46)
 - **Font program API.** `FontProgram` reads the glyphs of a font by glyph ID, without text layout.
   Use it to draw a font that another format selects and positions, such as a font embedded in a PDF file.
   `FontProgram.Load` takes the font file as `ReadOnlyMemory<byte>` and does not copy it. It accepts
@@ -84,6 +99,15 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- GSUB lookups are applied in LookupList order across all the features that are active in a shaping stage, as the
+  OpenType specification requires. Before, each feature was applied in turn, in the order that the shaper planned
+  it. A font whose `vrtr` lookup precedes its `liga` lookup now gives a rotated ligature its `vrtr` form in vertical
+  mixed layout. A font whose lookup order differs from the old feature order can shape differently. (#85)
+- In `VerticalMixedLeftRight` and `VerticalMixedRightLeft` layout, rotated glyphs sit on the CSS central baseline:
+  the midpoint of the ascent and descent of the font is on the column centre, as in browsers. Before, a rotated glyph
+  was off by half the line gap of the font. Fonts with no line gap do not change. (#50)
+- The built-in encoding of a TrueType font program finds a code in a format 4 'cmap' subtable by binary search
+  instead of a scan of every segment. (#79)
 - A TrueType composite that places many components on high point numbers fails within the outline budget,
   instead of reading hundreds of millions of points. (#74)
 - A CFF font program keeps at most 256 Font DICT records, the most that FDSelect can select. Before, 65,535

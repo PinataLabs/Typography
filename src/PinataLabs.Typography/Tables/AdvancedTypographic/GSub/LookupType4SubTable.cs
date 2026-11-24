@@ -117,7 +117,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
@@ -146,7 +146,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                 continue;
             }
 
-            if (!AdvancedTypographicUtils.MatchInputSequence(iterator, feature, 1, ligatureTable.ComponentGlyphs, matchBuffer))
+            if (!AdvancedTypographicUtils.MatchInputSequence(iterator, features, 1, ligatureTable.ComponentGlyphs, matchBuffer))
             {
                 continue;
             }

@@ -155,25 +155,23 @@ internal class GSubTable : Table
             i += delta;
             count += delta;
 
-            IEnumerable<ShapingStage> stages = shaper.GetShapingStages();
+            IReadOnlyList<ShapingStage> stages = shaper.GetShapingStages();
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
             foreach (ShapingStage stage in stages)
             {
                 collectionCount = collection.Count;
-                stage.PreProcessFeature(collection, index, count);
+                stage.PreProcessFeatures(collection, index, count);
 
                 // Account for substitutions changing the length of the collection.
                 delta = collection.Count - collectionCount;
                 count += delta;
                 i += delta;
 
-                Tag featureTag = stage.FeatureTag;
-
-                this.ApplyFeature(
+                this.ApplyFeatures(
                     fontMetrics,
                     collection,
                     ref iterator,
-                    in featureTag,
+                    stage.FeatureTags,
                     current,
                     index,
                     ref count,
@@ -184,7 +182,7 @@ internal class GSubTable : Table
                     ref currentOperations);
 
                 collectionCount = collection.Count;
-                stage.PostProcessFeature(collection, index, count);
+                stage.PostProcessFeatures(collection, index, count);
 
                 // Account for substitutions changing the length of the collection.
                 delta = collection.Count - collectionCount;
@@ -213,7 +211,8 @@ internal class GSubTable : Table
         }
 
         Tag vert = Tag.Parse("vert");
-        if (!table.TryGetFeatureLookups(in vert, script, out _))
+        Tag[] vertOnly = [vert];
+        if (!table.TryGetFeatureLookups(vertOnly, script, out _))
         {
             return;
         }
@@ -236,16 +235,20 @@ internal class GSubTable : Table
             int probeIndex = 0;
             int probeCollectionCount = 1;
             int operations = 0;
-            table.ApplyFeature(fontMetrics, probe, ref iterator, in vert, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
+            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
             data.HasVerticalForm = probe[0].GlyphId != data.GlyphId;
         }
     }
 
-    internal void ApplyFeature(
+    /// <summary>
+    /// Applies the lookups of all the given features in LookupList order, as the OpenType specification
+    /// requires. Each lookup is applied only to the glyphs that have a feature which references it.
+    /// </summary>
+    internal void ApplyFeatures(
         FontMetrics fontMetrics,
         GlyphSubstitutionCollection collection,
         ref SkippingGlyphIterator iterator,
-        in Tag featureTag,
+        IReadOnlyList<Tag> featureTags,
         ScriptClass current,
         int index,
         ref int count,
@@ -255,45 +258,50 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (this.TryGetFeatureLookups(in featureTag, current, out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? lookups))
+        if (!this.TryGetFeatureLookups(featureTags, current, out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? lookups))
         {
-            // Apply features in order.
-            foreach ((Tag Feature, ushort Index, LookupTable LookupTable) featureLookup in lookups)
+            return;
+        }
+
+        foreach ((ushort _, LookupTable lookupTable, LookupFeatures features) in lookups)
+        {
+            iterator.Reset(index, lookupTable.LookupFlags);
+
+            while (iterator.Index < index + count)
             {
-                Tag feature = featureLookup.Feature;
-                iterator.Reset(index, featureLookup.LookupTable.LookupFlags);
-
-                while (iterator.Index < index + count)
+                if (collection.Count >= maxCount || currentOperations++ >= maxOperationsCount)
                 {
-                    if (collection.Count >= maxCount || currentOperations++ >= maxOperationsCount)
-                    {
-                        return;
-                    }
-
-                    List<TagEntry> glyphFeatures = collection[iterator.Index].Features;
-                    if (!HasFeature(glyphFeatures, in feature))
-                    {
-                        iterator.Next();
-                        continue;
-                    }
-
-                    collectionCount = collection.Count;
-                    featureLookup.LookupTable.TrySubstitution(fontMetrics, this, collection, featureLookup.Feature, iterator.Index, count - (iterator.Index - index));
-                    iterator.Next();
-
-                    // Account for substitutions changing the length of the collection.
-                    int delta = collection.Count - collectionCount;
-                    count += delta;
-                    i += delta;
+                    return;
                 }
+
+                if (!features.AnyEnabledOn(collection[iterator.Index].Features))
+                {
+                    iterator.Next();
+                    continue;
+                }
+
+                collectionCount = collection.Count;
+                lookupTable.TrySubstitution(fontMetrics, this, collection, features, iterator.Index, count - (iterator.Index - index));
+                iterator.Next();
+
+                // Account for substitutions changing the length of the collection.
+                int delta = collection.Count - collectionCount;
+                count += delta;
+                i += delta;
             }
         }
     }
 
     internal bool TryGetFeatureLookups(
-        in Tag stageFeature,
+        in Tag feature,
         ScriptClass script,
-        [NotNullWhen(true)] out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? value)
+        [NotNullWhen(true)] out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? value)
+        => this.TryGetFeatureLookups([feature], script, out value);
+
+    internal bool TryGetFeatureLookups(
+        IReadOnlyList<Tag> stageFeatures,
+        ScriptClass script,
+        [NotNullWhen(true)] out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? value)
     {
         if (this.ScriptList is null)
         {
@@ -315,11 +323,11 @@ internal class GSubTable : Table
         LangSysTable? defaultLangSysTable = scriptListTable.DefaultLangSysTable;
         if (defaultLangSysTable != null)
         {
-            value = this.GetFeatureLookups(stageFeature, defaultLangSysTable);
+            value = this.GetFeatureLookups(stageFeatures, defaultLangSysTable);
             return value.Count > 0;
         }
 
-        value = this.GetFeatureLookups(stageFeature, scriptListTable.LangSysTables);
+        value = this.GetFeatureLookups(stageFeatures, scriptListTable.LangSysTables);
         return value.Count > 0;
     }
 
@@ -342,9 +350,13 @@ internal class GSubTable : Table
         return default;
     }
 
-    private List<(Tag Feature, ushort Index, LookupTable LookupTable)> GetFeatureLookups(in Tag stageFeature, params LangSysTable[] langSysTables)
+    /// <summary>
+    /// Gets the lookups that the given features reference, in LookupList order.
+    /// Each lookup appears once, with all the features that reference it.
+    /// </summary>
+    private List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)> GetFeatureLookups(IReadOnlyList<Tag> stageFeatures, params LangSysTable[] langSysTables)
     {
-        List<(Tag Feature, ushort Index, LookupTable LookupTable)> lookups = [];
+        List<(ushort Index, int Order, Tag Feature)> references = [];
         for (int i = 0; i < langSysTables.Length; i++)
         {
             ushort[] featureIndices = langSysTables[i].FeatureIndices;
@@ -359,7 +371,8 @@ internal class GSubTable : Table
                 FeatureTable featureTable = this.FeatureList.FeatureTables[featureIndices[j]];
                 Tag feature = featureTable.FeatureTag;
 
-                if (stageFeature != feature)
+                int order = IndexOf(stageFeatures, feature);
+                if (order < 0)
                 {
                     continue;
                 }
@@ -375,27 +388,48 @@ internal class GSubTable : Table
                         continue;
                     }
 
-                    LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-                    lookups.Add(new(feature, lookupIndex, lookupTable));
+                    references.Add(new(lookupIndex, order, feature));
                 }
             }
         }
 
-        lookups.Sort((x, y) => x.Index - y.Index);
+        // List.Sort is unstable. The plan order of the feature makes the order total,
+        // so the result does not depend on the order of the feature records.
+        references.Sort((x, y) => x.Index != y.Index ? x.Index - y.Index : x.Order - y.Order);
+
+        List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)> lookups = [];
+        Tag[] tags = new Tag[references.Count];
+        int tagCount = 0;
+        int end;
+        for (int start = 0; start < references.Count; start = end)
+        {
+            ushort lookupIndex = references[start].Index;
+            int tagStart = tagCount;
+            for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
+            {
+                // Feature records of several language systems can repeat a reference.
+                if (end == start || references[end].Order != references[end - 1].Order)
+                {
+                    tags[tagCount++] = references[end].Feature;
+                }
+            }
+
+            lookups.Add(new(lookupIndex, this.LookupList.LookupTables[lookupIndex], new LookupFeatures(tags, tagStart, tagCount - tagStart)));
+        }
+
         return lookups;
     }
 
-    private static bool HasFeature(List<TagEntry> glyphFeatures, in Tag feature)
+    private static int IndexOf(IReadOnlyList<Tag> tags, Tag tag)
     {
-        for (int i = 0; i < glyphFeatures.Count; i++)
+        for (int i = 0; i < tags.Count; i++)
         {
-            TagEntry entry = glyphFeatures[i];
-            if (entry.Tag == feature && entry.Enabled)
+            if (tags[i] == tag)
             {
-                return true;
+                return i;
             }
         }
 
-        return false;
+        return -1;
     }
 }

@@ -20,9 +20,11 @@ internal static class CffParser
     private const int OpEncoding = 16;
     private const int OpCharStrings = 17;
     private const int OpPrivate = 18;
+    private const int OpPaintType = 0x0C05;
     private const int OpCharstringType = 0x0C06;
     private const int OpFontMatrix = 0x0C07;
     private const int OpRos = 0x0C1E;
+    private const int OpStrokeWidth = 0x0C08;
     private const int OpFdArray = 0x0C24;
     private const int OpFdSelect = 0x0C25;
 
@@ -77,6 +79,8 @@ internal static class CffParser
         int charsetOffset = 0;
         int encodingOffset = 0;
         bool isCidKeyed = false;
+        bool isStroked = false;
+        float strokeWidth = 0;
         int charStringsOffset = 0;
         int privateSize = 0;
         int privateOffset = 0;
@@ -100,6 +104,12 @@ internal static class CffParser
                     break;
                 case OpRos:
                     isCidKeyed = true;
+                    break;
+                case OpPaintType when count >= 1:
+                    isStroked = operands[0] == 2; // NOSONAR: PaintType is an integer, so the comparison is exact.
+                    break;
+                case OpStrokeWidth when count >= 1:
+                    strokeWidth = FontPrograms.StrokeWidth.Sanitize(operands[0]);
                     break;
                 case OpCharStrings when count >= 1:
                     charStringsOffset = ToOffset(operands[0], span.Length);
@@ -162,7 +172,7 @@ internal static class CffParser
 
         ReadCharset(span, charsetOffset, charset, isCidKeyed);
 
-        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, fontMatrix, encodingOffset, fontDicts, fdSelectOffset);
+        return new CffFont(data, strings, globalSubrs, charStrings, charset, isCidKeyed, fontMatrix, encodingOffset, fontDicts, fdSelectOffset, isStroked, strokeWidth);
     }
 
     /// <summary>

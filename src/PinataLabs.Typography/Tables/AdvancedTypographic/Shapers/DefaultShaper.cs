@@ -64,7 +64,11 @@ internal class DefaultShaper : BaseShaper
 
     private static readonly CodePoint Slash = new(0x002F);
 
-    private readonly HashSet<ShapingStage> shapingStages = [];
+    private readonly List<ShapingStage> shapingStages = [];
+
+    private readonly HashSet<Tag> plannedFeatures = [];
+
+    private ShapingStage? openStage;
 
     private readonly KerningMode kerningMode;
 
@@ -89,8 +93,9 @@ internal class DefaultShaper : BaseShaper
 
     protected override void PlanPreprocessingFeatures(IGlyphShapingCollection collection, int index, int count)
     {
-        // Add variation Features.
+        // Add variation Features. They choose the glyphs that every later lookup sees.
         this.AddFeature(collection, index, count, RvnrTag);
+        this.EndStage();
 
         // Add directional features.
         for (int i = index; i < index + count; i++)
@@ -222,10 +227,34 @@ internal class DefaultShaper : BaseShaper
             collection.AddShapingFeature(i, new TagEntry(feature, enabled));
         }
 
-        this.shapingStages.Add(new ShapingStage(feature, preAction, postAction));
+        // A feature stays in the stage that first planned it.
+        if (!this.plannedFeatures.Add(feature))
+        {
+            return;
+        }
+
+        if (this.openStage is null || preAction is not null)
+        {
+            this.openStage = new ShapingStage(preAction);
+            this.shapingStages.Add(this.openStage);
+        }
+
+        this.openStage.AddFeature(feature);
+
+        if (postAction is not null)
+        {
+            this.openStage.SetPostAction(postAction);
+            this.openStage = null;
+        }
     }
 
-    public override IEnumerable<ShapingStage> GetShapingStages() => this.shapingStages;
+    /// <summary>
+    /// Ends the current shaping stage. The features added next start a new stage,
+    /// so their lookups are applied after all lookups of the features added before.
+    /// </summary>
+    protected void EndStage() => this.openStage = null;
+
+    public override IReadOnlyList<ShapingStage> GetShapingStages() => this.shapingStages;
 
     private void AssignFractionalFeatures(IGlyphShapingCollection collection, int index, int count)
     {

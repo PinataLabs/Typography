@@ -51,7 +51,7 @@ internal sealed class LookupType5Format1SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
@@ -89,7 +89,7 @@ internal sealed class LookupType5Format1SubTable : LookupSubTable
             return AdvancedTypographicUtils.ApplyLookupList(
                 fontMetrics,
                 table,
-                feature,
+                features,
                 this.LookupFlags,
                 ruleTable.SequenceLookupRecords,
                 collection,
@@ -130,7 +130,7 @@ internal sealed class LookupType5Format2SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
@@ -173,7 +173,7 @@ internal sealed class LookupType5Format2SubTable : LookupSubTable
             return AdvancedTypographicUtils.ApplyLookupList(
                 fontMetrics,
                 table,
-                feature,
+                features,
                 this.LookupFlags,
                 ruleTable.SequenceLookupRecords,
                 collection,
@@ -208,7 +208,7 @@ internal sealed class LookupType5Format3SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
@@ -229,7 +229,7 @@ internal sealed class LookupType5Format3SubTable : LookupSubTable
         return AdvancedTypographicUtils.ApplyLookupList(
             fontMetrics,
             table,
-            feature,
+            features,
             this.LookupFlags,
             this.sequenceLookupRecords,
             collection,

@@ -192,15 +192,15 @@ internal sealed class TrueTypeProgram
     /// <returns><see langword="false"/>, with nothing written, if the font has neither subtable in a supported format.</returns>
     public bool TryGetBuiltInEncoding(Span<ushort> glyphIds)
     {
-        if (this.TryGetCmapSubtable(3, 0, out ReadOnlySpan<byte> symbol))
+        if (CmapReader.TryGetSubtable(this.cmap.Span, 3, 0, out ReadOnlySpan<byte> symbol))
         {
             // A symbol font puts its codes in one of three ranges of the Private Use Area, or uses them directly.
             for (int code = 0; code < 256; code++)
             {
-                ushort glyphId = this.MapCode(symbol, code);
-                for (int range = 0xF000; glyphId == 0 && range <= 0xF200; range += 0x100)
+                bool found = CmapReader.TryMap(symbol, code, this.GlyphCount, out ushort glyphId);
+                for (int range = 0xF000; !found && range <= 0xF200; range += 0x100)
                 {
-                    glyphId = this.MapCode(symbol, range | code);
+                    found = CmapReader.TryMap(symbol, range | code, this.GlyphCount, out glyphId);
                 }
 
                 glyphIds[code] = glyphId;
@@ -209,16 +209,30 @@ internal sealed class TrueTypeProgram
             return true;
         }
 
-        if (this.TryGetCmapSubtable(1, 0, out ReadOnlySpan<byte> mac))
+        if (CmapReader.TryGetSubtable(this.cmap.Span, 1, 0, out ReadOnlySpan<byte> mac))
         {
             for (int code = 0; code < 256; code++)
             {
-                glyphIds[code] = this.MapCode(mac, code);
+                CmapReader.TryMap(mac, code, this.GlyphCount, out glyphIds[code]);
             }
 
             return true;
         }
 
+        return false;
+    }
+
+    /// <summary>
+    /// Maps a code through one 'cmap' subtable.
+    /// </summary>
+    public bool TryGetGlyphIdFromCmap(int platformId, int encodingId, int code, out ushort glyphId)
+    {
+        if (CmapReader.TryGetSubtable(this.cmap.Span, platformId, encodingId, out ReadOnlySpan<byte> subtable))
+        {
+            return CmapReader.TryMap(subtable, code, this.GlyphCount, out glyphId);
+        }
+
+        glyphId = 0;
         return false;
     }
 
@@ -255,11 +269,6 @@ internal sealed class TrueTypeProgram
         strings = strings.Slice(1 + value.Length);
         return true;
     }
-
-    private static ushort ReadUInt16(ReadOnlySpan<byte> data, int position)
-        => position >= 0 && position + 2 <= data.Length
-            ? BinaryPrimitives.ReadUInt16BigEndian(data.Slice(position))
-            : (ushort)0;
 
     // Formats 1 and 2 of 'post' name glyphs. Format 1 uses the standard names in order.
     private int GetPostFormat()
@@ -310,90 +319,5 @@ internal sealed class TrueTypeProgram
             default:
                 return false;
         }
-    }
-
-    private bool TryGetCmapSubtable(int platformId, int encodingId, out ReadOnlySpan<byte> subtable)
-    {
-        subtable = default;
-        ReadOnlySpan<byte> table = this.cmap.Span;
-        int recordCount = ReadUInt16(table, 2);
-        for (int i = 0; i < recordCount; i++)
-        {
-            int record = 4 + (i * 8);
-            if (record + 8 > table.Length)
-            {
-                return false;
-            }
-
-            if (ReadUInt16(table, record) == platformId && ReadUInt16(table, record + 2) == encodingId)
-            {
-                uint offset = BinaryPrimitives.ReadUInt32BigEndian(table.Slice(record + 4));
-                if (offset >= (uint)table.Length)
-                {
-                    return false;
-                }
-
-                // Formats 0, 4 and 6 hold 16-bit codes, which is all that these two encodings need.
-                subtable = table.Slice((int)offset);
-                return ReadUInt16(subtable, 0) is 0 or 4 or 6;
-            }
-        }
-
-        return false;
-    }
-
-    private ushort MapCode(ReadOnlySpan<byte> subtable, int code)
-    {
-        int glyphId = 0;
-        switch (ReadUInt16(subtable, 0))
-        {
-            case 0:
-                // A byte for each of 256 codes.
-                glyphId = code < 256 && 6 + code < subtable.Length ? subtable[6 + code] : 0;
-                break;
-
-            case 6:
-                // A range of codes: firstCode, entryCount, then a glyph ID for each code.
-                int index = code - ReadUInt16(subtable, 6);
-                glyphId = index >= 0 && index < ReadUInt16(subtable, 8) ? ReadUInt16(subtable, 10 + (index * 2)) : 0;
-                break;
-
-            case 4:
-                // Segments of codes in four parallel arrays: endCode, a pad, startCode, idDelta, idRangeOffset.
-                int segmentBytes = ReadUInt16(subtable, 6);
-                for (int segment = 0; segment < segmentBytes; segment += 2)
-                {
-                    if (ReadUInt16(subtable, 14 + segment) < code)
-                    {
-                        continue;
-                    }
-
-                    int start = ReadUInt16(subtable, 16 + segmentBytes + segment);
-                    if (start > code)
-                    {
-                        break;
-                    }
-
-                    int delta = ReadUInt16(subtable, 16 + (2 * segmentBytes) + segment);
-                    int rangeOffsetPosition = 16 + (3 * segmentBytes) + segment;
-                    int rangeOffset = ReadUInt16(subtable, rangeOffsetPosition);
-                    if (rangeOffset == 0)
-                    {
-                        glyphId = (code + delta) & 0xFFFF;
-                    }
-                    else
-                    {
-                        // The offset is from its own position to the glyph ID of the first code of the segment.
-                        glyphId = ReadUInt16(subtable, rangeOffsetPosition + rangeOffset + ((code - start) * 2));
-                        glyphId = glyphId == 0 ? 0 : (glyphId + delta) & 0xFFFF;
-                    }
-
-                    break;
-                }
-
-                break;
-        }
-
-        return glyphId < this.GlyphCount ? (ushort)glyphId : (ushort)0;
     }
 }

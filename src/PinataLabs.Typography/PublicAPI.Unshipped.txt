@@ -13,6 +13,7 @@ PinataLabs.Typography.FontProgram.GlyphCount.get -> int
 PinataLabs.Typography.FontProgram.IsCidKeyed.get -> bool
 PinataLabs.Typography.FontProgram.TryGetAdvanceWidth(ushort glyphId, out float advanceWidth) -> bool
 PinataLabs.Typography.FontProgram.TryGetBuiltInEncoding(System.Span<ushort> glyphIds) -> bool
+PinataLabs.Typography.FontProgram.TryGetGlyphIdFromCmap(ushort platformId, ushort encodingId, int code, out ushort glyphId) -> bool
 PinataLabs.Typography.FontProgram.TryGetGlyphId(System.ReadOnlySpan<char> glyphName, out ushort glyphId) -> bool
 PinataLabs.Typography.FontProgram.TryGetGlyphIdForCid(int cid, out ushort glyphId) -> bool
 PinataLabs.Typography.FontProgram.TryWriteOutline<TSink>(ushort glyphId, ref TSink sink) -> bool
@@ -40,3 +41,8 @@ PinataLabs.Typography.OptionalFontTables.Name = 1 -> PinataLabs.Typography.Optio
 PinataLabs.Typography.OptionalFontTables.None = 0 -> PinataLabs.Typography.OptionalFontTables
 PinataLabs.Typography.OptionalFontTables.Os2 = 2 -> PinataLabs.Typography.OptionalFontTables
 PinataLabs.Typography.OptionalFontTables.Post = 4 -> PinataLabs.Typography.OptionalFontTables
+PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.GlyphPaintType.Filled = 0 -> PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.GlyphPaintType.Stroked = 2 -> PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.FontProgram.PaintType.get -> PinataLabs.Typography.GlyphPaintType
+PinataLabs.Typography.FontProgram.StrokeWidth.get -> float

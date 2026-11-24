@@ -52,6 +52,7 @@ BARE_CFF = [
     ("cff-cid-fdselect3.otf", "bare-cff-cid-fdselect3.cff"),
     ("cff-type2-widths.otf", "bare-cff-type2-widths.cff"),
     ("cff-seac-widths.otf", "bare-cff-seac-widths.cff"),
+    ("cff-paint-stroked.otf", "bare-cff-paint-stroked.cff"),
 ]
 
 # Expert Encoding, from Adobe Technical Note #5176, Appendix B: code -> glyph name.
@@ -251,6 +252,8 @@ def cff_table_fixture(font_set, order, hmtx, encoding_override):
         "format": "Cff",
         "isCidKeyed": is_cid,
         "fontMatrix": font_matrix,
+        "paintType": top.PaintType,
+        "strokeWidth": top.StrokeWidth,
         "encoding": encoding,
         "glyphs": glyphs,
     }
@@ -272,6 +275,8 @@ def truetype_fixture(font):
         "format": "TrueType",
         "isCidKeyed": False,
         "fontMatrix": [scale, 0, 0, scale, 0, 0],
+        "paintType": 0,
+        "strokeWidth": 0,
         "encoding": truetype_encoding(font),
         "glyphs": glyphs,
     }
@@ -291,7 +296,7 @@ def write_fixture(font_path, encoding_override=None):
     relative = os.path.relpath(font_path, OUT).replace(os.sep, "/")
     lines = ["{"]
     lines.append('  "font": %s,' % json.dumps(relative))
-    for key in ("format", "isCidKeyed", "fontMatrix", "encoding"):
+    for key in ("format", "isCidKeyed", "fontMatrix", "paintType", "strokeWidth", "encoding"):
         lines.append("  %s: %s," % (json.dumps(key), json.dumps(fixture[key], separators=(",", ":"))))
     lines.append('  "glyphs": [')
     glyphs = fixture["glyphs"]
@@ -389,6 +394,17 @@ def custom_encoding_font(file_name, names, codes, supplements, expected_format):
     for code, name in supplements:
         by_code[code] = name
     return path, builtin_encoding(by_code, names)
+
+
+def paint_font(file_name, paint_type, stroke_width):
+    """A name-keyed CFF font whose Top DICT declares PaintType and StrokeWidth."""
+    def customize(font):
+        top = font["CFF "].cff.topDictIndex[0]
+        top.PaintType = paint_type
+        top.StrokeWidth = stroke_width
+
+    glyphs = [(".notdef", []), ("bar", box(100, 0, 50, 700)), ("tee", box(100, 650, 400, 50))]
+    return build_cff(file_name, glyphs, customize=customize)
 
 
 def type2_font(file_name, tables=True):
@@ -617,11 +633,11 @@ def build_truetype(file_name, glyphs, cmap_tables, post=None):
     builder.setupPost()
     font = builder.font
     tables = []
-    for platform, encoding, table_format, mapping in cmap_tables:
+    for platform, encoding, table_format, mapping, *language in cmap_tables:
         subtable = CmapSubtable.newSubtable(table_format)
         subtable.platformID = platform
         subtable.platEncID = encoding
-        subtable.language = 0
+        subtable.language = language[0] if language else 0
         subtable.cmap = dict(mapping)
         tables.append(subtable)
     font["cmap"].tables = tables
@@ -706,6 +722,76 @@ def bare_cff(font_path, file_name):
     return path
 
 
+# Fonts whose cmap subtables get a lookup fixture. The path is relative to the Fonts directory.
+CMAP_FONTS = [
+    "FontPrograms/tt-names.ttf",
+    "FontPrograms/tt-cmap.ttf",
+    "OpenSans-Regular.ttf",
+    "SixLaborsSampleAB.ttf",
+    "SourceSansPro-Regular.otf",
+]
+
+
+def cmap_font(file_name):
+    """One font with a subtable of each format that FontProgram reads, except format 10 (fontTools cannot write it).
+
+    (3,1) appears twice with different data, so that the first record has to win.
+    """
+    square = [(0, 0, True), (0, 500, True), (500, 500, True), (500, 0, True)]
+    order = [".notdef"] + ["g%d" % index for index in range(1, 12)]
+    glyphs = [(name, simple_glyph([[(x + 10 * index, y, on) for x, y, on in square]] if index else []))
+              for index, name in enumerate(order)]
+    tables = [
+        (1, 0, 0, {65: "g1", 66: "g2", 90: "g3", 255: "g4"}),
+        (3, 2, 2, {65: "g1", 66: "g2", 0x8140: "g3", 0x8141: "g4", 0x8142: "g6", 0x8240: "g5", 0x9F00: "g7"}),
+        (3, 1, 4, {0x20: "g1", 0x21: "g2", 0x22: "g3", 0x41: "g9", 0x42: "g5", 0x43: "g8", 0x3042: "g4", 0x3044: "g6", 0xFFFD: "g7"}),
+        (3, 1, 4, {0x20: "g11", 0x21: "g10"}, 1),
+        (3, 3, 6, {100: "g2", 101: "g4", 102: "g6", 103: "g8"}),
+        (3, 10, 12, {0x41: "g1", 0x42: "g2", 0x43: "g3", 0x1F600: "g4", 0x1F601: "g5", 0x1F602: "g6", 0x10FFFF: "g7"}),
+        (0, 6, 13, {0x10000: "g8", 0x10001: "g8", 0x10002: "g8", 0x20000: "g9"}),
+    ]
+    return build_truetype(file_name, glyphs, tables)
+
+
+def cmap_subtable_fixture(table, order):
+    pairs = []
+    for code in sorted(table.cmap):
+        glyph = order.index(table.cmap[code])
+        if glyph != 0:
+            pairs.append([code, glyph])
+    return {"platform": table.platformID, "encoding": table.platEncID, "format": table.format, "map": pairs}
+
+
+def write_cmap_fixtures():
+    fonts = []
+    for relative in CMAP_FONTS:
+        font = TTFont(os.path.join(FONTS, relative))
+        order = font.getGlyphOrder()
+        seen = set()
+        subtables = []
+        # The first subtable of a platform and encoding is the one that FontProgram reads.
+        for table in font["cmap"].tables:
+            if table.format in (0, 2, 4, 6, 12, 13) and (table.platformID, table.platEncID) not in seen:
+                seen.add((table.platformID, table.platEncID))
+                subtables.append(cmap_subtable_fixture(table, order))
+        fonts.append({"font": os.path.relpath(os.path.join(FONTS, relative), os.path.join(OUT, "cmap")).replace(os.sep, "/"), "subtables": subtables})
+    lines = ["{", '  "fonts": [']
+    for font_index, font in enumerate(fonts):
+        lines.append("    {")
+        lines.append('      "font": %s,' % json.dumps(font["font"]))
+        lines.append('      "subtables": [')
+        for index, subtable in enumerate(font["subtables"]):
+            comma = "," if index + 1 < len(font["subtables"]) else ""
+            lines.append("        " + json.dumps(subtable, separators=(",", ":")) + comma)
+        lines.append("      ]")
+        lines.append("    }" + ("," if font_index + 1 < len(fonts) else ""))
+    lines.append("  ]")
+    lines.append("}")
+    os.makedirs(os.path.join(OUT, "cmap"), exist_ok=True)
+    with open(os.path.join(OUT, "cmap", "lookups.json"), "w", newline="\n", encoding="utf-8") as stream:
+        stream.write("\n".join(lines) + "\n")
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     expert = list(cffLib.cffIExpertStrings)
@@ -730,6 +816,10 @@ def main():
             [(32, "n3")],
             1),
         (type2_font("cff-type2.otf"), None),
+        # PaintType 2 strokes the outlines. A real StrokeWidth keeps its fraction, and PaintType 1 is not stroked.
+        (paint_font("cff-paint-stroked.otf", 2, 40), None),
+        (paint_font("cff-paint-stroked-real.otf", 2, 12.5), None),
+        (paint_font("cff-paint-outline.otf", 1, 30), None),
         (type2_font("cff-type2-widths.otf", tables=False), None),
         (seac_font("cff-seac.otf"), None),
         (seac_font("cff-seac-widths.otf", tables=False), None),
@@ -742,6 +832,7 @@ def main():
         (cid_font("cff-cid-upem2048.otf", 3, None, [[1 / 2048, 0, 0, 1 / 2048, 0, 0]] * 3, 2048, tables=True), None),
         (composite_font("tt-composite.ttf"), None),
         (names_font("tt-names.ttf"), None),
+        (cmap_font("tt-cmap.ttf"), None),
     ]
     built += [(os.path.join(FONTS, name), None) for name in SHIPPED]
 
@@ -755,6 +846,7 @@ def main():
         print("%-40s %5d glyphs" % (os.path.basename(path), count))
 
     print(os.path.basename(seac_missing_font("cff-seac-missing.otf")))
+    write_cmap_fixtures()
 
 
 if __name__ == "__main__":

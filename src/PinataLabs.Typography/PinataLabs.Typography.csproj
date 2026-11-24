@@ -14,6 +14,15 @@
     <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
+  <!--
+    IsAotCompatible implies IsTrimmable and turns on the trim, AOT and single-file analyzers.
+    The netstandard2.1 asset gets neither: the trimmer reads the attribute only on .NET assets,
+    and the analyzers need the net8.0+ annotations.
+  -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="Unicode\StateAutomation\StateMachine.cs" />
     <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\INode.cs" Link="Unicode\StateAutomation\INode.cs" />

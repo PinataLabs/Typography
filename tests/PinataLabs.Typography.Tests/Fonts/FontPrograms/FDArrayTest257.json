@@ -3,6 +3,8 @@
   "format": "Cff",
   "isCidKeyed": true,
   "fontMatrix": [0.001,0,0,0.001,0,0],
+  "paintType": 0,
+  "strokeWidth": 0,
   "encoding": null,
   "glyphs": [
     {"name":null,"cid":0,"advance":1000,"outline":"M 100 -120 L 900 -120 L 900 880 L 100 880 Z M 500 421 L 182 830 L 818 830 Z M 532 380 L 850 789 L 850 -29 Z M 182 -70 L 500 339 L 818 -70 Z M 150 789 L 468 380 L 150 -29 Z"},

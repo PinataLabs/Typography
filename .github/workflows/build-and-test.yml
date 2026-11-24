@@ -136,3 +136,25 @@ jobs:
       - name: End SonarCloud analysis
         if: ${{ !cancelled() && env.SONAR_TOKEN != '' && steps.build.outcome == 'success' }}
         run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+  # Consumers such as PdfPinata ship Native AOT and trimmed apps, and fail on any trim warning.
+  # The smoke project turns trim and AOT warnings into errors, so a warning in the library fails the publish.
+  # The binary needs no .NET runtime, so the SDK that global.json pins is the only install.
+  aot-smoke:
+    name: Native AOT smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        run: dotnet publish tests/PinataLabs.Typography.AotSmoke -c Release -r linux-x64 -o aot-smoke
+
+      - name: Run
+        run: ./aot-smoke/PinataLabs.Typography.AotSmoke

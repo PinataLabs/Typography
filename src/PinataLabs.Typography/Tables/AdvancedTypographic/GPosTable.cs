@@ -160,15 +160,20 @@ internal class GPosTable : Table
 
             // Plan positioning features for each glyph.
             shaper.Plan(collection, index, count);
-            IEnumerable<ShapingStage> shapingStages = shaper.GetShapingStages();
+            IReadOnlyList<ShapingStage> shapingStages = shaper.GetShapingStages();
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
             foreach (ShapingStage stage in shapingStages)
             {
-                stage.PreProcessFeature(collection, index, count);
+                stage.PreProcessFeatures(collection, index, count);
 
-                Tag featureTag = stage.FeatureTag;
-                if (this.TryGetFeatureLookups(in featureTag, current, out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? lookups))
+                // Unlike substitution, positioning applies the features of a stage one after the other.
+                foreach (Tag featureTag in stage.FeatureTags)
                 {
+                    if (!this.TryGetFeatureLookups(in featureTag, current, out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? lookups))
+                    {
+                        continue;
+                    }
+
                     // Apply features in order.
                     foreach ((Tag Feature, ushort Index, LookupTable LookupTable) featureLookup in lookups)
                     {
@@ -198,7 +203,7 @@ internal class GPosTable : Table
                     }
                 }
 
-                stage.PostProcessFeature(collection, index, count);
+                stage.PostProcessFeatures(collection, index, count);
             }
 
             EndLookups:

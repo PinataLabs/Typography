@@ -9,7 +9,7 @@ namespace PinataLabs.Typography;
 
 internal readonly struct Bounds : IEquatable<Bounds>
 {
-    public static Bounds Empty = default;
+    public static readonly Bounds Empty = default;
 
     public Bounds(Vector2 min, Vector2 max)
     {

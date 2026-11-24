@@ -688,11 +688,18 @@ internal static class TextLayout
             {
                 foreach (GlyphMetrics metric in data.Metrics)
                 {
-                    Vector2 scale = new Vector2(data.PointSize) / metric.ScaleFactor;
+                    // CSS Writing Modes 3 §4.2: rotated text sits on the central baseline, halfway between the
+                    // used ascent and descent (hhea, or OS/2 typo with USE_TYPO_METRICS). Browsers centre it in
+                    // the column whatever the line gap; see tests/tools/central_baseline.
+                    float scaleY = data.PointSize / metric.ScaleFactor.Y;
+
+                    // Some fonts store the descent as a positive number; the line metrics take its magnitude too.
+                    HorizontalMetrics metrics = metric.FontMetrics.HorizontalMetrics;
+                    float central = (metrics.Ascender - Math.Abs((int)metrics.Descender)) * .5F * scaleY;
                     glyphs.Add(new GlyphLayout(
                         new Glyph(metric, data.PointSize),
                         boxLocation,
-                        penLocation + new Vector2(((scaledMaxLineHeight - data.ScaledLineHeight) * .5F) + data.ScaledDescender, 0),
+                        penLocation + new Vector2((scaledMaxLineHeight * .5F) - central, 0),
                         Vector2.Zero,
                         advanceX,
                         data.ScaledAdvance,

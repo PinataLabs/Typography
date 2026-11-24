@@ -1,13 +1,18 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Tests.Fakes;
+using PinataLabs.Typography.Tests.FontPrograms;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -120,6 +125,85 @@ public class VerticalGlyphFormTests
         float columnCentre = originX + (TextMeasurer.MeasureAdvance(text, options).Width * .5F);
 
         await Assert.That(inkCentre).IsEqualTo(columnCentre).Within(1.5F);
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight)]
+    public async Task RotatedGlyphCentralBaselineIsAtTheColumnCentre(LayoutMode mode)
+    {
+        // The font's ascent (1100) and descent (-200) are far from symmetric and it has a line gap (100).
+        // Its Latin glyphs fill the ascent to descent range, so a rotated Latin glyph's ink centre is its
+        // central baseline. Edge puts it at the column centre to within 0.01px, see tests/tools/central_baseline.
+        const float originX = 200F;
+        const string text = "あいうABCえお";
+        FontFamily family = new FontCollection().Add(TestFonts.CentralBaselineTestFile);
+        TextOptions options = new(family.CreateFont(100))
+        {
+            LayoutMode = mode,
+            Origin = new Vector2(originX, 20),
+        };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, text, options);
+
+        // The column is one em wide, like the browser's line-height: 1 column. MeasureAdvance is not used
+        // because it counts a rotated glyph's baseline shift as column width.
+        const float columnCentre = originX + 50F;
+
+        List<float> rotated = renderer.InkCentres(GlyphLayoutMode.VerticalRotated);
+        List<float> upright = renderer.InkCentres(GlyphLayoutMode.Vertical);
+
+        await Assert.That(rotated.Count).IsEqualTo(3);
+        await Assert.That(upright.Count).IsEqualTo(5);
+        foreach (float centre in rotated.Concat(upright))
+        {
+            await Assert.That(centre).IsEqualTo(columnCentre).Within(0.01F);
+        }
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight)]
+    public async Task RotatedGlyphCentralBaselineIgnoresTheSignOfTheDescender(LayoutMode mode)
+    {
+        // A malformed font stores its descent as a positive number. The glyphs still descend below
+        // the baseline, so the central baseline must not move.
+        const float originX = 200F;
+        byte[] font = WithPositiveDescender(File.ReadAllBytes(TestFonts.CentralBaselineTestFile));
+        using MemoryStream stream = new(font);
+        FontFamily family = new FontCollection().Add(stream);
+        TextOptions options = new(family.CreateFont(100))
+        {
+            LayoutMode = mode,
+            Origin = new Vector2(originX, 20),
+        };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "ABC", options);
+
+        List<float> rotated = renderer.InkCentres(GlyphLayoutMode.VerticalRotated);
+        await Assert.That(rotated.Count).IsEqualTo(3);
+        foreach (float centre in rotated)
+        {
+            await Assert.That(centre).IsEqualTo(originX + 50F).Within(0.01F);
+        }
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight)]
+    public async Task RotatedGlyphLaysOutWhenTheDescenderIsTheSmallestShort(LayoutMode mode)
+    {
+        byte[] font = WithDescender(File.ReadAllBytes(TestFonts.CentralBaselineTestFile), short.MinValue);
+        using MemoryStream stream = new(font);
+        FontFamily family = new FontCollection().Add(stream);
+        TextOptions options = new(family.CreateFont(100)) { LayoutMode = mode };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "ABC", options);
+
+        await Assert.That(renderer.InkCentres(GlyphLayoutMode.VerticalRotated).Count).IsEqualTo(3);
     }
 
     [Test]
@@ -312,5 +396,93 @@ public class VerticalGlyphFormTests
         new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);
 
         return collection[0].Features.Select(f => f.Tag.ToString()).ToList();
+    }
+
+    private static byte[] WithDescender(byte[] font, short descender)
+    {
+        byte[] hhea = SfntRewriter.GetTable(font, "hhea")!;
+        byte[] os2 = SfntRewriter.GetTable(font, "OS/2")!;
+        BinaryPrimitives.WriteInt16BigEndian(hhea.AsSpan(6), descender);
+        BinaryPrimitives.WriteInt16BigEndian(os2.AsSpan(70), descender);
+        return SfntRewriter.Replace(SfntRewriter.Replace(font, "hhea", hhea), "OS/2", os2);
+    }
+
+    private static byte[] WithPositiveDescender(byte[] font)
+    {
+        const int hheaDescender = 6;
+        const int os2TypoDescender = 70;
+        byte[] hhea = SfntRewriter.GetTable(font, "hhea")!;
+        byte[] os2 = SfntRewriter.GetTable(font, "OS/2")!;
+        Negate(hhea, hheaDescender);
+        Negate(os2, os2TypoDescender);
+        return SfntRewriter.Replace(SfntRewriter.Replace(font, "hhea", hhea), "OS/2", os2);
+
+        static void Negate(byte[] table, int offset)
+        {
+            short value = BinaryPrimitives.ReadInt16BigEndian(table.AsSpan(offset));
+            if (value >= 0)
+            {
+                throw new InvalidOperationException("The source font must have a negative descender.");
+            }
+
+            BinaryPrimitives.WriteInt16BigEndian(table.AsSpan(offset), (short)-value);
+        }
+    }
+
+    private sealed class InkBoundsRenderer : IGlyphRenderer
+    {
+        private readonly List<(GlyphLayoutMode Mode, float MinX, float MaxX)> glyphs = [];
+        private GlyphLayoutMode mode;
+        private float minX;
+        private float maxX;
+
+        public List<float> InkCentres(GlyphLayoutMode layoutMode)
+            => this.glyphs.Where(g => g.Mode == layoutMode).Select(g => (g.MinX + g.MaxX) * .5F).ToList();
+
+        public bool BeginGlyph(in FontRectangle bounds, in GlyphRendererParameters parameters)
+        {
+            this.mode = parameters.LayoutMode;
+            this.minX = float.MaxValue;
+            this.maxX = float.MinValue;
+            return true;
+        }
+
+        public void EndGlyph() => this.glyphs.Add((this.mode, this.minX, this.maxX));
+
+        public void MoveTo(Vector2 point) => this.Add(point);
+
+        public void LineTo(Vector2 point) => this.Add(point);
+
+        public void QuadraticBezierTo(Vector2 secondControlPoint, Vector2 point) => this.Add(point);
+
+        public void CubicBezierTo(Vector2 secondControlPoint, Vector2 thirdControlPoint, Vector2 point) => this.Add(point);
+
+        public void BeginFigure()
+        {
+        }
+
+        public void EndFigure()
+        {
+        }
+
+        public void BeginText(in FontRectangle bounds)
+        {
+        }
+
+        public void EndText()
+        {
+        }
+
+        public TextDecorations EnabledDecorations() => TextDecorations.None;
+
+        public void SetDecoration(TextDecorations textDecorations, Vector2 start, Vector2 end, float thickness)
+        {
+        }
+
+        private void Add(Vector2 point)
+        {
+            this.minX = MathF.Min(this.minX, point.X);
+            this.maxX = MathF.Max(this.maxX, point.X);
+        }
     }
 }
