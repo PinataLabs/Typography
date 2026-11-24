@@ -87,7 +87,8 @@ the same tag, or else in the first stage, which holds only `rvrn`.
 
 Last, it builds four `ScriptFallback*.ttf` fonts with no `grek` script and a different `liga` and `kern` for each
 script. HarfBuzz shapes Greek text in them with the `DFLT` script, else the `dflt` script, else `latn`, and with no
-feature when the font has none of the three.
+feature when the font has none of the three. Their `vert` is listed only under `arab`, and HarfBuzz takes it from
+the whole FeatureList for vertical Han text.
 
 `DefaultLangSysTests` checks that the library gives the same glyphs and positions.
 

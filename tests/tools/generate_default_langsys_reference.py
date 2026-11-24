@@ -41,6 +41,10 @@ The script also builds four ScriptFallback fonts. Each has a `liga` that gives a
 with the `DFLT` script, else the `dflt` script, else `latn`, and with no feature when the font has none
 of them. The first ScriptRecord of three of the fonts is `arab`.
 
+The `vert` of the ScriptFallback fonts is listed only under `arab`. HarfBuzz looks for `vert` in the
+whole FeatureList when the chosen LangSys lacks it, so vertical Han text gets a.vert in these fonts.
+The cases with a direction are shaped in that direction.
+
 The reference holds the glyph IDs and positions that HarfBuzz gives for each case, in font units
 from the origin of the line. DefaultLangSysTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -101,6 +105,8 @@ CASES = [
     ("FallbackToDfltScript", "ScriptFallbackLowercaseDflt.ttf", "\u03b1\u03b1"),
     ("FallbackToLatn", "ScriptFallbackLatn.ttf", "\u03b1\u03b1"),
     ("FallbackToNone", "ScriptFallbackNone.ttf", "\u03b1\u03b1"),
+    ("VertNotInLangSys", "ScriptFallbackLatn.ttf", "\u4e2d\u4e2d", "ttb"),
+    ("VertWithoutLangSys", "ScriptFallbackNone.ttf", "\u4e2d\u4e2d", "ttb"),
 ]
 
 REQUIRED_GLYPHS = [".notdef", "a", "b", "c", "d"]
@@ -136,7 +142,7 @@ REQUIRED = {
     ("GPOS", "latn"): ("rqdp", False),
 }
 
-FALLBACK_GLYPHS = [".notdef", "a", "a.arab", "a.cyrl", "a.DFLT", "a.dflt", "a.latn"]
+FALLBACK_GLYPHS = [".notdef", "a", "a.arab", "a.cyrl", "a.DFLT", "a.dflt", "a.latn", "a.vert"]
 FALLBACK_KERN = {"arab": -10, "cyrl": -20, "DFLT": -30, "dflt": -40, "latn": -50}
 
 # feaLib has no `dflt` script, so `thai` stands in for it and build_script_fallback() renames it.
@@ -218,8 +224,9 @@ def build_script_fallback(path, scripts):
     features += "} liga;\nfeature kern {\n"
     features += "".join(f"    script {f}; pos a.{s} a.{s} {FALLBACK_KERN[s]};\n" for f, s in zip(fea_scripts, scripts))
     features += "} kern;\n"
+    features += "feature vert { script arab; sub a by a.vert; } vert;\n"
 
-    builder = new_font(os.path.splitext(path)[0], FALLBACK_GLYPHS, {0x03B1: "a"}, features)
+    builder = new_font(os.path.splitext(path)[0], FALLBACK_GLYPHS, {0x03B1: "a", 0x4E2D: "a"}, features)
     for table in ("GSUB", "GPOS"):
         script_list = builder.font[table].table.ScriptList
         for record in script_list.ScriptRecord:
@@ -230,13 +237,15 @@ def build_script_fallback(path, scripts):
     builder.font.save(os.path.join(FONTS, path))
 
 
-def shape(path, text):
+def shape(path, text, direction=None):
     with open(os.path.join(FONTS, path), "rb") as file:
         font = hb.Font(hb.Face(file.read()))
 
     buffer = hb.Buffer()
     buffer.add_str(text)
     buffer.guess_segment_properties()
+    if direction:
+        buffer.direction = direction
     hb.shape(font, buffer)
 
     glyphs = []
@@ -253,10 +262,13 @@ def main():
     build_required_feature()
     for path, scripts in FALLBACK_FONTS.items():
         build_script_fallback(path, scripts)
-    cases = [
-        {"name": name, "font": path, "text": text, "glyphs": shape(path, text)}
-        for name, path, text in CASES
-    ]
+    cases = []
+    for name, path, text, *direction in CASES:
+        case = {"name": name, "font": path, "text": text}
+        if direction:
+            case["direction"] = direction[0]
+        case["glyphs"] = shape(path, text, *direction)
+        cases.append(case)
     reference = {"harfbuzz": hb.version_string(), "cases": cases}
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
         json.dump(reference, file, indent=2, ensure_ascii=False)

@@ -60,6 +60,25 @@ public class DefaultLangSysTests
         await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
     }
 
+    /// <summary>
+    /// HarfBuzz takes <c>vert</c> from the whole FeatureList when the chosen language system lacks it.
+    /// </summary>
+    [Test]
+    [Arguments("VertNotInLangSys")]
+    [Arguments("VertWithoutLangSys")]
+    public async Task VerticalGlyphsAreSubstitutedAsHarfBuzzSubstitutesThem(string name)
+    {
+        ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);
+        Font font = new FontCollection().Add(TestFonts.GetPath(expected.Font)).CreateFont(12);
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(
+            expected.Text.AsSpan(),
+            new TextOptions(font) { LayoutMode = LayoutMode.VerticalLeftRight });
+
+        int[] actual = layout.Select(g => (int)g.Glyph.GlyphMetrics.GlyphId).ToArray();
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => g.Id), CollectionOrdering.Matching);
+    }
+
     private sealed class Reference
     {
         public ReferenceCase[] Cases { get; set; } = [];

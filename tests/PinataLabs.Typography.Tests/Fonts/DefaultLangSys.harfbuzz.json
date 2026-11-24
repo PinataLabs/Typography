@@ -430,6 +430,42 @@
           "y": 0
         }
       ]
+    },
+    {
+      "name": "VertNotInLangSys",
+      "font": "ScriptFallbackLatn.ttf",
+      "text": "中中",
+      "direction": "ttb",
+      "glyphs": [
+        {
+          "id": 7,
+          "x": -300,
+          "y": -850
+        },
+        {
+          "id": 7,
+          "x": -300,
+          "y": -1850
+        }
+      ]
+    },
+    {
+      "name": "VertWithoutLangSys",
+      "font": "ScriptFallbackNone.ttf",
+      "text": "中中",
+      "direction": "ttb",
+      "glyphs": [
+        {
+          "id": 7,
+          "x": -300,
+          "y": -850
+        },
+        {
+          "id": 7,
+          "x": -300,
+          "y": -1850
+        }
+      ]
     }
   ]
 }
