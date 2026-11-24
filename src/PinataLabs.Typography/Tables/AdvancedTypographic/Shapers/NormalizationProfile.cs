@@ -60,6 +60,10 @@ internal sealed class NormalizationProfile
 
     private readonly (uint First, uint Second, uint Composed)[] presentationPairs;
 
+    private readonly (uint Vowel, uint Mark, uint Remainder)[] splitVowels;
+
+    private readonly (uint First, uint Last)[] marksBeforeSplitMark;
+
     private NormalizationProfile(
         NormalizationMode mode,
         bool composesOntoMarks = true,
@@ -67,7 +71,9 @@ internal sealed class NormalizationProfile
         uint[]? keptWhole = null,
         uint[]? composedDespiteExclusion = null,
         (uint First, uint Last) presentationForms = default,
-        (uint First, uint Second, uint Composed)[]? presentationPairs = null)
+        (uint First, uint Second, uint Composed)[]? presentationPairs = null,
+        (uint Vowel, uint Mark, uint Remainder)[]? splitVowels = null,
+        (uint First, uint Last)[]? marksBeforeSplitMark = null)
     {
         this.Mode = mode;
         this.ComposesOntoMarks = composesOntoMarks;
@@ -76,6 +82,8 @@ internal sealed class NormalizationProfile
         this.composedDespiteExclusion = composedDespiteExclusion ?? [];
         this.presentationForms = presentationForms;
         this.presentationPairs = presentationPairs ?? [];
+        this.splitVowels = splitVowels ?? [];
+        this.marksBeforeSplitMark = marksBeforeSplitMark ?? [];
     }
 
     public static NormalizationProfile Default { get; } = new(NormalizationMode.ComposedDiacritics);
@@ -100,6 +108,13 @@ internal sealed class NormalizationProfile
 
     public static NormalizationProfile Myanmar { get; } = new(NormalizationMode.ComposedDiacriticsNoShortCircuit);
 
+    // SARA AM splits into NIKHAHIT and SARA AA, and Lao AM into NIGGAHITA and AA, whether or not the font has the parts.
+    // NIKHAHIT then moves before the tone marks and vowels above the base that come right before it.
+    public static NormalizationProfile Thai { get; } = new(
+        NormalizationMode.ComposedDiacritics,
+        splitVowels: [(0x0E33, 0x0E4D, 0x0E32), (0x0EB3, 0x0ECD, 0x0EB2)],
+        marksBeforeSplitMark: [(0x0E31, 0x0E31), (0x0E34, 0x0E37), (0x0E47, 0x0E4E), (0x0EB1, 0x0EB1), (0x0EB4, 0x0EB7), (0x0EBB, 0x0EBB), (0x0EC8, 0x0ECE)]);
+
     public static NormalizationProfile Universal { get; } = new(NormalizationMode.ComposedDiacriticsNoShortCircuit, composesOntoMarks: false);
 
     public NormalizationMode Mode { get; }
@@ -117,6 +132,54 @@ internal sealed class NormalizationProfile
     /// when the font does not attach marks with GPOS and so cannot place the mark on the letter.
     /// </summary>
     public bool ComposesPresentationForms => this.presentationForms.Last != 0;
+
+    /// <summary>
+    /// Gets a value indicating whether the shaper splits a vowel into a mark and the rest before it maps the text to
+    /// glyphs.
+    /// </summary>
+    public bool SplitsVowels => this.splitVowels.Length > 0;
+
+    /// <summary>
+    /// Gets the two characters that the shaper splits the vowel into.
+    /// </summary>
+    /// <param name="codePoint">The character.</param>
+    /// <param name="mark">The mark, which moves before the marks that <see cref="MovesSplitMarkBefore"/> names.</param>
+    /// <param name="rest">The character that stays in the place of the vowel.</param>
+    /// <returns><see langword="true"/> if the shaper splits the character.</returns>
+    public bool TrySplitVowel(uint codePoint, out uint mark, out uint rest)
+    {
+        foreach ((uint Vowel, uint Mark, uint Remainder) split in this.splitVowels)
+        {
+            if (split.Vowel == codePoint)
+            {
+                mark = split.Mark;
+                rest = split.Remainder;
+                return true;
+            }
+        }
+
+        mark = 0;
+        rest = 0;
+        return false;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the mark of a split vowel moves before the character when it comes before it.
+    /// </summary>
+    /// <param name="codePoint">The character before the mark.</param>
+    /// <returns><see langword="true"/> if the mark moves before the character.</returns>
+    public bool MovesSplitMarkBefore(uint codePoint)
+    {
+        foreach ((uint First, uint Last) range in this.marksBeforeSplitMark)
+        {
+            if (codePoint >= range.First && codePoint <= range.Last)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Gets the canonical decomposition of the character, one step deep, unless this shaper keeps it whole.

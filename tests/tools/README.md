@@ -159,6 +159,8 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
   GPOS table that only kerns.
 - `NormalizationMarksLegacyKern.ttf` and `NormalizationMarksBothKern.ttf` have the same glyphs and a `kern` table.
   The second also has the GPOS table that only kerns.
+- `NormalizationThai.ttf` and `NormalizationThaiWithoutParts.ttf` have Thai and Lao letters, marks and SARA AM, with
+  and without its parts. HarfBuzz splits SARA AM in both.
 - `NormalizationLigature.ttf`, `NormalizationLigatureGdef.ttf` and `NormalizationLigatureGdefBase.ttf` ligate f and i,
   f, f and i, and lam and alef across marks, and have no GPOS table. The second and third also have GDEF glyph
   classes, and the third calls the ligatures bases. Without GPOS, HarfBuzz places a mark of a ligature on its own

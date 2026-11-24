@@ -31,6 +31,8 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
   GPOS `mark` feature that decides whether a letter and a point compose.
 * NormalizationLigature.ttf, NormalizationLigatureGdef.ttf and NormalizationLigatureGdefBase.ttf have a GSUB table that
   ligates across marks, and no GPOS table. The second and third also have GDEF glyph classes.
+* NormalizationThai.ttf and NormalizationThaiWithoutParts.ttf have Thai and Lao letters, marks and SARA AM, with and
+  without its parts.
 * NormalizationHebrewGposDflt.ttf, NormalizationHebrewGposLatn.ttf and NormalizationHebrewGposHebr.ttf have Hebrew and
   Latin letters, marks and a `kern` table. Only the GPOS table of the third has the `hebr` script.
 * NormalizationHangul.ttf, NormalizationHangulGsub.ttf and NormalizationHangulJamo.ttf have Hangul jamo, with and
@@ -422,6 +424,34 @@ LIGATURE_CASES = [
     ("MarkAfterALigatureOfABaseAndAMark", "aa\u0301\u0302"),
 ]
 
+# The Thai shaper splits SARA AM into NIKHAHIT and SARA AA before it maps the text to glyphs, even when the font
+# lacks the parts, and moves NIKHAHIT before the marks above the base that come before it. Lao does the same with
+# its AM. Thai has Thai and Lao letters, SARA AM, its parts and the marks, and ThaiWithoutParts lacks the parts.
+THAI_CHARACTERS = [
+    0x20, 0x0E01, 0x0E19, 0x0E31, 0x0E32, 0x0E33, *range(0x0E34, 0x0E3B), *range(0x0E47, 0x0E4F),
+    0x0E81, 0x0EB1, 0x0EB2, 0x0EB3, *range(0x0EB4, 0x0EBD), *range(0x0EC8, 0x0ECF),
+]
+THAI_PARTS = [0x0E4D, 0x0E32, 0x0ECD, 0x0EB2]
+THAI_FONTS = [
+    ("NormalizationThai.ttf", THAI_CHARACTERS),
+    ("NormalizationThaiWithoutParts.ttf", [c for c in THAI_CHARACTERS if c not in THAI_PARTS]),
+]
+
+THAI_CASES = [
+    ("SplitsSaraAm", "\u0E19\u0E33"),
+    ("MovesNikhahitBeforeAToneMark", "\u0E19\u0E49\u0E33"),
+    ("MovesNikhahitBeforeTwoToneMarks", "\u0E01\u0E48\u0E49\u0E33"),
+    ("MovesNikhahitBeforeAVowelAbove", "\u0E01\u0E34\u0E48\u0E33"),
+    ("DoesNotMoveNikhahitBeforeAVowelBelow", "\u0E01\u0E38\u0E48\u0E33"),
+    ("MovesNikhahitOnlyBeforeTheMarksAboveNextToIt", "\u0E01\u0E48\u0E38\u0E49\u0E33"),
+    ("SplitsSaraAmWithoutBase", "\u0E33"),
+    ("SplitsSaraAmAfterASpace", "\u0E01 \u0E49\u0E33"),
+    ("SplitsEachSaraAm", "\u0E01\u0E33\u0E33"),
+    ("SplitsLaoAm", "\u0E81\u0EC8\u0EB3"),
+    ("MovesLaoNiggahitaBeforeMaiKon", "\u0E81\u0EBB\u0EB3"),
+    ("DoesNotMoveLaoNiggahitaBeforeASemivowelBelow", "\u0E81\u0EBC\u0EB3"),
+]
+
 # The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
 # mark is placed on its base, it only loses its advance, or it keeps its advance. Scripts has the first letter of
 # every script of Scripts.txt and U+0301, and the reference has that letter and mark for each script.
@@ -702,6 +732,11 @@ def main():
         font = build(file_name, LIGATURE_CHARACTERS, True, features, LIGATURE_ADVANCES, LIGATURE_BOXES)
         prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
         positioned += positioned_cases(file_name, font, [(prefix + name, text) for name, text in LIGATURE_CASES])
+
+    for file_name, characters in THAI_FONTS:
+        font = build(file_name, characters, True)
+        prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
+        positioned += positioned_cases(file_name, font, [(prefix + name, text) for name, text in THAI_CASES])
 
     script_letters = read_script_letters()
     scripts_font, scripts_kern_font = (

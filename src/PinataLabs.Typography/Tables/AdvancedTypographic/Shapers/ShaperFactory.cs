@@ -54,6 +54,7 @@ internal static class ShaperFactory
             ShaperKind.Hebrew => NormalizationProfile.Hebrew,
             ShaperKind.Indic => NormalizationProfile.Indic,
             ShaperKind.Myanmar => NormalizationProfile.Myanmar,
+            ShaperKind.Thai => NormalizationProfile.Thai,
             ShaperKind.Universal => NormalizationProfile.Universal,
             _ => NormalizationProfile.Default,
         };
