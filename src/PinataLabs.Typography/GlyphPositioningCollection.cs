@@ -42,6 +42,13 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         get => this.glyphs[index].Data;
     }
 
+    /// <summary>
+    /// Gets the metrics of the glyph at the index, in the font that draws it.
+    /// </summary>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <returns>The metrics, which belong to this layout alone.</returns>
+    public GlyphMetrics GetMetrics(int index) => this.glyphs[index].Metrics[0];
+
     /// <inheritdoc />
     public void AddShapingFeature(int index, TagEntry feature)
         => this.glyphs[index].Data.Features.Add(feature);

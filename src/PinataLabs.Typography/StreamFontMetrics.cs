@@ -11,6 +11,7 @@ using System.Linq;
 using System.Numerics;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Tables.Cff;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.General.Colr;
@@ -308,7 +309,14 @@ internal partial class StreamFontMetrics : FontMetrics
         bool kerned = false;
         KerningMode kerningMode = collection.TextOptions.KerningMode;
 
-        gpos?.TryUpdatePositions(this, collection, out kerned);
+        if (gpos is null)
+        {
+            FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection);
+        }
+        else
+        {
+            gpos.TryUpdatePositions(this, collection, out kerned);
+        }
 
         // TODO: I don't think we should disable kerning here.
         if (!kerned && kerningMode != KerningMode.None)
@@ -331,6 +339,11 @@ internal partial class StreamFontMetrics : FontMetrics
                     kern.UpdatePositions(this, collection, index - 1, index);
                 }
             }
+        }
+
+        if (gpos is null)
+        {
+            FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection);
         }
     }
 

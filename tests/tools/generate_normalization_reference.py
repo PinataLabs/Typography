@@ -166,6 +166,67 @@ HANGUL_CASES = [
     ("ComposesAfterLatinText", ("aa", "\u1100\u1161\u11AB\u302E\uAC00\u11A8")),
 ]
 
+# A font without a GPOS table cannot attach a mark. HarfBuzz then takes the advance of the mark away, and its
+# default, Arabic, Hebrew and Hangul shapers place the mark on its base from the boxes of the two glyphs.
+# Each mark of the fonts is 200 wide and has an advance of 300. Marks has no GPOS and no GDEF table. MarksGdef has
+# a GDEF table that calls U+0301 a mark and U+0323 a base. MarksKern has a GPOS table with only a `kern` feature.
+MARKS_FONT = "NormalizationMarks.ttf"
+MARKS_GDEF_FONT = "NormalizationMarksGdef.ttf"
+MARKS_KERN_FONT = "NormalizationMarksKern.ttf"
+MARKS = [
+    0x0301, 0x0302, 0x0315, 0x031B, 0x0323, 0x0327, 0x035D, 0x20DD,
+    0x05B7, 0x05B9, 0x05BC, 0x064E, 0x0650, 0x0E38, 0x0E48, 0x093C, 0x1036, 0x1B34,
+]
+MARKS_CHARACTERS = sorted([ord("a"), ord("x"), 0x05D0, 0x0628, 0x0E01, 0x0915, 0x1000, 0x1B05, 0xAC00, *MARKS])
+MARK_BOXES = {mark: (100, 300, 300, 400) for mark in MARKS}
+MARK_ADVANCES = {mark: 300 for mark in MARKS}
+
+MARKS_GDEF_FEATURES = """
+table GDEF { GlyphClassDef [u0061 u0323], , [u0301], ; } GDEF;
+"""
+
+MARKS_KERN_FEATURES = """
+languagesystem DFLT dflt;
+feature kern { pos u0061 u0078 -50; } kern;
+"""
+
+MARKS_CASES = [
+    ("MarkAboveIsCentredOverItsBase", "a\u0301a"),
+    ("MarkBelowIsCentredUnderItsBase", "a\u0323a"),
+    ("TwoMarksAboveStack", "a\u0301\u0302a"),
+    ("MarksAboveAndBelow", "a\u0323\u0301a"),
+    ("AttachedMarksTouchTheBase", "a\u0327\u031Ba"),
+    ("MarkAboveRight", "a\u0315a"),
+    ("DoubleMarkSitsOverTheEndOfItsBase", "a\u035Dx"),
+    ("MarkWithoutBaseOnlyLosesItsAdvance", "\u0301a"),
+    ("EnclosingMarkKeepsItsAdvance", "a\u20DDa"),
+    ("HebrewPoints", "\u05D0\u05B7\u05BC\u05D0"),
+    ("HebrewHolamIsLeftAligned", "\u05D0\u05B9"),
+    ("ArabicMarks", "\u0628\u064E\u0628\u0650"),
+    ("ArabicMarkWithoutBase", "\u064E\u0628"),
+    ("ArabicDoubleMark", "\u0628\u035D\u0628"),
+    ("HangulMark", "\uAC00\u0301\uAC00"),
+    ("ThaiMarksOnlyLoseTheirAdvance", "\u0E01\u0E38\u0E48\u0E01"),
+    ("MyanmarMarkOnlyLosesItsAdvance", "\u1000\u1036\u1000"),
+    ("BalineseMarkOnlyLosesItsAdvance", "\u1B05\u1B34\u1B05"),
+    ("DevanagariMarkKeepsItsAdvance", "\u0915\u093C\u0915"),
+]
+
+MARKS_GDEF_CASES = [
+    ("GdefMarkIsPlaced", "a\u0301a"),
+    ("GdefBaseThatIsAMarkInUnicodeIsPlaced", "a\u0323a"),
+    ("ThaiMarksWithoutGdefClassKeepTheirAdvance", "\u0E01\u0E38\u0E48\u0E01"),
+]
+
+MARKS_KERN_CASES = [
+    ("GposWithoutGdefTakesTheAdvanceOfAMark", "a\u0301a"),
+    ("GposWithoutGdefTakesTheAdvanceOfThaiMarks", "\u0E01\u0E38\u0E48\u0E01"),
+    ("GposWithoutGdefTakesTheAdvanceOfAMyanmarMark", "\u1000\u1036\u1000"),
+    ("GposWithoutGdefKeepsTheAdvanceOfAHangulMark", "\uAC00\u0301\uAC00"),
+    ("GposWithoutGdefKeepsTheAdvanceOfADevanagariMark", "\u0915\u093C\u0915"),
+    ("GposWithoutGdefKeepsTheAdvanceOfAnEnclosingMark", "a\u20DDa"),
+]
+
 # A space or a hyphen that the font lacks becomes the space or the hyphen that the font has. Each text ends with
 # a letter, so that the place of the letter shows the advance of the space.
 SPACE_FONT = "NormalizationSpace.ttf"
@@ -223,25 +284,27 @@ def read_unicode_data():
     return classes, decompositions
 
 
-def box():
+def box(x_min=50, y_min=0, x_max=450, y_max=700):
     pen = TTGlyphPen(None)
-    pen.moveTo((50, 0))
-    pen.lineTo((50, 700))
-    pen.lineTo((450, 700))
-    pen.lineTo((450, 0))
+    pen.moveTo((x_min, y_min))
+    pen.lineTo((x_min, y_max))
+    pen.lineTo((x_max, y_max))
+    pen.lineTo((x_max, y_min))
     pen.closePath()
     return pen.glyph()
 
 
-def build(file_name, code_points, outlines, features=None, advances=None):
+def build(file_name, code_points, outlines, features=None, advances=None, boxes=None):
     names = [".notdef"] + ["u%04X" % c for c in code_points]
+    boxes = {"u%04X" % c: b for c, b in (boxes or {}).items()}
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(names)
     builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
-    builder.setupGlyf({name: box() if outlines else Glyph() for name in names})
-    metrics = {name: (600, 50 if outlines else 0) for name in names}
+    builder.setupGlyf({name: box(*boxes.get(name, ())) if outlines else Glyph() for name in names})
+    metrics = {name: (600, boxes[name][0] if name in boxes else 50 if outlines else 0) for name in names}
     for code_point, advance in (advances or {}).items():
-        metrics["u%04X" % code_point] = (advance, 50)
+        name = "u%04X" % code_point
+        metrics[name] = (advance, metrics[name][1])
     builder.setupHorizontalMetrics(metrics)
     builder.setupHorizontalHeader(ascent=800, descent=-200)
     builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
@@ -334,6 +397,13 @@ def main():
     space_bare_font = build(SPACE_BARE_FONT, sorted(set(map(ord, SPACE_BARE_CHARACTERS))), True, advances=SPACE_BARE_ADVANCES)
     positioned = positioned_cases(SPACE_FONT, space_font, SPACE_CASES)
     positioned += positioned_cases(SPACE_BARE_FONT, space_bare_font, SPACE_BARE_CASES)
+    for file_name, features, mark_cases in (
+        (MARKS_FONT, None, MARKS_CASES),
+        (MARKS_GDEF_FONT, MARKS_GDEF_FEATURES, MARKS_GDEF_CASES),
+        (MARKS_KERN_FONT, MARKS_KERN_FEATURES, MARKS_KERN_CASES),
+    ):
+        marks_font = build(file_name, MARKS_CHARACTERS, True, features, MARK_ADVANCES, MARK_BOXES)
+        positioned += positioned_cases(file_name, marks_font, mark_cases)
 
     composed = list(scanned(decompositions))
     values = sorted(set(classes.values()))

@@ -336,7 +336,7 @@ internal class GPosTable : Table
         {
             int currentIndex = i + index;
             GlyphShapingData data = collection[currentIndex];
-            if (AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data.GlyphId, data))
+            if (AdvancedTypographicUtils.IsZeroWidthMark(fontMetrics, data))
             {
                 data.Bounds.Width = 0;
                 data.Bounds.Height = 0;

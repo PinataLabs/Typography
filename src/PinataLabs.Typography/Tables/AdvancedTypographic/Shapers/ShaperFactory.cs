@@ -16,6 +16,7 @@ internal static class ShaperFactory
         Hebrew,
         Indic,
         Myanmar,
+        Thai,
         Universal,
     }
 
@@ -54,6 +55,15 @@ internal static class ShaperFactory
             _ => NormalizationProfile.Default,
         };
 
+    /// <summary>
+    /// Gets a value indicating whether the shaper of the script places a mark on its base from the boxes of the two
+    /// glyphs when the font has no GPOS table. The default, Arabic, Hebrew and Hangul shapers of HarfBuzz do.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns><see langword="true"/> if the shaper places marks without GPOS.</returns>
+    public static bool PlacesMarksWithoutGpos(ScriptClass script)
+        => GetShaperKind(script) is ShaperKind.Default or ShaperKind.Arabic or ShaperKind.Hebrew or ShaperKind.Hangul;
+
     private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch
         {
@@ -87,6 +97,10 @@ internal static class ShaperFactory
 
             // Myanmar
             ScriptClass.Myanmar => ShaperKind.Myanmar,
+
+            // Thai and Lao have the default shaper, which does not place their marks without GPOS.
+            ScriptClass.Thai
+            or ScriptClass.Lao => ShaperKind.Thai,
 
             // Universal. HarfBuzz also shapes Adlam, Chorasmian, Hanifi Rohingya, Old Uyghur and Sogdian with its
             // universal shaper, which joins their letters. UniversalShaper does not join, so they stay with the default.
