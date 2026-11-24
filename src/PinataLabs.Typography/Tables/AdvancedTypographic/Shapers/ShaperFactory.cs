@@ -8,6 +8,12 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 internal static class ShaperFactory
 {
+    private static readonly Tag DfltTag = Tag.Parse("DFLT");
+
+    private static readonly Tag LatnTag = Tag.Parse("latn");
+
+    private static readonly Tag MymrTag = Tag.Parse("mymr");
+
     private enum ShaperKind
     {
         Default,
@@ -15,6 +21,9 @@ internal static class ShaperFactory
         Hangul,
         Hebrew,
         Indic,
+
+        // HarfBuzz has a Khmer shaper. IndicShaper shapes Khmer here.
+        Khmer,
         Myanmar,
         Thai,
         Universal,
@@ -24,18 +33,19 @@ internal static class ShaperFactory
     }
 
     /// <summary>
-    /// Creates a Shaper based on the given script language.
+    /// Creates the shaper of a text. As in HarfBuzz, it depends on the script of the text and on the script that
+    /// the GSUB table of the font has for it.
     /// </summary>
-    /// <param name="script">The script language.</param>
-    /// <param name="unicodeScriptTag">The unicode script tag found in the font matching the script.</param>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="substitutionScript">The tag that <see cref="GSubTable.GetScriptTag"/> gives for the script.</param>
     /// <param name="textOptions">The text options.</param>
-    /// <returns>A shaper for the given script.</returns>
-    public static BaseShaper Create(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
-        => GetShaperKind(script) switch
+    /// <returns>A shaper for the text.</returns>
+    public static BaseShaper Create(ScriptClass script, Tag substitutionScript, TextOptions textOptions)
+        => GetShaperKind(script, substitutionScript) switch
         {
             ShaperKind.Arabic => new ArabicShaper(script, textOptions),
             ShaperKind.Hangul => new HangulShaper(script, textOptions),
-            ShaperKind.Indic => new IndicShaper(script, unicodeScriptTag, textOptions),
+            ShaperKind.Indic or ShaperKind.Khmer => new IndicShaper(script, substitutionScript, textOptions),
             ShaperKind.Myanmar => new MyanmarShaper(script, textOptions),
             ShaperKind.Universal => new UniversalShaper(script, false, textOptions),
             ShaperKind.UniversalJoining => new UniversalShaper(script, true, textOptions),
@@ -46,14 +56,15 @@ internal static class ShaperFactory
     /// Gets how the shaper of the script wants its text normalized before GSUB.
     /// </summary>
     /// <param name="script">The script of the text.</param>
-    /// <returns>The profile of the shaper that <see cref="Create"/> returns for the script.</returns>
-    public static NormalizationProfile GetNormalizationProfile(ScriptClass script)
-        => GetShaperKind(script) switch
+    /// <param name="substitutionScript">The tag that <see cref="GSubTable.GetScriptTag"/> gives for the script.</param>
+    /// <returns>The profile of the shaper that <see cref="Create"/> returns for the text.</returns>
+    public static NormalizationProfile GetNormalizationProfile(ScriptClass script, Tag substitutionScript)
+        => GetShaperKind(script, substitutionScript) switch
         {
             ShaperKind.Arabic => NormalizationProfile.Arabic,
             ShaperKind.Hangul => NormalizationProfile.Hangul,
             ShaperKind.Hebrew => NormalizationProfile.Hebrew,
-            ShaperKind.Indic => NormalizationProfile.Indic,
+            ShaperKind.Indic or ShaperKind.Khmer => NormalizationProfile.Indic,
             ShaperKind.Myanmar => NormalizationProfile.Myanmar,
             ShaperKind.Universal or ShaperKind.UniversalJoining => NormalizationProfile.Universal,
             _ => NormalizationProfile.Default,
@@ -65,9 +76,29 @@ internal static class ShaperFactory
     /// of the two glyphs. The default, Arabic, Hebrew and Hangul shapers of HarfBuzz do.
     /// </summary>
     /// <param name="script">The script of the text.</param>
+    /// <param name="substitutionScript">The tag that <see cref="GSubTable.GetScriptTag"/> gives for the script.</param>
     /// <returns><see langword="true"/> if the shaper positions glyphs without GPOS.</returns>
-    public static bool HasFallbackPositioning(ScriptClass script)
-        => GetShaperKind(script) is ShaperKind.Default or ShaperKind.Arabic or ShaperKind.Hebrew or ShaperKind.Hangul;
+    public static bool HasFallbackPositioning(ScriptClass script, Tag substitutionScript)
+        => GetShaperKind(script, substitutionScript) is ShaperKind.Default or ShaperKind.Arabic or ShaperKind.Hebrew or ShaperKind.Hangul;
+
+    // HarfBuzz gives a script to another shaper when the GSUB table of the font has one of these scripts for it.
+    // A font that has no script at all for the text keeps the shaper of the script.
+    private static ShaperKind GetShaperKind(ScriptClass script, Tag substitutionScript)
+    {
+        ShaperKind kind = GetShaperKind(script);
+        bool isDflt = substitutionScript == DfltTag;
+        bool isDfltOrLatn = isDflt || substitutionScript == LatnTag;
+        return kind switch
+        {
+            ShaperKind.Arabic when script == ScriptClass.Syriac && isDflt => ShaperKind.Default,
+            ShaperKind.Indic or ShaperKind.Universal or ShaperKind.UniversalJoining when isDfltOrLatn => ShaperKind.Default,
+
+            // A version 3 tag such as dev3.
+            ShaperKind.Indic when (substitutionScript.Value & 0xFF) == '3' => ShaperKind.Universal,
+            ShaperKind.Myanmar when isDfltOrLatn || substitutionScript == MymrTag => ShaperKind.Default,
+            _ => kind,
+        };
+    }
 
     private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch
@@ -104,8 +135,10 @@ internal static class ShaperFactory
             or ScriptClass.Malayalam
             or ScriptClass.Oriya
             or ScriptClass.Tamil
-            or ScriptClass.Telugu
-            or ScriptClass.Khmer => ShaperKind.Indic,
+            or ScriptClass.Telugu => ShaperKind.Indic,
+
+            // Khmer
+            ScriptClass.Khmer => ShaperKind.Khmer,
 
             // Myanmar
             ScriptClass.Myanmar => ShaperKind.Myanmar,

@@ -72,29 +72,52 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, LoclTag, preAction: SetupSyllables);
         this.AddFeature(collection, index, count, CcmpTag);
 
+        // The Khmer shaper of HarfBuzz applies fewer features than its Indic shaper.
+        bool isKhmer = this.ScriptClass == ScriptClass.Khmer;
+
         // Each basic shaping feature is a stage of its own: the lookups of one form
         // must all have run before the next form is tried.
-        this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
-        this.EndStage();
-        this.AddBasicFeature(collection, index, count, AkhnTag);
-        this.AddBasicFeature(collection, index, count, RphfTag, false);
-        this.AddBasicFeature(collection, index, count, RkrfTag);
-        this.AddBasicFeature(collection, index, count, PrefTag, false);
-        this.AddBasicFeature(collection, index, count, BlwfTag, false);
-        this.AddBasicFeature(collection, index, count, AbvfTag, false);
-        this.AddBasicFeature(collection, index, count, HalfTag, false);
-        this.AddBasicFeature(collection, index, count, PstfTag, false);
-        this.AddBasicFeature(collection, index, count, VatuTag);
-        this.AddBasicFeature(collection, index, count, CjctTag);
+        if (isKhmer)
+        {
+            this.AddFeature(collection, index, count, PrefTag, false, preAction: this.InitialReorder);
+            this.EndStage();
+            this.AddBasicFeature(collection, index, count, BlwfTag, false);
+            this.AddBasicFeature(collection, index, count, AbvfTag, false);
+            this.AddBasicFeature(collection, index, count, PstfTag, false);
+        }
+        else
+        {
+            this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
+            this.EndStage();
+            this.AddBasicFeature(collection, index, count, AkhnTag);
+            this.AddBasicFeature(collection, index, count, RphfTag, false);
+            this.AddBasicFeature(collection, index, count, RkrfTag);
+            this.AddBasicFeature(collection, index, count, PrefTag, false);
+            this.AddBasicFeature(collection, index, count, BlwfTag, false);
+            this.AddBasicFeature(collection, index, count, AbvfTag, false);
+            this.AddBasicFeature(collection, index, count, HalfTag, false);
+            this.AddBasicFeature(collection, index, count, PstfTag, false);
+            this.AddBasicFeature(collection, index, count, VatuTag);
+            this.AddBasicFeature(collection, index, count, CjctTag);
+        }
+
         this.AddFeature(collection, index, count, CfarTag, false, postAction: this.FinalReorder);
 
         // The presentation features that follow share one stage with the common features.
-        this.AddFeature(collection, index, count, InitTag, false);
+        if (!isKhmer)
+        {
+            this.AddFeature(collection, index, count, InitTag, false);
+        }
+
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
         this.AddFeature(collection, index, count, PstsTag);
-        this.AddFeature(collection, index, count, HalnTag);
+        if (!isKhmer)
+        {
+            this.AddFeature(collection, index, count, HalnTag);
+        }
+
         this.AddFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);

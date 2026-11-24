@@ -235,3 +235,32 @@ python tests/tools/generate_universal_shaper_reference.py
 
 The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
 HarfBuzz version that wrote it.
+
+## Shaper choice reference
+
+`generate_shaper_choice_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ShaperChoice.harfbuzz.json`.
+HarfBuzz chooses a shaper from the script of the text and from the script tag that it finds in the GSUB table of
+the font. The script builds seven fonts that differ only in the scripts of their GSUB table:
+
+- `ShaperChoiceTag1.ttf` has the first tag that HarfBuzz looks for, for each script of `ScriptTags.harfbuzz.json`,
+  such as `dev3`, `mym2` and `latn`. `ShaperChoiceTag2.ttf` has the second tag, such as `dev2` and `mymr`, and
+  `ShaperChoiceTag3.ttf` has the third, such as `deva`.
+- `ShaperChoiceDFLT.ttf`, `ShaperChoiceLowercaseDflt.ttf` and `ShaperChoiceLatn.ttf` have only `DFLT`, `dflt` or `latn`.
+- `ShaperChoiceNone.ttf` has only `zzzz`, which HarfBuzz looks for in no script.
+
+Each font has one glyph for the first letter of every script, a glyph for U+0301, and no GPOS table. Every script of
+the GSUB table has the features `nukt`, `pref`, `pres`, `haln` and `isol`, and each of them puts a glyph of its own
+after the letter. The features that HarfBuzz applies, and what it does with the mark, show its shaper. For example,
+only the universal shaper applies both `nukt` and `pref`, and only the default and Arabic shapers place the mark.
+
+The reference holds the glyph IDs and positions that HarfBuzz gives for the letter and the mark of each script, in
+each font that has a tag for the script. `ShaperChoiceTests` checks that the library gives the same.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root. Run `derive_harfbuzz_script_tags.py` first when the script tags can have changed:
+
+```
+python tests/tools/generate_shaper_choice_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

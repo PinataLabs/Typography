@@ -92,7 +92,7 @@ internal ref struct GlyphNormalizer
         {
             this.runStart = index;
             this.runEnd = GetScriptRunEnd(this.collection, index, out ScriptClass script);
-            this.profile = ShaperFactory.GetNormalizationProfile(script);
+            this.profile = ShaperFactory.GetNormalizationProfile(script, this.fontMetrics.GetGSubTable().GetScriptTag(script));
             this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script);
 
             // HarfBuzz sorts and composes only in a buffer that has a mark after its first character.

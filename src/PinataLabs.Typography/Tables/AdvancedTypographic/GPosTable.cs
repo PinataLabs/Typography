@@ -150,8 +150,9 @@ internal class GPosTable : Table
                 }
             }
 
-            Tag unicodeScriptTag = this.GetUnicodeScriptTag(current);
-            BaseShaper shaper = ShaperFactory.Create(current, unicodeScriptTag, collection.TextOptions);
+            // As in HarfBuzz, the script of the GSUB table chooses the shaper for both tables.
+            Tag substitutionScript = fontMetrics.GetGSubTable().GetScriptTag(current);
+            BaseShaper shaper = ShaperFactory.Create(current, substitutionScript, collection.TextOptions);
 
             if (shaper.MarkZeroingMode == MarkZeroingMode.PreGPos)
             {
@@ -242,25 +243,6 @@ internal class GPosTable : Table
         }
 
         return false;
-    }
-
-    private Tag GetUnicodeScriptTag(ScriptClass script)
-    {
-        if (this.ScriptList is null)
-        {
-            return default;
-        }
-
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
-        {
-            if (this.ScriptList.TryGetValue(tags[i].Value, out ScriptListTable? _))
-            {
-                return tags[i];
-            }
-        }
-
-        return default;
     }
 
     private static void FixCursiveAttachment(GlyphPositioningCollection collection, int index, int count)

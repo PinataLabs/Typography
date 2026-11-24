@@ -40,6 +40,7 @@ internal sealed class UniversalShaper : DefaultShaper
 
     private static readonly Tag AbvsTag = Tag.Parse("abvs");
     private static readonly Tag BlwsTag = Tag.Parse("blws");
+    private static readonly Tag HalnTag = Tag.Parse("haln");
     private static readonly Tag PresTag = Tag.Parse("pres");
     private static readonly Tag PstsTag = Tag.Parse("psts");
     private static readonly Tag DistTag = Tag.Parse("dist");
@@ -95,6 +96,7 @@ internal sealed class UniversalShaper : DefaultShaper
         // Standard topographic presentation and positional feature application
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
+        this.AddFeature(collection, index, count, HalnTag);
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, PstsTag);
         this.AddFeature(collection, index, count, DistTag);
