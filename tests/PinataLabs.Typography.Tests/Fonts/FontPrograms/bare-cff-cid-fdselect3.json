@@ -3,6 +3,8 @@
   "format": "Cff",
   "isCidKeyed": true,
   "fontMatrix": [0.0005,0,0,0.00025,0,0],
+  "paintType": 0,
+  "strokeWidth": 0,
   "encoding": null,
   "glyphs": [
     {"name":null,"cid":0,"advance":500,"outline":""},

@@ -52,6 +52,7 @@ BARE_CFF = [
     ("cff-cid-fdselect3.otf", "bare-cff-cid-fdselect3.cff"),
     ("cff-type2-widths.otf", "bare-cff-type2-widths.cff"),
     ("cff-seac-widths.otf", "bare-cff-seac-widths.cff"),
+    ("cff-paint-stroked.otf", "bare-cff-paint-stroked.cff"),
 ]
 
 # Expert Encoding, from Adobe Technical Note #5176, Appendix B: code -> glyph name.
@@ -251,6 +252,8 @@ def cff_table_fixture(font_set, order, hmtx, encoding_override):
         "format": "Cff",
         "isCidKeyed": is_cid,
         "fontMatrix": font_matrix,
+        "paintType": top.PaintType,
+        "strokeWidth": top.StrokeWidth,
         "encoding": encoding,
         "glyphs": glyphs,
     }
@@ -272,6 +275,8 @@ def truetype_fixture(font):
         "format": "TrueType",
         "isCidKeyed": False,
         "fontMatrix": [scale, 0, 0, scale, 0, 0],
+        "paintType": 0,
+        "strokeWidth": 0,
         "encoding": truetype_encoding(font),
         "glyphs": glyphs,
     }
@@ -291,7 +296,7 @@ def write_fixture(font_path, encoding_override=None):
     relative = os.path.relpath(font_path, OUT).replace(os.sep, "/")
     lines = ["{"]
     lines.append('  "font": %s,' % json.dumps(relative))
-    for key in ("format", "isCidKeyed", "fontMatrix", "encoding"):
+    for key in ("format", "isCidKeyed", "fontMatrix", "paintType", "strokeWidth", "encoding"):
         lines.append("  %s: %s," % (json.dumps(key), json.dumps(fixture[key], separators=(",", ":"))))
     lines.append('  "glyphs": [')
     glyphs = fixture["glyphs"]
@@ -389,6 +394,17 @@ def custom_encoding_font(file_name, names, codes, supplements, expected_format):
     for code, name in supplements:
         by_code[code] = name
     return path, builtin_encoding(by_code, names)
+
+
+def paint_font(file_name, paint_type, stroke_width):
+    """A name-keyed CFF font whose Top DICT declares PaintType and StrokeWidth."""
+    def customize(font):
+        top = font["CFF "].cff.topDictIndex[0]
+        top.PaintType = paint_type
+        top.StrokeWidth = stroke_width
+
+    glyphs = [(".notdef", []), ("bar", box(100, 0, 50, 700)), ("tee", box(100, 650, 400, 50))]
+    return build_cff(file_name, glyphs, customize=customize)
 
 
 def type2_font(file_name, tables=True):
@@ -730,6 +746,10 @@ def main():
             [(32, "n3")],
             1),
         (type2_font("cff-type2.otf"), None),
+        # PaintType 2 strokes the outlines. A real StrokeWidth keeps its fraction, and PaintType 1 is not stroked.
+        (paint_font("cff-paint-stroked.otf", 2, 40), None),
+        (paint_font("cff-paint-stroked-real.otf", 2, 12.5), None),
+        (paint_font("cff-paint-outline.otf", 1, 30), None),
         (type2_font("cff-type2-widths.otf", tables=False), None),
         (seac_font("cff-seac.otf"), None),
         (seac_font("cff-seac-widths.otf", tables=False), None),
