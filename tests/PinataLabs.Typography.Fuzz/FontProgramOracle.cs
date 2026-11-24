@@ -20,6 +20,11 @@ namespace PinataLabs.Typography.Fuzz;
 /// </remarks>
 internal static class FontProgramOracle
 {
+    // Static so that the glyph calls, whose allocations the oracle measures, do not allocate the probe lists.
+    private static readonly (ushort Platform, ushort Encoding)[] CmapSubtables = [(3, 1), (3, 0), (1, 0), (0, 3), (3, 10), (0, 4), (3, 2)];
+
+    private static readonly int[] CmapCodes = [0, 1, 65, 255, 256, 0x20AC, 0xF041, 0xFFFF, 0x10000, 0x1F600, 0x10FFFF, -1, int.MaxValue];
+
     /// <summary>
     /// The input is a font file: <see cref="FontProgram.Load(ReadOnlyMemory{byte})"/>, which also takes bare CFF.
     /// </summary>
@@ -238,9 +243,9 @@ internal static class FontProgramOracle
             }
         }
 
-        foreach ((ushort platform, ushort encoding) in (ReadOnlySpan<(ushort, ushort)>)[(3, 1), (3, 0), (1, 0), (0, 3), (3, 10), (0, 4), (3, 2)])
+        foreach ((ushort platform, ushort encoding) in CmapSubtables)
         {
-            foreach (int code in (ReadOnlySpan<int>)[0, 1, 65, 255, 256, 0x20AC, 0xF041, 0xFFFF, 0x10000, 0x1F600, 0x10FFFF, -1, int.MaxValue])
+            foreach (int code in CmapCodes)
             {
                 bool found = font.TryGetGlyphIdFromCmap(platform, encoding, code, out ushort glyphId);
                 if (found ? glyphId == 0 || glyphId >= glyphCount : glyphId != 0)
