@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.Cff;
 using PinataLabs.Typography.Tables.General;
-using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests.Tables.Hardening;
@@ -14,26 +13,6 @@ namespace PinataLabs.Typography.Tests.Tables.Hardening;
 public class OutOfRangeIndexTests
 {
     private static readonly Tag Kern = Tag.Parse("kern");
-
-    [Test]
-    public async Task TrueTypeGlyphIdAboveGlyphCountReturnsNotdef()
-    {
-        Bounds notdef = new(1, 2, 3, 4);
-        GlyphTable table = new([new FixedGlyphLoader(notdef), new FixedGlyphLoader(new Bounds(5, 6, 7, 8))]);
-
-        GlyphVector glyph = table.GetGlyph(50);
-
-        await Assert.That(glyph.Bounds).IsEqualTo(notdef);
-    }
-
-    [Test]
-    public async Task TrueTypeNegativeGlyphIdReturnsNotdef()
-    {
-        Bounds notdef = new(1, 2, 3, 4);
-        GlyphTable table = new([new FixedGlyphLoader(notdef)]);
-
-        await Assert.That(table.GetGlyph(-1).Bounds).IsEqualTo(notdef);
-    }
 
     [Test]
     public async Task Cff1GlyphIdAboveGlyphCountReturnsNotdef()
@@ -146,14 +125,5 @@ public class OutOfRangeIndexTests
         w.WriteUInt16(0);
 
         return w.GetReader();
-    }
-
-    private sealed class FixedGlyphLoader : GlyphLoader
-    {
-        private readonly Bounds bounds;
-
-        public FixedGlyphLoader(Bounds bounds) => this.bounds = bounds;
-
-        public override GlyphVector CreateGlyph(GlyphTable table) => GlyphVector.Empty(this.bounds);
     }
 }

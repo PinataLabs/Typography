@@ -35,7 +35,6 @@ internal class TableLoader
         this.Register(VerticalMetricsTable.TableName, VerticalMetricsTable.Load);
         this.Register(MaximumProfileTable.TableName, MaximumProfileTable.Load);
         this.Register(OS2Table.TableName, OS2Table.Load);
-        this.Register(IndexLocationTable.TableName, IndexLocationTable.Load);
         this.Register(GlyphTable.TableName, GlyphTable.Load);
         this.Register(KerningTable.TableName, KerningTable.Load);
         this.Register(ColrTable.TableName, ColrTable.Load);

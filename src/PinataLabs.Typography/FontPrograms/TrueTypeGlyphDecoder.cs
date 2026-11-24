@@ -3,13 +3,17 @@
 
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Numerics;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
 namespace PinataLabs.Typography.FontPrograms;
 
 /// <summary>
-/// Streams the outline of a 'glyf' glyph to a sink. It allocates nothing: it reads the points of a
-/// contour from the glyph data as often as it needs them.
+/// Decodes 'glyf' glyphs. It streams an outline to a sink without an allocation: it reads the points
+/// of a contour from the glyph data as often as it needs them. The hinting interpreter changes the
+/// points of a glyph before they become an outline, so for it the decoder reads the points into arrays
+/// and writes the outline of the hinted points.
 /// </summary>
 internal static class TrueTypeGlyphDecoder
 {
@@ -18,7 +22,7 @@ internal static class TrueTypeGlyphDecoder
     private const int MaxDepth = 16;
 
     // Components can repeat work without a limit on the glyph size, so bound the number of components
-    // and the number of sink calls per outline.
+    // and the number of sink calls per outline. The bound on sink calls also bounds the points of a glyph.
     private const int MaxComponents = 4096;
     private const int MaxSinkCalls = 1_000_000;
 
@@ -35,31 +39,99 @@ internal static class TrueTypeGlyphDecoder
     private const int MoreComponents = 0x0020;
     private const int HasXYScale = 0x0040;
     private const int HasTwoByTwo = 0x0080;
+    private const int HasInstructions = 0x0100;
     private const int ScaledComponentOffset = 0x0800;
 
     /// <summary>
     /// Writes the outline of a glyph in glyph space. Each contour starts at its first on-curve point.
     /// </summary>
     /// <typeparam name="TSink">The type of the sink.</typeparam>
-    /// <param name="font">The font.</param>
+    /// <param name="glyphs">The 'loca' and 'glyf' tables of the font.</param>
     /// <param name="glyphId">The glyph ID.</param>
     /// <param name="sink">The sink that receives the outline.</param>
     /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
-    public static bool TryWriteOutline<TSink>(TrueTypeProgram font, ushort glyphId, ref TSink sink)
+    public static bool TryWriteOutline<TSink>(TrueTypeGlyphData glyphs, ushort glyphId, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
         Budget budget = new() { Components = MaxComponents, SinkCalls = MaxSinkCalls };
-        return TryWriteGlyph(font, glyphId, Matrix3x2.Identity, 0, ref budget, ref sink);
+        return TryWriteGlyph(glyphs, glyphId, Matrix3x2.Identity, 0, ref budget, ref sink);
     }
 
-    private static bool TryWriteGlyph<TSink>(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, ref TSink sink)
-        where TSink : IGlyphOutlineSink
+    /// <summary>
+    /// Reads the points, the contours and the instructions of a glyph in glyph space, in the form that
+    /// the hinting interpreter takes. A composite glyph has the points of its components in order.
+    /// </summary>
+    /// <param name="glyphs">The 'loca' and 'glyf' tables of the font.</param>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="vector">The points of the glyph. An empty glyph has none.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
+    public static bool TryReadPoints(TrueTypeGlyphData glyphs, ushort glyphId, out GlyphVector vector)
     {
-        if (!font.TryGetGlyphData(glyphId, out ReadOnlySpan<byte> glyph))
+        vector = default;
+        List<ControlPoint> points = [];
+        List<ushort> endPoints = [];
+        Budget budget = new() { Components = MaxComponents, SinkCalls = MaxSinkCalls };
+        if (!TryAppendPoints(glyphs, glyphId, Matrix3x2.Identity, 0, ref budget, points, endPoints)
+            || !glyphs.TryGetGlyphData(glyphId, out ReadOnlyMemory<byte> data))
         {
             return false;
         }
 
+        bool isComposite = !data.IsEmpty && BinaryPrimitives.ReadInt16BigEndian(data.Span) < 0;
+        vector = new GlyphVector(points.ToArray(), endPoints.ToArray(), default, ReadInstructions(data, isComposite), isComposite);
+        return true;
+    }
+
+    /// <summary>
+    /// Gets one point of a glyph in glyph space. A composite glyph numbers the points of its components in order.
+    /// </summary>
+    /// <param name="glyphs">The 'loca' and 'glyf' tables of the font.</param>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="index">The number of the point.</param>
+    /// <param name="point">The point.</param>
+    /// <returns><see langword="false"/> if the glyph has no such point or is malformed.</returns>
+    public static bool TryGetPoint(TrueTypeGlyphData glyphs, ushort glyphId, int index, out Vector2 point)
+    {
+        point = default;
+        Budget budget = new() { Components = MaxComponents, SinkCalls = MaxSinkCalls };
+        return index >= 0
+            && TryFindPoint(glyphs, glyphId, Matrix3x2.Identity, 0, ref budget, ref index, out point)
+            && index < 0;
+    }
+
+    /// <summary>
+    /// Writes the outline of points that <see cref="TryReadPoints"/> read, in the space of the points.
+    /// The contours are the same as those that <see cref="TryWriteOutline"/> writes for the glyph.
+    /// </summary>
+    /// <typeparam name="TSink">The type of the sink.</typeparam>
+    /// <param name="points">The points.</param>
+    /// <param name="endPoints">The number of the last point of each contour.</param>
+    /// <param name="sink">The sink that receives the outline.</param>
+    public static void WriteOutline<TSink>(ReadOnlySpan<ControlPoint> points, ReadOnlySpan<ushort> endPoints, ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        PointReader reader = new(points);
+        int start = 0;
+        foreach (ushort end in endPoints)
+        {
+            if (end < start || end >= points.Length)
+            {
+                return;
+            }
+
+            WriteContour(ref reader, end - start + 1, ref sink);
+            start = end + 1;
+        }
+    }
+
+    private static bool TryAppendPoints(TrueTypeGlyphData glyphs, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, List<ControlPoint> points, List<ushort> endPoints)
+    {
+        if (!glyphs.TryGetGlyphData(glyphId, out ReadOnlyMemory<byte> data))
+        {
+            return false;
+        }
+
+        ReadOnlySpan<byte> glyph = data.Span;
         if (glyph.IsEmpty)
         {
             return true;
@@ -73,7 +145,127 @@ internal static class TrueTypeGlyphDecoder
         int contourCount = BinaryPrimitives.ReadInt16BigEndian(glyph);
         if (contourCount < 0)
         {
-            return TryWriteComposite(font, glyph, matrix, depth, ref budget, ref sink);
+            if (depth >= MaxDepth)
+            {
+                return false;
+            }
+
+            ComponentReader components = new(glyph);
+            while (components.TryRead(out Component component))
+            {
+                if (--budget.Components < 0
+                    || !TryPlaceComponent(glyphs, glyph, in component, depth, ref budget, out Matrix3x2 placement)
+                    || !TryAppendPoints(glyphs, component.GlyphId, placement * matrix, depth + 1, ref budget, points, endPoints))
+                {
+                    return false;
+                }
+            }
+
+            return !components.Failed;
+        }
+
+        if (!PointReader.TryCreate(glyph, contourCount, out PointReader reader))
+        {
+            return false;
+        }
+
+        // The interpreter numbers points with 16 bits.
+        budget.SinkCalls -= reader.Count;
+        int first = points.Count;
+        if (budget.SinkCalls < 0 || first + reader.Count > ushort.MaxValue)
+        {
+            return false;
+        }
+
+        int start = 0;
+        for (int i = 0; i < contourCount; i++)
+        {
+            int end = BinaryPrimitives.ReadUInt16BigEndian(glyph.Slice(HeaderSize + (i * 2)));
+            if (end < start || end >= reader.Count)
+            {
+                return false;
+            }
+
+            endPoints.Add((ushort)(first + end));
+            start = end + 1;
+        }
+
+        for (int i = 0; i < reader.Count; i++)
+        {
+            reader.Read(out Vector2 point, out bool onCurve);
+            points.Add(new ControlPoint(Vector2.Transform(point, matrix), onCurve));
+        }
+
+        return true;
+    }
+
+    // A simple glyph has its instructions after its contours. A composite glyph has them after its last
+    // component, when that component says so.
+    private static ReadOnlyMemory<byte> ReadInstructions(ReadOnlyMemory<byte> data, bool isComposite)
+    {
+        ReadOnlySpan<byte> glyph = data.Span;
+        if (glyph.Length < HeaderSize)
+        {
+            return default;
+        }
+
+        int position;
+        if (isComposite)
+        {
+            ComponentReader components = new(glyph);
+            int flags = 0;
+            while (components.TryRead(out Component component))
+            {
+                flags = component.Flags;
+            }
+
+            if (components.Failed || (flags & HasInstructions) == 0)
+            {
+                return default;
+            }
+
+            position = components.Position;
+        }
+        else
+        {
+            int contourCount = BinaryPrimitives.ReadInt16BigEndian(glyph);
+            if (contourCount == 0)
+            {
+                return default;
+            }
+
+            position = HeaderSize + (contourCount * 2);
+        }
+
+        FontDataReader reader = new(glyph, position);
+        return reader.TryReadUInt16(out ushort length) && reader.TrySkip(length)
+            ? data.Slice(reader.Position - length, length)
+            : default;
+    }
+
+    private static bool TryWriteGlyph<TSink>(TrueTypeGlyphData glyphs, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, ref TSink sink)
+        where TSink : IGlyphOutlineSink
+    {
+        if (!glyphs.TryGetGlyphData(glyphId, out ReadOnlyMemory<byte> data))
+        {
+            return false;
+        }
+
+        ReadOnlySpan<byte> glyph = data.Span;
+        if (glyph.IsEmpty)
+        {
+            return true;
+        }
+
+        if (glyph.Length < HeaderSize)
+        {
+            return false;
+        }
+
+        int contourCount = BinaryPrimitives.ReadInt16BigEndian(glyph);
+        if (contourCount < 0)
+        {
+            return TryWriteComposite(glyphs, glyph, matrix, depth, ref budget, ref sink);
         }
 
         if (matrix.IsIdentity)
@@ -87,7 +279,7 @@ internal static class TrueTypeGlyphDecoder
         return result;
     }
 
-    private static bool TryWriteComposite<TSink>(TrueTypeProgram font, ReadOnlySpan<byte> glyph, Matrix3x2 matrix, int depth, ref Budget budget, ref TSink sink)
+    private static bool TryWriteComposite<TSink>(TrueTypeGlyphData glyphs, ReadOnlySpan<byte> glyph, Matrix3x2 matrix, int depth, ref Budget budget, ref TSink sink)
         where TSink : IGlyphOutlineSink
     {
         if (depth >= MaxDepth)
@@ -99,8 +291,8 @@ internal static class TrueTypeGlyphDecoder
         while (components.TryRead(out Component component))
         {
             if (--budget.Components < 0
-                || !TryPlaceComponent(font, glyph, in component, depth, ref budget, out Matrix3x2 placement)
-                || !TryWriteGlyph(font, component.GlyphId, placement * matrix, depth + 1, ref budget, ref sink))
+                || !TryPlaceComponent(glyphs, glyph, in component, depth, ref budget, out Matrix3x2 placement)
+                || !TryWriteGlyph(glyphs, component.GlyphId, placement * matrix, depth + 1, ref budget, ref sink))
             {
                 return false;
             }
@@ -112,7 +304,7 @@ internal static class TrueTypeGlyphDecoder
     /// <summary>
     /// Gets the matrix that maps the points of a component into the space of its composite glyph.
     /// </summary>
-    private static bool TryPlaceComponent(TrueTypeProgram font, ReadOnlySpan<byte> glyph, in Component component, int depth, ref Budget budget, out Matrix3x2 placement)
+    private static bool TryPlaceComponent(TrueTypeGlyphData glyphs, ReadOnlySpan<byte> glyph, in Component component, int depth, ref Budget budget, out Matrix3x2 placement)
     {
         placement = component.Transform;
         Vector2 offset;
@@ -131,9 +323,9 @@ internal static class TrueTypeGlyphDecoder
             // and the point of this component that moves onto it.
             int parentIndex = component.Argument1;
             int childIndex = component.Argument2;
-            if (!TryFindCompositePoint(font, glyph, component.Start, Matrix3x2.Identity, depth, ref budget, ref parentIndex, out Vector2 parent)
+            if (!TryFindCompositePoint(glyphs, glyph, component.Start, Matrix3x2.Identity, depth, ref budget, ref parentIndex, out Vector2 parent)
                 || parentIndex >= 0
-                || !TryFindPoint(font, component.GlyphId, component.Transform, depth + 1, ref budget, ref childIndex, out Vector2 child)
+                || !TryFindPoint(glyphs, component.GlyphId, component.Transform, depth + 1, ref budget, ref childIndex, out Vector2 child)
                 || childIndex >= 0)
             {
                 return false;
@@ -147,14 +339,15 @@ internal static class TrueTypeGlyphDecoder
     }
 
     // A composite numbers the points of its components in order.
-    private static bool TryFindPoint(TrueTypeProgram font, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, ref int index, out Vector2 point)
+    private static bool TryFindPoint(TrueTypeGlyphData glyphs, int glyphId, Matrix3x2 matrix, int depth, ref Budget budget, ref int index, out Vector2 point)
     {
         point = default;
-        if (!font.TryGetGlyphData(glyphId, out ReadOnlySpan<byte> glyph))
+        if (!glyphs.TryGetGlyphData(glyphId, out ReadOnlyMemory<byte> data))
         {
             return false;
         }
 
+        ReadOnlySpan<byte> glyph = data.Span;
         if (glyph.IsEmpty)
         {
             return true;
@@ -168,7 +361,7 @@ internal static class TrueTypeGlyphDecoder
         int contourCount = BinaryPrimitives.ReadInt16BigEndian(glyph);
         if (contourCount < 0)
         {
-            return TryFindCompositePoint(font, glyph, glyph.Length, matrix, depth, ref budget, ref index, out point);
+            return TryFindCompositePoint(glyphs, glyph, glyph.Length, matrix, depth, ref budget, ref index, out point);
         }
 
         if (!PointReader.TryCreate(glyph, contourCount, out PointReader points))
@@ -192,7 +385,7 @@ internal static class TrueTypeGlyphDecoder
         return true;
     }
 
-    private static bool TryFindCompositePoint(TrueTypeProgram font, ReadOnlySpan<byte> glyph, int end, Matrix3x2 matrix, int depth, ref Budget budget, ref int index, out Vector2 point)
+    private static bool TryFindCompositePoint(TrueTypeGlyphData glyphs, ReadOnlySpan<byte> glyph, int end, Matrix3x2 matrix, int depth, ref Budget budget, ref int index, out Vector2 point)
     {
         point = default;
         if (depth >= MaxDepth)
@@ -204,8 +397,8 @@ internal static class TrueTypeGlyphDecoder
         while (index >= 0 && components.TryRead(out Component component) && component.Start < end)
         {
             if (--budget.Components < 0
-                || !TryPlaceComponent(font, glyph, in component, depth, ref budget, out Matrix3x2 placement)
-                || !TryFindPoint(font, component.GlyphId, placement * matrix, depth + 1, ref budget, ref index, out point))
+                || !TryPlaceComponent(glyphs, glyph, in component, depth, ref budget, out Matrix3x2 placement)
+                || !TryFindPoint(glyphs, component.GlyphId, placement * matrix, depth + 1, ref budget, ref index, out point))
             {
                 return false;
             }
@@ -383,6 +576,11 @@ internal static class TrueTypeGlyphDecoder
         /// </summary>
         public bool Failed { get; private set; }
 
+        /// <summary>
+        /// Gets the position in the glyph data after the records read so far.
+        /// </summary>
+        public readonly int Position => this.reader.Position;
+
         public bool TryRead(out Component component)
         {
             component = default;
@@ -447,10 +645,13 @@ internal static class TrueTypeGlyphDecoder
     /// <summary>
     /// Reads the points of a simple glyph in order. The flags, the x coordinates and the y coordinates
     /// are three runs of the glyph data, so the reader keeps a position in each.
+    /// It also reads points that are already decoded, so that one contour writer serves both.
     /// </summary>
     private ref struct PointReader
     {
         private readonly ReadOnlySpan<byte> glyph;
+        private readonly ReadOnlySpan<ControlPoint> decoded;
+        private int decodedPosition;
         private int flagPosition;
         private int xPosition;
         private int yPosition;
@@ -459,9 +660,18 @@ internal static class TrueTypeGlyphDecoder
         private int x;
         private int y;
 
+        public PointReader(ReadOnlySpan<ControlPoint> decoded)
+        {
+            this = default;
+            this.decoded = decoded;
+            this.Count = decoded.Length;
+        }
+
         private PointReader(ReadOnlySpan<byte> glyph, int count, int flagPosition, int xPosition, int yPosition)
         {
             this.glyph = glyph;
+            this.decoded = default;
+            this.decodedPosition = 0;
             this.Count = count;
             this.flagPosition = flagPosition;
             this.xPosition = xPosition;
@@ -544,6 +754,14 @@ internal static class TrueTypeGlyphDecoder
 
         public void Read(out Vector2 point, out bool onCurve)
         {
+            if (!this.decoded.IsEmpty)
+            {
+                ControlPoint next = this.decoded[this.decodedPosition++];
+                point = next.Point;
+                onCurve = next.OnCurve;
+                return;
+            }
+
             if (this.repeat > 0)
             {
                 this.repeat--;
