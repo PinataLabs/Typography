@@ -1,0 +1,2 @@
+# The libFuzzer driver is a prebuilt binary from https://github.com/Metalnem/libfuzzer-dotnet/releases.
+tools/
