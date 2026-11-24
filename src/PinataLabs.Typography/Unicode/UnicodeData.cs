@@ -32,10 +32,20 @@ internal static class UnicodeData
     public static uint GetBidiMirror(uint codePoint) => LazyBidiMirrorTrie.Value.Get(codePoint);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GraphemeClusterClass GetGraphemeClusterClass(uint codePoint) => (GraphemeClusterClass)LazyGraphemeTrie.Value.Get(codePoint);
+    public static GraphemeClusterClass GetGraphemeClusterClass(uint codePoint)
+        => (GraphemeClusterClass)(LazyGraphemeTrie.Value.Get(codePoint) & TrieValueLayout.GraphemeClusterClassMask);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LineBreakClass GetLineBreakClass(uint codePoint) => (LineBreakClass)LazyLineBreakTrie.Value.Get(codePoint);
+    public static IndicConjunctBreak GetIndicConjunctBreak(uint codePoint)
+        => (IndicConjunctBreak)(LazyGraphemeTrie.Value.Get(codePoint) >> TrieValueLayout.IndicConjunctBreakShift);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LineBreakClass GetLineBreakClass(uint codePoint)
+        => (LineBreakClass)(LazyLineBreakTrie.Value.Get(codePoint) & TrieValueLayout.LineBreakClassMask);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsEastAsianWidth(uint codePoint)
+        => (LazyLineBreakTrie.Value.Get(codePoint) & TrieValueLayout.EastAsianWidthFlag) != 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ScriptClass GetScriptClass(uint codePoint) => (ScriptClass)LazyScriptTrie.Value.Get(codePoint);
