@@ -81,7 +81,8 @@ internal sealed class KerningTable : Table
         while (start < collection.Count)
         {
             int end = FallbackMarkPositioner.GetScriptRunEnd(collection, start, out ScriptClass script);
-            if (ShaperFactory.HasFallbackPositioning(script) && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag)))
+            if (ShaperFactory.HasFallbackPositioning(script, fontMetrics.GetGSubTable().GetScriptTag(script))
+                && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag)))
             {
                 int left = start;
                 for (int right = start + 1; right < end; right++)

@@ -39,9 +39,6 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly Tag PresTag = Tag.Parse("pres");
     private static readonly Tag PstsTag = Tag.Parse("psts");
     private static readonly Tag HalnTag = Tag.Parse("haln");
-    private static readonly Tag DistTag = Tag.Parse("dist");
-    private static readonly Tag AbvmTag = Tag.Parse("abvm");
-    private static readonly Tag BlwmTag = Tag.Parse("blwm");
 
     private const int DottedCircle = 0x25cc;
 
@@ -72,29 +69,52 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, LoclTag, preAction: SetupSyllables);
         this.AddFeature(collection, index, count, CcmpTag);
 
+        // The Khmer shaper of HarfBuzz applies fewer features than its Indic shaper.
+        bool isKhmer = this.ScriptClass == ScriptClass.Khmer;
+
         // Each basic shaping feature is a stage of its own: the lookups of one form
         // must all have run before the next form is tried.
-        this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
-        this.EndStage();
-        this.AddBasicFeature(collection, index, count, AkhnTag);
-        this.AddBasicFeature(collection, index, count, RphfTag, false);
-        this.AddBasicFeature(collection, index, count, RkrfTag);
-        this.AddBasicFeature(collection, index, count, PrefTag, false);
-        this.AddBasicFeature(collection, index, count, BlwfTag, false);
-        this.AddBasicFeature(collection, index, count, AbvfTag, false);
-        this.AddBasicFeature(collection, index, count, HalfTag, false);
-        this.AddBasicFeature(collection, index, count, PstfTag, false);
-        this.AddBasicFeature(collection, index, count, VatuTag);
-        this.AddBasicFeature(collection, index, count, CjctTag);
+        if (isKhmer)
+        {
+            this.AddFeature(collection, index, count, PrefTag, false, preAction: this.InitialReorder);
+            this.EndStage();
+            this.AddBasicFeature(collection, index, count, BlwfTag, false);
+            this.AddBasicFeature(collection, index, count, AbvfTag, false);
+            this.AddBasicFeature(collection, index, count, PstfTag, false);
+        }
+        else
+        {
+            this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
+            this.EndStage();
+            this.AddBasicFeature(collection, index, count, AkhnTag);
+            this.AddBasicFeature(collection, index, count, RphfTag, false);
+            this.AddBasicFeature(collection, index, count, RkrfTag);
+            this.AddBasicFeature(collection, index, count, PrefTag, false);
+            this.AddBasicFeature(collection, index, count, BlwfTag, false);
+            this.AddBasicFeature(collection, index, count, AbvfTag, false);
+            this.AddBasicFeature(collection, index, count, HalfTag, false);
+            this.AddBasicFeature(collection, index, count, PstfTag, false);
+            this.AddBasicFeature(collection, index, count, VatuTag);
+            this.AddBasicFeature(collection, index, count, CjctTag);
+        }
+
         this.AddFeature(collection, index, count, CfarTag, false, postAction: this.FinalReorder);
 
         // The presentation features that follow share one stage with the common features.
-        this.AddFeature(collection, index, count, InitTag, false);
+        if (!isKhmer)
+        {
+            this.AddFeature(collection, index, count, InitTag, false);
+        }
+
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
         this.AddFeature(collection, index, count, PstsTag);
-        this.AddFeature(collection, index, count, HalnTag);
+        if (!isKhmer)
+        {
+            this.AddFeature(collection, index, count, HalnTag);
+        }
+
         this.AddFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
@@ -250,7 +270,6 @@ internal sealed class IndicShaper : DefaultShaper
         int max = index + count;
         int start = index;
         int end = NextSyllable(substitutionCollection, index, max);
-        Span<ushort> glyphs = stackalloc ushort[2];
         while (start < max)
         {
             GlyphShapingData data = substitutionCollection[start];
@@ -267,30 +286,25 @@ internal sealed class IndicShaper : DefaultShaper
 
             if (dataInfo != null && type == "broken_cluster" && fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
             {
-                // Insert after possible Repha.
+                // As in HarfBuzz, the dotted circle is the base of the cluster. It goes after a repha and before
+                // every other glyph. The glyphs that go in front of the base are then moved in front of it.
                 int i = start;
-                GlyphShapingData current = substitutionCollection[i];
-                for (i = start; i < end; i++)
+                while (i < end && substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.Repha)
                 {
-                    if (current.IndicShapingEngineInfo?.Category != Categories.Repha)
-                    {
-                        break;
-                    }
-
-                    current = substitutionCollection[i];
+                    i++;
                 }
 
-                glyphs[0] = current.GlyphId;
-                glyphs[1] = id;
+                CodePoint dottedCircle = new(DottedCircle);
+                substitutionCollection.InsertGlyph(i, id, dottedCircle);
+                substitutionCollection[i].IndicShapingEngineInfo = new(
+                    (Categories)(1 << IndicShapingCategory(dottedCircle)),
+                    (Positions)IndicShapingPosition(dottedCircle),
+                    dataInfo.SyllableType,
+                    dataInfo.Syllable);
 
-                substitutionCollection.Replace(i, glyphs);
-
-                // Update shaping info for newly inserted data.
-                GlyphShapingData dotted = substitutionCollection[i + 1];
-                var dottedCategory = (Categories)(1 << IndicShapingCategory(dotted.CodePoint));
-                var dottedPosition = (Positions)IndicShapingPosition(dotted.CodePoint);
-                dotted.IndicShapingEngineInfo = new(dottedCategory, dottedPosition, dataInfo.SyllableType, dataInfo.Syllable);
-
+                // The first glyph of the syllable may have changed.
+                data = substitutionCollection[start];
+                dataInfo = data.IndicShapingEngineInfo;
                 end++;
                 max++;
             }

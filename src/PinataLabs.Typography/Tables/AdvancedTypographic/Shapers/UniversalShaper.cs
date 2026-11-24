@@ -33,20 +33,40 @@ internal sealed class UniversalShaper : DefaultShaper
     private static readonly Tag VatuTag = Tag.Parse("vatu");
     private static readonly Tag CjctTag = Tag.Parse("cjct");
 
+    private static readonly Tag IsolTag = Tag.Parse("isol");
+    private static readonly Tag InitTag = Tag.Parse("init");
+    private static readonly Tag MediTag = Tag.Parse("medi");
+    private static readonly Tag FinaTag = Tag.Parse("fina");
+
     private static readonly Tag AbvsTag = Tag.Parse("abvs");
     private static readonly Tag BlwsTag = Tag.Parse("blws");
+    private static readonly Tag HalnTag = Tag.Parse("haln");
     private static readonly Tag PresTag = Tag.Parse("pres");
     private static readonly Tag PstsTag = Tag.Parse("psts");
-    private static readonly Tag DistTag = Tag.Parse("dist");
-    private static readonly Tag AbvmTag = Tag.Parse("abvm");
-    private static readonly Tag BlwmTag = Tag.Parse("blwm");
 
     private const int DottedCircle = 0x25cc;
 
-    public UniversalShaper(ScriptClass script, TextOptions textOptions)
+    private static readonly int OtherCategory = Array.IndexOf(UniversalShapingData.Categories, "O");
+
+    private static readonly int IndependentCategory = Array.IndexOf(UniversalShapingData.Categories, "IND");
+
+    private static readonly int SymbolCategory = Array.IndexOf(UniversalShapingData.Categories, "S");
+
+    private static readonly int GenericBaseCategory = Array.IndexOf(UniversalShapingData.Categories, "GB");
+
+    private static readonly int HalantCategory = Array.IndexOf(UniversalShapingData.Categories, "H");
+
+    private readonly bool joinsLetters;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UniversalShaper"/> class.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="joinsLetters">Whether the letters of the script join as Arabic letters do.</param>
+    /// <param name="textOptions">The text options.</param>
+    public UniversalShaper(ScriptClass script, bool joinsLetters, TextOptions textOptions)
        : base(script, MarkZeroingMode.PreGPos, textOptions)
-    {
-    }
+        => this.joinsLetters = joinsLetters;
 
     /// <inheritdoc/>
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
@@ -70,9 +90,20 @@ internal sealed class UniversalShaper : DefaultShaper
         this.AddFeature(collection, index, count, VatuTag);
         this.AddFeature(collection, index, count, CjctTag, postAction: Reorder);
 
+        // As in HarfBuzz, the joining forms are a stage of their own, after the reordering.
+        if (this.joinsLetters)
+        {
+            this.AddFeature(collection, index, count, IsolTag, false);
+            this.AddFeature(collection, index, count, InitTag, false);
+            this.AddFeature(collection, index, count, MediTag, false);
+            this.AddFeature(collection, index, count, FinaTag, false);
+            this.EndStage();
+        }
+
         // Standard topographic presentation and positional feature application
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
+        this.AddFeature(collection, index, count, HalnTag);
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, PstsTag);
         this.AddFeature(collection, index, count, DistTag);
@@ -82,7 +113,14 @@ internal sealed class UniversalShaper : DefaultShaper
 
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
-        => DecomposeSplitVowels(collection, index, count);
+    {
+        if (this.joinsLetters)
+        {
+            ArabicShaper.AssignJoiningForms(collection, index, count);
+        }
+
+        DecomposeSplitVowels(collection, index, count);
+    }
 
     private static void DecomposeSplitVowels(IGlyphShapingCollection collection, int index, int count)
     {
@@ -132,8 +170,17 @@ internal sealed class UniversalShaper : DefaultShaper
         Span<int> values = count <= 64 ? stackalloc int[count] : new int[count];
         for (int i = index; i < index + count; i++)
         {
-            CodePoint codePoint = substitutionCollection[i].CodePoint;
-            values[i - index] = UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
+            values[i - index] = GetCategory(substitutionCollection[i].CodePoint);
+        }
+
+        // A symbol is a base too. It stays a symbol before a symbol modifier, which only the symbol cluster takes.
+        for (int i = 0; i < count; i++)
+        {
+            if (values[i] == SymbolCategory
+                && (i + 1 == count || UniversalShapingData.Categories[values[i + 1]] is not "SMAbv" and not "SMBlw"))
+            {
+                values[i] = GenericBaseCategory;
+            }
         }
 
         int syllable = 0;
@@ -145,8 +192,7 @@ internal sealed class UniversalShaper : DefaultShaper
             for (int i = match.StartIndex; i <= match.EndIndex; i++)
             {
                 GlyphShapingData data = substitutionCollection[i + index];
-                CodePoint codePoint = data.CodePoint;
-                string category = UniversalShapingData.Categories[UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value)];
+                string category = UniversalShapingData.Categories[values[i]];
 
                 data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
             }
@@ -161,6 +207,33 @@ internal sealed class UniversalShaper : DefaultShaper
                 substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
             }
         }
+
+        // The state machine has no cluster for a halant that no base comes before or after.
+        // As in HarfBuzz, it is a broken cluster.
+        for (int i = 0; i < count; i++)
+        {
+            GlyphShapingData data = substitutionCollection[i + index];
+            if (values[i] == HalantCategory && data.UniversalShapingEngineInfo is null)
+            {
+                data.UniversalShapingEngineInfo = new(UniversalShapingData.Categories[HalantCategory], "broken_cluster", ++syllable);
+            }
+        }
+    }
+
+    // As in HarfBuzz, a character that is not a letter or a sign of a script is a base, so a sign after a space,
+    // a digit or a full stop is not a broken cluster. HarfBuzz 15.0.0 leaves out the characters that it does not
+    // draw, and six right brackets.
+    private static int GetCategory(CodePoint codePoint)
+    {
+        int category = UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
+        if ((category != OtherCategory && category != IndependentCategory)
+            || UnicodeUtility.IsDefaultIgnorableCodePoint((uint)codePoint.Value)
+            || codePoint.Value is 0x005D or 0x007D or 0x27E7 or 0x27E9 or 0x2E23 or 0x2E25)
+        {
+            return category;
+        }
+
+        return GenericBaseCategory;
     }
 
     private static void ClearSubstitutionFlags(IGlyphShapingCollection collection, int index, int count)
@@ -232,7 +305,6 @@ internal sealed class UniversalShaper : DefaultShaper
         int max = index + count;
         int start = index;
         int end = NextSyllable(substitutionCollection, index, max);
-        Span<ushort> glyphs = stackalloc ushort[2];
         while (start < max)
         {
             GlyphShapingData data = substitutionCollection[start];
@@ -248,23 +320,23 @@ internal sealed class UniversalShaper : DefaultShaper
             FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
             if (type == "broken_cluster" && fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
             {
-                // Insert after possible Repha.
+                // As in HarfBuzz, the dotted circle is the base of the cluster. It goes after a repha and before
+                // every other glyph. The glyphs that go in front of the base are then moved in front of it.
                 int i = start;
-                GlyphShapingData current = substitutionCollection[i];
-                for (i = start; i < end; i++)
+                while (i < end && substitutionCollection[i].UniversalShapingEngineInfo?.Category == "R")
                 {
-                    if (current.UniversalShapingEngineInfo?.Category != "R")
-                    {
-                        break;
-                    }
-
-                    current = substitutionCollection[i];
+                    i++;
                 }
 
-                glyphs[0] = current.GlyphId;
-                glyphs[1] = id;
+                substitutionCollection.InsertGlyph(i, id, new(DottedCircle));
+                substitutionCollection[i].UniversalShapingEngineInfo = new(
+                    UniversalShapingData.Categories[GetCategory(new(DottedCircle))],
+                    type,
+                    info!.Syllable);
 
-                substitutionCollection.Replace(i, glyphs);
+                // The first glyph of the syllable may have changed.
+                data = substitutionCollection[start];
+                info = data.UniversalShapingEngineInfo;
                 end++;
                 max++;
             }

@@ -29,7 +29,7 @@ internal static class FallbackMarkPositioner
         while (start < collection.Count)
         {
             int end = GetScriptRunEnd(collection, start, out ScriptClass script);
-            if (gpos?.PositionsScript(script) != true && GetMarkZeroingMode(script, collection.TextOptions) == MarkZeroingMode.PreGPos)
+            if (gpos?.PositionsScript(script) != true && GetMarkZeroingMode(fontMetrics, script, collection.TextOptions) == MarkZeroingMode.PreGPos)
             {
                 ZeroMarks(fontMetrics, collection, start, end);
                 UpdatePositions(fontMetrics, collection, start, end);
@@ -57,8 +57,8 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
-            bool zeroes = GetMarkZeroingMode(script, collection.TextOptions) == MarkZeroingMode.PostGpos;
-            bool places = ShaperFactory.HasFallbackPositioning(script);
+            bool zeroes = GetMarkZeroingMode(fontMetrics, script, collection.TextOptions) == MarkZeroingMode.PostGpos;
+            bool places = ShaperFactory.HasFallbackPositioning(script, fontMetrics.GetGSubTable().GetScriptTag(script));
             if (zeroes)
             {
                 ZeroMarks(fontMetrics, collection, start, end);
@@ -78,8 +78,8 @@ internal static class FallbackMarkPositioner
         }
     }
 
-    private static MarkZeroingMode GetMarkZeroingMode(ScriptClass script, TextOptions options)
-        => ShaperFactory.Create(script, default, options).MarkZeroingMode;
+    private static MarkZeroingMode GetMarkZeroingMode(FontMetrics fontMetrics, ScriptClass script, TextOptions options)
+        => ShaperFactory.Create(script, fontMetrics.GetGSubTable().GetScriptTag(script), options).MarkZeroingMode;
 
     private static void ZeroMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
     {
