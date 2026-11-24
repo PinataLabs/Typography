@@ -14,12 +14,14 @@ namespace PinataLabs.Typography;
 /// </summary>
 public static class TextMeasurer
 {
+    private const float FloatErrorTolerance = 1E-6F;
+
     /// <summary>
     /// Measures the advance (line-height and horizontal/vertical advance) of the text in pixel units.
     /// </summary>
     /// <param name="text">The text.</param>
     /// <param name="options">The text shaping options.</param>
-    /// <returns>The advance of the text if it was to be rendered.</returns>
+    /// <returns>The advance of the text if it was to be rendered, rounded up to whole pixels.</returns>
     public static FontRectangle MeasureAdvance(string text, TextOptions options)
         => MeasureAdvance(text.AsSpan(), options);
 
@@ -28,7 +30,7 @@ public static class TextMeasurer
     /// </summary>
     /// <param name="text">The text.</param>
     /// <param name="options">The text shaping options.</param>
-    /// <returns>The advance of the text if it was to be rendered.</returns>
+    /// <returns>The advance of the text if it was to be rendered, rounded up to whole pixels.</returns>
     public static FontRectangle MeasureAdvance(ReadOnlySpan<char> text, TextOptions options)
         => GetAdvance(TextLayout.GenerateLayout(text, options), options.Dpi);
 
@@ -37,7 +39,7 @@ public static class TextMeasurer
     /// </summary>
     /// <param name="text">The text.</param>
     /// <param name="options">The text shaping options.</param>
-    /// <returns>The size of the text if it was to be rendered.</returns>
+    /// <returns>The size of the text if it was to be rendered, rounded up to whole pixels.</returns>
     public static FontRectangle MeasureSize(string text, TextOptions options)
         => MeasureSize(text.AsSpan(), options);
 
@@ -46,7 +48,7 @@ public static class TextMeasurer
     /// </summary>
     /// <param name="text">The text.</param>
     /// <param name="options">The text shaping options.</param>
-    /// <returns>The size of the text if it was to be rendered.</returns>
+    /// <returns>The size of the text if it was to be rendered, rounded up to whole pixels.</returns>
     public static FontRectangle MeasureSize(ReadOnlySpan<char> text, TextOptions options)
         => GetSize(TextLayout.GenerateLayout(text, options), options.Dpi);
 
@@ -207,7 +209,7 @@ public static class TextMeasurer
         Vector2 topLeft = new(left, top);
         Vector2 bottomRight = new(right, bottom);
         Vector2 size = (bottomRight - topLeft) * dpi;
-        return new FontRectangle(0, 0, MathF.Ceiling(size.X), MathF.Ceiling(size.Y));
+        return new FontRectangle(0, 0, CeilingToPixel(size.X), CeilingToPixel(size.Y));
     }
 
     internal static FontRectangle GetSize(IReadOnlyList<GlyphLayout> glyphLayouts, float dpi)
@@ -219,7 +221,16 @@ public static class TextMeasurer
 
         Vector2 topLeft = glyphLayouts[0].BoxLocation * dpi;
         FontRectangle bounds = GetBounds(glyphLayouts, dpi);
-        return new FontRectangle(0, 0, MathF.Ceiling(bounds.Right - topLeft.X), MathF.Ceiling(bounds.Bottom - topLeft.Y));
+        return new FontRectangle(0, 0, CeilingToPixel(bounds.Right - topLeft.X), CeilingToPixel(bounds.Bottom - topLeft.Y));
+    }
+
+    // Layout works in inches, where a whole pixel such as 100 / 72 is inexact, so a whole-pixel extent comes
+    // back a few float steps over or under, about 3e-7 of the extent at most. That error scales with the extent,
+    // so the tolerance does too; a real ink overhang, such as 399.0037px, still rounds up.
+    private static float CeilingToPixel(float extent)
+    {
+        float nearest = MathF.Round(extent);
+        return MathF.Abs(extent - nearest) <= nearest * FloatErrorTolerance ? nearest : MathF.Ceiling(extent);
     }
 
     internal static FontRectangle GetBounds(IReadOnlyList<GlyphLayout> glyphLayouts, float dpi)
