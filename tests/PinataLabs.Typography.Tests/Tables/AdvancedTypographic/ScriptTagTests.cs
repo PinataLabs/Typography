@@ -54,6 +54,7 @@ public class ScriptTagTests
     [Arguments("Yi")]
     [Arguments("Katakana")]
     [Arguments("Hiragana")]
+    [Arguments("KannadaVersion3")]
     public async Task GlyphsAreShapedAsHarfBuzzShapesThem(string name)
     {
         ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);

@@ -11,7 +11,7 @@ The script does not read the HarfBuzz source. It takes each script of ScriptClas
 code, and asks HarfBuzz which script tags it looks for in a font:
 
 1. The candidates are every tag of the form `xxx2`, `xxx3`, `xxx ` and `xx  `, and the lowercase ISO
-   code of every script, that hb_ot_tag_to_script maps to a script of ScriptClass.cs.
+   code of every script, that hb_ot_tag_to_script maps to a script of ScriptClass.cs other than Zzzz.
 2. A probe font has a GSUB script for each candidate and for `DFLT`. Each script has a required feature
    that changes "a" to a glyph of its own.
 3. The script shapes "a" with the buffer script set to the ISO code and reads which script HarfBuzz
@@ -22,6 +22,10 @@ The script also builds ScriptTags.ttf. It has the scripts `nko `, `lao `, `vai `
 whose ISO codes are Nkoo, Laoo, Vaii, Yiii and Kana, and `DFLT`. Each has a `ccmp` that gives a glyph
 of its own and a `kern` with a value of its own. The reference holds the glyph IDs and positions that
 HarfBuzz gives for text of each script, and for Hiragana text, which HarfBuzz shapes with `kana`.
+
+Last, it copies NotoSansKannada-Regular.ttf to ScriptTagsKannadaVersion3.ttf with its `knd2` script
+renamed to `knd3`. HarfBuzz tries `knd3` first, and the reference holds the glyphs it gives for
+Kannada text in that font.
 
 ScriptTagTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -40,7 +44,7 @@ import uharfbuzz as hb
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.ttLib import newTable
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
@@ -48,6 +52,8 @@ FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 SCRIPT_CLASS = os.path.join(ROOT, "src", "PinataLabs.Typography", "Unicode", "ScriptClass.cs")
 REFERENCE = os.path.join(FONTS, "ScriptTags.harfbuzz.json")
 FONT = "ScriptTags.ttf"
+KANNADA_SOURCE = "NotoSansKannada-Regular.ttf"
+KANNADA_FONT = "ScriptTagsKannadaVersion3.ttf"
 
 HIDDEN = "zz{:02d}"
 
@@ -62,12 +68,13 @@ FONT_SCRIPTS = [
 ]
 
 CASES = [
-    ("Nko", "ߊߊ"),
-    ("Lao", "ກກ"),
-    ("Vai", "ꔀꔀ"),
-    ("Yi", "ꀀꀀ"),
-    ("Katakana", "アア"),
-    ("Hiragana", "ああ"),
+    ("Nko", FONT, "ߊߊ"),
+    ("Lao", FONT, "ກກ"),
+    ("Vai", FONT, "ꔀꔀ"),
+    ("Yi", FONT, "ꀀꀀ"),
+    ("Katakana", FONT, "アア"),
+    ("Hiragana", FONT, "ああ"),
+    ("KannadaVersion3", KANNADA_FONT, "ಕನ್ನಡ ಕ್ಷ"),
 ]
 
 
@@ -219,8 +226,19 @@ def build_font():
     builder.font.save(os.path.join(FONTS, FONT))
 
 
-def shape(text):
-    with open(os.path.join(FONTS, FONT), "rb") as file:
+def build_kannada_version3():
+    font = TTFont(os.path.join(FONTS, KANNADA_SOURCE))
+    for table in ("GSUB", "GPOS"):
+        script_list = font[table].table.ScriptList
+        for record in script_list.ScriptRecord:
+            if record.ScriptTag == "knd2":
+                record.ScriptTag = "knd3"
+        script_list.ScriptRecord.sort(key=lambda r: r.ScriptTag)
+    font.save(os.path.join(FONTS, KANNADA_FONT))
+
+
+def shape(path, text):
+    with open(os.path.join(FONTS, path), "rb") as file:
         font = hb.Font(hb.Face(file.read()))
 
     buffer = hb.Buffer()
@@ -240,7 +258,8 @@ def shape(text):
 def main():
     scripts = derive_tags(script_classes())
     build_font()
-    cases = [{"name": name, "font": FONT, "text": text, "glyphs": shape(text)} for name, text in CASES]
+    build_kannada_version3()
+    cases = [{"name": name, "font": path, "text": text, "glyphs": shape(path, text)} for name, path, text in CASES]
     reference = {"harfbuzz": hb.version_string(), "scripts": scripts, "cases": cases}
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
         json.dump(reference, file, indent=2, ensure_ascii=False)

@@ -164,7 +164,8 @@ as the buffer script, and reads which script HarfBuzz chose. It hides that scrip
 chooses `DFLT`.
 
 It also builds `ScriptTags.ttf`, whose scripts are `nko `, `lao `, `vai `, `yi  `, `kana` and `DFLT`, and writes the
-glyphs that HarfBuzz gives for text of each script. `ScriptTagTests` checks the map of the library and the glyphs
+glyphs that HarfBuzz gives for text of each script. It copies `NotoSansKannada-Regular.ttf` to
+`ScriptTagsKannadaVersion3.ttf` with `knd2` renamed to `knd3`, and writes the glyphs of Kannada text in it. `ScriptTagTests` checks the map of the library and the glyphs
 against the reference.
 
 To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
