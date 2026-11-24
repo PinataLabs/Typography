@@ -44,25 +44,8 @@ internal readonly struct LookupFeatures
         ScriptClass script,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
-        if (scriptList is null)
-        {
-            value = null;
-            return false;
-        }
-
-        ScriptListTable scriptListTable = scriptList.Default();
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
-        {
-            if (scriptList.TryGetValue(tags[i].Value, out ScriptListTable? table))
-            {
-                scriptListTable = table;
-                break;
-            }
-        }
-
         // No language is requested, so only one language system applies. A script without one has no features.
-        LangSysTable? langSysTable = scriptListTable.GetDefaultLangSys();
+        LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
         if (langSysTable is null)
         {
             value = null;
