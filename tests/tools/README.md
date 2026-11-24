@@ -146,6 +146,10 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
 - `NormalizationHebrew.ttf`, `NormalizationHebrewMark.ttf` and `NormalizationHebrewKern.ttf` have the Hebrew
   letters, points and presentation forms. The first has no GPOS table, the second has a `mark` feature for `hebr`,
   and the third has a `mark` feature that only `latn` lists. A letter and a point compose in the first and third.
+- `NormalizationHebrewGposDflt.ttf`, `NormalizationHebrewGposLatn.ttf` and `NormalizationHebrewGposHebr.ttf` have
+  Hebrew and Latin letters, marks and a `kern` table. Their GPOS tables have the `DFLT` script, the `latn` script and
+  the `hebr` script. HarfBuzz positions Hebrew with GPOS only in the third, and kerns it with the `kern` table and
+  places its marks as without GPOS in the other two.
 - `NormalizationHangul.ttf`, `NormalizationHangulGsub.ttf` and `NormalizationHangulJamo.ttf` have Hangul jamo.
   The first two also have two syllables, and only the second has a GSUB table.
 - `NormalizationDevanagari.ttf` has Devanagari letters and signs and the dotted circle, and no GSUB table.

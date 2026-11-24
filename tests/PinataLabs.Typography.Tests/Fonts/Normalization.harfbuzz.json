@@ -190,7 +190,16 @@
     {"name": "ThaiHasNoLegacyKern", "font": "NormalizationMarksLegacyKern.ttf", "text": "\u0e01\u0e38\u0e48\u0e01", "glyphs": [{"id": 19, "x": 0, "y": 0}, {"id": 20, "x": 300, "y": 0}, {"id": 21, "x": 300, "y": 0}, {"id": 19, "x": 600, "y": 0}]},
     {"name": "KernTableIsIgnoredWhenGposHasAKernFeature", "font": "NormalizationMarksBothKern.ttf", "text": "xa", "glyphs": [{"id": 2, "x": 0, "y": 0}, {"id": 1, "x": 600, "y": 0}]},
     {"name": "GposKernsAPairThatTheKernTableAlsoHas", "font": "NormalizationMarksBothKern.ttf", "text": "ax", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 2, "x": 550, "y": 0}]},
-    {"name": "GposAttachesAMark", "font": "NormalizationHebrewMark.ttf", "text": "\u05d0\u05d1\u05bc\u05d0", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 42, "x": 600, "y": 350}, {"id": 2, "x": 600, "y": 0}, {"id": 1, "x": 1200, "y": 0}]}
+    {"name": "GposAttachesAMark", "font": "NormalizationHebrewMark.ttf", "text": "\u05d0\u05d1\u05bc\u05d0", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 42, "x": 600, "y": 350}, {"id": 2, "x": 600, "y": 0}, {"id": 1, "x": 1200, "y": 0}]},
+    {"name": "HebrewGposDfltHebrewPair", "font": "NormalizationHebrewGposDflt.ttf", "text": "\u05d0\u05d1", "glyphs": [{"id": 4, "x": 0, "y": 0}, {"id": 3, "x": 570, "y": 0}]},
+    {"name": "HebrewGposDfltHebrewMarks", "font": "NormalizationHebrewGposDflt.ttf", "text": "\u05d1\u05b7\u05bc", "glyphs": [{"id": 5, "x": 100, "y": -462}, {"id": 6, "x": 100, "y": 0}, {"id": 4, "x": 0, "y": 0}]},
+    {"name": "HebrewGposDfltLatinPairAndMark", "font": "NormalizationHebrewGposDflt.ttf", "text": "ax\u0301", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 2, "x": 550, "y": 0}, {"id": 7, "x": 500, "y": 350}]},
+    {"name": "HebrewGposLatnHebrewPair", "font": "NormalizationHebrewGposLatn.ttf", "text": "\u05d0\u05d1", "glyphs": [{"id": 4, "x": 0, "y": 0}, {"id": 3, "x": 570, "y": 0}]},
+    {"name": "HebrewGposLatnHebrewMarks", "font": "NormalizationHebrewGposLatn.ttf", "text": "\u05d1\u05b7\u05bc", "glyphs": [{"id": 5, "x": 100, "y": -462}, {"id": 6, "x": 100, "y": 0}, {"id": 4, "x": 0, "y": 0}]},
+    {"name": "HebrewGposLatnLatinPairAndMark", "font": "NormalizationHebrewGposLatn.ttf", "text": "ax\u0301", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 2, "x": 550, "y": 0}, {"id": 7, "x": 500, "y": 350}]},
+    {"name": "HebrewGposHebrHebrewPair", "font": "NormalizationHebrewGposHebr.ttf", "text": "\u05d0\u05d1", "glyphs": [{"id": 4, "x": 0, "y": 0}, {"id": 3, "x": 570, "y": 0}]},
+    {"name": "HebrewGposHebrHebrewMarks", "font": "NormalizationHebrewGposHebr.ttf", "text": "\u05d1\u05b7\u05bc", "glyphs": [{"id": 5, "x": -50, "y": 350}, {"id": 6, "x": -50, "y": 350}, {"id": 4, "x": 0, "y": 0}]},
+    {"name": "HebrewGposHebrLatinPairAndMark", "font": "NormalizationHebrewGposHebr.ttf", "text": "ax\u0301", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 2, "x": 540, "y": 0}, {"id": 7, "x": 490, "y": 350}]}
   ],
   "scripts": [
     {"name": "Adlam", "font": "NormalizationScripts.ttf", "text": "\ud83a\udd00\u0301", "glyphs": [{"id": 3, "x": 0, "y": 0}, {"id": 159, "x": 0, "y": 0}]},

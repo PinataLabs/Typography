@@ -150,6 +150,16 @@ internal class GPosTable : Table
                 }
             }
 
+            if (!this.PositionsScript(current))
+            {
+                if (i >= maxCount)
+                {
+                    return updated;
+                }
+
+                continue;
+            }
+
             Tag unicodeScriptTag = this.GetUnicodeScriptTag(current);
             BaseShaper shaper = ShaperFactory.Create(current, unicodeScriptTag, collection.TextOptions);
 
@@ -217,6 +227,15 @@ internal class GPosTable : Table
 
         return updated;
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the table positions text of the script. When it does not, the text is
+    /// positioned as in a font without GPOS. See <see cref="ShaperFactory.NeedsOwnGposScript"/>.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns><see langword="true"/> if the table positions the text.</returns>
+    public bool PositionsScript(ScriptClass script)
+        => !ShaperFactory.NeedsOwnGposScript(script) || this.GetUnicodeScriptTag(script) != default;
 
     /// <summary>
     /// Gets a value indicating whether the language system that the table uses for the script lists the feature.

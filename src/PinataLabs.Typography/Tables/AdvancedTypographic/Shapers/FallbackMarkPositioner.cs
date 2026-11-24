@@ -7,7 +7,7 @@ using PinataLabs.Typography.Unicode.Resources;
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 /// <summary>
-/// Positions the marks of a font that has no GPOS table, as HarfBuzz does. A mark loses its advance, and the
+/// Positions the marks of text that the GPOS table of the font does not position, as HarfBuzz does. A mark loses its advance, and the
 /// shapers that <see cref="ShaperFactory.HasFallbackPositioning"/> names place it on its base from the boxes
 /// of the two glyphs. <see cref="UnicodeData.GetCombiningClassData"/> gives the side of the base for each mark.
 /// </summary>
@@ -19,15 +19,16 @@ internal static class FallbackMarkPositioner
     /// <summary>
     /// Takes the advance of each mark away for the shapers that do so before they position glyphs.
     /// </summary>
-    /// <param name="fontMetrics">The font, which has no GPOS table.</param>
+    /// <param name="fontMetrics">The font.</param>
     /// <param name="collection">The glyphs of the text.</param>
-    public static void ZeroMarksBeforeKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection)
+    /// <param name="gpos">The GPOS table of the font, if it has one.</param>
+    public static void ZeroMarksBeforeKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection, GPosTable? gpos)
     {
         int start = 0;
         while (start < collection.Count)
         {
             int end = GetScriptRunEnd(collection, start, out ScriptClass script);
-            if (GetMarkZeroingMode(script, collection.TextOptions) == MarkZeroingMode.PreGPos)
+            if (gpos?.PositionsScript(script) != true && GetMarkZeroingMode(script, collection.TextOptions) == MarkZeroingMode.PreGPos)
             {
                 ZeroMarks(fontMetrics, collection, start, end);
                 UpdatePositions(fontMetrics, collection, start, end);
@@ -40,14 +41,21 @@ internal static class FallbackMarkPositioner
     /// <summary>
     /// Takes the advance of each mark away for the other shapers, and places each mark on its base.
     /// </summary>
-    /// <param name="fontMetrics">The font, which has no GPOS table.</param>
+    /// <param name="fontMetrics">The font.</param>
     /// <param name="collection">The glyphs of the text.</param>
-    public static void PlaceMarksAfterKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection)
+    /// <param name="gpos">The GPOS table of the font, if it has one.</param>
+    public static void PlaceMarksAfterKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection, GPosTable? gpos)
     {
         int start = 0;
         while (start < collection.Count)
         {
             int end = GetScriptRunEnd(collection, start, out ScriptClass script);
+            if (gpos?.PositionsScript(script) == true)
+            {
+                start = end;
+                continue;
+            }
+
             bool zeroes = GetMarkZeroingMode(script, collection.TextOptions) == MarkZeroingMode.PostGpos;
             bool places = ShaperFactory.HasFallbackPositioning(script);
             if (zeroes)

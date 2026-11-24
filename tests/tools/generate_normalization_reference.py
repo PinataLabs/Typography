@@ -29,6 +29,8 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
 * NormalizationHebrew.ttf, NormalizationHebrewMark.ttf, NormalizationHebrewKern.ttf and
   NormalizationHebrewRequiredMark.ttf have the Hebrew letters, points and presentation forms. They differ in the
   GPOS `mark` feature that decides whether a letter and a point compose.
+* NormalizationHebrewGposDflt.ttf, NormalizationHebrewGposLatn.ttf and NormalizationHebrewGposHebr.ttf have Hebrew and
+  Latin letters, marks and a `kern` table. Only the GPOS table of the third has the `hebr` script.
 * NormalizationHangul.ttf, NormalizationHangulGsub.ttf and NormalizationHangulJamo.ttf have Hangul jamo, with and
   without syllables and a GSUB table.
 * NormalizationSpace.ttf and NormalizationSpaceBare.ttf have U+0020 and lack the other spaces.
@@ -347,6 +349,36 @@ HEBREW_MARK_POSITIONED_CASES = [
     ("GposAttachesAMark", "\u05D0\u05D1\u05BC\u05D0"),
 ]
 
+# HarfBuzz positions Hebrew with GPOS only when the GPOS table has the `hebr` script. When the table gives Hebrew the
+# language system of `DFLT` or `latn`, HarfBuzz kerns Hebrew with the `kern` table and places its marks as in a font
+# without GPOS, while Latin text keeps the GPOS table. The fonts have the marks of the Marks fonts and a `kern` table
+# with one pair in each order. HebrewGposDflt has GPOS `kern` and `mark` features under `DFLT` only, HebrewGposLatn
+# has them under `latn` only, and HebrewGposHebr has a `mark` feature under `hebr` and no `kern` feature.
+HEBREW_GPOS_CHARACTERS = [ord("a"), ord("x"), 0x05D0, 0x05D1, 0x05B7, 0x05BC, 0x0301]
+HEBREW_GPOS_MARKS = [0x05B7, 0x05BC, 0x0301]
+HEBREW_GPOS_KERN = {(0x05D0, 0x05D1): -100, (0x05D1, 0x05D0): -30, (ord("a"), ord("x")): -60}
+HEBREW_GPOS_LOOKUPS = """
+markClass [u05B7 u05BC u0301] <anchor 300 0> @MARK;
+feature kern { pos u05D0 u05D1 -50; pos u0061 u0078 -50; } kern;
+feature mark { pos base [u05D0 u05D1 u0061 u0078] <anchor 250 350> mark @MARK; } mark;
+"""
+HEBREW_GPOS_FONTS = [
+    ("NormalizationHebrewGposDflt.ttf", "languagesystem DFLT dflt;\n" + HEBREW_GPOS_LOOKUPS),
+    ("NormalizationHebrewGposLatn.ttf", "languagesystem latn dflt;\n" + HEBREW_GPOS_LOOKUPS),
+    ("NormalizationHebrewGposHebr.ttf", """
+languagesystem DFLT dflt;
+languagesystem hebr dflt;
+markClass [u05B7 u05BC u0301] <anchor 300 0> @MARK;
+feature mark { pos base [u05D0 u05D1 u0061 u0078] <anchor 250 350> mark @MARK; } mark;
+"""),
+]
+
+HEBREW_GPOS_CASES = [
+    ("HebrewPair", "\u05D0\u05D1"),
+    ("HebrewMarks", "\u05D1\u05B7\u05BC"),
+    ("LatinPairAndMark", "ax\u0301"),
+]
+
 # The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
 # mark is placed on its base, it only loses its advance, or it keeps its advance. Scripts has the first letter of
 # every script of Scripts.txt and U+0301, and the reference has that letter and mark for each script.
@@ -611,6 +643,17 @@ def main():
         marks_font = build(file_name, MARKS_CHARACTERS, True, features, MARK_ADVANCES, MARK_BOXES, kern)
         positioned += positioned_cases(file_name, marks_font, mark_cases)
     positioned += positioned_cases(HEBREW_MARK_FONT, hebrew_fonts[HEBREW_MARK_FONT], HEBREW_MARK_POSITIONED_CASES)
+    for file_name, features in HEBREW_GPOS_FONTS:
+        font = build(
+            file_name,
+            HEBREW_GPOS_CHARACTERS,
+            True,
+            features,
+            {mark: MARK_ADVANCES[0x0301] for mark in HEBREW_GPOS_MARKS},
+            {mark: MARK_BOXES[0x0301] for mark in HEBREW_GPOS_MARKS},
+            HEBREW_GPOS_KERN)
+        prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
+        positioned += positioned_cases(file_name, font, [(prefix + name, text) for name, text in HEBREW_GPOS_CASES])
 
     script_letters = read_script_letters()
     scripts_font, scripts_kern_font = (
