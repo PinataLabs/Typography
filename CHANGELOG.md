@@ -50,6 +50,21 @@ An additive or breaking public API change needs all of these:
   each allocation and before it parses anything, and it throws `FontProgramTooLargeException`, a subclass of
   `InvalidFontFileException`, instead of retaining more. The exception carries `RetainedByteCount` and `MaxRetainedBytes`.
   Use this to keep one budget for the fonts of a document. (#75)
+- **Bare CFF font programs.** `FontProgram.Load` reads a bare CFF font, as a PDF embeds it in a `/FontFile3`
+  stream with `/Subtype /Type1C` or `/CIDFontType0C`. Name-keyed and CID-keyed fonts load, and the FontMatrix of
+  each Font DICT is folded into the outlines of its glyphs. The format comes from the CFF header, and `Format` is
+  `FontProgramFormat.Cff`. Advance widths come from the charstrings. A bare CFF2 font throws
+  `InvalidFontFileException`. (#70)
+- **Stripped OpenType fonts.** `FontProgram.MissingOptionalTables` and `FontProgram.MalformedOptionalTables`
+  name the optional sfnt tables (`name`, `OS/2`, `post`, `cmap`, `hhea`, `hmtx`) that a TrueType or OpenType
+  font lacks or that were ignored because they are damaged. Font subsets without these tables, such as the
+  subsets in PDF files, load for their outlines. A damaged optional table is treated as absent and never fails
+  `Load`. (#77)
+- **Limits for untrusted fonts.** The `FontProgram` remarks state the limits on charstring stacks, subroutine
+  nesting, operators per glyph, composite depth and components, points per outline, CFF INDEX and DICT data,
+  Font DICTs, glyph counts and Type 1 subroutines, and the memory that `Load` and the glyph methods allocate.
+  `tests/PinataLabs.Typography.Fuzz` is a SharpFuzz harness over the TrueType, CFF, bare CFF and Type 1
+  loaders, and a seeded mutation test in the test suite checks the same rules on each build. (#74)
 - **netstandard2.1 target.** The library targets `netstandard2.1` again, so a netstandard2.1
   project such as a Unity package can depend on it. On this target the package depends on
   `System.Runtime.CompilerServices.Unsafe`. The other targets keep no dependencies.
@@ -57,6 +72,11 @@ An additive or breaking public API change needs all of these:
 
 ### Changed
 
+- **One TrueType decoder.** Text layout draws TrueType glyphs with the decoder that `FontProgram` uses, and it
+  no longer decodes the `glyf` table when it loads a font. A loaded font keeps the bytes of `glyf` and `loca`.
+  OpenSans-Regular keeps about 295 KB after load, down from 585 KB. A contour starts at its first on-curve point,
+  so an `IGlyphRenderer` gets the same curves in fewer calls. A malformed `glyf` no longer fails the load. A
+  malformed glyph draws up to the fault. (#80)
 - **`vrtr` in vertical mixed layout.** Glyphs that are rotated in `VerticalMixedLeftRight` and
   `VerticalMixedRightLeft` layouts now get the OpenType `vrtr` feature. The font's `vrtr` glyphs are
   designed to be rotated by the layout engine, so they are still rotated. Fonts without `vrtr` are
@@ -64,6 +84,16 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- A TrueType composite that places many components on high point numbers fails within the outline budget,
+  instead of reading hundreds of millions of points. (#74)
+- A CFF font program keeps at most 256 Font DICT records, the most that FDSelect can select. Before, 65,535
+  empty Font DICTs in 65 KB of data made the program keep 6.36 MB. (#74)
+- TrueType outlines in text layout no longer contain a zero-length line before each curve. (#80)
+- Composite TrueType glyphs in text layout place a component by point numbers when the font asks for that,
+  and scale a component offset when `SCALED_COMPONENT_OFFSET` is set. (#80)
+- Hinted WOFF2 text matches the hinted TrueType font. The WOFF2 reader read the bounding box bitmap at the
+  wrong length and gave some glyphs the instructions of other glyphs. (#80)
+- Text layout of TrueType fonts keeps no per-thread state. (#80)
 - **CFF glyph outlines.** Text layout draws these CFF glyphs correctly now: a glyph that uses a
   `flex`, `hflex`, `hflex1` or `flex1` operator, a glyph with fractional coordinates, and an accented glyph
   that an `endchar` with four arguments builds from two other glyphs. In a CID-keyed font, each glyph

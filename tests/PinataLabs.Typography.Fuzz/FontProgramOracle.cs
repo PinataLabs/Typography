@@ -4,7 +4,6 @@
 using System;
 using System.Numerics;
 using PinataLabs.Typography.FontPrograms;
-using PinataLabs.Typography.Tables.Cff;
 
 namespace PinataLabs.Typography.Fuzz;
 
@@ -22,8 +21,7 @@ namespace PinataLabs.Typography.Fuzz;
 internal static class FontProgramOracle
 {
     /// <summary>
-    /// The input is a font file: <see cref="FontProgram.Load(ReadOnlyMemory{byte})"/>, and the internal
-    /// bare CFF path when the data starts with a CFF header.
+    /// The input is a font file: <see cref="FontProgram.Load(ReadOnlyMemory{byte})"/>, which also takes bare CFF.
     /// </summary>
     public const string Program = "program";
 
@@ -125,7 +123,7 @@ internal static class FontProgramOracle
         }
         catch (InvalidFontFileException)
         {
-            return RunBareCff(data);
+            return "rejected";
         }
         catch (Exception e)
         {
@@ -174,42 +172,6 @@ internal static class FontProgramOracle
         }
 
         throw new FuzzFindingException($"A limit of {retained - 1} bytes loaded a program that retains {retained}.");
-    }
-
-    // Until FontProgram.Load sniffs a bare CFF (#70), the internal parser is the CFF program path of PdfPinata.
-    private static string RunBareCff(byte[] data)
-    {
-        if (data.Length < 4 || data[0] != 1)
-        {
-            return "rejected";
-        }
-
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        CffFont font;
-        try
-        {
-            LoadBudget budget = new(0, null);
-            font = CffParser.Load(data, ref budget);
-        }
-        catch (InvalidFontFileException)
-        {
-            return "rejected";
-        }
-        catch (Exception e)
-        {
-            throw new FuzzFindingException($"Bare CFF load threw {e.GetType().Name}.", e);
-        }
-
-        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
-        long maxAllocated = MaxRetainedBytes(FontProgramFormat.Cff, data.Length) + LoadOverheadBytes;
-        if (allocated > maxAllocated)
-        {
-            throw new FuzzFindingException($"Bare CFF load allocated {allocated} bytes, above {maxAllocated}.");
-        }
-
-        BareCffFont adapter = new(font);
-        Exercise(ref adapter);
-        return $"loaded bare CFF, {font.GlyphCount} glyphs";
     }
 
     private static void Exercise<TFont>(ref TFont font)
@@ -336,7 +298,7 @@ internal static class FontProgramOracle
     }
 
     /// <summary>
-    /// The calls that a PDF renderer makes on a font program, over <see cref="FontProgram"/> and over the bare CFF parser.
+    /// The calls that a PDF renderer makes on a font program, over <see cref="FontProgram"/>.
     /// </summary>
     private interface IFuzzFont
     {
@@ -360,27 +322,6 @@ internal static class FontProgramOracle
         private readonly FontProgram font;
 
         public ProgramFont(FontProgram font) => this.font = font;
-
-        public int GlyphCount => this.font.GlyphCount;
-
-        public bool TryWriteOutline(ushort glyphId, ref CheckingSink sink) => this.font.TryWriteOutline(glyphId, ref sink);
-
-        public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth) => this.font.TryGetAdvanceWidth(glyphId, out advanceWidth);
-
-        public string? GetGlyphName(ushort glyphId) => this.font.GetGlyphName(glyphId);
-
-        public bool TryGetGlyphId(ReadOnlySpan<char> name, out ushort glyphId) => this.font.TryGetGlyphId(name, out glyphId);
-
-        public bool TryGetGlyphIdForCid(int cid, out ushort glyphId) => this.font.TryGetGlyphIdForCid(cid, out glyphId);
-
-        public bool TryGetBuiltInEncoding(Span<ushort> glyphIds) => this.font.TryGetBuiltInEncoding(glyphIds);
-    }
-
-    private readonly struct BareCffFont : IFuzzFont
-    {
-        private readonly CffFont font;
-
-        public BareCffFont(CffFont font) => this.font = font;
 
         public int GlyphCount => this.font.GlyphCount;
 
