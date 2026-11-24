@@ -710,7 +710,7 @@ public static partial class Generator
         if (symbols != null)
         {
             // Write the categories.
-            writer.WriteLine("    public static string[] Categories => new string[]");
+            writer.WriteLine("    public static string[] Categories { get; } = new string[]");
             writer.WriteLine("    {");
 
             max = symbols.Count - 1;
@@ -733,7 +733,7 @@ public static partial class Generator
         // Write the decompositions
         if (decompositions != null)
         {
-            writer.WriteLine("    public static Dictionary<int, int[]> Decompositions => new()");
+            writer.WriteLine("    public static Dictionary<int, int[]> Decompositions { get; } = new()");
             writer.WriteLine("    {");
 
             counter = 0;
