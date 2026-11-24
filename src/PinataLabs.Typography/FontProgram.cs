@@ -434,6 +434,38 @@ public sealed class FontProgram
     }
 
     /// <summary>
+    /// Maps a character code to a glyph through the 'cmap' subtable for a platform and encoding, reading the table in place.
+    /// </summary>
+    /// <remarks>
+    /// Subtable formats 0, 2, 4, 6, 10, 12 and 13 are read, with bounds checks, and the formats 4, 12 and 13 by binary search.
+    /// When several encoding records share a platform and encoding, the first in the table is used.
+    /// A TrueType program and an OpenType CFF program have a 'cmap' table. A bare CFF program and a Type 1 program
+    /// have none, so this method returns <see langword="false"/> for them. It never throws for the data of the font.
+    /// </remarks>
+    /// <param name="platformId">The platform ID of the encoding record, such as 3 for Windows or 1 for Macintosh.</param>
+    /// <param name="encodingId">The encoding ID of the encoding record, such as 1 for Unicode BMP or 0 for symbol.</param>
+    /// <param name="code">The character code, in the encoding of the subtable. Negative codes have no glyph.</param>
+    /// <param name="glyphId">Receives the glyph ID, or 0 when the method returns <see langword="false"/>.</param>
+    /// <returns>
+    /// <see langword="true"/> if the subtable maps the code to a glyph other than glyph 0. <see langword="false"/> if
+    /// the font has no 'cmap' table, no subtable of that platform and encoding, or only one in an unsupported or
+    /// malformed format; and when the code is unmapped, maps to glyph 0, or maps to a glyph the font does not have.
+    /// </returns>
+    public bool TryGetGlyphIdFromCmap(ushort platformId, ushort encodingId, int code, out ushort glyphId)
+    {
+        switch (this.program)
+        {
+            case TrueTypeProgram trueType:
+                return trueType.TryGetGlyphIdFromCmap(platformId, encodingId, code, out glyphId);
+            case CffProgram cff:
+                return cff.TryGetGlyphIdFromCmap(platformId, encodingId, code, out glyphId);
+            default:
+                glyphId = 0;
+                return false;
+        }
+    }
+
+    /// <summary>
     /// Gets the glyph for each of the 256 character codes under the encoding that the program carries.
     /// </summary>
     /// <remarks>
