@@ -181,10 +181,10 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             bool isMarkLigature = shapingClass.IsMark;
 
             Span<int> matches = matchBuffer.Slice(0, Math.Min(ligatureTable.ComponentGlyphs.Length, matchBuffer.Length));
-            for (int j = 0; j < matches.Length && isMarkLigature; j++)
+            for (int j = 0; j < matches.Length; j++)
             {
                 GlyphShapingData match = collection[matches[j]];
-                if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, match.GlyphId, match))
+                if (!AdvancedTypographicUtils.GetGlyphShapingClass(fontMetrics, match.GlyphId, match).IsMark)
                 {
                     isBaseLigature = false;
                     isMarkLigature = false;
@@ -194,7 +194,8 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
 
             bool isLigature = !isBaseLigature && !isMarkLigature;
 
-            int ligatureId = isLigature ? 0 : collection.LigatureId++;
+            int ligatureId = isLigature ? collection.LigatureId++ : isMarkLigature ? data.LigatureId : 0;
+            int firstComponent = data.LigatureComponent;
             int lastLigatureId = data.LigatureId;
             int lastComponentCount = data.CodePointCount;
             int currentComponentCount = lastComponentCount;
@@ -204,8 +205,8 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             // This allows GPOS to attach marks to the correct ligature components.
             foreach (int matchIndex in matches)
             {
-                // Don't assign new ligature components for mark ligatures (see above).
-                if (isLigature)
+                // Only a ligature of components gives the marks between its components a component (see above).
+                if (!isLigature)
                 {
                     idx = matchIndex;
                 }
@@ -231,11 +232,10 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             }
 
             // Adjust ligature components for any marks following
-            if (lastLigatureId > 0 && !isLigature)
+            if (lastLigatureId > 0 && !isMarkLigature)
             {
                 // Only check glyphs managed by current shaper.
-                int followingCount = count - (idx - index);
-                for (int j = idx; j < followingCount; j++)
+                for (int j = idx; j < index + count; j++)
                 {
                     GlyphShapingData current = collection[j];
                     if (current.LigatureId == lastLigatureId)
@@ -254,6 +254,11 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
 
             // Delete the matched glyphs, and replace the current glyph with the ligature glyph
             collection.Replace(index, matches, ligatureTable.GlyphId, ligatureId);
+            if (isMarkLigature)
+            {
+                collection[index].LigatureComponent = firstComponent;
+            }
+
             return true;
         }
 

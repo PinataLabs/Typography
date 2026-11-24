@@ -159,6 +159,10 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
   GPOS table that only kerns.
 - `NormalizationMarksLegacyKern.ttf` and `NormalizationMarksBothKern.ttf` have the same glyphs and a `kern` table.
   The second also has the GPOS table that only kerns.
+- `NormalizationLigature.ttf`, `NormalizationLigatureGdef.ttf` and `NormalizationLigatureGdefBase.ttf` ligate f and i,
+  f, f and i, and lam and alef across marks, and have no GPOS table. The second and third also have GDEF glyph
+  classes, and the third calls the ligatures bases. Without GPOS, HarfBuzz places a mark of a ligature on its own
+  component.
 - `NormalizationScripts.ttf` has the first letter of every script of `Scripts.txt` and U+0301.
   `NormalizationScriptsKern.ttf` also has a `kern` table with the pair of each letter and itself.
 

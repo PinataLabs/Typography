@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -146,6 +147,9 @@ internal static class FallbackMarkPositioner
 
         // The pen is after the base in text that runs forward, and still before it in text that runs backward.
         int penOffset = isForward ? -GetAdvance(collection, baseIndex) : 0;
+        int components = GetComponentCount(fontMetrics, baseData);
+        int lastComponent = -1;
+        Box componentBox = baseBox;
         Box stack = baseBox;
         (MarkAlignment Alignment, MarkSide Side) last = default;
         for (int i = baseIndex + 1; i < end; i++)
@@ -160,11 +164,22 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
+            // A mark of a ligature goes on its own component, an equal part of the ligature.
+            int component = GetComponent(baseData, data, components);
+            if (component != lastComponent)
+            {
+                lastComponent = component;
+                componentBox = baseBox;
+                componentBox.Left += (isForward ? component : components - 1 - component) * baseBox.Width / components;
+                componentBox.Width /= components;
+                last = default;
+            }
+
             // Marks of one placement stack away from the base. The first mark of another placement starts at the base again.
             if (last != (alignment, side))
             {
                 last = (alignment, side);
-                stack = baseBox;
+                stack = componentBox;
             }
 
             Box mark = Box.Of(collection.GetMetrics(i));
@@ -174,6 +189,18 @@ internal static class FallbackMarkPositioner
             data.Bounds.Height = 0;
         }
     }
+
+    // Only a ligature of components has parts for marks. A base that GSUB composed with marks is still one base.
+    private static int GetComponentCount(FontMetrics fontMetrics, GlyphShapingData baseData)
+        => baseData.LigatureId > 0 && AdvancedTypographicUtils.GetGlyphShapingClass(fontMetrics, baseData.GlyphId, baseData).IsLigature
+            ? Math.Max(baseData.CodePointCount, 1)
+            : 1;
+
+    // A mark that GSUB did not give a component of this ligature, such as a mark after the ligature, goes on its last component.
+    private static int GetComponent(GlyphShapingData baseData, GlyphShapingData mark, int components)
+        => mark.LigatureId == baseData.LigatureId && mark.LigatureComponent > 0 && mark.LigatureComponent <= components
+            ? mark.LigatureComponent - 1
+            : components - 1;
 
     private static int Align(Box stack, Box mark, MarkAlignment alignment, bool isForward)
         => alignment switch

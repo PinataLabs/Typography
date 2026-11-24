@@ -29,6 +29,8 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
 * NormalizationHebrew.ttf, NormalizationHebrewMark.ttf, NormalizationHebrewKern.ttf and
   NormalizationHebrewRequiredMark.ttf have the Hebrew letters, points and presentation forms. They differ in the
   GPOS `mark` feature that decides whether a letter and a point compose.
+* NormalizationLigature.ttf, NormalizationLigatureGdef.ttf and NormalizationLigatureGdefBase.ttf have a GSUB table that
+  ligates across marks, and no GPOS table. The second and third also have GDEF glyph classes.
 * NormalizationHebrewGposDflt.ttf, NormalizationHebrewGposLatn.ttf and NormalizationHebrewGposHebr.ttf have Hebrew and
   Latin letters, marks and a `kern` table. Only the GPOS table of the third has the `hebr` script.
 * NormalizationHangul.ttf, NormalizationHangulGsub.ttf and NormalizationHangulJamo.ttf have Hangul jamo, with and
@@ -379,6 +381,47 @@ HEBREW_GPOS_CASES = [
     ("LatinPairAndMark", "ax\u0301"),
 ]
 
+# A font without GPOS places a mark of a ligature on the component that the mark came after, not on the whole
+# ligature. Each component takes an equal part of the advance of the ligature, counted from the right in text that
+# runs backward. A mark after the last component goes on the last component. Ligature ligates f and i to U+FB01, and
+# f, f and i to U+FB03, across marks. U+FB03 has three components in an advance of 1000. It ligates lam and alef in
+# `rlig`, and a with U+0301 to U+FB01, which is not a ligature of components. LigatureGdef also has GDEF glyph classes.
+# LigatureGdefBase calls the ligatures bases, so their marks go on the whole ligature.
+# Each text starts with a letter that is not part of the ligature, so the tests can end a text run after it.
+LIGATURE_CHARACTERS = [ord("a"), ord("f"), ord("i"), 0xFB01, 0xFB03, 0x0301, 0x0302, 0x0323, 0x0627, 0x0644, 0x064E, 0x0650, 0xFEFB]
+LIGATURE_MARKS = [0x0301, 0x0302, 0x0323, 0x064E, 0x0650]
+LIGATURE_ADVANCES = {**{mark: MARK_ADVANCES[0x0301] for mark in LIGATURE_MARKS}, 0xFB01: 1000, 0xFB03: 1000, 0xFEFB: 1000}
+LIGATURE_BOXES = {**{mark: MARK_BOXES[0x0301] for mark in LIGATURE_MARKS}, 0xFB01: (0, 0, 1000, 700), 0xFB03: (0, 0, 1000, 700), 0xFEFB: (0, 0, 1000, 700)}
+LIGATURE_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem arab dflt;
+feature liga { sub u0061 u0301 by uFB01; lookupflag IgnoreMarks; sub u0066 u0066 u0069 by uFB03; sub u0066 u0069 by uFB01; } liga;
+feature rlig { lookupflag IgnoreMarks; sub u0644 u0627 by uFEFB; } rlig;
+"""
+LIGATURE_GDEF_FEATURES = LIGATURE_FEATURES + """
+table GDEF { GlyphClassDef [u0061 u0066 u0069], [uFB01 uFB03], [u0301 u0302 u0323], ; } GDEF;
+"""
+LIGATURE_GDEF_BASE_FEATURES = LIGATURE_FEATURES + """
+table GDEF { GlyphClassDef [u0061 u0066 u0069 uFB01 uFB03], , [u0301 u0302 u0323], ; } GDEF;
+"""
+LIGATURE_FONTS = [
+    ("NormalizationLigature.ttf", LIGATURE_FEATURES),
+    ("NormalizationLigatureGdef.ttf", LIGATURE_GDEF_FEATURES),
+    ("NormalizationLigatureGdefBase.ttf", LIGATURE_GDEF_BASE_FEATURES),
+]
+
+LIGATURE_CASES = [
+    ("MarkOnTheFirstComponent", "af\u0301i"),
+    ("MarkAfterTheLastComponent", "afi\u0301"),
+    ("MarksOnBothComponents", "af\u0323i\u0301"),
+    ("MarksStackOnTheirComponent", "af\u0301\u0302i"),
+    ("MarksOnThreeComponents", "af\u0301f\u0301i\u0301"),
+    ("MarkOnTheMiddleComponent", "aff\u0301i"),
+    ("RightToLeftMarksOnBothComponents", "\u0627\u0644\u064E\u0627\u0650"),
+    ("MarkAfterALigatureOfABaseAndAMark", "aa\u0301\u0302"),
+]
+
 # The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
 # mark is placed on its base, it only loses its advance, or it keeps its advance. Scripts has the first letter of
 # every script of Scripts.txt and U+0301, and the reference has that letter and mark for each script.
@@ -654,6 +697,11 @@ def main():
             HEBREW_GPOS_KERN)
         prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
         positioned += positioned_cases(file_name, font, [(prefix + name, text) for name, text in HEBREW_GPOS_CASES])
+
+    for file_name, features in LIGATURE_FONTS:
+        font = build(file_name, LIGATURE_CHARACTERS, True, features, LIGATURE_ADVANCES, LIGATURE_BOXES)
+        prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
+        positioned += positioned_cases(file_name, font, [(prefix + name, text) for name, text in LIGATURE_CASES])
 
     script_letters = read_script_letters()
     scripts_font, scripts_kern_font = (
