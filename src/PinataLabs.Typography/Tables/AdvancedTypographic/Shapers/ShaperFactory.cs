@@ -8,6 +8,16 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 internal static class ShaperFactory
 {
+    private enum ShaperKind
+    {
+        Default,
+        Arabic,
+        Hangul,
+        Indic,
+        Myanmar,
+        Universal,
+    }
+
     /// <summary>
     /// Creates a Shaper based on the given script language.
     /// </summary>
@@ -16,6 +26,33 @@ internal static class ShaperFactory
     /// <param name="textOptions">The text options.</param>
     /// <returns>A shaper for the given script.</returns>
     public static BaseShaper Create(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
+        => GetShaperKind(script) switch
+        {
+            ShaperKind.Arabic => new ArabicShaper(script, textOptions),
+            ShaperKind.Hangul => new HangulShaper(script, textOptions),
+            ShaperKind.Indic => new IndicShaper(script, unicodeScriptTag, textOptions),
+            ShaperKind.Myanmar => new MyanmarShaper(script, textOptions),
+            ShaperKind.Universal => new UniversalShaper(script, textOptions),
+            _ => new DefaultShaper(script, textOptions),
+        };
+
+    /// <summary>
+    /// Gets how the shaper of the script wants its text normalized before GSUB.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns>The profile of the shaper that <see cref="Create"/> returns for the script.</returns>
+    public static NormalizationProfile GetNormalizationProfile(ScriptClass script)
+        => GetShaperKind(script) switch
+        {
+            ShaperKind.Arabic => NormalizationProfile.Arabic,
+            ShaperKind.Hangul => NormalizationProfile.Hangul,
+            ShaperKind.Indic => NormalizationProfile.Indic,
+            ShaperKind.Myanmar => NormalizationProfile.Myanmar,
+            ShaperKind.Universal => NormalizationProfile.Universal,
+            _ => NormalizationProfile.Default,
+        };
+
+    private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch
         {
             // Arabic
@@ -26,10 +63,10 @@ internal static class ShaperFactory
             or ScriptClass.PhagsPa
             or ScriptClass.Mandaic
             or ScriptClass.Manichaean
-            or ScriptClass.PsalterPahlavi => new ArabicShaper(script, textOptions),
+            or ScriptClass.PsalterPahlavi => ShaperKind.Arabic,
 
             // Hangul
-            ScriptClass.Hangul => new HangulShaper(script, textOptions),
+            ScriptClass.Hangul => ShaperKind.Hangul,
 
             // Indic
             ScriptClass.Bengali
@@ -41,10 +78,10 @@ internal static class ShaperFactory
             or ScriptClass.Oriya
             or ScriptClass.Tamil
             or ScriptClass.Telugu
-            or ScriptClass.Khmer => new IndicShaper(script, unicodeScriptTag, textOptions),
+            or ScriptClass.Khmer => ShaperKind.Indic,
 
             // Myanmar
-            ScriptClass.Myanmar => new MyanmarShaper(script, textOptions),
+            ScriptClass.Myanmar => ShaperKind.Myanmar,
 
             // Universal
             ScriptClass.Balinese
@@ -86,7 +123,7 @@ internal static class ShaperFactory
             or ScriptClass.Tibetan
             or ScriptClass.Tifinagh
             or ScriptClass.Tirhuta
-            => new UniversalShaper(script, textOptions),
-            _ => new DefaultShaper(script, textOptions),
+            => ShaperKind.Universal,
+            _ => ShaperKind.Default,
         };
 }

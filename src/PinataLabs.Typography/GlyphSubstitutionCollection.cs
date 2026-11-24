@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -21,6 +22,11 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// Contains a map the index of a map within the collection, non-sequential codepoint offsets, and their glyph ids.
     /// </summary>
     private readonly List<OffsetGlyphDataPair> glyphs = [];
+
+    // Scratch space of ReplaceNormalized, kept so that normalizing a long text does not allocate for each cluster.
+    private OffsetGlyphDataPair[] normalizedSources = [];
+
+    private int[] normalizedOffsets = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphSubstitutionCollection"/> class.
@@ -377,6 +383,75 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             // https://github.com/MicrosoftDocs/typography-issues/issues/673
             this.glyphs.RemoveAt(index);
         }
+    }
+
+    /// <summary>
+    /// Replaces the glyphs of one character and its marks with their normalized form. The offsets of the
+    /// characters that the new glyphs come from are given out in ascending order, so a glyph that did not move
+    /// keeps its offset. Glyphs that share an offset are laid out one after the other.
+    /// </summary>
+    /// <param name="index">The zero-based index of the first glyph to replace.</param>
+    /// <param name="count">The number of glyphs to replace.</param>
+    /// <param name="glyphs">The new glyphs.</param>
+    public void ReplaceNormalized(int index, int count, ReadOnlySpan<GlyphNormalizer.Item> glyphs)
+    {
+        if (this.normalizedSources.Length < count)
+        {
+            this.normalizedSources = new OffsetGlyphDataPair[count];
+        }
+
+        if (this.normalizedOffsets.Length < glyphs.Length)
+        {
+            this.normalizedOffsets = new int[glyphs.Length];
+        }
+
+        Span<OffsetGlyphDataPair> sources = this.normalizedSources.AsSpan(0, count);
+        Span<int> offsets = this.normalizedOffsets.AsSpan(0, glyphs.Length);
+        for (int i = 0; i < count; i++)
+        {
+            sources[i] = this.glyphs[index + i];
+        }
+
+        for (int i = 0; i < glyphs.Length; i++)
+        {
+            int offset = sources[glyphs[i].Source].Offset;
+            int j = i;
+            while (j > 0 && offsets[j - 1] > offset)
+            {
+                offsets[j] = offsets[j - 1];
+                j--;
+            }
+
+            offsets[j] = offset;
+        }
+
+        if (glyphs.Length < count)
+        {
+            this.glyphs.RemoveRange(index + glyphs.Length, count - glyphs.Length);
+        }
+
+        for (int i = 0; i < glyphs.Length; i++)
+        {
+            GlyphNormalizer.Item glyph = glyphs[i];
+            bool sharesOffset = (i > 0 && offsets[i - 1] == offsets[i]) || (i + 1 < offsets.Length && offsets[i + 1] == offsets[i]);
+            OffsetGlyphDataPair pair = new(offsets[i], new(sources[glyph.Source].Data, false)
+            {
+                CodePoint = glyph.CodePoint,
+                GlyphId = glyph.GlyphId,
+                IsDecomposed = sharesOffset,
+            });
+
+            if (i < count)
+            {
+                this.glyphs[index + i] = pair;
+            }
+            else
+            {
+                this.glyphs.Insert(index + i, pair);
+            }
+        }
+
+        sources.Clear();
     }
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]

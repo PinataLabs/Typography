@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -825,7 +826,11 @@ internal static class TextLayout
         }
 
         // Apply the simple and complex substitutions.
-        // TODO: Investigate HarfBuzz normalizer.
+        GlyphNormalizer.Normalize(
+            font.FontMetrics,
+            substitutions,
+            substitutions.TextOptions.FallbackFontFamilies?.Count > 0,
+            isFallbackRun ? positionings.GetUnresolvedOffsets() : null);
         SubstituteBidiMirrors(font.FontMetrics, substitutions);
         SubstituteVerticalForms(font.FontMetrics, substitutions);
         font.FontMetrics.ApplySubstitution(substitutions);

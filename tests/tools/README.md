@@ -100,3 +100,54 @@ python tests/tools/generate_default_langsys_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## HarfBuzz mark order
+
+`derive_harfbuzz_mark_order.py` writes `src/PinataLabs.Typography.UnicodeTrieGenerator/Rules/HarfBuzzMarkOrder.txt`.
+Before GSUB, HarfBuzz sorts each run of combining marks. It does not sort by Canonical_Combining_Class itself:
+it moves some classes, and three characters, to another place in the order. The script does not read the HarfBuzz
+source. It builds a font with every character of `UnicodeData.txt` that has a non-zero combining class, shapes
+each of them after a base with one mark of each class in both orders, and writes the order that HarfBuzz gives.
+It also lists the modifier combining marks that the Arabic shaper moves to the start of a run.
+
+The Unicode trie generator reads the file and writes `CombiningClassTrie.Generated.cs` from it.
+To write the file again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
+
+```
+python tests/tools/derive_harfbuzz_mark_order.py
+```
+
+Then run the generator. When it has written the files, it waits for Enter:
+
+```
+dotnet run --project src/PinataLabs.Typography.UnicodeTrieGenerator
+```
+
+The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. The file records the HarfBuzz version.
+
+## Normalization reference
+
+`generate_normalization_reference.py` builds four fonts in `tests/PinataLabs.Typography.Tests/Fonts` and writes
+`Normalization.harfbuzz.json` next to them.
+
+- `Normalization.ttf` has a small character set for named cases. For example it has o, U+0301 and U+00F3, and it
+  has T and U+0327 but not U+0162.
+- `NormalizationScan.ttf` has every character of `UnicodeData.txt` that has a canonical decomposition, and every
+  part of those decompositions. `NormalizationParts.ttf` has the same characters without the ones that decompose.
+  The glyphs of both fonts have no outline.
+- `NormalizationBase.ttf` has a, e, o, q and U+0323 only. The tests use it as a primary font with
+  `Normalization.ttf` as its fallback font. HarfBuzz has no font fallback, so the reference has no case for it.
+
+The reference holds the glyph IDs that HarfBuzz gives for each named case, and for a scan of 6427 texts: each
+character alone in both scan fonts, the two parts of each decomposition, the full decomposition, and each pair of
+combining classes after a base. `NormalizationTests` checks that the library gives the same glyph IDs.
+It skips the rows that it lists as known differences.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_normalization_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
