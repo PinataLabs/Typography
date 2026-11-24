@@ -197,7 +197,7 @@ public sealed class FontProgram
         where TSink : IGlyphOutlineSink
         => this.program switch
         {
-            TrueTypeProgram trueType => TrueTypeGlyphDecoder.TryWriteOutline(trueType, glyphId, ref sink),
+            TrueTypeProgram trueType => TrueTypeGlyphDecoder.TryWriteOutline(trueType.Glyphs, glyphId, ref sink),
             CffProgram cff => cff.Font.TryWriteOutline(glyphId, ref sink),
             Type1Program type1 => type1.TryWriteOutline(glyphId, ref sink),
             _ => false,
