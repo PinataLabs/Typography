@@ -49,6 +49,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
     <InternalsVisibleTo Include="PinataLabs.Typography.Tests" />
+    <InternalsVisibleTo Include="PinataLabs.Typography.Fuzz" />
   </ItemGroup>
 
 </Project>

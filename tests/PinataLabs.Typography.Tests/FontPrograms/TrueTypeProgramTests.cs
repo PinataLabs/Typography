@@ -89,6 +89,40 @@ public class TrueTypeProgramTests
         await Assert.That(counter.Calls).IsLessThanOrEqualTo(1_000_000);
     }
 
+    [Test]
+    public async Task PointLookupsOfACompositeCountAgainstTheOutlineBudget()
+    {
+        // One contour of 65,535 points, all at the origin: 256 runs of a repeated flag, on curve, x and y unchanged.
+        List<byte> large = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFE, 0, 0];
+        for (int run = 0; run < 256; run++)
+        {
+            large.AddRange([0x39, (byte)(run < 255 ? 255 : 254)]);
+        }
+
+        byte[] point = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x31];
+
+        // The large glyph, then 2000 copies of the one-point glyph, each placed on point 65,534 of the large one.
+        // Each placement reads 65,535 points to find that point: 131 million reads for 8,000 sink calls.
+        // The reads count against the budget of 1,000,000, so the glyph fails after 15 placements.
+        const int componentCount = 2000;
+        List<byte> composite = [0xFF, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 1, 0, 0];
+        for (int i = 0; i < componentCount; i++)
+        {
+            int flags = 0x0001 | (i + 1 < componentCount ? 0x0020 : 0);
+            composite.AddRange([0, (byte)flags, 0, 2, 0xFF, 0xFE, 0, 0]);
+        }
+
+        FontProgram font = FontProgram.Load(TrueTypeBuilder.Build([[], [.. large], point, [.. composite]]));
+        SegmentCounter counter = default;
+
+        await Assert.That(font.TryWriteOutline(1, ref counter)).IsTrue();
+        await Assert.That(counter.Calls).IsEqualTo(65_536);
+
+        counter = default;
+        await Assert.That(font.TryWriteOutline(3, ref counter)).IsFalse();
+        await Assert.That(counter.Calls).IsLessThan(65_536 + 100);
+    }
+
     private struct SegmentCounter : IGlyphOutlineSink
     {
         public int Calls { get; private set; }

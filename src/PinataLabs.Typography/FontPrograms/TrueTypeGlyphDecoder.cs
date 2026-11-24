@@ -375,6 +375,14 @@ internal static class TrueTypeGlyphDecoder
             return true;
         }
 
+        // Finding a point reads every point before it, and a composite can look up points many times,
+        // so the reads count against the budget of the outline too.
+        budget.SinkCalls -= index + 1;
+        if (budget.SinkCalls < 0)
+        {
+            return false;
+        }
+
         for (int i = 0; i <= index; i++)
         {
             points.Read(out point, out _);
