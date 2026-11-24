@@ -1,0 +1,83 @@
+# HarfBuzzMarkOrder.txt
+# Written by tests/tools/derive_harfbuzz_mark_order.py from HarfBuzz 15.0.0. Do not edit.
+#
+# The order in which HarfBuzz sorts a run of combining marks, from the first sorted to the last.
+#   ccc <value>            every character with that Canonical_Combining_Class
+#   char <code point>      one character that HarfBuzz sorts apart from its class
+#
+# The marks that the Arabic shaper of HarfBuzz moves to the start of a run, after the sort.
+#   modifier <code point>
+
+ccc 1
+ccc 103
+ccc 84
+ccc 91
+ccc 6
+ccc 7
+ccc 8
+ccc 9
+ccc 24
+ccc 25
+ccc 21
+ccc 23
+ccc 19
+ccc 11
+ccc 12
+ccc 13
+ccc 15
+ccc 16
+ccc 17
+ccc 18
+ccc 10
+ccc 14
+ccc 20
+ccc 22
+ccc 26
+ccc 33
+ccc 27
+ccc 28
+ccc 29
+ccc 30
+ccc 31
+ccc 32
+ccc 34
+ccc 35
+ccc 36
+ccc 107
+ccc 118
+ccc 122
+char 0F39
+ccc 129
+ccc 132
+ccc 130
+ccc 202
+ccc 214
+ccc 216
+ccc 218
+ccc 220
+ccc 222
+ccc 224
+ccc 226
+ccc 228
+ccc 230
+ccc 232
+ccc 233
+ccc 234
+ccc 240
+char 0FC6
+char 1A60
+
+modifier 0654
+modifier 0655
+modifier 0658
+modifier 06DC
+modifier 06E3
+modifier 06E7
+modifier 06E8
+modifier 08CA
+modifier 08CB
+modifier 08CD
+modifier 08CE
+modifier 08CF
+modifier 08D3
+modifier 08F3

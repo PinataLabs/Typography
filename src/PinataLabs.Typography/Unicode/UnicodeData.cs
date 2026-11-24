@@ -23,6 +23,7 @@ internal static class UnicodeData
     private static readonly Lazy<UnicodeTrie> LazyVerticalOrientationTrie = new(() => GetVerticalOrientationTrie());
     private static readonly Lazy<UnicodeTrie> LazyUniversalShapingTrie = new(() => GetUniversalShapingTrie());
     private static readonly Lazy<UnicodeTrie> LazyIndicShapingTrie = new(() => GetIndicShapingTrie());
+    private static readonly Lazy<UnicodeTrie> LazyCombiningClassTrie = new(() => GetCombiningClassTrie());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetBidiData(uint codePoint) => LazyBidiTrie.Value.Get(codePoint);
@@ -60,6 +61,13 @@ internal static class UnicodeData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetIndicShapingProperties(uint codePoint) => (int)LazyIndicShapingTrie.Value.Get(codePoint);
 
+    /// <summary>
+    /// Gets the place of the character in the order that a shaper sorts combining marks by, in the low byte.
+    /// It is 0 for a starter. <see cref="CanonicalMappingData.ArabicModifierMark"/> flags an Arabic modifier mark.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetCombiningClassData(uint codePoint) => LazyCombiningClassTrie.Value.Get(codePoint);
+
     private static UnicodeTrie GetBidiTrie() => new(BidiTrie.Data);
 
     private static UnicodeTrie GetBidiMirrorTrie() => new(BidiMirrorTrie.Data);
@@ -83,4 +91,6 @@ internal static class UnicodeData
     private static UnicodeTrie GetUniversalShapingTrie() => new(UniversalShapingTrie.Data);
 
     private static UnicodeTrie GetIndicShapingTrie() => new(IndicShapingTrie.Data);
+
+    private static UnicodeTrie GetCombiningClassTrie() => new(CombiningClassTrie.Data);
 }
