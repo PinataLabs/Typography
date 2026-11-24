@@ -299,6 +299,137 @@
           "y": 0
         }
       ]
+    },
+    {
+      "name": "RequiredBeforeLiga",
+      "font": "RequiredFeature.ttf",
+      "text": "aba",
+      "glyphs": [
+        {
+          "id": 2,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 3,
+          "x": 500,
+          "y": 0
+        },
+        {
+          "id": 2,
+          "x": 1100,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "RequiredListedLiga",
+      "font": "RequiredFeature.ttf",
+      "text": "α",
+      "glyphs": [
+        {
+          "id": 2,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "RequiredUnlistedLiga",
+      "font": "RequiredFeature.ttf",
+      "text": "ա",
+      "glyphs": [
+        {
+          "id": 2,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "RequiredWithRvrn",
+      "font": "RequiredFeature.ttf",
+      "text": "аб",
+      "glyphs": [
+        {
+          "id": 2,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 3,
+          "x": 500,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "FallbackToDFLT",
+      "font": "ScriptFallbackDFLT.ttf",
+      "text": "αα",
+      "glyphs": [
+        {
+          "id": 4,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 4,
+          "x": 570,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "FallbackToDfltScript",
+      "font": "ScriptFallbackLowercaseDflt.ttf",
+      "text": "αα",
+      "glyphs": [
+        {
+          "id": 5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 5,
+          "x": 560,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "FallbackToLatn",
+      "font": "ScriptFallbackLatn.ttf",
+      "text": "αα",
+      "glyphs": [
+        {
+          "id": 6,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 6,
+          "x": 550,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "FallbackToNone",
+      "font": "ScriptFallbackNone.ttf",
+      "text": "αα",
+      "glyphs": [
+        {
+          "id": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 1,
+          "x": 600,
+          "y": 0
+        }
+      ]
     }
   ]
 }

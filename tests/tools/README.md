@@ -80,6 +80,15 @@ its features when no language is requested.
 The script also builds `DfltLangSysRecord.ttf`. Its `arab` script has only a LangSysRecord tagged `dflt` and no
 default LangSys, and its `latn` script has both, with different `liga` lookups. HarfBuzz uses the `dflt` record
 before the default LangSys, so it joins and kerns the Arabic text and takes `liga` from the `dflt` record.
+
+It builds `RequiredFeature.ttf` too, whose language systems have a required feature, listed and not listed.
+HarfBuzz applies a required feature to every glyph. It applies its lookups in the stage of the shaper feature with
+the same tag, or else in the first stage, which holds only `rvrn`.
+
+Last, it builds four `ScriptFallback*.ttf` fonts with no `grek` script and a different `liga` and `kern` for each
+script. HarfBuzz shapes Greek text in them with the `DFLT` script, else the `dflt` script, else `latn`, and with no
+feature when the font has none of the three.
+
 `DefaultLangSysTests` checks that the library gives the same glyphs and positions.
 
 To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the

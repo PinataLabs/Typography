@@ -13,7 +13,9 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// With no language requested, a shaper uses the features of the LangSysRecord tagged <c>dflt</c>, or else of the
-/// default LangSys of the script. A script with neither contributes no feature, as in HarfBuzz.
+/// default LangSys of the script. A script with neither contributes no feature, as in HarfBuzz. A font without the
+/// script of the text gives the LangSys of its <c>DFLT</c>, <c>dflt</c> or <c>latn</c> script, in that order. The
+/// required feature of the LangSys applies to every glyph.
 /// </summary>
 public class DefaultLangSysTests
 {
@@ -31,6 +33,14 @@ public class DefaultLangSysTests
     [Arguments("DejaVuSansKern")]
     [Arguments("DfltRecordOnly")]
     [Arguments("DfltRecordBeforeDefault")]
+    [Arguments("RequiredBeforeLiga")]
+    [Arguments("RequiredListedLiga")]
+    [Arguments("RequiredUnlistedLiga")]
+    [Arguments("RequiredWithRvrn")]
+    [Arguments("FallbackToDFLT")]
+    [Arguments("FallbackToDfltScript")]
+    [Arguments("FallbackToLatn")]
+    [Arguments("FallbackToNone")]
     public async Task GlyphsAreShapedAsHarfBuzzShapesThem(string name)
     {
         ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);
