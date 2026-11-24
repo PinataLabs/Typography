@@ -194,7 +194,7 @@ internal static class MutationRunner
             + $"findings {state.Findings.Values.Sum()} in {state.Findings.Count} groups");
     }
 
-    private static string Hash(byte[] data) => Convert.ToHexString(SHA1.HashData(data)).ToLowerInvariant();
+    private static string Hash(byte[] data) => Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
 
     private sealed class State
     {
