@@ -30,6 +30,8 @@ public class FontProgramParityTests
         await Assert.That(font.Format.ToString()).IsEqualTo(fixture.Format);
         await Assert.That(font.GlyphCount).IsEqualTo(fixture.Glyphs.Length);
         await Assert.That(font.IsCidKeyed).IsEqualTo(fixture.IsCidKeyed);
+        await Assert.That(font.PaintType).IsEqualTo(fixture.PaintType == 2 ? GlyphPaintType.Stroked : GlyphPaintType.Filled);
+        await Assert.That(font.StrokeWidth).IsEqualTo((float)fixture.StrokeWidth);
 
         double[] matrix = GlyphOutline.ToArray(font.FontMatrix);
         for (int i = 0; i < matrix.Length; i++)

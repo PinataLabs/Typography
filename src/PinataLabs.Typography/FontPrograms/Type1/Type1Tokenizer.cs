@@ -135,6 +135,26 @@ internal ref struct Type1Tokenizer
     }
 
     /// <summary>
+    /// Reads the next token as a number. Leaves the position unchanged when it is not one.
+    /// </summary>
+    /// <param name="value">The number.</param>
+    /// <returns><see langword="true"/> if the next token is a finite number.</returns>
+    public bool TryReadNumber(out double value)
+    {
+        int saved = this.Position;
+        if (this.TryRead(out Type1Token token)
+            && token.Kind == Type1TokenKind.Word
+            && TryParseNumber(this.GetBytes(token), out value))
+        {
+            return true;
+        }
+
+        this.Position = saved;
+        value = 0;
+        return false;
+    }
+
+    /// <summary>
     /// Skips to the end of a procedure whose opening brace has been read.
     /// </summary>
     public void SkipProcedure()

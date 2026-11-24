@@ -23,6 +23,11 @@ internal sealed class FontProgramFixture
     /// <summary>Gets or sets the matrix from glyph space to ems as [a b c d e f].</summary>
     public double[] FontMatrix { get; set; } = [];
 
+    /// <summary>Gets or sets the PaintType: 0 or 2, or any other value that the font declares.</summary>
+    public int PaintType { get; set; }
+
+    public double StrokeWidth { get; set; }
+
     /// <summary>Gets or sets the glyph ID for each of the 256 codes, or null when the font has no built-in encoding.</summary>
     public int[]? Encoding { get; set; }
 
