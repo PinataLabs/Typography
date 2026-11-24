@@ -11,7 +11,7 @@ The script takes a headless screenshot of central-baseline.html and reads it pix
 Each column's line box is the gray stripe at its top. Below the stripe, each run of rows with
 ink is one glyph, and the script reads the ink's left and right edges to a fraction of a pixel.
 The test font's Latin glyphs fill the ascent to descent range, so the ink centre of a rotated
-Latin glyph is its central baseline. A glyph whose ink is wider than it is tall is rotated.
+Latin glyph is its central baseline. A glyph whose ink is much wider than it is tall is rotated.
 
 It prints JSON with each glyph's ink edges relative to the column's left edge, in px at 100px.
 """
@@ -160,7 +160,7 @@ def measure_column(rows, left_guess):
             body = run[2:-2] or run
             l, r = mean([b[0] for b in body]) - col_left, mean([b[1] for b in body]) - col_left
             glyphs.append({
-                "rotated": r - l > len(run),
+                "rotated": r - l > 1.5 * len(run),
                 "inkLeft": round(l, 2),
                 "inkRight": round(r, 2),
                 "inkCentre": round((l + r) / 2, 2),
