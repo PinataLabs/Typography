@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Proves the library works when trimmed and compiled with Native AOT (issue #76).
+    CI publishes it with dotnet publish -c Release -r linux-x64 and runs the binary. A normal build
+    compiles it as a plain console app with the trim and AOT analyzers on, so it needs no native toolchain.
+    TrimmerSingleWarn=false reports each warning in the library on its own line instead of one IL2104 for the assembly.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsTestProject>false</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\PinataLabs.Typography.Tests\Fonts\OpenSans-Regular.ttf" LogicalName="OpenSans-Regular.ttf" />
+    <EmbeddedResource Include="..\PinataLabs.Typography.Tests\Fonts\SourceSansPro-Regular.otf" LogicalName="SourceSansPro-Regular.otf" />
+    <EmbeddedResource Include="..\PinataLabs.Typography.Tests\Fonts\Type1\bchr8a.pfb" LogicalName="bchr8a.pfb" />
+  </ItemGroup>
+
+</Project>

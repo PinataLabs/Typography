@@ -241,7 +241,7 @@ internal static partial class IndicShapingData
 
     internal struct ShapingConfiguration
     {
-        public static ShapingConfiguration Default = new()
+        public static readonly ShapingConfiguration Default = new()
         {
             HasOldSpec = false,
             Virama = 0,
