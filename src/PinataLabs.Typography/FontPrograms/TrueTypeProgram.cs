@@ -29,18 +29,18 @@ internal sealed class TrueTypeProgram
     private TrueTypeProgram(
         ReadOnlyMemory<byte> loca,
         ReadOnlyMemory<byte> glyf,
-        ReadOnlyMemory<byte> post,
-        ReadOnlyMemory<byte> cmap,
-        SfntAdvances advances,
+        SfntOptionalTables tables,
         bool longOffsets,
         int glyphCount,
         int unitsPerEm)
     {
         this.loca = loca;
         this.glyf = glyf;
-        this.post = post;
-        this.cmap = cmap;
-        this.advances = advances;
+        this.post = tables.Post;
+        this.cmap = tables.Cmap;
+        this.advances = tables.Advances;
+        this.MissingTables = tables.Missing;
+        this.MalformedTables = tables.Malformed;
         this.longOffsets = longOffsets;
         this.GlyphCount = glyphCount;
         this.UnitsPerEm = unitsPerEm;
@@ -49,6 +49,10 @@ internal sealed class TrueTypeProgram
     public int GlyphCount { get; }
 
     public int UnitsPerEm { get; }
+
+    public OptionalFontTables MissingTables { get; }
+
+    public OptionalFontTables MalformedTables { get; }
 
     /// <summary>
     /// Loads the program from an sfnt file. The 'head', 'maxp', 'loca' and 'glyf' tables are required.
@@ -83,9 +87,8 @@ internal sealed class TrueTypeProgram
             throw new InvalidFontFileException("The font has no glyphs.");
         }
 
-        directory.TryGetTable(SfntDirectory.Post, out ReadOnlyMemory<byte> post);
-        directory.TryGetTable(SfntDirectory.Cmap, out ReadOnlyMemory<byte> cmap);
-        return new TrueTypeProgram(loca, glyf, post, cmap, SfntAdvances.Read(directory), longOffsets, glyphCount, unitsPerEm);
+        SfntOptionalTables tables = SfntOptionalTables.Read(directory);
+        return new TrueTypeProgram(loca, glyf, tables, longOffsets, glyphCount, unitsPerEm);
     }
 
     /// <summary>
