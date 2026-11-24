@@ -13,7 +13,7 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// Before GSUB, the characters of the text are composed and decomposed to the glyphs that the font has,
-/// and each run of marks is sorted, as in HarfBuzz.
+/// and each run of marks is sorted, as in HarfBuzz. A font without GPOS also places its marks as HarfBuzz does.
 /// </summary>
 public class NormalizationTests
 {
@@ -34,9 +34,75 @@ public class NormalizationTests
     public async Task TextIsMappedToTheGlyphsThatHarfBuzzGives(string name)
     {
         ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);
-        Font font = new FontCollection().Add(TestFonts.GetPath(HarfBuzz.Font)).CreateFont(12);
+        Font font = new FontCollection().Add(TestFonts.GetPath(expected.Font)).CreateFont(12);
 
         await Assert.That(Shape(font, expected.Text)).IsEquivalentTo(expected.Glyphs, CollectionOrdering.Matching);
+    }
+
+    public static IEnumerable<string> PositionedCaseNames() => HarfBuzz.Positioned.Select(c => c.Name);
+
+    // A space that the font lacks takes the glyph of U+0020 and a width of its own, and a mark takes no width
+    // in a font that has no GPOS table. So these cases compare the place of each glyph, in font units.
+    [Test]
+    [MethodDataSource(nameof(PositionedCaseNames))]
+    public async Task GlyphsAreDrawnWhereHarfBuzzDrawsThem(string name)
+    {
+        PositionedCase expected = HarfBuzz.Positioned.Single(c => c.Name == name);
+
+        await Assert.That(Place(expected)).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
+    }
+
+    // What a font without GPOS does with a mark shows the shaper of the script: the default shaper places the mark,
+    // the universal shaper only takes its advance away, and the Indic shaper leaves it. HarfBuzz gives these scripts
+    // to its universal shaper, which also joins their letters. UniversalShaper does not join, so the library keeps
+    // them with its Arabic shaper, which places the mark.
+    private static readonly string[] ScriptsWithAnotherShaper =
+    [
+        "Mandaic", "Manichaean", "Mongolian", "Nko", "Phags_Pa", "Psalter_Pahlavi",
+    ];
+
+    [Test]
+    public async Task EveryScriptHasTheShaperThatHarfBuzzGivesIt()
+    {
+        List<string> different = [];
+        foreach (PositionedCase expected in HarfBuzz.Scripts)
+        {
+            if (!Place(expected).SequenceEqual(expected.Glyphs.Select(g => (g.Id, g.X, g.Y))))
+            {
+                different.Add(expected.Name);
+            }
+        }
+
+        await Assert.That(different.Except(ScriptsWithAnotherShaper)).IsEmpty();
+        await Assert.That(ScriptsWithAnotherShaper.Except(different)).IsEmpty();
+    }
+
+    // Gives the glyph ID and the place of each glyph, in font units from the start of the line.
+    private static (int Id, int X, int Y)[] Place(PositionedCase text)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.GetPath(text.Font));
+
+        // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
+        Font font = family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.Text.AsSpan(), new TextOptions(font));
+
+        return layout
+            .Select(g => (
+                (int)g.Glyph.GlyphMetrics.GlyphId,
+                (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
+                (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y)))
+            .ToArray();
+    }
+
+    // The glyph of U+0020 draws a no-break space that the font lacks. The line must still not break there.
+    [Test]
+    [Arguments("aaa aaa", 1)]
+    [Arguments("aaa aaa", 2)]
+    public async Task SpaceThatTheFontLacksBreaksTheLineAsItsCharacterDoes(string text, int lines)
+    {
+        Font font = new FontCollection().Add(TestFonts.GetPath("NormalizationSpace.ttf")).CreateFont(10);
+
+        await Assert.That(TextMeasurer.CountLines(text, new TextOptions(font) { Dpi = 72, WrappingLength = 30 })).IsEqualTo(lines);
     }
 
     // Each row is one character with a canonical decomposition, its parts, or two marks after a base.
@@ -51,11 +117,6 @@ public class NormalizationTests
         foreach (JsonElement[] row in HarfBuzz.Scan)
         {
             string text = row[1].GetString()!;
-            if (IsKnownDifference(text))
-            {
-                continue;
-            }
-
             int[] expected = row[2].EnumerateArray().Select(g => g.GetInt32()).ToArray();
             int[] actual = Shape(fonts[row[0].GetString()!], text);
             if (!actual.SequenceEqual(expected))
@@ -106,17 +167,6 @@ public class NormalizationTests
             .ToArray();
     }
 
-    // HarfBuzz composes a Hebrew letter and point to the presentation form (U+FB1D to U+FB4E) when the font has no
-    // GPOS 'mark' feature, although Unicode excludes those forms from composition. The library does not.
-    // HarfBuzz shapes Dives Akuru (U+11900 to U+1195F) with its universal shaper, and the library with its default one.
-    private static bool IsKnownDifference(string text)
-    {
-        int first = char.ConvertToUtf32(text, 0);
-        bool hebrewLetter = first is (>= 0x05D0 and <= 0x05F2) or (>= 0xFB2A and <= 0xFB4A);
-        bool hebrewPoint = text[^1] is >= 'ִ' and <= 'ׂ';
-        return (hebrewLetter && hebrewPoint) || first is >= 0x11900 and <= 0x1195F;
-    }
-
     private static int[] Shape(Font font, string text)
         => TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font))
             .Select(g => (int)g.Glyph.GlyphMetrics.GlyphId)
@@ -128,6 +178,10 @@ public class NormalizationTests
 
         public ReferenceCase[] Cases { get; set; } = [];
 
+        public PositionedCase[] Positioned { get; set; } = [];
+
+        public PositionedCase[] Scripts { get; set; } = [];
+
         public Dictionary<string, string> ScanFonts { get; set; } = [];
 
         public JsonElement[][] Scan { get; set; } = [];
@@ -137,8 +191,30 @@ public class NormalizationTests
     {
         public string Name { get; set; } = string.Empty;
 
+        public string Font { get; set; } = string.Empty;
+
         public string Text { get; set; } = string.Empty;
 
         public int[] Glyphs { get; set; } = [];
+    }
+
+    private sealed class PositionedCase
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Font { get; set; } = string.Empty;
+
+        public string Text { get; set; } = string.Empty;
+
+        public PositionedGlyph[] Glyphs { get; set; } = [];
+    }
+
+    private sealed class PositionedGlyph
+    {
+        public int Id { get; set; }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
     }
 }

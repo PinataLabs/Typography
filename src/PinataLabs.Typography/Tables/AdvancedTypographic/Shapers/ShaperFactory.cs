@@ -13,8 +13,10 @@ internal static class ShaperFactory
         Default,
         Arabic,
         Hangul,
+        Hebrew,
         Indic,
         Myanmar,
+        Thai,
         Universal,
     }
 
@@ -46,16 +48,27 @@ internal static class ShaperFactory
         {
             ShaperKind.Arabic => NormalizationProfile.Arabic,
             ShaperKind.Hangul => NormalizationProfile.Hangul,
+            ShaperKind.Hebrew => NormalizationProfile.Hebrew,
             ShaperKind.Indic => NormalizationProfile.Indic,
             ShaperKind.Myanmar => NormalizationProfile.Myanmar,
             ShaperKind.Universal => NormalizationProfile.Universal,
             _ => NormalizationProfile.Default,
         };
 
+    /// <summary>
+    /// Gets a value indicating whether the shaper of the script places a mark on its base from the boxes of the two
+    /// glyphs when the font has no GPOS table. The default, Arabic, Hebrew and Hangul shapers of HarfBuzz do.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns><see langword="true"/> if the shaper places marks without GPOS.</returns>
+    public static bool PlacesMarksWithoutGpos(ScriptClass script)
+        => GetShaperKind(script) is ShaperKind.Default or ShaperKind.Arabic or ShaperKind.Hebrew or ShaperKind.Hangul;
+
     private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch
         {
-            // Arabic
+            // Arabic. HarfBuzz gives only Arabic and Syriac to its Arabic shaper, and the other six to its universal
+            // shaper, which also joins their letters. UniversalShaper does not join, so they stay here.
             ScriptClass.Arabic
             or ScriptClass.Mongolian
             or ScriptClass.Syriac
@@ -67,6 +80,9 @@ internal static class ShaperFactory
 
             // Hangul
             ScriptClass.Hangul => ShaperKind.Hangul,
+
+            // Hebrew has the default shaper and a normalization of its own.
+            ScriptClass.Hebrew => ShaperKind.Hebrew,
 
             // Indic
             ScriptClass.Bengali
@@ -83,35 +99,63 @@ internal static class ShaperFactory
             // Myanmar
             ScriptClass.Myanmar => ShaperKind.Myanmar,
 
+            // Thai and Lao have the default shaper, which does not place their marks without GPOS.
+            ScriptClass.Thai
+            or ScriptClass.Lao => ShaperKind.Thai,
+
             // Universal
-            ScriptClass.Balinese
+            ScriptClass.Adlam
+            or ScriptClass.Ahom
+            or ScriptClass.Balinese
             or ScriptClass.Batak
+            or ScriptClass.Bhaiksuki
             or ScriptClass.Brahmi
             or ScriptClass.Buginese
             or ScriptClass.Buhid
             or ScriptClass.Chakma
             or ScriptClass.Cham
+            or ScriptClass.Chorasmian
+            or ScriptClass.CyproMinoan
+            or ScriptClass.DivesAkuru
+            or ScriptClass.Dogra
             or ScriptClass.Duployan
             or ScriptClass.EgyptianHieroglyphs
+            or ScriptClass.Elymaic
             or ScriptClass.Grantha
+            or ScriptClass.GunjalaGondi
+            or ScriptClass.HanifiRohingya
             or ScriptClass.Hanunoo
             or ScriptClass.Javanese
             or ScriptClass.Kaithi
             or ScriptClass.KayahLi
             or ScriptClass.Kharoshthi
+            or ScriptClass.KhitanSmallScript
             or ScriptClass.Khojki
             or ScriptClass.Khudawadi
             or ScriptClass.Lepcha
             or ScriptClass.Limbu
             or ScriptClass.Mahajani
+            or ScriptClass.Makasar
+            or ScriptClass.Marchen
+            or ScriptClass.MasaramGondi
+            or ScriptClass.Medefaidrin
             or ScriptClass.MeeteiMayek
+            or ScriptClass.Miao
             or ScriptClass.Modi
+            or ScriptClass.Multani
+            or ScriptClass.Nandinagari
+            or ScriptClass.Newa
+            or ScriptClass.NyiakengPuachueHmong
+            or ScriptClass.OldSogdian
+            or ScriptClass.OldUyghur
             or ScriptClass.PahawhHmong
             or ScriptClass.Rejang
             or ScriptClass.Saurashtra
             or ScriptClass.Sharada
             or ScriptClass.Siddham
             or ScriptClass.Sinhala
+            or ScriptClass.Sogdian
+            or ScriptClass.Soyombo
             or ScriptClass.Sundanese
             or ScriptClass.SylotiNagri
             or ScriptClass.Tagalog
@@ -120,9 +164,15 @@ internal static class ShaperFactory
             or ScriptClass.TaiTham
             or ScriptClass.TaiViet
             or ScriptClass.Takri
+            or ScriptClass.Tangsa
             or ScriptClass.Tibetan
             or ScriptClass.Tifinagh
             or ScriptClass.Tirhuta
+            or ScriptClass.Toto
+            or ScriptClass.Vithkuqi
+            or ScriptClass.Wancho
+            or ScriptClass.Yezidi
+            or ScriptClass.ZanabazarSquare
             => ShaperKind.Universal,
             _ => ShaperKind.Default,
         };

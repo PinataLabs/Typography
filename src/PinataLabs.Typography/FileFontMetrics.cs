@@ -149,6 +149,10 @@ internal sealed class FileFontMetrics : FontMetrics
         => this.fontMetrics.Value.TryGetGSubTable(out gSubTable);
 
     /// <inheritdoc/>
+    internal override bool HasMarkPositioning(ScriptClass script)
+        => this.fontMetrics.Value.HasMarkPositioning(script);
+
+    /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
         => this.fontMetrics.Value.ApplySubstitution(collection);
 

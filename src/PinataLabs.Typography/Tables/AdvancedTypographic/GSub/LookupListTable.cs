@@ -25,6 +25,12 @@ internal sealed class LookupListTable
 
     public LookupTable[] LookupTables { get; }
 
+    /// <summary>
+    /// Creates the list of a table that has no lookup.
+    /// </summary>
+    /// <returns>The empty list.</returns>
+    public static LookupListTable CreateEmpty() => new(0, []);
+
     public static LookupListTable Load(BigEndianBinaryReader reader, long offset)
     {
         // +----------+----------------------------+---------------------------------------------------------------+
