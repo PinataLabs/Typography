@@ -56,6 +56,8 @@ internal sealed class UniversalShaper : DefaultShaper
 
     private static readonly int HalantCategory = Array.IndexOf(UniversalShapingData.Categories, "H");
 
+    private static readonly int RephaCategory = Array.IndexOf(UniversalShapingData.Categories, "R");
+
     private readonly bool joinsLetters;
 
     /// <summary>
@@ -184,28 +186,45 @@ internal sealed class UniversalShaper : DefaultShaper
         }
 
         int syllable = 0;
-        foreach (StateMatch match in StateMachine.Match(values))
+        int start = 0;
+        while (start < count)
         {
-            ++syllable;
-
-            // Create shaper info
-            for (int i = match.StartIndex; i <= match.EndIndex; i++)
+            // As in HarfBuzz, a repha does not go with a character that is a base only because it is not of a
+            // script. The repha is a broken cluster, and the character starts the next cluster.
+            int end = start + 1;
+            while (end < count
+                && !(values[end - 1] == RephaCategory && IsBaseOutsideScripts(substitutionCollection[end + index].CodePoint)))
             {
-                GlyphShapingData data = substitutionCollection[i + index];
-                string category = UniversalShapingData.Categories[values[i]];
-
-                data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
+                end++;
             }
 
-            // Assign rphf feature
-            int limit = substitutionCollection[match.StartIndex + index].UniversalShapingEngineInfo!.Category == "R"
-                ? 1
-                : Math.Min(3, match.EndIndex - match.StartIndex);
-
-            for (int i = match.StartIndex; i < match.StartIndex + limit; i++)
+            foreach (StateMatch match in StateMachine.Match(values[start..end]))
             {
-                substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
+                ++syllable;
+                int matchStart = match.StartIndex + start;
+                int matchEnd = match.EndIndex + start;
+
+                // Create shaper info
+                for (int i = matchStart; i <= matchEnd; i++)
+                {
+                    GlyphShapingData data = substitutionCollection[i + index];
+                    string category = UniversalShapingData.Categories[values[i]];
+
+                    data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
+                }
+
+                // Assign rphf feature
+                int limit = values[matchStart] == RephaCategory
+                    ? 1
+                    : Math.Min(3, matchEnd - matchStart);
+
+                for (int i = matchStart; i < matchStart + limit; i++)
+                {
+                    substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
+                }
             }
+
+            start = end;
         }
 
         // The state machine has no cluster for a halant that no base comes before or after.
@@ -224,16 +243,16 @@ internal sealed class UniversalShaper : DefaultShaper
     // a digit or a full stop is not a broken cluster. HarfBuzz 15.0.0 leaves out the characters that it does not
     // draw, and six right brackets.
     private static int GetCategory(CodePoint codePoint)
+        => IsBaseOutsideScripts(codePoint)
+            ? GenericBaseCategory
+            : UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
+
+    private static bool IsBaseOutsideScripts(CodePoint codePoint)
     {
         int category = UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
-        if ((category != OtherCategory && category != IndependentCategory)
-            || UnicodeUtility.IsDefaultIgnorableCodePoint((uint)codePoint.Value)
-            || codePoint.Value is 0x005D or 0x007D or 0x27E7 or 0x27E9 or 0x2E23 or 0x2E25)
-        {
-            return category;
-        }
-
-        return GenericBaseCategory;
+        return (category == OtherCategory || category == IndependentCategory)
+            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)codePoint.Value)
+            && codePoint.Value is not (0x005D or 0x007D or 0x27E7 or 0x27E9 or 0x2E23 or 0x2E25);
     }
 
     private static void ClearSubstitutionFlags(IGlyphShapingCollection collection, int index, int count)
