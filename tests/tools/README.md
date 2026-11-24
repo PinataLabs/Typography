@@ -68,3 +68,25 @@ python tests/tools/generate_gpos_lookup_order_font.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Default LangSys reference
+
+`generate_default_langsys_reference.py` shapes Latin text with HarfBuzz in `NotoSansOgham-Regular.ttf`,
+`NotoSansRunic-Regular.ttf` and `DejaVuSans.ttf`, and writes the glyph IDs and positions to
+`tests/PinataLabs.Typography.Tests/Fonts/DefaultLangSys.harfbuzz.json`. The `latn` script of the two Noto
+fonts has only the `MOL ` and `ROM ` language systems and no default LangSys, so HarfBuzz applies none of
+its features when no language is requested.
+
+The script also builds `DfltLangSysRecord.ttf`. Its `arab` script has only a LangSysRecord tagged `dflt` and no
+default LangSys, and its `latn` script has both, with different `liga` lookups. HarfBuzz uses the `dflt` record
+before the default LangSys, so it joins and kerns the Arabic text and takes `liga` from the `dflt` record.
+`DefaultLangSysTests` checks that the library gives the same glyphs and positions.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_default_langsys_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

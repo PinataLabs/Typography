@@ -44,6 +44,9 @@ public static class TestFonts
 
     public static string GposLookupOrderHarfBuzzReference => GetFullPath("GposLookupOrder.harfbuzz.json");
 
+    // Written by tests/tools/generate_default_langsys_reference.py.
+    public static string DefaultLangSysHarfBuzzReference => GetFullPath("DefaultLangSys.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");

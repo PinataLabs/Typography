@@ -61,10 +61,15 @@ internal readonly struct LookupFeatures
             }
         }
 
-        LangSysTable? defaultLangSysTable = scriptListTable.DefaultLangSysTable;
-        value = defaultLangSysTable != null
-            ? GetLookups(featureList, lookupCount, features, defaultLangSysTable)
-            : GetLookups(featureList, lookupCount, features, scriptListTable.LangSysTables);
+        // No language is requested, so only one language system applies. A script without one has no features.
+        LangSysTable? langSysTable = scriptListTable.GetDefaultLangSys();
+        if (langSysTable is null)
+        {
+            value = null;
+            return false;
+        }
+
+        value = GetLookups(featureList, lookupCount, features, langSysTable);
         return value.Count > 0;
     }
 
@@ -107,42 +112,39 @@ internal readonly struct LookupFeatures
         FeatureListTable featureList,
         int lookupCount,
         IReadOnlyList<Tag> features,
-        params LangSysTable[] langSysTables)
+        LangSysTable langSysTable)
     {
         List<(ushort Index, int Order, Tag Feature)> references = [];
-        for (int i = 0; i < langSysTables.Length; i++)
+        ushort[] featureIndices = langSysTable.FeatureIndices;
+        for (int i = 0; i < featureIndices.Length; i++)
         {
-            ushort[] featureIndices = langSysTables[i].FeatureIndices;
-            for (int j = 0; j < featureIndices.Length; j++)
+            // Skip feature indices that fall outside the feature list.
+            if (featureIndices[i] >= featureList.FeatureTables.Length)
             {
-                // Skip feature indices that fall outside the feature list.
-                if (featureIndices[j] >= featureList.FeatureTables.Length)
+                continue;
+            }
+
+            FeatureTable featureTable = featureList.FeatureTables[featureIndices[i]];
+            Tag feature = featureTable.FeatureTag;
+
+            int order = IndexOf(features, feature);
+            if (order < 0)
+            {
+                continue;
+            }
+
+            ushort[] lookupListIndices = featureTable.LookupListIndices;
+            for (int j = 0; j < lookupListIndices.Length; j++)
+            {
+                ushort lookupIndex = lookupListIndices[j];
+
+                // Skip lookup indices that fall outside the lookup list.
+                if (lookupIndex >= lookupCount)
                 {
                     continue;
                 }
 
-                FeatureTable featureTable = featureList.FeatureTables[featureIndices[j]];
-                Tag feature = featureTable.FeatureTag;
-
-                int order = IndexOf(features, feature);
-                if (order < 0)
-                {
-                    continue;
-                }
-
-                ushort[] lookupListIndices = featureTable.LookupListIndices;
-                for (int k = 0; k < lookupListIndices.Length; k++)
-                {
-                    ushort lookupIndex = lookupListIndices[k];
-
-                    // Skip lookup indices that fall outside the lookup list.
-                    if (lookupIndex >= lookupCount)
-                    {
-                        continue;
-                    }
-
-                    references.Add(new(lookupIndex, order, feature));
-                }
+                references.Add(new(lookupIndex, order, feature));
             }
         }
 
@@ -160,7 +162,7 @@ internal readonly struct LookupFeatures
             int tagStart = tagCount;
             for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
             {
-                // Feature records of several language systems can repeat a reference.
+                // Feature records that share a tag, or a feature that lists a lookup twice, repeat a reference.
                 if (end == start || references[end].Order != references[end - 1].Order)
                 {
                     tags[tagCount++] = references[end].Feature;

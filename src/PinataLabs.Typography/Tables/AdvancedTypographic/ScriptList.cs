@@ -67,6 +67,8 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
 
 internal sealed class ScriptListTable
 {
+    private static readonly Tag DfltTag = Tag.Parse("dflt");
+
     private ScriptListTable(LangSysTable[] langSysTables, LangSysTable? defaultLang, Tag scriptTag)
     {
         this.LangSysTables = langSysTables;
@@ -79,6 +81,24 @@ internal sealed class ScriptListTable
     public LangSysTable? DefaultLangSysTable { get; }
 
     public LangSysTable[] LangSysTables { get; }
+
+    /// <summary>
+    /// Gets the language system that applies when no language is requested. As in HarfBuzz, this is the
+    /// LangSysRecord tagged <c>dflt</c> when the script has one, and otherwise the default LangSys.
+    /// </summary>
+    /// <returns>The language system, or <see langword="null"/> when the script has neither.</returns>
+    public LangSysTable? GetDefaultLangSys()
+    {
+        for (int i = 0; i < this.LangSysTables.Length; i++)
+        {
+            if (this.LangSysTables[i].LangSysTag == DfltTag.Value)
+            {
+                return this.LangSysTables[i];
+            }
+        }
+
+        return this.DefaultLangSysTable;
+    }
 
     public static ScriptListTable Load(Tag scriptTag, BigEndianBinaryReader reader, long offset)
     {

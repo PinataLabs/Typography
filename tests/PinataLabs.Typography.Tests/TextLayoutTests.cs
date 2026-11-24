@@ -1229,7 +1229,7 @@ public class TextLayoutTests
         FontRectangle first = TextMeasurer.MeasureAdvance(text, options);
 
         // TODO: We should probably drop the 32bit test runner.
-        await Assert.That(first).IsEqualTo(new FontRectangle(0, 0, 11729, 2049));
+        await Assert.That(first).IsEqualTo(new FontRectangle(0, 0, 11729, 2048));
 
         options.LineSpacing = 2F;
         FontRectangle second = TextMeasurer.MeasureAdvance(text, options);

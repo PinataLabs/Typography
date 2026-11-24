@@ -99,6 +99,13 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- Shaping uses one language system of a script, as HarfBuzz does: the language system tagged `dflt` when the script
+  has one, and otherwise the default language system. A script with neither gets none of its features. Before, it
+  applied the features of every language system together, so Latin text in fonts such as Noto Sans Ogham and
+  Noto Sans Runic was kerned and got `locl` substitutions that HarfBuzz does not apply. This affects GSUB and GPOS. (#91)
+- `TextMeasurer.MeasureAdvance` and `MeasureSize` no longer add a pixel when float error puts an extent just over a
+  whole pixel. A one-em column at line spacing 1.5 now measures 150, not 151, in every vertical mode, and the same
+  holds for horizontal line heights and advances. A real fractional extent still rounds up. (#90)
 - GPOS lookups are applied in LookupList order across all the positioning features that are active on a glyph, as
   the OpenType specification requires and as HarfBuzz does. Each lookup is applied once, even when more than one active
   feature refers to it. A font whose lookup order differs from the old feature order can position differently. In
