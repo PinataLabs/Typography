@@ -184,6 +184,9 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     public void InsertGlyph(int index, ushort glyphId, CodePoint codePoint)
     {
         OffsetGlyphDataPair pair = this.glyphs[index < this.glyphs.Count ? index : index - 1];
+
+        // The two glyphs share an offset. The layout gives each of them an advance only when they are decomposed.
+        pair.Data.IsDecomposed = true;
         GlyphShapingData data = new(pair.Data, false)
         {
             GlyphId = glyphId,
