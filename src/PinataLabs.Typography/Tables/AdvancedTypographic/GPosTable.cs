@@ -169,7 +169,7 @@ internal class GPosTable : Table
                 features.AddRange(stage.FeatureTags);
             }
 
-            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, out List<(ushort Index, LookupFeatures Features)>? lookups))
+            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, true, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)

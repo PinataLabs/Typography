@@ -424,7 +424,7 @@ public class TextLayoutTests
     [Test]
     [Arguments("ab", 477, 1081, false)] // no kerning rules defined for lowercase ab so widths should stay the same
     [Arguments("ab", 477, 1081, true)]
-    [Arguments("AB", 465, 1033, false)] // width changes between kerning enabled or not
+    [Arguments("AB", 465, 654, false)] // kern is the required feature of the font, so it applies even with kerning off, as in HarfBuzz
     [Arguments("AB", 465, 654, true)]
     public async Task MeasureTextWithKerning(string text, float height, float width, bool applyKerning)
     {
