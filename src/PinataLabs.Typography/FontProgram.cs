@@ -38,7 +38,7 @@ namespace PinataLabs.Typography;
 /// </item>
 /// <item>
 /// <term>Subroutine nesting</term>
-/// <description>CFF and Type 1: 10 levels of <c>callsubr</c> and <c>callgsubr</c>.</description>
+/// <description>CFF and Type 1: 10 levels of subroutine calls.</description>
 /// </item>
 /// <item>
 /// <term>Charstring operators</term>
