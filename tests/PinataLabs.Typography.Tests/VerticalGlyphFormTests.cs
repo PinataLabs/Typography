@@ -2,14 +2,17 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Tests.Fakes;
+using PinataLabs.Typography.Tests.FontPrograms;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -156,6 +159,34 @@ public class VerticalGlyphFormTests
         foreach (float centre in rotated.Concat(upright))
         {
             await Assert.That(centre).IsEqualTo(columnCentre).Within(0.01F);
+        }
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight)]
+    public async Task RotatedGlyphCentralBaselineIgnoresTheSignOfTheDescender(LayoutMode mode)
+    {
+        // A malformed font stores its descent as a positive number. The glyphs still descend below
+        // the baseline, so the central baseline must not move.
+        const float originX = 200F;
+        byte[] font = WithPositiveDescender(File.ReadAllBytes(TestFonts.CentralBaselineTestFile));
+        using MemoryStream stream = new(font);
+        FontFamily family = new FontCollection().Add(stream);
+        TextOptions options = new(family.CreateFont(100))
+        {
+            LayoutMode = mode,
+            Origin = new Vector2(originX, 20),
+        };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "ABC", options);
+
+        List<float> rotated = renderer.InkCentres(GlyphLayoutMode.VerticalRotated);
+        await Assert.That(rotated.Count).IsEqualTo(3);
+        foreach (float centre in rotated)
+        {
+            await Assert.That(centre).IsEqualTo(originX + 50F).Within(0.01F);
         }
     }
 
@@ -349,6 +380,28 @@ public class VerticalGlyphFormTests
         new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);
 
         return collection[0].Features.Select(f => f.Tag.ToString()).ToList();
+    }
+
+    private static byte[] WithPositiveDescender(byte[] font)
+    {
+        const int hheaDescender = 6;
+        const int os2TypoDescender = 70;
+        byte[] hhea = SfntRewriter.GetTable(font, "hhea")!;
+        byte[] os2 = SfntRewriter.GetTable(font, "OS/2")!;
+        Negate(hhea, hheaDescender);
+        Negate(os2, os2TypoDescender);
+        return SfntRewriter.Replace(SfntRewriter.Replace(font, "hhea", hhea), "OS/2", os2);
+
+        static void Negate(byte[] table, int offset)
+        {
+            short value = BinaryPrimitives.ReadInt16BigEndian(table.AsSpan(offset));
+            if (value >= 0)
+            {
+                throw new InvalidOperationException("The source font must have a negative descender.");
+            }
+
+            BinaryPrimitives.WriteInt16BigEndian(table.AsSpan(offset), (short)-value);
+        }
     }
 
     private sealed class InkBoundsRenderer : IGlyphRenderer

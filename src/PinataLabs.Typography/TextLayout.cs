@@ -692,8 +692,10 @@ internal static class TextLayout
                     // used ascent and descent (hhea, or OS/2 typo with USE_TYPO_METRICS). Browsers centre it in
                     // the column whatever the line gap; see tests/tools/central_baseline.
                     float scaleY = data.PointSize / metric.ScaleFactor.Y;
-                    IMetricsHeader metrics = metric.FontMetrics.HorizontalMetrics;
-                    float central = (metrics.Ascender + metrics.Descender) * .5F * scaleY;
+
+                    // Some fonts store the descent as a positive number; the line metrics take its magnitude too.
+                    HorizontalMetrics metrics = metric.FontMetrics.HorizontalMetrics;
+                    float central = (metrics.Ascender - Math.Abs(metrics.Descender)) * .5F * scaleY;
                     glyphs.Add(new GlyphLayout(
                         new Glyph(metric, data.PointSize),
                         boxLocation,
