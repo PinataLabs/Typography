@@ -3,21 +3,21 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using PinataLabs.Typography.Tables.TrueType.Hinting;
 
 namespace PinataLabs.Typography.Tables.TrueType.Glyphs;
 
 /// <summary>
-/// Represents the raw glyph outlines for a given glyph comprised of a collection of glyph table entries.
-/// The type is mutable by design to reduce copying during transformation.
+/// The points of one glyph in the form that the hinting interpreter takes: the points of every contour
+/// in order, the number of the last point of each contour, and the instructions of the glyph.
+/// The decoder reads one when a glyph is hinted. The points change in place.
 /// </summary>
 internal struct GlyphVector
 {
     internal GlyphVector(
-        IList<ControlPoint> controlPoints,
-        IReadOnlyList<ushort> endPoints,
+        ControlPoint[] controlPoints,
+        ushort[] endPoints,
         Bounds bounds,
         ReadOnlyMemory<byte> instructions,
         bool isComposite)
@@ -29,18 +29,15 @@ internal struct GlyphVector
         this.IsComposite = isComposite;
     }
 
-    public IList<ControlPoint> ControlPoints { get; set; }
+    public ControlPoint[] ControlPoints { get; }
 
-    public IReadOnlyList<ushort> EndPoints { get; set; }
+    public ushort[] EndPoints { get; }
 
-    public ReadOnlyMemory<byte> Instructions { get; set; }
+    public ReadOnlyMemory<byte> Instructions { get; }
 
-    public bool IsComposite { get; set; }
+    public bool IsComposite { get; }
 
     public Bounds Bounds { get; set; }
-
-    public static GlyphVector Empty(Bounds bounds = default)
-        => new(Array.Empty<ControlPoint>(), [], bounds, Array.Empty<byte>(), false);
 
     /// <summary>
     /// Transforms a glyph vector by a specified 3x2 matrix.
@@ -49,12 +46,10 @@ internal struct GlyphVector
     /// <param name="matrix">The transformation matrix.</param>
     public static void TransformInPlace(ref GlyphVector src, Matrix3x2 matrix)
     {
-        IList<ControlPoint> controlPoints = src.ControlPoints;
-        for (int i = 0; i < controlPoints.Count; i++)
+        ControlPoint[] controlPoints = src.ControlPoints;
+        for (int i = 0; i < controlPoints.Length; i++)
         {
-            ControlPoint point = controlPoints[i];
-            point.Point = Vector2.Transform(point.Point, matrix);
-            controlPoints[i] = point;
+            controlPoints[i].Point = Vector2.Transform(controlPoints[i].Point, matrix);
         }
 
         src.Bounds = Bounds.Transform(src.Bounds, matrix);
@@ -63,7 +58,6 @@ internal struct GlyphVector
     /// <summary>
     /// Applies True Type hinting to the specified glyph vector.
     /// </summary>
-    /// <param name="hintingMode">The hinting mode.</param>
     /// <param name="glyph">The glyph vector to hint.</param>
     /// <param name="interpreter">The True Type interpreter.</param>
     /// <param name="pp1">The first phantom point.</param>
@@ -71,7 +65,6 @@ internal struct GlyphVector
     /// <param name="pp3">The third phantom point.</param>
     /// <param name="pp4">The fourth phantom point.</param>
     public static void Hint(
-        HintingMode hintingMode,
         ref GlyphVector glyph,
         TrueTypeInterpreter interpreter,
         Vector2 pp1,
@@ -79,46 +72,18 @@ internal struct GlyphVector
         Vector2 pp3,
         Vector2 pp4)
     {
-        if (hintingMode == HintingMode.None)
-        {
-            return;
-        }
-
-        var controlPoints = new ControlPoint[glyph.ControlPoints.Count + 4];
-        controlPoints[controlPoints.Length - 4].Point = pp1;
-        controlPoints[controlPoints.Length - 3].Point = pp2;
-        controlPoints[controlPoints.Length - 2].Point = pp3;
-        controlPoints[controlPoints.Length - 1].Point = pp4;
-
-        for (int i = 0; i < glyph.ControlPoints.Count; i++)
-        {
-            controlPoints[i] = glyph.ControlPoints[i];
-        }
+        // The interpreter works on a copy with the phantom points at the end,
+        // so that a hint program that fails leaves the glyph as it was.
+        int count = glyph.ControlPoints.Length;
+        var controlPoints = new ControlPoint[count + 4];
+        glyph.ControlPoints.CopyTo(controlPoints, 0);
+        controlPoints[count].Point = pp1;
+        controlPoints[count + 1].Point = pp2;
+        controlPoints[count + 2].Point = pp3;
+        controlPoints[count + 3].Point = pp4;
 
         interpreter.HintGlyph(controlPoints, glyph.EndPoints, glyph.Instructions, glyph.IsComposite);
 
-        for (int i = 0; i < glyph.ControlPoints.Count; i++)
-        {
-            glyph.ControlPoints[i] = controlPoints[i];
-        }
+        Array.Copy(controlPoints, glyph.ControlPoints, count);
     }
-
-    /// <summary>
-    /// Creates a new glyph vector that is a deep copy of the specified instance.
-    /// </summary>
-    /// <param name="src">The source glyph vector to copy.</param>
-    /// <returns>The cloned <see cref="GlyphVector"/>.</returns>
-    public static GlyphVector DeepClone(GlyphVector src)
-    {
-        List<ControlPoint> controlPoints = [with(src.ControlPoints)];
-        List<ushort> endPoints = [with(src.EndPoints)];
-
-        return new(controlPoints, endPoints, src.Bounds, src.Instructions, src.IsComposite);
-    }
-
-    /// <summary>
-    /// Returns a value indicating whether the current instance is empty.
-    /// </summary>
-    /// <returns>The <see cref="bool"/> indicating the result.</returns>
-    public bool HasValue() => this.ControlPoints?.Count > 0;
 }

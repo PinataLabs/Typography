@@ -12,6 +12,7 @@ using NSubstitute;
 using PinataLabs.Typography.Tables.TrueType;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Tests.Fakes;
+using PinataLabs.Typography.Tests.FontPrograms;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -33,12 +34,8 @@ public class GlyphTests
             (StreamFontMetrics)metrics,
             0,
             codePoint,
-            new GlyphVector(
-                Array.Empty<ControlPoint>(),
-                Array.Empty<ushort>(),
-                new Bounds(0, metrics.UnitsPerEm, 0, metrics.UnitsPerEm),
-                Array.Empty<byte>(),
-                false),
+            TrueTypeBuilder.GlyphTable([]),
+            new Bounds(0, metrics.UnitsPerEm, 0, metrics.UnitsPerEm),
             0,
             0,
             0,
@@ -106,9 +103,10 @@ public class GlyphTests
         // Get letter A
         await Assert.That(font.TryGetGlyphs(new CodePoint(41), ColorFontSupport.None, out IReadOnlyList<Glyph>? glyphs)).IsTrue();
         Glyph g = glyphs![0];
-        GlyphVector instance = ((TrueTypeGlyphMetrics)g.GlyphMetrics).GetOutline();
+        TrueTypeGlyphMetrics metrics = (TrueTypeGlyphMetrics)g.GlyphMetrics;
 
-        await Assert.That(instance.ControlPoints.Count).IsEqualTo(20);
+        await Assert.That(metrics.TryGetPoint(19, out _)).IsTrue();
+        await Assert.That(metrics.TryGetPoint(20, out _)).IsFalse();
     }
 
     [Test]
@@ -174,10 +172,10 @@ public class GlyphTests
     }
 
     [Test]
-    [Arguments(false, false, 1238)]
-    [Arguments(false, true, 1238)]
-    [Arguments(true, false, 1238)]
-    [Arguments(true, true, 1238)]
+    [Arguments(false, false, 719)]
+    [Arguments(false, true, 719)]
+    [Arguments(true, false, 719)]
+    [Arguments(true, true, 719)]
     public async Task RenderWoffGlyphs_IsEqualToTtfGlyphs(bool applyKerning, bool applyHinting, int expectedControlPoint)
     {
         Font fontTtf = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
@@ -232,10 +230,10 @@ public class GlyphTests
     }
 
     [Test]
-    [Arguments(false, false, 1238)]
-    [Arguments(false, true, 1238)]
-    [Arguments(true, false, 1238)]
-    [Arguments(true, true, 1238)]
+    [Arguments(false, false, 719)]
+    [Arguments(false, true, 719)]
+    [Arguments(true, false, 719)]
+    [Arguments(true, true, 719)]
     public async Task RenderWoff2Glyphs_IsEqualToTtfGlyphs(bool applyKerning, bool applyHinting, int expectedControlPoints)
     {
         Font fontTtf = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);

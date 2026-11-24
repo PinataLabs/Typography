@@ -3,10 +3,11 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Numerics;
+using PinataLabs.Typography.FontPrograms;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
 namespace PinataLabs.Typography.Tables.Woff;
@@ -101,402 +102,345 @@ internal static class Woff2Utils
         return new Woff2TableHeader(tableName, 0, expectedTableStartAt, tableTransformLength);
     }
 
-    public static GlyphLoader[] LoadAllGlyphs(BigEndianBinaryReader reader, EmptyGlyphLoader emptyGlyphLoader)
+    /// <summary>
+    /// Builds the 'glyf' and 'loca' tables of a font from the transformed 'glyf' table of a WOFF2 file.
+    /// </summary>
+    /// <param name="data">The transformed 'glyf' table.</param>
+    /// <param name="glyf">The 'glyf' table.</param>
+    /// <param name="loca">The 'loca' table, with 32-bit offsets.</param>
+    /// <exception cref="InvalidFontFileException">The transformed table is malformed.</exception>
+    public static void ReconstructGlyphTables(ReadOnlySpan<byte> data, out byte[] glyf, out byte[] loca)
     {
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | Data Type | Semantic              | Description and value type (if applicable)                                                            |
-        // +===========+=======================+=======================================================================================================+
-        // | Fixed     | version               | = 0x00000000                                                                                          |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt16    | numGlyphs             | Number of glyphs                                                                                      |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt16    | indexFormat           | Offset format for loca table, should be consistent with indexToLocFormat                              |
-        // |           |                       | of the original head table (see specification)                                                        |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | nContourStreamSize    | Size of nContour stream in bytes                                                                      |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | nPointsStreamSize     | Size of nPoints stream in bytes                                                                       |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | flagStreamSize        | Size of flag stream in bytes                                                                          |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | glyphStreamSize       | Size of glyph stream in bytes (a stream of variable-length encoded values, see description below)     |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | compositeStreamSize   | Size of composite stream in bytes (a stream of variable-length encoded values, see description below) |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | bboxStreamSize        | Size of bbox data in bytes representing combined length of bboxBitmap (a packed bit array)            |
-        // |           |                       | and bboxStream (a stream of Int16 values)                                                             |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt32    | instructionStreamSize | Size of instruction stream (a stream of UInt8 values)                                                 |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | Int16     | nContourStream[]      | Stream of Int16 values representing number of contours for each glyph record                          |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | 255UInt16 | nPointsStream[]       | Stream of values representing number of outline points for each contour in glyph records              |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt8     | flagStream[]          | Stream of UInt8 values representing flag values for each outline point.                               |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | Vary      | glyphStream[]         | Stream of bytes representing point coordinate values using variable length                            |
-        // |           |                       | encoding format (defined in subclause 5.2)                                                            |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | Vary      | compositeStream[]     | Stream of bytes representing component flag values and associated composite glyph data                |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt8     | bboxBitmap[]          | Bitmap (a numGlyphs-long bit array) indicating explicit bounding boxes                                |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | Int16     | bboxStream[]          | Stream of Int16 values representing glyph bounding box data                                           |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        // | UInt8     | instructionStream[]   | Stream of UInt8 values representing a set of instructions for each corresponding glyph                |
-        // +-----------+-----------------------+-------------------------------------------------------------------------------------------------------+
-        uint version = reader.ReadUInt32();
-        ushort numGlyphs = reader.ReadUInt16();
-        ushort indexFormatOffset = reader.ReadUInt16();
+        // The table is a header and seven streams. A glyph takes its values from each stream in turn.
+        // Fixed     | version               | 0
+        // UInt16    | numGlyphs             | Number of glyphs
+        // UInt16    | indexFormat           | Offset format of the original 'loca' table
+        // UInt32    | nContourStreamSize    | Int16 number of contours of each glyph
+        // UInt32    | nPointsStreamSize     | 255UInt16 number of points of each contour
+        // UInt32    | flagStreamSize        | UInt8 flag of each point
+        // UInt32    | glyphStreamSize       | Coordinates of each point, and the instruction length of each glyph
+        // UInt32    | compositeStreamSize   | Component records of each composite glyph
+        // UInt32    | bboxStreamSize        | A bit for each glyph, then the Int16 bounding boxes of the glyphs whose bit is set
+        // UInt32    | instructionStreamSize | UInt8 instructions of each glyph
+        FontDataReader header = new(data);
+        header.ReadUInt32();
+        int glyphCount = header.ReadUInt16();
+        header.ReadUInt16();
 
-        uint nContourStreamSize = reader.ReadUInt32();
-        uint nPointsStreamSize = reader.ReadUInt32();
-        uint flagStreamSize = reader.ReadUInt32();
-        uint glyphStreamSize = reader.ReadUInt32();
-        uint compositeStreamSize = reader.ReadUInt32();
-        uint bboxStreamSize = reader.ReadUInt32();
-        uint instructionStreamSize = reader.ReadUInt32();
-
-        long nCountStreamOffset = reader.BaseStream.Position;
-        long nPointStreamOffset = nCountStreamOffset + nContourStreamSize;
-        long flagStreamOffset = nPointStreamOffset + nPointsStreamSize;
-        long glyphStreamOffset = flagStreamOffset + flagStreamSize;
-        long compositeStreamOffset = glyphStreamOffset + glyphStreamSize;
-
-        long bboxStreamOffset = compositeStreamOffset + compositeStreamSize;
-        long instructionStreamOffset = bboxStreamOffset + bboxStreamSize;
-
-        var glyphs = new GlyphVector[numGlyphs];
-        var allGlyphs = new GlyphData[numGlyphs];
-        var glyphLoaders = new GlyphLoader[numGlyphs];
-        var compositeGlyphs = new List<ushort>();
-        int contourCount = 0;
-        for (ushort i = 0; i < numGlyphs; i++)
+        Span<uint> sizes = stackalloc uint[7];
+        for (int i = 0; i < sizes.Length; i++)
         {
-            short numContour = reader.ReadInt16();
-            allGlyphs[i] = new GlyphData(i, numContour);
-            if (numContour > 0)
-            {
-                contourCount += numContour;
-
-                // >0 => simple glyph
-                // -1 = composite
-                // 0 = empty glyph
-            }
-            else if (numContour < 0)
-            {
-                // Composite glyph, resolve later.
-                compositeGlyphs.Add(i);
-            }
+            sizes[i] = header.ReadUInt32();
         }
 
-        ushort[] pntPerContours = new ushort[contourCount];
-        for (int i = 0; i < contourCount; i++)
+        int position = header.Position;
+        FontDataReader contourCounts = new(TakeStream(data, ref position, sizes[0]));
+        FontDataReader pointCounts = new(TakeStream(data, ref position, sizes[1]));
+        FontDataReader flags = new(TakeStream(data, ref position, sizes[2]));
+        ReadOnlySpan<byte> glyphStream = TakeStream(data, ref position, sizes[3]);
+        ReadOnlySpan<byte> compositeStream = TakeStream(data, ref position, sizes[4]);
+        ReadOnlySpan<byte> boundsStream = TakeStream(data, ref position, sizes[5]);
+        ReadOnlySpan<byte> instructionStream = TakeStream(data, ref position, sizes[6]);
+        FontDataReader glyphReader = new(glyphStream);
+        FontDataReader composites = new(compositeStream);
+        FontDataReader instructions = new(instructionStream);
+
+        // The bit array is padded to a multiple of four bytes.
+        int bitmapLength = ((glyphCount + 31) >> 5) << 2;
+        if (bitmapLength > boundsStream.Length)
         {
-            // Each of these is the number of points of that contour.
-            pntPerContours[i] = Read255UInt16(reader);
+            throw Malformed();
         }
 
-        // FlagStream, flags value for each point.
-        // Each byte in flags stream represents one point.
-        byte[] flagStream = reader.ReadBytes((int)flagStreamSize);
+        FontDataReader explicitBounds = new(boundsStream, bitmapLength);
 
-        // Some composite glyphs have instructions so we must check all composite glyphs before read the glyph stream.
-        using (MemoryStream compositeMemoryStream = new())
+        ArrayBufferWriter<byte> output = new(data.Length);
+        loca = new byte[(glyphCount + 1) * 4];
+        ushort[] endPoints = [];
+        SimplePoint[] points = [];
+        for (int glyphId = 0; glyphId < glyphCount; glyphId++)
         {
-            reader.BaseStream.Position = compositeStreamOffset;
-            compositeMemoryStream.Write(reader.ReadBytes((int)compositeStreamSize), 0, (int)compositeStreamSize);
-            compositeMemoryStream.Position = 0;
+            BinaryPrimitives.WriteUInt32BigEndian(loca.AsSpan(glyphId * 4), (uint)output.WrittenCount);
+            int contourCount = contourCounts.ReadInt16();
+            bool hasExplicitBounds = (boundsStream[glyphId >> 3] & (0x80 >> (glyphId & 7))) != 0;
 
-            using (BigEndianBinaryReader compositeReader = new(compositeMemoryStream, false))
+            if (contourCount == 0)
             {
-                for (ushort i = 0; i < compositeGlyphs.Count; i++)
+                // An empty glyph has no bounding box. Skip one that the file gives it.
+                if (hasExplicitBounds && !explicitBounds.TrySkip(8))
                 {
-                    ushort compositeGlyphIndex = compositeGlyphs[i];
-                    allGlyphs[compositeGlyphIndex].CompositeHasInstructions = CompositeHasInstructions(compositeReader);
+                    throw Malformed();
                 }
-            }
 
-            reader.BaseStream.Position = glyphStreamOffset;
-        }
-
-        int curFlagsIndex = 0;
-        int pntContourIndex = 0;
-        for (int i = 0; i < allGlyphs.Length; i++)
-        {
-            glyphs[i] = ReadSimpleGlyphData(
-                reader,
-                ref allGlyphs[i],
-                pntPerContours,
-                ref pntContourIndex,
-                flagStream,
-                ref curFlagsIndex);
-        }
-
-        // Now we read the composite stream again and create composite glyphs.
-        for (ushort i = 0; i < compositeGlyphs.Count; i++)
-        {
-            int compositeGlyphIndex = compositeGlyphs[i];
-            glyphs[compositeGlyphIndex] = ReadCompositeGlyphData(glyphs, reader);
-        }
-
-        // Read the bounding box stream.
-        int bitmapCount = (numGlyphs + 7) / 8;
-        byte[] boundsBitmap = ExpandBitmap(reader.ReadBytes(bitmapCount));
-        for (ushort i = 0; i < numGlyphs; i++)
-        {
-            GlyphData data = allGlyphs[i];
-            if (boundsBitmap[i] == 1)
-            {
-                // Read explicit bounds from the stream.
-                // If the bounds are not explicit, the glyph loader will calculate them on demand.
-                glyphs[i].Bounds = Bounds.Load(reader);
-            }
-            else if (data.NumContour < 0)
-            {
-                throw new NotSupportedException("Composite glyph must have a bounding box.");
-            }
-        }
-
-        // Read the instructions stream.
-        reader.BaseStream.Position = instructionStreamOffset;
-        for (int i = 0; i < allGlyphs.Length; i++)
-        {
-            ref GlyphVector vector = ref glyphs[i];
-            GlyphData data = allGlyphs[i];
-            if (data.InstructionsLength > 0)
-            {
-                vector.Instructions = reader.ReadBytes(data.InstructionsLength);
-            }
-
-            glyphLoaders[i] = new Woff2GlyphLoader(vector);
-        }
-
-        // Finally compile the complete glyphs.
-        for (ushort i = 0; i < numGlyphs; i++)
-        {
-            if (!glyphs[i].HasValue())
-            {
-                glyphLoaders[i] = emptyGlyphLoader;
                 continue;
             }
 
-            glyphLoaders[i] = new Woff2GlyphLoader(glyphs[i]);
-        }
-
-        return glyphLoaders;
-    }
-
-    private static GlyphVector ReadSimpleGlyphData(
-        BigEndianBinaryReader reader,
-        ref GlyphData glyphData,
-        ushort[] pntPerContours,
-        ref int pntContourIndex,
-        byte[] flagStream,
-        ref int flagStreamIndex)
-    {
-        if (glyphData.NumContour == 0)
-        {
-            return default;
-        }
-
-        if (glyphData.NumContour < 0)
-        {
-            // Composite glyph. Check if this has instruction or not
-            // and read the length. We don't actually use the data but it ensures
-            // we maintain the correct location within the stream.
-            if (glyphData.CompositeHasInstructions)
+            WriteInt16(output, (short)contourCount);
+            if (contourCount < 0)
             {
-                Read255UInt16(reader);
-            }
-
-            return default; // Skip composite glyph (resolve later).
-        }
-
-        int curX = 0;
-        int curY = 0;
-        int numContour = glyphData.NumContour;
-        ushort[] endPoints = new ushort[numContour];
-        ushort pointCount = 0;
-
-        for (ushort i = 0; i < numContour; i++)
-        {
-            ushort numPoint = pntPerContours[pntContourIndex++];
-            pointCount += numPoint;
-            endPoints[i] = (ushort)(pointCount - 1);
-        }
-
-        var controlPoints = new ControlPoint[pointCount];
-        int n = 0;
-        for (int i = 0; i < numContour; i++)
-        {
-            int endContour = endPoints[i];
-            for (; n <= endContour; ++n)
-            {
-                byte f = flagStream[flagStreamIndex++];
-
-                // int f1 = (f >> 7); // Most significant 1 bit -> on/off curve.
-                int xyFormat = f & 0x7F; // Remaining 7 bits x, y format.
-
-                TripleEncodingRecord enc = TripleEncodingTable.EncTable[xyFormat]; // 0-128
-
-                byte[] packedXY = reader.ReadBytes(enc.ByteCount - 1); // byte count include 1 byte flags, so actual read=> byteCount-1
-
-                int x;
-                int y;
-                switch (enc.XBits)
+                if (!hasExplicitBounds)
                 {
-                    default:
-                        throw new NotSupportedException();
-                    case 0: // 0,8,
-                        x = 0;
-                        y = enc.Ty(packedXY[0]);
-                        break;
-                    case 4: // 4,4
-                        x = enc.Tx(packedXY[0] >> 4);
-                        y = enc.Ty(packedXY[0] & 0xF);
-                        break;
-                    case 8: // 8,0 or 8,8
-                        x = enc.Tx(packedXY[0]);
-                        y = enc.YBits == 8 ?
-                            enc.Ty(packedXY[1]) :
-                            0;
-                        break;
-                    case 12: // 12,12
-                        x = enc.Tx((packedXY[0] << 4) | (packedXY[1] >> 4));
-                        y = enc.Ty(((packedXY[1] & 0xF) << 8) | packedXY[2]);
-                        break;
-                    case 16: // 16,16
-                        x = enc.Tx((packedXY[0] << 8) | packedXY[1]);
-                        y = enc.Ty((packedXY[2] << 8) | packedXY[3]);
-                        break;
+                    throw new InvalidFontFileException("A composite glyph of the WOFF2 font has no bounding box.");
                 }
 
-                // Most significant 1 bit -> on/off curve.
-                controlPoints[n] = new(new Vector2(curX += x, curY += y), f >> 7 == 0);
+                output.Write(Take(ref explicitBounds, boundsStream, 8));
+                if (CopyComponents(ref composites, compositeStream, output))
+                {
+                    int length = Read255UInt16(ref glyphReader);
+                    WriteUInt16(output, (ushort)length);
+                    output.Write(Take(ref instructions, instructionStream, length));
+                }
+
+                continue;
             }
-        }
 
-        // Read the instructions length for later parsing.
-        glyphData.InstructionsLength = Read255UInt16(reader);
-
-        // Bounds and instructions are read later.
-        return new GlyphVector(controlPoints, endPoints, default, Array.Empty<byte>(), false);
-    }
-
-    private static bool CompositeHasInstructions(BigEndianBinaryReader reader)
-    {
-        bool weHaveInstructions = false;
-        CompositeGlyphFlags flags = CompositeGlyphFlags.MoreComponents;
-        while ((flags & CompositeGlyphFlags.MoreComponents) != 0)
-        {
-            flags = reader.ReadUInt16<CompositeGlyphFlags>();
-            weHaveInstructions |= (flags & CompositeGlyphFlags.WeHaveInstructions) != 0;
-            int argSize = 2; // glyph index
-            if ((flags & CompositeGlyphFlags.Args1And2AreWords) != 0)
+            if (endPoints.Length < contourCount)
             {
-                argSize += 4;
+                endPoints = new ushort[contourCount];
+            }
+
+            int pointCount = 0;
+            for (int i = 0; i < contourCount; i++)
+            {
+                pointCount += Read255UInt16(ref pointCounts);
+                if (pointCount is 0 or > ushort.MaxValue)
+                {
+                    throw Malformed();
+                }
+
+                endPoints[i] = (ushort)(pointCount - 1);
+            }
+
+            if (points.Length < pointCount)
+            {
+                points = new SimplePoint[pointCount];
+            }
+
+            ReadPoints(ref flags, ref glyphReader, glyphStream, points.AsSpan(0, pointCount), out Bounds bounds);
+            if (hasExplicitBounds)
+            {
+                output.Write(Take(ref explicitBounds, boundsStream, 8));
             }
             else
             {
-                argSize += 2;
+                WriteInt16(output, (short)bounds.Min.X);
+                WriteInt16(output, (short)bounds.Min.Y);
+                WriteInt16(output, (short)bounds.Max.X);
+                WriteInt16(output, (short)bounds.Max.Y);
             }
 
-            if ((flags & CompositeGlyphFlags.WeHaveAScale) != 0)
+            for (int i = 0; i < contourCount; i++)
             {
-                argSize += 2;
-            }
-            else if ((flags & CompositeGlyphFlags.WeHaveXAndYScale) != 0)
-            {
-                argSize += 4;
-            }
-            else if ((flags & CompositeGlyphFlags.WeHaveATwoByTwo) != 0)
-            {
-                argSize += 8;
+                WriteUInt16(output, endPoints[i]);
             }
 
-            reader.BaseStream.Seek(argSize, SeekOrigin.Current);
+            int instructionLength = Read255UInt16(ref glyphReader);
+            WriteUInt16(output, (ushort)instructionLength);
+            output.Write(Take(ref instructions, instructionStream, instructionLength));
+            WritePoints(output, points.AsSpan(0, pointCount));
         }
 
-        return weHaveInstructions;
+        BinaryPrimitives.WriteUInt32BigEndian(loca.AsSpan(glyphCount * 4), (uint)output.WrittenCount);
+        glyf = output.WrittenSpan.ToArray();
     }
 
-    private static GlyphVector ReadCompositeGlyphData(GlyphVector[] createdGlyphs, BigEndianBinaryReader reader)
+    private static ReadOnlySpan<byte> TakeStream(ReadOnlySpan<byte> data, ref int position, uint length)
     {
-        List<ControlPoint> controlPoints = [];
-        List<ushort> endPoints = [];
+        if (length > (uint)(data.Length - position))
+        {
+            throw Malformed();
+        }
+
+        ReadOnlySpan<byte> stream = data.Slice(position, (int)length);
+        position += (int)length;
+        return stream;
+    }
+
+    private static ReadOnlySpan<byte> Take(ref FontDataReader reader, ReadOnlySpan<byte> stream, int count)
+    {
+        int start = reader.Position;
+        if (!reader.TrySkip(count))
+        {
+            throw Malformed();
+        }
+
+        return stream.Slice(start, count);
+    }
+
+    private static InvalidFontFileException Malformed()
+        => new("The transformed 'glyf' table of the WOFF2 font is malformed.");
+
+    private static void WriteInt16(ArrayBufferWriter<byte> output, short value)
+        => WriteUInt16(output, (ushort)value);
+
+    private static void WriteUInt16(ArrayBufferWriter<byte> output, ushort value)
+    {
+        BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), value);
+        output.Advance(2);
+    }
+
+    /// <summary>
+    /// Copies the component records of one composite glyph. The records have the form of the 'glyf' table.
+    /// </summary>
+    /// <returns><see langword="true"/> if the glyph has instructions.</returns>
+    private static bool CopyComponents(ref FontDataReader composites, ReadOnlySpan<byte> compositeStream, ArrayBufferWriter<byte> output)
+    {
+        bool hasInstructions = false;
         CompositeGlyphFlags flags;
         do
         {
-            flags = reader.ReadUInt16<CompositeGlyphFlags>();
-            ushort glyphIndex = reader.ReadUInt16();
-            if (!createdGlyphs[glyphIndex].HasValue())
-            {
-                // This glyph has not been read yet, resolve it first.
-                long position = reader.BaseStream.Position;
-                createdGlyphs[glyphIndex] = ReadCompositeGlyphData(createdGlyphs, reader);
-                reader.BaseStream.Position = position;
-            }
+            int start = composites.Position;
+            flags = (CompositeGlyphFlags)composites.ReadUInt16();
+            hasInstructions |= (flags & CompositeGlyphFlags.WeHaveInstructions) != 0;
 
-            CompositeGlyphLoader.LoadArguments(reader, flags, out int dx, out int dy);
-
-            Matrix3x2 transform = Matrix3x2.Identity;
-            transform.Translation = new Vector2(dx, dy);
-
+            // The glyph index, then the two arguments, then the scale or the matrix.
+            int size = 2 + ((flags & CompositeGlyphFlags.Args1And2AreWords) != 0 ? 4 : 2);
             if ((flags & CompositeGlyphFlags.WeHaveAScale) != 0)
             {
-                float scale = reader.ReadF2dot14();
-                transform.M11 = scale;
-                transform.M22 = scale;
+                size += 2;
             }
             else if ((flags & CompositeGlyphFlags.WeHaveXAndYScale) != 0)
             {
-                transform.M11 = reader.ReadF2dot14();
-                transform.M22 = reader.ReadF2dot14();
+                size += 4;
             }
             else if ((flags & CompositeGlyphFlags.WeHaveATwoByTwo) != 0)
             {
-                transform.M11 = reader.ReadF2dot14();
-                transform.M12 = reader.ReadF2dot14();
-                transform.M21 = reader.ReadF2dot14();
-                transform.M22 = reader.ReadF2dot14();
+                size += 8;
             }
 
-            var clone = GlyphVector.DeepClone(createdGlyphs[glyphIndex]);
-            GlyphVector.TransformInPlace(ref clone, transform);
-            ushort endPointOffset = (ushort)controlPoints.Count;
-
-            controlPoints.AddRange(clone.ControlPoints);
-            foreach (ushort p in clone.EndPoints)
+            if (!composites.TrySkip(size))
             {
-                endPoints.Add((ushort)(p + endPointOffset));
+                throw Malformed();
             }
+
+            output.Write(compositeStream.Slice(start, composites.Position - start));
         }
         while ((flags & CompositeGlyphFlags.MoreComponents) != 0);
 
-        // Bounds and instructions are read later.
-        return new GlyphVector(controlPoints, endPoints, default, Array.Empty<byte>(), true);
+        return hasInstructions;
     }
 
-    private static byte[] ExpandBitmap(byte[] orgBBoxBitmap)
+    /// <summary>
+    /// Reads the points of one simple glyph. The flag of a point selects how its coordinates are packed.
+    /// </summary>
+    private static void ReadPoints(ref FontDataReader flags, ref FontDataReader glyphReader, ReadOnlySpan<byte> glyphStream, Span<SimplePoint> points, out Bounds bounds)
     {
-        byte[] expandArr = new byte[orgBBoxBitmap.Length * 8];
-
-        int index = 0;
-        for (int i = 0; i < orgBBoxBitmap.Length; i++)
+        int x = 0;
+        int y = 0;
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+        int maxX = int.MinValue;
+        int maxY = int.MinValue;
+        for (int i = 0; i < points.Length; i++)
         {
-            byte b = orgBBoxBitmap[i];
-            expandArr[index++] = (byte)((b >> 7) & 0x1);
-            expandArr[index++] = (byte)((b >> 6) & 0x1);
-            expandArr[index++] = (byte)((b >> 5) & 0x1);
-            expandArr[index++] = (byte)((b >> 4) & 0x1);
-            expandArr[index++] = (byte)((b >> 3) & 0x1);
-            expandArr[index++] = (byte)((b >> 2) & 0x1);
-            expandArr[index++] = (byte)((b >> 1) & 0x1);
-            expandArr[index++] = (byte)((b >> 0) & 0x1);
+            byte flag = flags.ReadByte();
+            TripleEncodingRecord enc = TripleEncodingTable.EncTable[flag & 0x7F];
+
+            // The byte count includes the flag.
+            ReadOnlySpan<byte> packed = Take(ref glyphReader, glyphStream, enc.ByteCount - 1);
+            int dx;
+            int dy;
+            switch (enc.XBits)
+            {
+                case 0:
+                    dx = 0;
+                    dy = enc.Ty(packed[0]);
+                    break;
+                case 4:
+                    dx = enc.Tx(packed[0] >> 4);
+                    dy = enc.Ty(packed[0] & 0xF);
+                    break;
+                case 8:
+                    dx = enc.Tx(packed[0]);
+                    dy = enc.YBits == 8 ? enc.Ty(packed[1]) : 0;
+                    break;
+                case 12:
+                    dx = enc.Tx((packed[0] << 4) | (packed[1] >> 4));
+                    dy = enc.Ty(((packed[1] & 0xF) << 8) | packed[2]);
+                    break;
+                default:
+                    dx = enc.Tx((packed[0] << 8) | packed[1]);
+                    dy = enc.Ty((packed[2] << 8) | packed[3]);
+                    break;
+            }
+
+            // The 'glyf' table holds a coordinate and a difference of coordinates in 16 bits.
+            x += dx;
+            y += dy;
+            if (dx is < short.MinValue or > short.MaxValue || dy is < short.MinValue or > short.MaxValue
+                || x is < short.MinValue or > short.MaxValue || y is < short.MinValue or > short.MaxValue)
+            {
+                throw Malformed();
+            }
+
+            // The high bit of the flag is clear for a point on the curve.
+            points[i] = new SimplePoint((short)dx, (short)dy, flag >> 7 == 0);
+            minX = Math.Min(minX, x);
+            minY = Math.Min(minY, y);
+            maxX = Math.Max(maxX, x);
+            maxY = Math.Max(maxY, y);
         }
 
-        return expandArr;
+        bounds = new Bounds(minX, minY, maxX, maxY);
+    }
+
+    /// <summary>
+    /// Writes the flags, the x coordinates and the y coordinates of a simple glyph in the form of the 'glyf' table.
+    /// </summary>
+    private static void WritePoints(ArrayBufferWriter<byte> output, ReadOnlySpan<SimplePoint> points)
+    {
+        const int onCurve = 0x01;
+        const int xShort = 0x02;
+        const int yShort = 0x04;
+        const int xSameOrPositive = 0x10;
+        const int ySameOrPositive = 0x20;
+
+        Span<byte> flags = output.GetSpan(points.Length).Slice(0, points.Length);
+        for (int i = 0; i < points.Length; i++)
+        {
+            SimplePoint point = points[i];
+            flags[i] = (byte)((point.OnCurve ? onCurve : 0)
+                | CoordinateFlags(point.DeltaX, xShort, xSameOrPositive)
+                | CoordinateFlags(point.DeltaY, yShort, ySameOrPositive));
+        }
+
+        output.Advance(points.Length);
+        foreach (SimplePoint point in points)
+        {
+            WriteCoordinate(output, point.DeltaX);
+        }
+
+        foreach (SimplePoint point in points)
+        {
+            WriteCoordinate(output, point.DeltaY);
+        }
+    }
+
+    // A difference is absent when it is zero, one byte with its sign in the flag when it is short, else two bytes.
+    private static int CoordinateFlags(short delta, int shortFlag, int sameOrPositiveFlag)
+        => delta switch
+        {
+            0 => sameOrPositiveFlag,
+            > 0 and < 256 => shortFlag | sameOrPositiveFlag,
+            < 0 and > -256 => shortFlag,
+            _ => 0,
+        };
+
+    private static void WriteCoordinate(ArrayBufferWriter<byte> output, short delta)
+    {
+        if (delta == 0)
+        {
+            return;
+        }
+
+        if (delta is > -256 and < 256)
+        {
+            output.GetSpan(1)[0] = (byte)Math.Abs(delta);
+            output.Advance(1);
+            return;
+        }
+
+        WriteInt16(output, delta);
     }
 
     /// <summary>
@@ -559,57 +503,34 @@ internal static class Woff2Utils
     }
 
     /// <summary>
-    /// Reads the UIntBase255 Data Type.
+    /// Reads a 255UInt16: an unsigned 16-bit integer in one to three bytes, where a first byte
+    /// from 253 says how to read the bytes that follow.
     /// </summary>
-    /// <param name="reader">The binary reader using big endian encoding.</param>
-    /// <returns>The UIntBase255 result.</returns>
-    private static ushort Read255UInt16(BigEndianBinaryReader reader)
+    private static int Read255UInt16(ref FontDataReader reader)
     {
-        // 255UInt16 Variable-length encoding of a 16-bit unsigned integer for optimized intermediate font data storage.
-        // 255UInt16 is a variable-length encoding of an unsigned integer
-        // in the range 0 to 65535 inclusive.
-        // This data type is intended to be used as intermediate representation of various font values,
-        // which are typically expressed as UInt16 but represent relatively small values.
-        // Depending on the encoded value, the length of the data field may be one to three bytes,
-        // where the value of the first byte either represents the small value itself or is treated as a code that defines the format of the additional byte(s).
         byte code = reader.ReadByte();
-        if (code == WordCode)
+        return code switch
         {
-            int value = reader.ReadByte();
-            value <<= 8;
-            value &= 0xff00;
-            int value2 = reader.ReadByte();
-            value |= value2 & 0x00ff;
-
-            return (ushort)value;
-        }
-        else if (code == OneMoreByteCode1)
-        {
-            return (ushort)(reader.ReadByte() + LowestUCode);
-        }
-        else if (code == OneMoreByteCode2)
-        {
-            return (ushort)(reader.ReadByte() + (LowestUCode * 2));
-        }
-        else
-        {
-            return code;
-        }
+            WordCode => reader.ReadUInt16(),
+            OneMoreByteCode1 => reader.ReadByte() + LowestUCode,
+            OneMoreByteCode2 => reader.ReadByte() + (LowestUCode * 2),
+            _ => code,
+        };
     }
 
-    private struct GlyphData
+    private readonly struct SimplePoint
     {
-        public readonly ushort GlyphIndex;
-        public readonly short NumContour;
-        public int InstructionsLength;
-        public bool CompositeHasInstructions;
-
-        public GlyphData(ushort glyphIndex, short contourCount)
+        public SimplePoint(short deltaX, short deltaY, bool onCurve)
         {
-            this.GlyphIndex = glyphIndex;
-            this.NumContour = contourCount;
-            this.InstructionsLength = 0;
-            this.CompositeHasInstructions = false;
+            this.DeltaX = deltaX;
+            this.DeltaY = deltaY;
+            this.OnCurve = onCurve;
         }
+
+        public short DeltaX { get; }
+
+        public short DeltaY { get; }
+
+        public bool OnCurve { get; }
     }
 }

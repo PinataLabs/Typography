@@ -49,6 +49,50 @@ public class LayoutOutlineCharacterizationTests
     }
 
     /// <summary>
+    /// Compares the outline that the layout path draws for every glyph of a TrueType font with the outline
+    /// that <see cref="FontProgram"/> writes. The two share one decoder, so the outlines are the same.
+    /// The recorder keeps a coordinate as text, so the comparison allows a thousandth of a font unit.
+    /// </summary>
+    [Test]
+    [Arguments("OpenSans-Regular.ttf")]
+    [Arguments("Roboto-Regular.ttf")]
+    [Arguments("DejaVuSans.ttf")]
+    [Arguments("TimesNewRoman.ttf")]
+    public async Task EveryTrueTypeGlyphMatchesFontProgram(string fontFile)
+    {
+        string path = TestFonts.GetPath(fontFile);
+        FontProgram program = FontProgram.Load(File.ReadAllBytes(path));
+        Font font = LayoutOutlineRecorder.LoadAtUnitScale(path);
+        List<string> differences = [];
+
+        for (int i = 0; i < program.GlyphCount && differences.Count < 10; i++)
+        {
+            GlyphOutline expected = new();
+            if (!program.TryWriteOutline((ushort)i, ref expected))
+            {
+                differences.Add($"glyph {i}: no outline");
+                continue;
+            }
+
+            string calls = LayoutOutlineRecorder.Render(font, (ushort)i);
+            string? difference = GlyphOutline.Compare(
+                expected,
+                GlyphOutline.Identity,
+                GlyphOutline.Parse(LayoutOutlineRecorder.ToGlyphSpaceOutline(calls)),
+                GlyphOutline.Identity,
+                tolerance: 1e-3);
+
+            if (difference is not null)
+            {
+                differences.Add($"glyph {i}: {difference}");
+            }
+        }
+
+        await Assert.That(program.GlyphCount).IsGreaterThan(0);
+        await Assert.That(differences).IsEmpty();
+    }
+
+    /// <summary>
     /// Compares the outline that the layout path draws for every glyph of a synthetic font with fontTools, in ems.
     /// Layout draws in units of the 'head' table, so a CID-keyed glyph must carry the matrix of its Font DICT.
     /// </summary>

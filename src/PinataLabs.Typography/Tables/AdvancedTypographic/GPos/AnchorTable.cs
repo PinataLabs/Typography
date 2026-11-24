@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using PinataLabs.Typography.Tables.TrueType;
-using PinataLabs.Typography.Tables.TrueType.Glyphs;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
 
@@ -128,10 +127,8 @@ internal abstract class AnchorTable
                             break;
                         }
 
-                        IList<ControlPoint> points = ttmetric.GetOutline().ControlPoints;
-                        if (this.anchorPointIndex < points.Count)
+                        if (ttmetric.TryGetPoint(this.anchorPointIndex, out Vector2 point))
                         {
-                            Vector2 point = points[this.anchorPointIndex].Point;
                             return new((short)point.X, (short)point.Y);
                         }
                     }
