@@ -1160,6 +1160,118 @@
       "tags": [
         "zanb"
       ]
+    },
+    {
+      "name": "BeriaErfe",
+      "iso": "Berf",
+      "tags": [
+        "berf"
+      ]
+    },
+    {
+      "name": "Garay",
+      "iso": "Gara",
+      "tags": [
+        "gara"
+      ]
+    },
+    {
+      "name": "GurungKhema",
+      "iso": "Gukh",
+      "tags": [
+        "gukh"
+      ]
+    },
+    {
+      "name": "Jurchen",
+      "iso": "Jurc",
+      "tags": [
+        "jurc"
+      ]
+    },
+    {
+      "name": "Kawi",
+      "iso": "Kawi",
+      "tags": [
+        "kawi"
+      ]
+    },
+    {
+      "name": "KiratRai",
+      "iso": "Krai",
+      "tags": [
+        "krai"
+      ]
+    },
+    {
+      "name": "NagMundari",
+      "iso": "Nagm",
+      "tags": [
+        "nagm"
+      ]
+    },
+    {
+      "name": "OlOnal",
+      "iso": "Onao",
+      "tags": [
+        "onao"
+      ]
+    },
+    {
+      "name": "ProtoCuneiform",
+      "iso": "Pcun",
+      "tags": [
+        "pcun"
+      ]
+    },
+    {
+      "name": "Seal",
+      "iso": "Seal",
+      "tags": [
+        "seal"
+      ]
+    },
+    {
+      "name": "Sidetic",
+      "iso": "Sidt",
+      "tags": [
+        "sidt"
+      ]
+    },
+    {
+      "name": "Sunuwar",
+      "iso": "Sunu",
+      "tags": [
+        "sunu"
+      ]
+    },
+    {
+      "name": "TaiYo",
+      "iso": "Tayo",
+      "tags": [
+        "tayo"
+      ]
+    },
+    {
+      "name": "Todhri",
+      "iso": "Todr",
+      "tags": [
+        "todr"
+      ]
+    },
+    {
+      "name": "TolongSiki",
+      "iso": "Tols",
+      "tags": [
+        "tols"
+      ]
+    },
+    {
+      "name": "TuluTigalari",
+      "iso": "Tutg",
+      "tags": [
+        "tutg"
+      ]
     }
   ],
   "cases": [
