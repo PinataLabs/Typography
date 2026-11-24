@@ -12,8 +12,8 @@ using TUnit.Assertions.Enums;
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
-/// With no language requested, a shaper uses the features of the default LangSys of the script only.
-/// A script with no default LangSys contributes no feature, as in HarfBuzz.
+/// With no language requested, a shaper uses the features of the LangSysRecord tagged <c>dflt</c>, or else of the
+/// default LangSys of the script. A script with neither contributes no feature, as in HarfBuzz.
 /// </summary>
 public class DefaultLangSysTests
 {
@@ -29,6 +29,8 @@ public class DefaultLangSysTests
     [Arguments("RunicKern")]
     [Arguments("RunicLocl")]
     [Arguments("DejaVuSansKern")]
+    [Arguments("DfltRecordOnly")]
+    [Arguments("DfltRecordBeforeDefault")]
     public async Task GlyphsAreShapedAsHarfBuzzShapesThem(string name)
     {
         ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);

@@ -61,8 +61,8 @@ internal readonly struct LookupFeatures
             }
         }
 
-        // No language is requested, so only the default LangSys applies. A script without one has no features.
-        LangSysTable? langSysTable = scriptListTable.DefaultLangSysTable;
+        // No language is requested, so only one language system applies. A script without one has no features.
+        LangSysTable? langSysTable = scriptListTable.GetDefaultLangSys();
         if (langSysTable is null)
         {
             value = null;

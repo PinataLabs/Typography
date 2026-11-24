@@ -265,6 +265,40 @@
           "y": 0
         }
       ]
+    },
+    {
+      "name": "DfltRecordOnly",
+      "font": "DfltLangSysRecord.ttf",
+      "text": "ببب",
+      "glyphs": [
+        {
+          "id": 4,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 3,
+          "x": 600,
+          "y": 0
+        },
+        {
+          "id": 2,
+          "x": 1150,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "DfltRecordBeforeDefault",
+      "font": "DfltLangSysRecord.ttf",
+      "text": "a",
+      "glyphs": [
+        {
+          "id": 7,
+          "x": 0,
+          "y": 0
+        }
+      ]
     }
   ]
 }

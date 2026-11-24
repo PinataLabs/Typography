@@ -99,7 +99,8 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
-- When a script has no default language system, shaping applies none of its features, as HarfBuzz does. Before, it
+- Shaping uses one language system of a script, as HarfBuzz does: the language system tagged `dflt` when the script
+  has one, and otherwise the default language system. A script with neither gets none of its features. Before, it
   applied the features of every language system together, so Latin text in fonts such as Noto Sans Ogham and
   Noto Sans Runic was kerned and got `locl` substitutions that HarfBuzz does not apply. This affects GSUB and GPOS. (#91)
 - `TextMeasurer.MeasureAdvance` and `MeasureSize` no longer add a pixel when float error puts an extent just over a
