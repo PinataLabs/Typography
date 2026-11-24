@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: CentralBaselineTest; src: url("../../PinataLabs.Typography.Tests/Fonts/CentralBaselineTest.ttf"); }
+  html, body { margin: 0; background: #fff; }
+  .col {
+    position: absolute;
+    top: 20px;
+    padding-top: 30px;
+    /* A gray stripe across the padding marks the line box edges in the screenshot. */
+    background: linear-gradient(#808080, #808080) top left / 100% 30px no-repeat;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-family: CentralBaselineTest;
+    font-size: 100px;
+    color: #000;
+  }
+  /* line-height: 1 makes the line box one em wide, the column width the library uses. */
+  #em { left: 200px; line-height: 1; }
+  #normal { left: 500px; line-height: normal; }
+</style>
+</head>
+<body>
+<div class="col" id="em">あいうABCえお</div>
+<div class="col" id="normal">あいうABCえお</div>
+</body>
+</html>
