@@ -33,6 +33,9 @@ internal partial class StreamFontMetrics : FontMetrics
     private readonly CompactFontTables? compactFontTables;
     private readonly OutlineType outlineType;
 
+    // The GSUB table of the font, or an empty one, so that the shapers also run for a font without GSUB.
+    private readonly GSubTable substitution;
+
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
     private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
     private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]>? colorGlyphCache;
@@ -63,6 +66,7 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         this.trueTypeFontTables = tables;
         this.outlineType = OutlineType.TrueType;
+        this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
         this.description = new FontDescription(tables.Name, tables.Os2, tables.Head);
         this.glyphCache = new();
         if (tables.Colr is not null)
@@ -83,6 +87,7 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         this.compactFontTables = tables;
         this.outlineType = OutlineType.CFF;
+        this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
         this.description = new FontDescription(tables.Name, tables.Os2, tables.Head);
         this.glyphCache = new();
         if (tables.Colr is not null)
@@ -273,12 +278,7 @@ internal partial class StreamFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
-    {
-        if (this.TryGetGSubTable(out GSubTable? gSubTable))
-        {
-            gSubTable.ApplySubstitution(this, collection);
-        }
-    }
+        => this.substitution.ApplySubstitution(this, collection);
 
     /// <inheritdoc/>
     internal override bool TryGetKerningOffset(ushort previousId, ushort currentId, out Vector2 vector)

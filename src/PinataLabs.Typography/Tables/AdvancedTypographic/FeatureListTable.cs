@@ -22,6 +22,12 @@ internal class FeatureListTable
 
     public FeatureTable[] FeatureTables { get; }
 
+    /// <summary>
+    /// Creates the list of a table that has no feature.
+    /// </summary>
+    /// <returns>The empty list.</returns>
+    public static FeatureListTable CreateEmpty() => new([]);
+
     public static FeatureListTable Load(BigEndianBinaryReader reader, long offset)
     {
         // FeatureList

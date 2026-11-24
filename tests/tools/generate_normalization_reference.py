@@ -133,6 +133,39 @@ HEBREW_CASES = [
     ("KeepsMetegAfterShevaWithoutPatah", "אְֽ"),
 ]
 
+# The Hangul shaper composes and decomposes syllables before GSUB, so it does the same in a font without GSUB.
+# Hangul and HangulGsub have the jamo, the syllables U+AC00 and U+AC01, and a tone mark. HangulJamo has no syllable.
+HANGUL_FONT = "NormalizationHangul.ttf"
+HANGUL_GSUB_FONT = "NormalizationHangulGsub.ttf"
+HANGUL_JAMO_FONT = "NormalizationHangulJamo.ttf"
+HANGUL_JAMO = [ord("a"), 0x1100, 0x1102, 0x1161, 0x11A8, 0x11AB, 0x25CC, 0x302E]
+HANGUL_CHARACTERS = [*HANGUL_JAMO, 0xAC00, 0xAC01]
+
+HANGUL_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem hang dflt;
+feature liga { sub u0061 u0061 u0061 by u25CC; } liga;
+"""
+
+HANGUL_CASES = [
+    ("ComposesLeadAndVowel", "\u1100\u1161"),
+    ("ComposesLeadVowelAndTail", "\u1100\u1161\u11A8"),
+    ("ComposesSyllableAndTail", "\uAC00\u11A8"),
+    ("KeepsSyllable", "\uAC01"),
+    ("KeepsJamoWithoutSyllableGlyph", "\u1100\u1161\u11AB"),
+    ("DecomposesSyllableWithoutGlyph", "\uAC04"),
+    ("DecomposesSyllableWithoutTail", "\uB098"),
+    ("DecomposesSyllableBeforeTailWithoutGlyph", "\uAC00\u11AB"),
+    ("ComposesSecondLeadWithVowel", "\u1100\u1100\u1161"),
+    ("KeepsSecondVowel", "\u1100\u1161\u1161"),
+    ("MovesToneMarkBeforeSyllable", "\uAC00\u302E"),
+    ("MovesToneMarkBeforeComposedJamo", "\u1100\u1161\u11A8\u302E"),
+    ("MovesToneMarkBeforeJamo", "\u1100\u1161\u11AB\u302E"),
+    ("PutsDottedCircleAfterLoneToneMark", "\u302E"),
+    ("ComposesEachSyllableInAWord", "\u1100\u1161\u11A8\u1102\u1161 \u1100\u1161"),
+    ("ComposesAfterLatinText", ("aa", "\u1100\u1161\u11AB\u302E\uAC00\u11A8")),
+]
+
 # A space or a hyphen that the font lacks becomes the space or the hyphen that the font has. Each text ends with
 # a letter, so that the place of the letter shows the advance of the space.
 SPACE_FONT = "NormalizationSpace.ttf"
@@ -231,7 +264,13 @@ def shape(font, text):
 
 
 def named_cases(prefix, font_name, font, cases):
-    return [{"name": prefix + name, "font": font_name, "text": text, "glyphs": shape(font, text)} for name, text in cases]
+    """Shapes each text. A caller of HarfBuzz shapes each script alone, so a text of two scripts is a tuple of runs."""
+    result = []
+    for name, text in cases:
+        runs = (text,) if isinstance(text, str) else text
+        glyphs = [glyph for run in runs for glyph in shape(font, run)]
+        result.append({"name": prefix + name, "font": font_name, "text": "".join(runs), "glyphs": glyphs})
+    return result
 
 
 def shape_positions(font, text):
@@ -283,6 +322,12 @@ def main():
         ("HebrewWithMarkFeatureOfAnotherScript", HEBREW_KERN_FONT, HEBREW_KERN_FEATURES),
     ):
         cases += named_cases(prefix, file_name, build(file_name, HEBREW_CHARACTERS, True, features), HEBREW_CASES)
+    for prefix, file_name, characters, features in (
+        ("HangulWithoutGsub", HANGUL_FONT, HANGUL_CHARACTERS, None),
+        ("HangulWithGsub", HANGUL_GSUB_FONT, HANGUL_CHARACTERS, HANGUL_FEATURES),
+        ("HangulWithoutSyllables", HANGUL_JAMO_FONT, HANGUL_JAMO, None),
+    ):
+        cases += named_cases(prefix, file_name, build(file_name, characters, True, features), HANGUL_CASES)
     build(BASE_FONT, sorted(set(map(ord, BASE_CHARACTERS))), True)
 
     space_font = build(SPACE_FONT, sorted(set(map(ord, SPACE_CHARACTERS))), True, advances=SPACE_ADVANCES)
