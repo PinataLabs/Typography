@@ -100,11 +100,17 @@ internal sealed class UniversalShaper : DefaultShaper
             if (UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions) && decompositions != null)
             {
                 Span<ushort> ids = buffer.Slice(0, decompositions.Length);
+                bool hasParts = true;
                 for (int j = 0; j < decompositions.Length; j++)
                 {
-                    // Font should always contain the decomposed glyph.
-                    fontMetrics.TryGetGlyphId(new CodePoint(decompositions[j]), out ushort id);
+                    hasParts &= fontMetrics.TryGetGlyphId(new CodePoint(decompositions[j]), out ushort id);
                     ids[j] = id;
+                }
+
+                // As in HarfBuzz, a vowel sign stays whole when the font lacks one of its parts.
+                if (!hasParts)
+                {
+                    continue;
                 }
 
                 substitutionCollection.Replace(i, ids);

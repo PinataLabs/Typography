@@ -6,8 +6,29 @@ using System;
 
 namespace PinataLabs.Typography.Unicode.Resources;
 
+/// <summary>How a font without GPOS aligns a mark with its base.</summary>
+internal enum MarkAlignment
+{
+    None, Center, Left, Right, Double,
+}
+
+/// <summary>The side of its base that a font without GPOS places a mark on.</summary>
+internal enum MarkSide
+{
+    None, Below, AttachedBelow, Above, AttachedAbove,
+}
+
 internal static class CanonicalMappingData
 {
+    /// <summary>The shift, in a value of the combining class trie, of the <see cref="MarkAlignment"/> of a mark.</summary>
+    public const int MarkAlignmentShift = 9;
+
+    /// <summary>The shift, in a value of the combining class trie, of the <see cref="MarkSide"/> of a mark.</summary>
+    public const int MarkSideShift = 12;
+
+    /// <summary>The mask of the alignment or the side of a mark, after the shift.</summary>
+    public const uint MarkPlacementMask = 0x7;
+
     /// <summary>The flag in a value of the combining class trie for a mark that the Arabic shaper moves to the start of a run.</summary>
     public const uint ArabicModifierMark = 0x100;
 

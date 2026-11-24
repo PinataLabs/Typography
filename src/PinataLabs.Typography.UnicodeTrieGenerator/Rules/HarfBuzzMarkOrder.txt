@@ -7,6 +7,12 @@
 #
 # The marks that the Arabic shaper of HarfBuzz moves to the start of a run, after the sort.
 #   modifier <code point>
+#
+# Where HarfBuzz places a mark on its base in a font without a GPOS table: how it aligns the mark
+# with the base (center, left, right, or double for a mark over two bases), and the side of the base
+# (none, below, attached-below, above, attached-above). An attached mark touches the base.
+#   place ccc <value> <alignment> <side>         every character with that Canonical_Combining_Class
+#   place char <code point> <alignment> <side>   one character that HarfBuzz places apart from its class
 
 ccc 1
 ccc 103
@@ -81,3 +87,80 @@ modifier 08CE
 modifier 08CF
 modifier 08D3
 modifier 08F3
+
+place ccc 1 center none
+place ccc 6 center none
+place ccc 7 center none
+place ccc 8 center none
+place ccc 9 center none
+place ccc 10 center below
+place ccc 11 center below
+place ccc 12 center below
+place ccc 13 center below
+place ccc 14 center below
+place ccc 15 center below
+place ccc 16 center below
+place ccc 17 center below
+place ccc 18 center below
+place ccc 19 left above
+place ccc 20 center below
+place ccc 21 center none
+place ccc 22 center below
+place ccc 23 center attached-above
+place ccc 24 right above
+place ccc 25 left above
+place ccc 26 center above
+place ccc 27 center above
+place ccc 28 center above
+place ccc 29 center below
+place ccc 30 center above
+place ccc 31 center above
+place ccc 32 center below
+place ccc 33 center above
+place ccc 34 center above
+place ccc 35 center above
+place ccc 36 center above
+place ccc 84 center none
+place ccc 91 center none
+place ccc 103 right below
+place ccc 107 right above
+place ccc 118 center below
+place ccc 122 center above
+place ccc 129 center below
+place ccc 130 center above
+place ccc 132 center below
+place ccc 202 center attached-below
+place ccc 214 center attached-above
+place ccc 216 right attached-above
+place ccc 218 left below
+place ccc 220 center below
+place ccc 222 right below
+place ccc 224 center none
+place ccc 226 center none
+place ccc 228 left above
+place ccc 230 center above
+place ccc 232 right above
+place ccc 233 double below
+place ccc 234 double above
+place ccc 240 center none
+place char 0E31 right above
+place char 0E34 right above
+place char 0E35 right above
+place char 0E36 right above
+place char 0E37 right above
+place char 0E3A right below
+place char 0E47 right above
+place char 0E4C right above
+place char 0E4D right above
+place char 0E4E right above
+place char 0EB1 center above
+place char 0EB4 center above
+place char 0EB5 center above
+place char 0EB6 center above
+place char 0EB7 center above
+place char 0EBB center above
+place char 0EBC center below
+place char 0ECC center above
+place char 0ECD center above
+place char 0F39 center none
+place char 0FC6 center none

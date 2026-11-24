@@ -37,3 +37,11 @@ _Avoid_: Predefined instance, preset
 **Glyph normalization**:
 The step before GSUB that maps the characters of a run to the glyphs that the font has. It decomposes a character that the font lacks into its canonical parts, sorts each run of combining marks, and composes a base and a mark into the precomposed character when the font has it.
 _Avoid_: Unicode normalization (NFC and NFD do not look at the font), normalising (that word is for normalised coordinates)
+
+**Space fallback**:
+Drawing a space that the font lacks, such as U+00A0 or U+2003, with the glyph of U+0020 and the width of the missing space. The character of the glyph stays, so line breaking does not change.
+_Avoid_: Font fallback (that replaces a missing glyph with the glyph of another font)
+
+**Fallback mark placement**:
+Placing a mark on its base from the boxes of the two glyphs, in a font that has no GPOS table to attach it. The mark takes no advance, and its combining class gives the side of the base.
+_Avoid_: Mark attachment (that is the GPOS lookup with anchors)

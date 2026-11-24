@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -40,6 +41,13 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => this.glyphs[index].Data;
     }
+
+    /// <summary>
+    /// Gets the metrics of the glyph at the index, in the font that draws it.
+    /// </summary>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <returns>The metrics, which belong to this layout alone.</returns>
+    public GlyphMetrics GetMetrics(int index) => this.glyphs[index].Metrics[0];
 
     /// <inheritdoc />
     public void AddShapingFeature(int index, TagEntry feature)
@@ -189,6 +197,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
                     if (metrics.Count > 0)
                     {
+                        SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm));
                         if (j == 0)
                         {
                             // There should only be a single fallback glyph at this position from the previous collection.
@@ -266,6 +275,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             if (metrics.Count > 0)
             {
                 GlyphMetrics[] gm = metrics.ToArray();
+                SpaceFallback.SetAdvance(gm, data, fontMetrics, this.TextOptions, isVerticalLayout);
                 if (isVerticalLayout)
                 {
                     this.glyphs.Add(new(offset, new(data, true) { Bounds = new(0, 0, 0, gm[0].AdvanceHeight) }, font.Size, gm));
@@ -332,6 +342,25 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
             {
                 m.ApplyAdvance(dx, AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode, hasVerticalForm) ? dy : (short)0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Moves the glyphs at the given index and id by dx and dy. Their advance stays the same.
+    /// </summary>
+    /// <param name="fontMetrics">The font face with metrics.</param>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <param name="glyphId">The id of the glyph to move.</param>
+    /// <param name="dx">The delta x-offset.</param>
+    /// <param name="dy">The delta y-offset.</param>
+    public void Offset(FontMetrics fontMetrics, int index, ushort glyphId, short dx, short dy)
+    {
+        foreach (GlyphMetrics m in this.glyphs[index].Metrics)
+        {
+            if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
+            {
+                m.ApplyOffset(dx, dy);
             }
         }
     }

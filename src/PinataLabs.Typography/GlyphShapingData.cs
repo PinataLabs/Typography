@@ -42,6 +42,7 @@ internal class GlyphShapingData
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsDecomposed = data.IsDecomposed;
         this.HasVerticalForm = data.HasVerticalForm;
+        this.SpaceFallback = data.SpaceFallback;
         if (data.UniversalShapingEngineInfo != null)
         {
             this.UniversalShapingEngineInfo = new(
@@ -153,6 +154,11 @@ internal class GlyphShapingData
     /// and rotated, with horizontal features and metrics, otherwise.
     /// </summary>
     public bool HasVerticalForm { get; set; }
+
+    /// <summary>
+    /// Gets or sets the space that this glyph of U+0020 stands for, when the font lacks that space.
+    /// </summary>
+    public SpaceFallbackKind SpaceFallback { get; set; }
 
     /// <summary>
     /// Gets or sets the universal shaping information.

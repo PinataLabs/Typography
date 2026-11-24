@@ -32,6 +32,13 @@ internal class GSubTable : Table
 
     public LookupListTable LookupList { get; }
 
+    /// <summary>
+    /// Creates the table that stands for the GSUB table of a font that has none. The shaper of each script still
+    /// runs on it, because a shaper also composes, decomposes and reorders glyphs without a lookup, as in HarfBuzz.
+    /// </summary>
+    /// <returns>A table with no script, feature or lookup.</returns>
+    public static GSubTable CreateEmpty() => new(null, FeatureListTable.CreateEmpty(), LookupListTable.CreateEmpty());
+
     public static GSubTable? Load(FontReader fontReader)
     {
         if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader))

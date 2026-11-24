@@ -201,14 +201,22 @@ internal static class TextLayout
         // Update the positions of the glyphs in the completed collection.
         // Each set of metrics is associated with single font and will only be updated
         // by that font so it's safe to use a single collection.
+        // A font positions all of its glyphs in one pass, so the text runs and fallbacks that share it take one turn.
+        HashSet<FontMetrics> positioned = [];
         foreach (TextRun textRun in textRuns)
         {
-            textRun.Font!.FontMetrics.UpdatePositions(positionings);
+            if (positioned.Add(textRun.Font!.FontMetrics))
+            {
+                textRun.Font.FontMetrics.UpdatePositions(positionings);
+            }
         }
 
         foreach (Font font in fallbackFonts)
         {
-            font.FontMetrics.UpdatePositions(positionings);
+            if (positioned.Add(font.FontMetrics))
+            {
+                font.FontMetrics.UpdatePositions(positionings);
+            }
         }
 
         return BreakLines(text, options, paragraphDirection, bidiRuns, bidiMap, positionings, layoutMode);
@@ -771,6 +779,7 @@ internal static class TextLayout
         // For each run we start with a fresh substitution collection to avoid
         // overwriting the glyph ids.
         substitutions.Clear();
+        substitutions.UnresolvedOffsets = isFallbackRun ? positionings.GetUnresolvedOffsets() : null;
 
         // Enumerate through each grapheme in the text.
         int graphemeIndex = start;
@@ -829,8 +838,7 @@ internal static class TextLayout
         GlyphNormalizer.Normalize(
             font.FontMetrics,
             substitutions,
-            substitutions.TextOptions.FallbackFontFamilies?.Count > 0,
-            isFallbackRun ? positionings.GetUnresolvedOffsets() : null);
+            substitutions.TextOptions.FallbackFontFamilies?.Count > 0);
         SubstituteBidiMirrors(font.FontMetrics, substitutions);
         SubstituteVerticalForms(font.FontMetrics, substitutions);
         font.FontMetrics.ApplySubstitution(substitutions);
@@ -902,13 +910,8 @@ internal static class TextLayout
 
     private static bool HasVertFeature(FontMetrics fontMetrics)
     {
-        if (!fontMetrics.TryGetGSubTable(out GSubTable? gsub))
-        {
-            return false;
-        }
-
         Tag vert = Tag.Parse("vert");
-        foreach (FeatureTable feature in gsub.FeatureList.FeatureTables)
+        foreach (FeatureTable feature in fontMetrics.GetGSubTable().FeatureList.FeatureTables)
         {
             if (feature.FeatureTag == vert)
             {

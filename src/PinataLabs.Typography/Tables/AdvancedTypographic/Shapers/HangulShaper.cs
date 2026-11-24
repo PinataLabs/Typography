@@ -83,7 +83,7 @@ internal sealed class HangulShaper : DefaultShaper
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
     {
-        for (int i = index; i < count; i++)
+        for (int i = index; i < index + count; i++)
         {
             // Uniscribe does not apply 'calt' for Hangul, and certain fonts
             // (Noto Sans CJK, Source Sans Han, etc) apply all of jamo lookups
@@ -96,19 +96,16 @@ internal sealed class HangulShaper : DefaultShaper
         {
             // GSub
             int state = 0;
-            for (int i = 0; i < count; i++)
+            int end = index + count;
+            for (int i = index; i < end; i++)
             {
-                if (i + index >= substitutionCollection.Count)
-                {
-                    break;
-                }
-
-                GlyphShapingData data = substitutionCollection[i + index];
+                GlyphShapingData data = substitutionCollection[i];
                 CodePoint codePoint = data.CodePoint;
                 int type = GetSyllableType(codePoint);
                 byte[] actionsWithState = StateTable[state, type];
                 byte action = actionsWithState[0];
                 state = actionsWithState[1];
+                int collectionCount = substitutionCollection.Count;
                 switch (action)
                 {
                     case Decompose:
@@ -139,6 +136,9 @@ internal sealed class HangulShaper : DefaultShaper
                         i = this.InsertDottedCircle(substitutionCollection, data, i);
                         break;
                 }
+
+                // An action can add or remove glyphs, and the run ends that many glyphs later.
+                end += substitutionCollection.Count - collectionCount;
             }
         }
         else
@@ -146,14 +146,9 @@ internal sealed class HangulShaper : DefaultShaper
             // GPos
             // Simply loop and enable based on type.
             // Glyph substitution has handled [de]composition.
-            for (int i = 0; i < count; i++)
+            for (int i = index; i < index + count; i++)
             {
-                if (i + index >= collection.Count)
-                {
-                    break;
-                }
-
-                GlyphShapingData data = collection[i + index];
+                GlyphShapingData data = collection[i];
                 CodePoint codePoint = data.CodePoint;
                 switch (GetSyllableType(codePoint))
                 {
@@ -238,6 +233,8 @@ internal sealed class HangulShaper : DefaultShaper
             ii[1] = vjmo;
 
             collection.Replace(index, ii);
+            collection[index].CodePoint = new(l);
+            collection[index + 1].CodePoint = new(v);
             collection.EnableShapingFeature(index, LjmoTag);
             collection.EnableShapingFeature(index + 1, VjmoTag);
             return index + 1;
@@ -249,6 +246,9 @@ internal sealed class HangulShaper : DefaultShaper
         iii[0] = ljmo;
 
         collection.Replace(index, iii);
+        collection[index].CodePoint = new(l);
+        collection[index + 1].CodePoint = new(v);
+        collection[index + 2].CodePoint = new(t);
         collection.EnableShapingFeature(index, LjmoTag);
         collection.EnableShapingFeature(index + 1, VjmoTag);
         collection.EnableShapingFeature(index + 2, TjmoTag);
@@ -303,7 +303,8 @@ internal sealed class HangulShaper : DefaultShaper
         }
 
         CodePoint t = tjmo >= 0 ? collection[tjmo].CodePoint : new CodePoint(TBase);
-        if ((lv != default) && (t.Value == TBase || IsCombiningT(t)))
+        bool canCompose = collection.IsUnresolved(index - (prevType == V ? 2 : 1), index + 1);
+        if (canCompose && (lv != default) && (t.Value == TBase || IsCombiningT(t)))
         {
             CodePoint s = new(lv.Value + (t.Value - TBase));
 
@@ -336,7 +337,7 @@ internal sealed class HangulShaper : DefaultShaper
             collection.EnableShapingFeature(tjmo, TjmoTag);
         }
 
-        if (prevType == LV)
+        if (prevType == LV && canCompose)
         {
             // Sequence was originally <L,V>, which got combined earlier.
             // Either the T was non-combining, or the LVT glyph wasn't supported.

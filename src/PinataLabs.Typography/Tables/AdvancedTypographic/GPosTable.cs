@@ -16,7 +16,9 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// </summary>
 internal class GPosTable : Table
 {
-    private static readonly Tag KernTag = Tag.Parse("kern");
+    internal static readonly Tag MarkTag = Tag.Parse("mark");
+
+    internal static readonly Tag KernTag = Tag.Parse("kern");
 
     private static readonly Tag VKernTag = Tag.Parse("vkrn");
 
@@ -100,7 +102,7 @@ internal class GPosTable : Table
         return new GPosTable(scriptList, featureList, lookupList);
     }
 
-    public bool TryUpdatePositions(FontMetrics fontMetrics, GlyphPositioningCollection collection, out bool kerned)
+    public bool TryUpdatePositions(FontMetrics fontMetrics, GlyphPositioningCollection collection)
     {
         // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
         int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
@@ -108,7 +110,6 @@ internal class GPosTable : Table
         int currentOperations = 0;
         bool maxOperationsReached = false;
 
-        kerned = false;
         bool updated = false;
         for (int i = 0; i < collection.Count; i++)
         {
@@ -178,7 +179,6 @@ internal class GPosTable : Table
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
                 {
                     LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-                    bool isKerning = lookupFeatures.Contains(KernTag) || lookupFeatures.Contains(VKernTag);
                     iterator.Reset(index, lookupTable.LookupFlags);
 
                     while (iterator.Index < index + count)
@@ -191,9 +191,7 @@ internal class GPosTable : Table
 
                         if (lookupFeatures.AnyEnabledOn(collection[iterator.Index].Features))
                         {
-                            bool success = lookupTable.TryUpdatePosition(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
-                            kerned |= success && isKerning;
-                            updated |= success;
+                            updated |= lookupTable.TryUpdatePosition(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
                         }
 
                         iterator.Next();
@@ -218,6 +216,32 @@ internal class GPosTable : Table
         }
 
         return updated;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the language system that the table uses for the script lists the feature.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="feature">The tag of the feature.</param>
+    /// <returns><see langword="true"/> if the language system lists a feature with the tag.</returns>
+    public bool HasFeature(ScriptClass script, Tag feature)
+    {
+        LangSysTable? langSysTable = this.ScriptList?.GetDefaultLangSys(script);
+        if (langSysTable is null)
+        {
+            return false;
+        }
+
+        FeatureTable[] features = this.FeatureList.FeatureTables;
+        foreach (ushort index in langSysTable.FeatureIndices)
+        {
+            if (index < features.Length && features[index].FeatureTag == feature)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Tag GetUnicodeScriptTag(ScriptClass script)
@@ -308,7 +332,7 @@ internal class GPosTable : Table
         {
             int currentIndex = i + index;
             GlyphShapingData data = collection[currentIndex];
-            if (AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data.GlyphId, data))
+            if (collection.ShouldProcess(fontMetrics, currentIndex) && AdvancedTypographicUtils.IsZeroWidthMark(fontMetrics, data))
             {
                 data.Bounds.Width = 0;
                 data.Bounds.Height = 0;

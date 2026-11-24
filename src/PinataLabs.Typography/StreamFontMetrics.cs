@@ -11,6 +11,7 @@ using System.Linq;
 using System.Numerics;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Tables.Cff;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.General.Colr;
@@ -32,6 +33,9 @@ internal partial class StreamFontMetrics : FontMetrics
     private readonly TrueTypeFontTables? trueTypeFontTables;
     private readonly CompactFontTables? compactFontTables;
     private readonly OutlineType outlineType;
+
+    // The GSUB table of the font, or an empty one, so that the shapers also run for a font without GSUB.
+    private readonly GSubTable substitution;
 
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
     private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
@@ -63,6 +67,7 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         this.trueTypeFontTables = tables;
         this.outlineType = OutlineType.TrueType;
+        this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
         this.description = new FontDescription(tables.Name, tables.Os2, tables.Head);
         this.glyphCache = new();
         if (tables.Colr is not null)
@@ -83,6 +88,7 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         this.compactFontTables = tables;
         this.outlineType = OutlineType.CFF;
+        this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
         this.description = new FontDescription(tables.Name, tables.Os2, tables.Head);
         this.glyphCache = new();
         if (tables.Colr is not null)
@@ -252,23 +258,21 @@ internal partial class StreamFontMetrics : FontMetrics
     }
 
     /// <inheritdoc/>
-    internal override bool TryGetGSubTable([NotNullWhen(true)] out GSubTable? gSubTable)
-    {
-        gSubTable = this.outlineType == OutlineType.TrueType
-            ? this.trueTypeFontTables!.GSub
-            : this.compactFontTables!.GSub;
+    internal override GSubTable GetGSubTable() => this.substitution;
 
-        return gSubTable is not null;
+    /// <inheritdoc/>
+    internal override bool HasMarkPositioning(ScriptClass script)
+    {
+        GPosTable? gpos = this.outlineType == OutlineType.TrueType
+            ? this.trueTypeFontTables!.GPos
+            : this.compactFontTables!.GPos;
+
+        return gpos?.HasFeature(script, GPosTable.MarkTag) == true;
     }
 
     /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
-    {
-        if (this.TryGetGSubTable(out GSubTable? gSubTable))
-        {
-            gSubTable.ApplySubstitution(this, collection);
-        }
-    }
+        => this.substitution.ApplySubstitution(this, collection);
 
     /// <inheritdoc/>
     internal override bool TryGetKerningOffset(ushort previousId, ushort currentId, out Vector2 vector)
@@ -295,32 +299,28 @@ internal partial class StreamFontMetrics : FontMetrics
             ? this.trueTypeFontTables!.GPos
             : this.compactFontTables!.GPos;
 
-        bool kerned = false;
-        KerningMode kerningMode = collection.TextOptions.KerningMode;
-
-        gpos?.TryUpdatePositions(this, collection, out kerned);
+        if (gpos is null)
+        {
+            FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection);
+        }
+        else
+        {
+            gpos.TryUpdatePositions(this, collection);
+        }
 
         // TODO: I don't think we should disable kerning here.
-        if (!kerned && kerningMode != KerningMode.None)
+        if (collection.TextOptions.KerningMode != KerningMode.None)
         {
             KerningTable? kern = isTTF
                 ? this.trueTypeFontTables!.Kern
                 : this.compactFontTables!.Kern;
 
-            if (kern?.Count > 0)
-            {
-                // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
-                int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
-                for (int index = 1; index < collection.Count; index++)
-                {
-                    if (index >= maxCount)
-                    {
-                        break;
-                    }
+            kern?.UpdatePositions(this, collection, gpos);
+        }
 
-                    kern.UpdatePositions(this, collection, index - 1, index);
-                }
-            }
+        if (gpos is null)
+        {
+            FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection);
         }
     }
 

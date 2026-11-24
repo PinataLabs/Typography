@@ -110,6 +110,11 @@ source. It builds a font with every character of `UnicodeData.txt` that has a no
 each of them after a base with one mark of each class in both orders, and writes the order that HarfBuzz gives.
 It also lists the modifier combining marks that the Arabic shaper moves to the start of a run.
 
+The file also says where HarfBuzz places each mark on its base in a font without a GPOS table. The script builds
+a second font whose base and mark boxes make each placement give a different offset. It shapes every mark after
+a base in that font, and writes how HarfBuzz aligns the marks of each class with the base and the side of the
+base they go on. It lists the Thai, Lao and Tibetan characters that HarfBuzz places apart from their class.
+
 The Unicode trie generator reads the file and writes `CombiningClassTrie.Generated.cs` from it.
 To write the file again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
 
@@ -127,8 +132,8 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
 
 ## Normalization reference
 
-`generate_normalization_reference.py` builds four fonts in `tests/PinataLabs.Typography.Tests/Fonts` and writes
-`Normalization.harfbuzz.json` next to them.
+`generate_normalization_reference.py` builds the `Normalization*.ttf` fonts in
+`tests/PinataLabs.Typography.Tests/Fonts` and writes `Normalization.harfbuzz.json` next to them.
 
 - `Normalization.ttf` has a small character set for named cases. For example it has o, U+0301 and U+00F3, and it
   has T and U+0327 but not U+0162.
@@ -138,16 +143,66 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
 - `NormalizationBase.ttf` has a, e, o, q and U+0323 only. The tests use it as a primary font with
   `Normalization.ttf` as its fallback font. HarfBuzz has no font fallback, so the reference has no case for it.
 
-The reference holds the glyph IDs that HarfBuzz gives for each named case, and for a scan of 6427 texts: each
-character alone in both scan fonts, the two parts of each decomposition, the full decomposition, and each pair of
-combining classes after a base. `NormalizationTests` checks that the library gives the same glyph IDs.
-It skips the rows that it lists as known differences.
+- `NormalizationHebrew.ttf`, `NormalizationHebrewMark.ttf` and `NormalizationHebrewKern.ttf` have the Hebrew
+  letters, points and presentation forms. The first has no GPOS table, the second has a `mark` feature for `hebr`,
+  and the third has a `mark` feature that only `latn` lists. A letter and a point compose in the first and third.
+- `NormalizationHangul.ttf`, `NormalizationHangulGsub.ttf` and `NormalizationHangulJamo.ttf` have Hangul jamo.
+  The first two also have two syllables, and only the second has a GSUB table.
+- `NormalizationDevanagari.ttf` has Devanagari letters and signs and the dotted circle, and no GSUB table.
+- `NormalizationSpace.ttf` and `NormalizationSpaceBare.ttf` have U+0020 and lack the other spaces.
+- `NormalizationMarks.ttf`, `NormalizationMarksGdef.ttf` and `NormalizationMarksKern.ttf` have a base and marks of
+  eight scripts. The first has no GPOS and no GDEF table, the second has GDEF glyph classes, and the third has a
+  GPOS table that only kerns.
+- `NormalizationMarksLegacyKern.ttf` and `NormalizationMarksBothKern.ttf` have the same glyphs and a `kern` table.
+  The second also has the GPOS table that only kerns.
+- `NormalizationScripts.ttf` has the first letter of every script of `Scripts.txt` and U+0301.
+  `NormalizationScriptsKern.ttf` also has a `kern` table with the pair of each letter and itself.
+
+The reference holds five lists:
+
+- `cases` has the glyph IDs that HarfBuzz gives for each named text.
+- `scan` has the glyph IDs for 6427 texts: each character alone in both scan fonts, the two parts of each
+  decomposition, the full decomposition, and each pair of combining classes after a base.
+- `positioned` has the glyph IDs and where HarfBuzz draws each glyph, for the spaces that a font lacks, for
+  marks in a font without GPOS, and for text that a `kern` table kerns.
+- `scripts` has the same for one letter and a mark of each script. What happens to the mark shows the shaper
+  that HarfBuzz gives the script.
+- `kernedScripts` has the same for two letters of each script in the font with the `kern` table. Only the shapers
+  that place a mark without GPOS kern with that table.
+
+`NormalizationTests` checks that the library gives the same glyphs in the same places. It lays out each
+`positioned` text a second time as two text runs.
 
 To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
 repository root:
 
 ```
 python tests/tools/generate_normalization_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Script tags
+
+`derive_harfbuzz_script_tags.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ScriptTags.harfbuzz.json`. For each
+script of `ScriptClass.cs`, it holds the OpenType script tags that HarfBuzz looks for in a font, in the order that
+HarfBuzz tries them. For example, Devanagari gives `dev3`, `dev2`, `deva`, N'Ko gives `nko `, and Hiragana gives `kana`.
+
+The script does not read the HarfBuzz source. It builds a probe font with a GSUB script for each candidate tag, where
+each script has a required feature that gives a glyph of its own. It shapes text with the ISO 15924 code of the script
+as the buffer script, and reads which script HarfBuzz chose. It hides that script and shapes again, until HarfBuzz
+chooses `DFLT`.
+
+It also builds `ScriptTags.ttf`, whose scripts are `nko `, `lao `, `vai `, `yi  `, `kana` and `DFLT`, and writes the
+glyphs that HarfBuzz gives for text of each script. It copies `NotoSansKannada-Regular.ttf` to
+`ScriptTagsKannadaVersion3.ttf` with `knd2` renamed to `knd3`, and writes the glyphs of Kannada text in it. `ScriptTagTests` checks the map of the library and the glyphs
+against the reference.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/derive_harfbuzz_script_tags.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

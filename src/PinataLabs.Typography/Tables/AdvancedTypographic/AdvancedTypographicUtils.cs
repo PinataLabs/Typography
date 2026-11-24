@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
 using PinataLabs.Typography.Unicode;
 
@@ -295,6 +296,24 @@ internal static class AdvancedTypographicUtils
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the glyph is a mark that takes no advance. As in HarfBuzz, the GDEF table
+    /// says so when it has glyph classes. Without them, the glyph of a non-spacing mark is one.
+    /// </summary>
+    /// <param name="fontMetrics">The font of the glyph.</param>
+    /// <param name="shapingData">The glyph.</param>
+    /// <returns><see langword="true"/> if the glyph loses its advance.</returns>
+    public static bool IsZeroWidthMark(FontMetrics fontMetrics, GlyphShapingData shapingData)
+    {
+        if (fontMetrics.TryGetGlyphClass(shapingData.GlyphId, out GlyphClassDef? glyphClass))
+        {
+            return glyphClass == GlyphClassDef.MarkGlyph;
+        }
+
+        return CodePoint.GetGeneralCategory(shapingData.CodePoint) == UnicodeCategory.NonSpacingMark
+            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)shapingData.CodePoint.Value);
     }
 
     public static GlyphShapingClass GetGlyphShapingClass(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
