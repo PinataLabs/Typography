@@ -87,6 +87,12 @@ An additive or breaking public API change needs all of these:
 
 ### Changed
 
+- **Characters are composed and decomposed to the glyphs that a font has.** Before GSUB, text layout maps the
+  characters of each run to the glyphs that the font has, as the normalization step of HarfBuzz does. A base and a mark
+  give the precomposed glyph when the font has it, so `o` + U+0301 draws ó. A character that the font lacks is drawn
+  from its canonical parts when the font has them, so U+0162 draws as T + U+0327. Each run of combining marks is
+  sorted in the order that HarfBuzz uses. The Indic, universal and Myanmar shapers decompose first, and the Arabic
+  shaper moves modifier marks such as U+0654, as HarfBuzz 15.0.0 does. (#95)
 - **One TrueType decoder.** Text layout draws TrueType glyphs with the decoder that `FontProgram` uses, and it
   no longer decodes the `glyf` table when it loads a font. A loaded font keeps the bytes of `glyf` and `loca`.
   OpenSans-Regular keeps about 295 KB after load, down from 585 KB. A contour starts at its first on-curve point,
@@ -99,6 +105,16 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- The required feature of the chosen language system is applied to every glyph, as HarfBuzz does. GSUB applies it
+  in the stage of the shaper feature with the same tag, or else in the first stage. `KerningMode.None` still turns off
+  a required `kern` or `vkrn` feature, which HarfBuzz does not. (#93)
+- When a font has no script for the text, shaping uses its `DFLT` script, else `dflt`, else `latn`, and applies no
+  features when it has none of them. Before, the first script in the font was used. Vertical text takes `vert` from any
+  script in the font when the chosen language system lacks it, as HarfBuzz does. (#94)
+- `TextMeasurer` measures text from a layout at the zero origin, so `MeasureAdvance`, `MeasureSize` and the character
+  advances and sizes no longer depend on `TextOptions.Origin`. Before, a large origin could make a measured extent one
+  pixel larger. `MeasureBounds` and `TryMeasureCharacterBounds` still return absolute bounds, now the zero-origin
+  bounds moved by the origin. (#96)
 - Shaping uses one language system of a script, as HarfBuzz does: the language system tagged `dflt` when the script
   has one, and otherwise the default language system. A script with neither gets none of its features. Before, it
   applied the features of every language system together, so Latin text in fonts such as Noto Sans Ogham and
