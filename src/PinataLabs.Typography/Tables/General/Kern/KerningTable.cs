@@ -64,7 +64,8 @@ internal sealed class KerningTable : Table
     /// <summary>
     /// Kerns the glyphs of the font as HarfBuzz does with a <c>kern</c> table. Only the shapers that
     /// <see cref="ShaperFactory.HasFallbackPositioning"/> names kern with it, and only text of a script that the
-    /// GPOS table has no <c>kern</c> feature for. A pair is two glyphs with nothing but marks between them.
+    /// GPOS table does not position or has no <c>kern</c> feature for. A pair is two glyphs with nothing but marks
+    /// between them.
     /// </summary>
     /// <param name="fontMetrics">The font of the table.</param>
     /// <param name="collection">The glyphs of the text.</param>
@@ -80,7 +81,7 @@ internal sealed class KerningTable : Table
         while (start < collection.Count)
         {
             int end = FallbackMarkPositioner.GetScriptRunEnd(collection, start, out ScriptClass script);
-            if (ShaperFactory.HasFallbackPositioning(script) && gpos?.HasFeature(script, GPosTable.KernTag) != true)
+            if (ShaperFactory.HasFallbackPositioning(script) && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag)))
             {
                 int left = start;
                 for (int right = start + 1; right < end; right++)

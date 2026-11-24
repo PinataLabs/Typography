@@ -54,6 +54,7 @@ internal static class ShaperFactory
             ShaperKind.Hebrew => NormalizationProfile.Hebrew,
             ShaperKind.Indic => NormalizationProfile.Indic,
             ShaperKind.Myanmar => NormalizationProfile.Myanmar,
+            ShaperKind.Thai => NormalizationProfile.Thai,
             ShaperKind.Universal => NormalizationProfile.Universal,
             _ => NormalizationProfile.Default,
         };
@@ -67,6 +68,16 @@ internal static class ShaperFactory
     /// <returns><see langword="true"/> if the shaper positions glyphs without GPOS.</returns>
     public static bool HasFallbackPositioning(ScriptClass script)
         => GetShaperKind(script) is ShaperKind.Default or ShaperKind.Arabic or ShaperKind.Hebrew or ShaperKind.Hangul;
+
+    /// <summary>
+    /// Gets a value indicating whether the shaper of the script positions with GPOS only when the GPOS table has a
+    /// script tag of the script itself. Without one, the text is positioned as in a font without GPOS, even when the
+    /// <c>DFLT</c> or <c>latn</c> script of the table would apply. HarfBuzz does this for Hebrew.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns><see langword="true"/> if the GPOS table must have a script tag of the script.</returns>
+    public static bool NeedsOwnGposScript(ScriptClass script)
+        => GetShaperKind(script) is ShaperKind.Hebrew;
 
     private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch

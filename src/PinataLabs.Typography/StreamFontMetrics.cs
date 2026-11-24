@@ -298,14 +298,8 @@ internal partial class StreamFontMetrics : FontMetrics
             ? this.trueTypeFontTables!.GPos
             : this.compactFontTables!.GPos;
 
-        if (gpos is null)
-        {
-            FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection);
-        }
-        else
-        {
-            gpos.TryUpdatePositions(this, collection);
-        }
+        FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection, gpos);
+        gpos?.TryUpdatePositions(this, collection);
 
         // TODO: I don't think we should disable kerning here.
         if (collection.TextOptions.KerningMode != KerningMode.None)
@@ -317,10 +311,7 @@ internal partial class StreamFontMetrics : FontMetrics
             kern?.UpdatePositions(this, collection, gpos);
         }
 
-        if (gpos is null)
-        {
-            FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection);
-        }
+        FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection, gpos);
     }
 
     /// <summary>
