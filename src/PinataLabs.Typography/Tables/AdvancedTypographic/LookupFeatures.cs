@@ -15,6 +15,8 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// </summary>
 internal readonly struct LookupFeatures
 {
+    private static readonly Tag VertTag = Tag.Parse("vert");
+
     private readonly Tag[]? tags;
     private readonly int offset;
     private readonly int count;
@@ -50,14 +52,8 @@ internal readonly struct LookupFeatures
         bool withRequiredFeature,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
-        // No language is requested, so only one language system applies. A script without one has no features.
+        // No language is requested, so only one language system applies. A script without one has no features but vert.
         LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
-        if (langSysTable is null)
-        {
-            value = null;
-            return false;
-        }
-
         value = GetLookups(featureList, lookupCount, features, langSysTable, withRequiredFeature);
         return value.Count > 0;
     }
@@ -139,11 +135,12 @@ internal readonly struct LookupFeatures
         FeatureListTable featureList,
         int lookupCount,
         IReadOnlyList<Tag> features,
-        LangSysTable langSysTable,
+        LangSysTable? langSysTable,
         bool withRequiredFeature)
     {
         List<(ushort Index, int Order, Tag Feature, bool Required)> references = [];
-        ushort[] featureIndices = langSysTable.FeatureIndices;
+        ushort[] featureIndices = langSysTable?.FeatureIndices ?? [];
+        bool hasVert = false;
         for (int i = 0; i < featureIndices.Length; i++)
         {
             // Skip feature indices that fall outside the feature list.
@@ -153,6 +150,7 @@ internal readonly struct LookupFeatures
             }
 
             FeatureTable featureTable = featureList.FeatureTables[featureIndices[i]];
+            hasVert |= featureTable.FeatureTag == VertTag;
             int order = IndexOf(features, featureTable.FeatureTag);
             if (order >= 0)
             {
@@ -160,8 +158,22 @@ internal readonly struct LookupFeatures
             }
         }
 
+        // As in HarfBuzz, vertical text gets the first vert feature of the font when the language system lacks one.
+        int vertOrder = IndexOf(features, VertTag);
+        if (!hasVert && vertOrder >= 0)
+        {
+            for (int i = 0; i < featureList.FeatureTables.Length; i++)
+            {
+                if (featureList.FeatureTables[i].FeatureTag == VertTag)
+                {
+                    AddReferences(references, featureList.FeatureTables[i], lookupCount, vertOrder, false);
+                    break;
+                }
+            }
+        }
+
         // The shaper need not plan the tag of the required feature. Its order is then -1, before every planned feature.
-        if (withRequiredFeature && langSysTable.RequiredFeatureIndex < featureList.FeatureTables.Length)
+        if (withRequiredFeature && langSysTable is not null && langSysTable.RequiredFeatureIndex < featureList.FeatureTables.Length)
         {
             FeatureTable featureTable = featureList.FeatureTables[langSysTable.RequiredFeatureIndex];
             AddReferences(references, featureTable, lookupCount, IndexOf(features, featureTable.FeatureTag), true);
