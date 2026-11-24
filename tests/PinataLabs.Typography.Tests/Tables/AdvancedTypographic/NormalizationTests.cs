@@ -34,7 +34,7 @@ public class NormalizationTests
     public async Task TextIsMappedToTheGlyphsThatHarfBuzzGives(string name)
     {
         ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);
-        Font font = new FontCollection().Add(TestFonts.GetPath(HarfBuzz.Font)).CreateFont(12);
+        Font font = new FontCollection().Add(TestFonts.GetPath(expected.Font)).CreateFont(12);
 
         await Assert.That(Shape(font, expected.Text)).IsEquivalentTo(expected.Glyphs, CollectionOrdering.Matching);
     }
@@ -87,11 +87,6 @@ public class NormalizationTests
         foreach (JsonElement[] row in HarfBuzz.Scan)
         {
             string text = row[1].GetString()!;
-            if (IsKnownDifference(text))
-            {
-                continue;
-            }
-
             int[] expected = row[2].EnumerateArray().Select(g => g.GetInt32()).ToArray();
             int[] actual = Shape(fonts[row[0].GetString()!], text);
             if (!actual.SequenceEqual(expected))
@@ -142,16 +137,6 @@ public class NormalizationTests
             .ToArray();
     }
 
-    // HarfBuzz composes a Hebrew letter and point to the presentation form (U+FB1D to U+FB4E) when the font has no
-    // GPOS 'mark' feature, although Unicode excludes those forms from composition. The library does not.
-    private static bool IsKnownDifference(string text)
-    {
-        int first = char.ConvertToUtf32(text, 0);
-        bool hebrewLetter = first is (>= 0x05D0 and <= 0x05F2) or (>= 0xFB2A and <= 0xFB4A);
-        bool hebrewPoint = text[^1] is >= 'ִ' and <= 'ׂ';
-        return hebrewLetter && hebrewPoint;
-    }
-
     private static int[] Shape(Font font, string text)
         => TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font))
             .Select(g => (int)g.Glyph.GlyphMetrics.GlyphId)
@@ -173,6 +158,8 @@ public class NormalizationTests
     private sealed class ReferenceCase
     {
         public string Name { get; set; } = string.Empty;
+
+        public string Font { get; set; } = string.Empty;
 
         public string Text { get; set; } = string.Empty;
 

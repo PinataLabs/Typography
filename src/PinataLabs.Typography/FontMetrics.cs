@@ -224,6 +224,14 @@ public abstract class FontMetrics
     internal abstract bool TryGetGSubTable([NotNullWhen(true)] out GSubTable? gSubTable);
 
     /// <summary>
+    /// Gets a value indicating whether the GPOS language system that the font uses for the script lists a
+    /// <c>mark</c> feature.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns><see langword="true"/> if the font attaches marks for the script.</returns>
+    internal abstract bool HasMarkPositioning(ScriptClass script);
+
+    /// <summary>
     /// Applies any available substitutions to the collection of glyphs.
     /// </summary>
     /// <param name="collection">The glyph substitution collection.</param>

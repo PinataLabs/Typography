@@ -13,6 +13,7 @@ internal static class ShaperFactory
         Default,
         Arabic,
         Hangul,
+        Hebrew,
         Indic,
         Myanmar,
         Universal,
@@ -46,6 +47,7 @@ internal static class ShaperFactory
         {
             ShaperKind.Arabic => NormalizationProfile.Arabic,
             ShaperKind.Hangul => NormalizationProfile.Hangul,
+            ShaperKind.Hebrew => NormalizationProfile.Hebrew,
             ShaperKind.Indic => NormalizationProfile.Indic,
             ShaperKind.Myanmar => NormalizationProfile.Myanmar,
             ShaperKind.Universal => NormalizationProfile.Universal,
@@ -67,6 +69,9 @@ internal static class ShaperFactory
 
             // Hangul
             ScriptClass.Hangul => ShaperKind.Hangul,
+
+            // Hebrew has the default shaper and a normalization of its own.
+            ScriptClass.Hebrew => ShaperKind.Hebrew,
 
             // Indic
             ScriptClass.Bengali

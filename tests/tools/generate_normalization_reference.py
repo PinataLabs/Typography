@@ -97,6 +97,42 @@ CASES = [
     ("ArabicComposesHamzaAboveAcrossFatha", "أَ"),
 ]
 
+# HarfBuzz composes a Hebrew letter and point to the presentation form when the chosen GPOS language system has no
+# `mark` feature. The three fonts have the same glyphs. HebrewMark has a `mark` feature for `hebr`. HebrewKern has
+# a `kern` feature for `hebr`, and a `mark` feature that only `latn` lists.
+HEBREW_FONT = "NormalizationHebrew.ttf"
+HEBREW_MARK_FONT = "NormalizationHebrewMark.ttf"
+HEBREW_KERN_FONT = "NormalizationHebrewKern.ttf"
+HEBREW_CHARACTERS = [*range(0x05D0, 0x05EB), 0x05F2, 0x05A5, *range(0x05B0, 0x05C8), *range(0xFB1D, 0xFB4F)]
+
+HEBREW_MARK_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem hebr dflt;
+markClass [u05BC] <anchor 300 0> @DAGESH;
+feature mark { pos base [u05D1] <anchor 300 350> mark @DAGESH; } mark;
+"""
+
+HEBREW_KERN_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem hebr dflt;
+languagesystem latn dflt;
+markClass [u05BC] <anchor 300 0> @DAGESH;
+feature kern { pos u05D0 u05D1 -50; } kern;
+feature mark { script latn; pos base [u05D1] <anchor 300 350> mark @DAGESH; } mark;
+"""
+
+HEBREW_CASES = [
+    ("ComposesDagesh", "בּ"),
+    ("ComposesShinDotThenDagesh", "שּׁ"),
+    ("ComposesDageshOntoShinWithShinDot", "שּׁ"),
+    ("ComposesRafe", "פֿ"),
+    ("KeepsPresentationForm", "בּ"),
+    ("ComposesEachLetterInAWord", "שָׁלוֹם בּ"),
+    ("MovesMetegBeforeSheva", "אְַֽ"),
+    ("MovesMarkBelowBeforeHiriq", "אִָ֥"),
+    ("KeepsMetegAfterShevaWithoutPatah", "אְֽ"),
+]
+
 # A space or a hyphen that the font lacks becomes the space or the hyphen that the font has. Each text ends with
 # a letter, so that the place of the letter shows the advance of the space.
 SPACE_FONT = "NormalizationSpace.ttf"
@@ -194,6 +230,10 @@ def shape(font, text):
     return [info.codepoint for info in buffer.glyph_infos]
 
 
+def named_cases(prefix, font_name, font, cases):
+    return [{"name": prefix + name, "font": font_name, "text": text, "glyphs": shape(font, text)} for name, text in cases]
+
+
 def shape_positions(font, text):
     """Gives the glyph ID of each glyph, and where HarfBuzz draws it, in font units from the start of the line."""
     buffer = hb.Buffer()
@@ -236,7 +276,13 @@ def text_of(code_points):
 def main():
     classes, decompositions = read_unicode_data()
     case_font = build(CASE_FONT, sorted(set(map(ord, CASE_CHARACTERS))), True, CASE_FEATURES)
-    cases = [{"name": name, "text": text, "glyphs": shape(case_font, text)} for name, text in CASES]
+    cases = named_cases("", CASE_FONT, case_font, CASES)
+    for prefix, file_name, features in (
+        ("HebrewWithoutMarkFeature", HEBREW_FONT, None),
+        ("HebrewWithMarkFeature", HEBREW_MARK_FONT, HEBREW_MARK_FEATURES),
+        ("HebrewWithMarkFeatureOfAnotherScript", HEBREW_KERN_FONT, HEBREW_KERN_FEATURES),
+    ):
+        cases += named_cases(prefix, file_name, build(file_name, HEBREW_CHARACTERS, True, features), HEBREW_CASES)
     build(BASE_FONT, sorted(set(map(ord, BASE_CHARACTERS))), True)
 
     space_font = build(SPACE_FONT, sorted(set(map(ord, SPACE_CHARACTERS))), True, advances=SPACE_ADVANCES)

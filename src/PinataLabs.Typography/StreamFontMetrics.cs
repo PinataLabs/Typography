@@ -262,6 +262,16 @@ internal partial class StreamFontMetrics : FontMetrics
     }
 
     /// <inheritdoc/>
+    internal override bool HasMarkPositioning(ScriptClass script)
+    {
+        GPosTable? gpos = this.outlineType == OutlineType.TrueType
+            ? this.trueTypeFontTables!.GPos
+            : this.compactFontTables!.GPos;
+
+        return gpos?.HasFeature(script, GPosTable.MarkTag) == true;
+    }
+
+    /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
     {
         if (this.TryGetGSubTable(out GSubTable? gSubTable))

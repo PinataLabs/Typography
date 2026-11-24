@@ -36,6 +36,16 @@ internal ref struct GlyphNormalizer
 
     private static readonly byte AboveOrder = MarkOrder(new CodePoint(0x0301));
 
+    private static readonly byte PatahOrder = MarkOrder(new CodePoint(0x05B7));
+
+    private static readonly byte QamatsOrder = MarkOrder(new CodePoint(0x05B8));
+
+    private static readonly byte ShevaOrder = MarkOrder(new CodePoint(0x05B0));
+
+    private static readonly byte HiriqOrder = MarkOrder(new CodePoint(0x05B4));
+
+    private static readonly byte MetegOrder = MarkOrder(new CodePoint(0x05BD));
+
     private readonly FontMetrics fontMetrics;
 
     private readonly GlyphSubstitutionCollection collection;
@@ -52,6 +62,8 @@ internal ref struct GlyphNormalizer
     private int runEnd;
 
     private bool runHasMarks;
+
+    private bool composesPresentationForms;
 
     private GlyphNormalizer(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts, HashSet<int>? unresolvedOffsets)
     {
@@ -89,6 +101,7 @@ internal ref struct GlyphNormalizer
             this.runStart = index;
             this.runEnd = GetScriptRunEnd(this.collection, index, out ScriptClass script);
             this.profile = ShaperFactory.GetNormalizationProfile(script);
+            this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script);
 
             // HarfBuzz sorts and composes only in a buffer that has a mark after its first character.
             this.runHasMarks = false;
@@ -314,10 +327,12 @@ internal ref struct GlyphNormalizer
             {
                 Span<Item> run = items.Slice(i, end - i);
                 changed |= SortByOrder(run);
-                if (this.profile.MovesModifierMarks)
+                changed |= this.profile.MarkReordering switch
                 {
-                    changed |= MoveModifierMarks(run);
-                }
+                    MarkReordering.ArabicModifierMarks => MoveModifierMarks(run),
+                    MarkReordering.HebrewMeteg => MoveMeteg(run),
+                    _ => false,
+                };
             }
 
             i = end;
@@ -340,7 +355,7 @@ internal ref struct GlyphNormalizer
             Item item = items[i];
             if (CodePoint.IsMark(item.CodePoint)
                 && (starter == count - 1 || items[count - 1].Order < item.Order)
-                && this.profile.TryCompose((uint)items[starter].CodePoint.Value, (uint)item.CodePoint.Value, out uint composed)
+                && this.profile.TryCompose((uint)items[starter].CodePoint.Value, (uint)item.CodePoint.Value, this.composesPresentationForms, out uint composed)
                 && this.TryGetGlyph(composed, out ushort glyphId))
             {
                 items[starter] = new Item(new CodePoint(composed), glyphId, items[starter].Source);
@@ -391,6 +406,28 @@ internal ref struct GlyphNormalizer
         MoveLeadingModifierMarks(run, BelowOrder, ModifierBelowOrder, ref start, ref changed);
         MoveLeadingModifierMarks(run, AboveOrder, ModifierAboveOrder, ref start, ref changed);
         return changed;
+    }
+
+    /// <summary>
+    /// Swaps the first sheva or hiriq that follows a patah or qamats with the meteg or mark below the base after it.
+    /// </summary>
+    private static bool MoveMeteg(Span<Item> run)
+    {
+        for (int i = 2; i < run.Length; i++)
+        {
+            byte vowel = run[i - 2].Order;
+            byte point = run[i - 1].Order;
+            byte last = run[i].Order;
+            if ((vowel == PatahOrder || vowel == QamatsOrder)
+                && (point == ShevaOrder || point == HiriqOrder)
+                && (last == MetegOrder || last == BelowOrder))
+            {
+                (run[i - 1], run[i]) = (run[i], run[i - 1]);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void MoveLeadingModifierMarks(Span<Item> run, byte order, byte movedOrder, ref int start, ref bool changed)
