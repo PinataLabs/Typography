@@ -33,7 +33,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
     private readonly LigatureSetTable[] ligatureSetTables;
     private readonly CoverageTable coverageTable;
 
-    private LookupType4Format1SubTable(LigatureSetTable[] ligatureSetTables, CoverageTable coverageTable, LookupFlags lookupFlags)
+    internal LookupType4Format1SubTable(LigatureSetTable[] ligatureSetTables, CoverageTable coverageTable, LookupFlags lookupFlags)
         : base(lookupFlags)
     {
         this.ligatureSetTables = ligatureSetTables;

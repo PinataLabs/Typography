@@ -47,7 +47,7 @@ internal sealed class CoverageFormat1Table : CoverageTable
 {
     private readonly ushort[] glyphArray;
 
-    private CoverageFormat1Table(ushort[] glyphArray)
+    internal CoverageFormat1Table(ushort[] glyphArray)
         => this.glyphArray = glyphArray;
 
     public override int CoverageIndexOf(ushort glyphId)

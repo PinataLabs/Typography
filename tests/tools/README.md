@@ -165,6 +165,11 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
   f, f and i, and lam and alef across marks, and have no GPOS table. The second and third also have GDEF glyph
   classes, and the third calls the ligatures bases. Without GPOS, HarfBuzz places a mark of a ligature on its own
   component.
+- `NormalizationArabicForms.ttf` has every Arabic letter, mark and presentation form, and no GSUB table.
+  `NormalizationArabicFallback.ttf` has a few Arabic letters, marks, forms and ligatures.
+  `NormalizationArabicFallbackWithoutMedial.ttf` lacks the medial forms, `NormalizationArabicFallbackRlig.ttf` has a
+  GSUB table with only `rlig`, and `NormalizationArabicFallbackInit.ttf` has an `init` feature. HarfBuzz uses the
+  presentation forms in all but the last.
 - `NormalizationScripts.ttf` has the first letter of every script of `Scripts.txt` and U+0301.
   `NormalizationScriptsKern.ttf` also has a `kern` table with the pair of each letter and itself.
 
@@ -191,6 +196,24 @@ python tests/tools/generate_normalization_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Arabic fallback table
+
+`generate_arabic_fallback_table.py` writes `ArabicFallbackTable.Generated.cs` in
+`src/PinataLabs.Typography/Tables/AdvancedTypographic/Shapers`. When the GSUB table of a font has none of the joining
+form features for Arabic, HarfBuzz gives each letter the presentation form that the font has, and then ligates some
+of the forms. The table holds the four forms of each letter, from `UnicodeData.txt`, and the ligatures that HarfBuzz
+uses. The script finds those ligatures: it shapes each Arabic ligature of `UnicodeData.txt` in a probe font that has
+every Arabic letter, mark and presentation form, and keeps the ligatures that HarfBuzz gives.
+
+To write the table again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
+
+```
+python tests/tools/generate_arabic_fallback_table.py
+```
+
+The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. The file records the HarfBuzz version.
+The Arabic cases of the normalization reference check the table and its use against HarfBuzz.
 
 ## Script tags
 

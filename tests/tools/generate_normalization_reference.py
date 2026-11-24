@@ -33,6 +33,9 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
   ligates across marks, and no GPOS table. The second and third also have GDEF glyph classes.
 * NormalizationThai.ttf and NormalizationThaiWithoutParts.ttf have Thai and Lao letters, marks and SARA AM, with and
   without its parts.
+* NormalizationArabicForms.ttf has every Arabic letter, mark and presentation form, and no GSUB table.
+  NormalizationArabicFallback.ttf, NormalizationArabicFallbackWithoutMedial.ttf, NormalizationArabicFallbackRlig.ttf and
+  NormalizationArabicFallbackInit.ttf have a few letters and their forms, and differ in the medial forms and GSUB.
 * NormalizationHebrewGposDflt.ttf, NormalizationHebrewGposLatn.ttf and NormalizationHebrewGposHebr.ttf have Hebrew and
   Latin letters, marks and a `kern` table. Only the GPOS table of the third has the `hebr` script.
 * NormalizationHangul.ttf, NormalizationHangulGsub.ttf and NormalizationHangulJamo.ttf have Hangul jamo, with and
@@ -452,6 +455,39 @@ THAI_CASES = [
     ("DoesNotMoveLaoNiggahitaBeforeASemivowelBelow", "\u0E81\u0EBC\u0EB3"),
 ]
 
+# In a font whose GSUB table has none of the joining forms of Arabic, HarfBuzz gives each Arabic letter the presentation
+# form that the font has for its place in the word, and then ligates some of the forms, and a shadda with a vowel.
+# ArabicForms has every Arabic letter, mark and presentation form, and no outlines. The cases put each letter that has
+# a form in each place, and each ligature that HarfBuzz uses in its place. ArabicFallback has a few letters, marks,
+# forms and ligatures. ArabicFallbackWithoutMedial lacks the medial forms. ArabicFallbackRlig has a GSUB table with
+# only `rlig`, which does not stop the forms, and ArabicFallbackInit has an `init` feature, which does.
+# The library joins letters only within one text run, so each text starts with a space where the tests can end a run.
+ARABIC_FORMS_FONT = "NormalizationArabicForms.ttf"
+ARABIC_FORM_CONTEXTS = {"isolated": ("", ""), "final": ("\u0640", ""), "initial": ("", "\u0640"), "medial": ("\u0640", "\u0640")}
+ARABIC_FALLBACK_LETTERS = [0x0622, 0x0627, 0x0628, 0x0633, 0x0644, 0x0645, 0x0647]
+ARABIC_FALLBACK_MARKS = [0x064E, 0x064F, 0x0650, 0x0651]
+ARABIC_FALLBACK_INIT_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem arab dflt;
+feature init { sub u0628 by u0647; } init;
+"""
+ARABIC_FALLBACK_RLIG_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem arab dflt;
+feature rlig { sub u0628 u0628 u0628 by u0647; } rlig;
+"""
+
+ARABIC_FALLBACK_CASES = [
+    ("JoinsLetters", "\u0628\u0628\u0628"),
+    ("LigatesLamAndAlef", "\u0644\u0627"),
+    ("LigatesFinalLamAndAlef", "\u0628\u0644\u0627"),
+    ("LigatesAcrossMarks", "\u0644\u064E\u0627\u0650"),
+    ("LigatesShaddaAndFatha", "\u0628\u0651\u064E"),
+    ("LigatesLettersAndMarks", "\u0644\u0651\u064E\u0627"),
+    ("JoinsAWord", "\u0633\u0644\u0627\u0645"),
+    ("DoesNotJoinAcrossASpace", "\u0628 \u0628"),
+]
+
 # The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
 # mark is placed on its base, it only loses its advance, or it keeps its advance. Scripts has the first letter of
 # every script of Scripts.txt and U+0301, and the reference has that letter and mark for each script.
@@ -648,6 +684,36 @@ def positioned_cases(font_name, font, cases):
     return [{"name": name, "font": font_name, "text": text, "glyphs": shape_positions(font, text)} for name, text in cases]
 
 
+def arabic_presentation_forms():
+    """Gives each character that UnicodeData.txt calls an Arabic form of other characters its form and parts."""
+    forms = {}
+    with open(os.path.join(RULES, "UnicodeData.txt"), encoding="utf-8") as file:
+        for line in file:
+            fields = line.split(";")
+            tag, _, parts = fields[5].partition(" ")
+            if tag[1:-1] in ARABIC_FORM_CONTEXTS:
+                forms[int(fields[0], 16)] = (tag[1:-1], [int(part, 16) for part in parts.split()])
+    return forms
+
+
+def arabic_form_cases(classes):
+    forms = arabic_presentation_forms()
+    letters = sorted({parts[0] for form, parts in forms.values() if len(parts) == 1 and 0x0600 <= parts[0] <= 0x06FF})
+    marks = [c for c in classes if 0x0600 <= c <= 0x06FF]
+    font = build(ARABIC_FORMS_FONT, sorted({0x20, 0x0640, *letters, *marks, *forms}), False)
+    cases = []
+    for letter in letters:
+        text = " ".join(before + chr(letter) + after for before, after in ARABIC_FORM_CONTEXTS.values())
+        cases.append(("ArabicFallbackFormsOf%04X" % letter, text))
+    for code_point, (form, parts) in sorted(forms.items()):
+        if len(parts) > 1 and parts[0] != 0x20 and all(part in letters for part in parts):
+            before, after = ARABIC_FORM_CONTEXTS[form]
+            cases.append(("ArabicFallbackLigature%04X" % code_point, before + text_of(parts) + after))
+        elif len(parts) > 1 and parts[0] == 0x20:
+            cases.append(("ArabicFallbackLigature%04X" % code_point, "\u0628" + text_of(sorted(parts[1:], key=lambda c: classes.get(c, 0)))))
+    return named_cases("", ARABIC_FORMS_FONT, font, cases)
+
+
 def full_decomposition(code_point, decompositions):
     parts = decompositions.get(code_point)
     if parts is None:
@@ -673,6 +739,7 @@ def main():
     classes, decompositions = read_unicode_data()
     case_font = build(CASE_FONT, sorted(set(map(ord, CASE_CHARACTERS))), True, CASE_FEATURES)
     cases = named_cases("", CASE_FONT, case_font, CASES)
+    cases += arabic_form_cases(classes)
     hebrew_fonts = {}
     for prefix, file_name, features in (
         ("HebrewWithoutMarkFeature", HEBREW_FONT, None),
@@ -737,6 +804,21 @@ def main():
         font = build(file_name, characters, True)
         prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
         positioned += positioned_cases(file_name, font, [(prefix + name, text) for name, text in THAI_CASES])
+
+    forms = arabic_presentation_forms()
+    fallback_forms = [c for c, (_, parts) in forms.items() if all(p in ARABIC_FALLBACK_LETTERS + ARABIC_FALLBACK_MARKS + [0x20] for p in parts)]
+    fallback_characters = sorted({0x20, *ARABIC_FALLBACK_LETTERS, *ARABIC_FALLBACK_MARKS, *fallback_forms})
+    fallback_advances = {mark: MARK_ADVANCES[0x0301] for mark in ARABIC_FALLBACK_MARKS}
+    fallback_boxes = {mark: MARK_BOXES[0x0301] for mark in ARABIC_FALLBACK_MARKS}
+    for file_name, characters, features in (
+        ("NormalizationArabicFallback.ttf", fallback_characters, None),
+        ("NormalizationArabicFallbackWithoutMedial.ttf", [c for c in fallback_characters if forms.get(c, ("",))[0] != "medial"], None),
+        ("NormalizationArabicFallbackRlig.ttf", fallback_characters, ARABIC_FALLBACK_RLIG_FEATURES),
+        ("NormalizationArabicFallbackInit.ttf", fallback_characters, ARABIC_FALLBACK_INIT_FEATURES),
+    ):
+        font = build(file_name, characters, True, features, fallback_advances, fallback_boxes)
+        prefix = os.path.splitext(file_name)[0].replace("Normalization", "")
+        positioned += positioned_cases(file_name, font, [(prefix + name, " " + text) for name, text in ARABIC_FALLBACK_CASES])
 
     script_letters = read_script_letters()
     scripts_font, scripts_kern_font = (

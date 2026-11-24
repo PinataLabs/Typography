@@ -99,7 +99,8 @@ internal sealed class ArabicShaper : DefaultShaper
         this.AddFeature(collection, index, count, MsetTag);
         this.EndStage();
 
-        this.AddFeature(collection, index, count, RligTag);
+        // In a font without the joining forms of Arabic, the presentation forms stand in for them after `rlig`.
+        this.AddFeature(collection, index, count, RligTag, postAction: this.ScriptClass == ScriptClass.Arabic ? ArabicFallbackShaper.Apply : null);
         this.EndStage();
 
         // A count of zero places these features in a stage of their own without assigning them
