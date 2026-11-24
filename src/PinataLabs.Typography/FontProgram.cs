@@ -122,7 +122,8 @@ public sealed class FontProgram
     /// </summary>
     /// <remarks>
     /// The supported formats are an sfnt file with TrueType outlines in a 'glyf' table, an
-    /// OpenType file with a 'CFF ' table, and a Type 1 font as a PFB file, a PFA file or the stream of a
+    /// OpenType file with a 'CFF ' table, a bare CFF font as the stream of a PDF <c>/FontFile3</c>
+    /// (name-keyed or CID-keyed), and a Type 1 font as a PFB file, a PFA file or the stream of a
     /// PDF <c>/FontFile</c>. WOFF, WOFF2, font collections and CFF2 are not supported.
     /// A Type 1 font is found from its data alone, so the <c>/Length1</c>, <c>/Length2</c> and <c>/Length3</c>
     /// of a PDF stream are not needed.
@@ -167,6 +168,16 @@ public sealed class FontProgram
         }
 
         LoadBudget budget = new(data.Length, maxRetainedBytes);
+        if (CffProgram.IsBareCff(data.Span))
+        {
+            return new FontProgram(CffProgram.LoadBare(data, ref budget), budget.RetainedBytes);
+        }
+
+        if (CffProgram.IsBareCff2(data.Span))
+        {
+            throw new InvalidFontFileException("A CFF2 font program is not supported.");
+        }
+
         SfntDirectory directory = SfntDirectory.Read(data);
         return directory.Version switch
         {
