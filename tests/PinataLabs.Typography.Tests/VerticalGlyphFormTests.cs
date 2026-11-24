@@ -163,6 +163,48 @@ public class VerticalGlyphFormTests
     }
 
     [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft, "あいうABCえお")]
+    [Arguments(LayoutMode.VerticalMixedLeftRight, "あいうABCえお")]
+    [Arguments(LayoutMode.VerticalMixedRightLeft, "ABC")]
+    public async Task MeasureAdvanceOfAMixedColumnIsTheLaidOutColumn(LayoutMode mode, string text)
+    {
+        const float originX = 200F;
+        FontFamily family = new FontCollection().Add(TestFonts.CentralBaselineTestFile);
+        TextOptions options = new(family.CreateFont(100))
+        {
+            LayoutMode = mode,
+            Origin = new Vector2(originX, 20),
+        };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, text, options);
+        FontRectangle advance = TextMeasurer.MeasureAdvance(text, options);
+
+        await Assert.That(advance.Width).IsEqualTo(100F);
+        foreach (float centre in renderer.InkCentres(GlyphLayoutMode.VerticalRotated))
+        {
+            await Assert.That(centre).IsEqualTo(originX + (advance.Width * .5F)).Within(0.01F);
+        }
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft, "CentralBaselineTest", 100F, 1.5F)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight, "CentralBaselineTest", 100F, 1.5F)]
+    [Arguments(LayoutMode.VerticalMixedRightLeft, "NotoSansKR", 30F, 1F)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight, "NotoSansKR", 30F, 1F)]
+    public async Task MeasureAdvanceOfAMixedColumnMatchesTheUprightColumn(LayoutMode mode, string fontName, float size, float lineSpacing)
+    {
+        const string text = "あいうABCえお";
+        string path = fontName == "NotoSansKR" ? TestFonts.NotoSansKRRegular : TestFonts.CentralBaselineTestFile;
+        Font font = new FontCollection().Add(path).CreateFont(size);
+
+        FontRectangle mixed = TextMeasurer.MeasureAdvance(text, new TextOptions(font) { LayoutMode = mode, LineSpacing = lineSpacing });
+        FontRectangle upright = TextMeasurer.MeasureAdvance(text, new TextOptions(font) { LayoutMode = LayoutMode.VerticalLeftRight, LineSpacing = lineSpacing });
+
+        await Assert.That(mixed.Width).IsEqualTo(upright.Width);
+    }
+
+    [Test]
     [Arguments(LayoutMode.VerticalMixedRightLeft)]
     [Arguments(LayoutMode.VerticalMixedLeftRight)]
     public async Task RotatedGlyphCentralBaselineIgnoresTheSignOfTheDescender(LayoutMode mode)
