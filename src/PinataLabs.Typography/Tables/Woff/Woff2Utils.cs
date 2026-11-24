@@ -175,9 +175,9 @@ internal static class Woff2Utils
                 continue;
             }
 
-            WriteInt16(output, (short)contourCount);
             if (contourCount < 0)
             {
+                WriteInt16(output, (short)contourCount);
                 if (!hasExplicitBounds)
                 {
                     throw new InvalidFontFileException("A composite glyph of the WOFF2 font has no bounding box.");
@@ -199,16 +199,24 @@ internal static class Woff2Utils
                 endPoints = new ushort[contourCount];
             }
 
+            // 'glyf' cannot hold a contour without points, so drop one that the file gives.
             int pointCount = 0;
+            int keptContours = 0;
             for (int i = 0; i < contourCount; i++)
             {
-                pointCount += Read255UInt16(ref pointCounts);
-                if (pointCount is 0 or > ushort.MaxValue)
+                int contourPoints = Read255UInt16(ref pointCounts);
+                if (contourPoints == 0)
+                {
+                    continue;
+                }
+
+                pointCount += contourPoints;
+                if (pointCount > ushort.MaxValue)
                 {
                     throw Malformed();
                 }
 
-                endPoints[i] = (ushort)(pointCount - 1);
+                endPoints[keptContours++] = (ushort)(pointCount - 1);
             }
 
             if (points.Length < pointCount)
@@ -217,6 +225,18 @@ internal static class Woff2Utils
             }
 
             ReadPoints(ref flags, ref glyphReader, glyphStream, points.AsSpan(0, pointCount), out Bounds bounds);
+            if (keptContours == 0)
+            {
+                if (hasExplicitBounds && !explicitBounds.TrySkip(8))
+                {
+                    throw Malformed();
+                }
+
+                Take(ref instructions, instructionStream, Read255UInt16(ref glyphReader));
+                continue;
+            }
+
+            WriteInt16(output, (short)keptContours);
             if (hasExplicitBounds)
             {
                 output.Write(Take(ref explicitBounds, boundsStream, 8));
@@ -229,7 +249,7 @@ internal static class Woff2Utils
                 WriteInt16(output, (short)bounds.Max.Y);
             }
 
-            for (int i = 0; i < contourCount; i++)
+            for (int i = 0; i < keptContours; i++)
             {
                 WriteUInt16(output, endPoints[i]);
             }
