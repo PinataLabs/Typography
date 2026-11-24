@@ -12,10 +12,12 @@ namespace PinataLabs.Typography.FontPrograms;
 internal sealed class CffProgram
 {
     private readonly SfntAdvances advances;
+    private readonly ReadOnlyMemory<byte> cmap;
 
     private CffProgram(CffFont font, SfntOptionalTables tables)
     {
         this.Font = font;
+        this.cmap = tables.Cmap;
         this.advances = tables.Advances;
         this.MissingTables = tables.Missing;
         this.MalformedTables = tables.Malformed;
@@ -70,6 +72,17 @@ internal sealed class CffProgram
     /// <exception cref="FontProgramTooLargeException">The program does not fit under the cap of the budget.</exception>
     public static CffProgram LoadBare(ReadOnlyMemory<byte> data, ref LoadBudget budget)
         => new(CffParser.Load(data, ref budget), default);
+
+    public bool TryGetGlyphIdFromCmap(int platformId, int encodingId, int code, out ushort glyphId)
+    {
+        if (CmapReader.TryGetSubtable(this.cmap.Span, platformId, encodingId, out ReadOnlySpan<byte> subtable))
+        {
+            return CmapReader.TryMap(subtable, code, this.Font.GlyphCount, out glyphId);
+        }
+
+        glyphId = 0;
+        return false;
+    }
 
     public bool TryGetAdvanceWidth(ushort glyphId, out float advanceWidth)
     {

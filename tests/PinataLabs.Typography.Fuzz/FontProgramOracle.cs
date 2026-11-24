@@ -238,6 +238,18 @@ internal static class FontProgramOracle
             }
         }
 
+        foreach ((ushort platform, ushort encoding) in (ReadOnlySpan<(ushort, ushort)>)[(3, 1), (3, 0), (1, 0), (0, 3), (3, 10), (0, 4), (3, 2)])
+        {
+            foreach (int code in (ReadOnlySpan<int>)[0, 1, 65, 255, 256, 0x20AC, 0xF041, 0xFFFF, 0x10000, 0x1F600, 0x10FFFF, -1, int.MaxValue])
+            {
+                bool found = font.TryGetGlyphIdFromCmap(platform, encoding, code, out ushort glyphId);
+                if (found ? glyphId == 0 || glyphId >= glyphCount : glyphId != 0)
+                {
+                    throw new FuzzFindingException($"cmap ({platform},{encoding}) code {code}: {found} with glyph {glyphId} of {glyphCount}.");
+                }
+            }
+        }
+
         font.TryGetGlyphId("A", out _);
         font.TryGetGlyphId(".notdef", out _);
         font.TryGetGlyphId(string.Empty, out _);
@@ -315,6 +327,8 @@ internal static class FontProgramOracle
         bool TryGetGlyphIdForCid(int cid, out ushort glyphId);
 
         bool TryGetBuiltInEncoding(Span<ushort> glyphIds);
+
+        bool TryGetGlyphIdFromCmap(ushort platformId, ushort encodingId, int code, out ushort glyphId);
     }
 
     private readonly struct ProgramFont : IFuzzFont
@@ -336,6 +350,9 @@ internal static class FontProgramOracle
         public bool TryGetGlyphIdForCid(int cid, out ushort glyphId) => this.font.TryGetGlyphIdForCid(cid, out glyphId);
 
         public bool TryGetBuiltInEncoding(Span<ushort> glyphIds) => this.font.TryGetBuiltInEncoding(glyphIds);
+
+        public bool TryGetGlyphIdFromCmap(ushort platformId, ushort encodingId, int code, out ushort glyphId)
+            => this.font.TryGetGlyphIdFromCmap(platformId, encodingId, code, out glyphId);
     }
 
     /// <summary>
