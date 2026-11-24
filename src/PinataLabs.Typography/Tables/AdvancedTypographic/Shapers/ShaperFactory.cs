@@ -114,6 +114,7 @@ internal static class ShaperFactory
             or ScriptClass.Ahom
             or ScriptClass.Balinese
             or ScriptClass.Batak
+            or ScriptClass.BeriaErfe
             or ScriptClass.Bhaiksuki
             or ScriptClass.Brahmi
             or ScriptClass.Buginese
@@ -127,17 +128,22 @@ internal static class ShaperFactory
             or ScriptClass.Duployan
             or ScriptClass.EgyptianHieroglyphs
             or ScriptClass.Elymaic
+            or ScriptClass.Garay
             or ScriptClass.Grantha
             or ScriptClass.GunjalaGondi
+            or ScriptClass.GurungKhema
             or ScriptClass.HanifiRohingya
             or ScriptClass.Hanunoo
             or ScriptClass.Javanese
+            or ScriptClass.Jurchen
             or ScriptClass.Kaithi
+            or ScriptClass.Kawi
             or ScriptClass.KayahLi
             or ScriptClass.Kharoshthi
             or ScriptClass.KhitanSmallScript
             or ScriptClass.Khojki
             or ScriptClass.Khudawadi
+            or ScriptClass.KiratRai
             or ScriptClass.Lepcha
             or ScriptClass.Limbu
             or ScriptClass.Mahajani
@@ -149,32 +155,42 @@ internal static class ShaperFactory
             or ScriptClass.Miao
             or ScriptClass.Modi
             or ScriptClass.Multani
+            or ScriptClass.NagMundari
             or ScriptClass.Nandinagari
             or ScriptClass.Newa
             or ScriptClass.NyiakengPuachueHmong
+            or ScriptClass.OlOnal
             or ScriptClass.OldSogdian
             or ScriptClass.OldUyghur
             or ScriptClass.PahawhHmong
+            or ScriptClass.ProtoCuneiform
             or ScriptClass.Rejang
             or ScriptClass.Saurashtra
+            or ScriptClass.Seal
             or ScriptClass.Sharada
             or ScriptClass.Siddham
+            or ScriptClass.Sidetic
             or ScriptClass.Sinhala
             or ScriptClass.Sogdian
             or ScriptClass.Soyombo
             or ScriptClass.Sundanese
+            or ScriptClass.Sunuwar
             or ScriptClass.SylotiNagri
             or ScriptClass.Tagalog
             or ScriptClass.Tagbanwa
             or ScriptClass.TaiLe
             or ScriptClass.TaiTham
             or ScriptClass.TaiViet
+            or ScriptClass.TaiYo
             or ScriptClass.Takri
             or ScriptClass.Tangsa
             or ScriptClass.Tibetan
             or ScriptClass.Tifinagh
             or ScriptClass.Tirhuta
+            or ScriptClass.Todhri
+            or ScriptClass.TolongSiki
             or ScriptClass.Toto
+            or ScriptClass.TuluTigalari
             or ScriptClass.Vithkuqi
             or ScriptClass.Wancho
             or ScriptClass.Yezidi

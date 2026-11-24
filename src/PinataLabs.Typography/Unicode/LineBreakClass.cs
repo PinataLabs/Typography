@@ -225,4 +225,34 @@ public enum LineBreakClass : uint
     /// Unknown
     /// </summary>
     XX = 42,
+
+    /// <summary>
+    /// Aksara
+    /// </summary>
+    AK = 43,
+
+    /// <summary>
+    /// Aksara prebase
+    /// </summary>
+    AP = 44,
+
+    /// <summary>
+    /// Aksara start
+    /// </summary>
+    AS = 45,
+
+    /// <summary>
+    /// Unambiguous hyphen
+    /// </summary>
+    HH = 46,
+
+    /// <summary>
+    /// Virama final
+    /// </summary>
+    VF = 47,
+
+    /// <summary>
+    /// Virama
+    /// </summary>
+    VI = 48,
 }

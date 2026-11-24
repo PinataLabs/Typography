@@ -75,7 +75,10 @@ public static partial class Generator
             "H", new List<object>
             {
                 ISC.Virama,
-                ISC.InvisibleStacker
+                ISC.InvisibleStacker,
+
+                // Unicode 16.0 moved the Batak killers from Virama to Reordering_Killer.
+                ISC.ReorderingKiller
             }
         },
         { "HN", new List<object> { ISC.NumberJoiner } },
