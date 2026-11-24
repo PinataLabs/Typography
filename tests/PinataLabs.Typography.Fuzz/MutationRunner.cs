@@ -158,7 +158,7 @@ internal static class MutationRunner
                     }
                     else
                     {
-                        state.Pool[state.Seeds.Count + random.Next(MaxPool - state.Seeds.Count)] = input;
+                        state.Pool[state.Seeds.Length + random.Next(MaxPool - state.Seeds.Length)] = input;
                     }
                 }
             }
@@ -207,7 +207,7 @@ internal static class MutationRunner
             this.Current = new byte[MaxThreads][];
         }
 
-        public IReadOnlyList<byte[]> Seeds { get; }
+        public byte[][] Seeds { get; }
 
         public List<byte[]> Pool { get; }
 

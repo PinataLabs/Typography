@@ -21,7 +21,8 @@ internal sealed class Mutator
 
     private readonly Random random;
 
-    public Mutator(int seed) => this.random = new Random(seed);
+    // A seeded generator makes a mutation run reproducible, which a fuzzer needs and a secure generator cannot give.
+    public Mutator(int seed) => this.random = new Random(seed); // NOSONAR
 
     /// <summary>
     /// Makes one damaged copy.
