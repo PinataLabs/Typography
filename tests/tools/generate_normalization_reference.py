@@ -33,6 +33,7 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
 * NormalizationSpace.ttf and NormalizationSpaceBare.ttf have U+0020 and lack the other spaces.
 * NormalizationMarks.ttf, NormalizationMarksGdef.ttf and NormalizationMarksKern.ttf have a base and marks of
   eight scripts. They differ in their GDEF and GPOS tables.
+* NormalizationDevanagari.ttf has Devanagari letters, signs and the dotted circle, and no GSUB table.
 * NormalizationScripts.ttf has the first letter of every script and U+0301.
 
 The comment above the cases of each group says what the group shows.
@@ -182,6 +183,20 @@ HANGUL_CASES = [
     ("PutsDottedCircleAfterLoneToneMark", "\u302E"),
     ("ComposesEachSyllableInAWord", "\u1100\u1161\u11A8\u1102\u1161 \u1100\u1161"),
     ("ComposesAfterLatinText", ("aa", "\u1100\u1161\u11AB\u302E\uAC00\u11A8")),
+]
+
+# The Indic shaper reorders each syllable and gives a broken syllable a dotted circle before GSUB, so it does the
+# same in a font without GSUB.
+DEVANAGARI_FONT = "NormalizationDevanagari.ttf"
+DEVANAGARI_CHARACTERS = [0x20, 0x0915, 0x0930, 0x093C, 0x093F, 0x094D, 0x25CC]
+
+DEVANAGARI_CASES = [
+    ("MovesShortIBeforeItsConsonant", "\u0915\u093F"),
+    ("MovesShortIBeforeConsonantWithNukta", "\u0915\u093C\u093F"),
+    ("MovesShortIBeforeTheLastConsonant", "\u0915\u094D\u0930\u093F"),
+    ("KeepsRaAndHalantFirstWithoutRephGlyph", "\u0930\u094D\u0915\u093F"),
+    ("PutsDottedCircleAfterLoneShortI", "\u093F"),
+    ("ReordersEachSyllableInAWord", "\u0915\u093F \u093F\u0915"),
 ]
 
 # A font without a GPOS table cannot attach a mark. HarfBuzz then takes the advance of the mark away, and its
@@ -439,6 +454,7 @@ def main():
         ("HangulWithoutSyllables", HANGUL_JAMO_FONT, HANGUL_JAMO, None),
     ):
         cases += named_cases(prefix, file_name, build(file_name, characters, True, features), HANGUL_CASES)
+    cases += named_cases("DevanagariWithoutGsub", DEVANAGARI_FONT, build(DEVANAGARI_FONT, DEVANAGARI_CHARACTERS, True), DEVANAGARI_CASES)
     build(BASE_FONT, sorted(set(map(ord, BASE_CHARACTERS))), True)
 
     space_font = build(SPACE_FONT, sorted(set(map(ord, SPACE_CHARACTERS))), True, advances=SPACE_ADVANCES)

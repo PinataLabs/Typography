@@ -258,14 +258,7 @@ internal partial class StreamFontMetrics : FontMetrics
     }
 
     /// <inheritdoc/>
-    internal override bool TryGetGSubTable([NotNullWhen(true)] out GSubTable? gSubTable)
-    {
-        gSubTable = this.outlineType == OutlineType.TrueType
-            ? this.trueTypeFontTables!.GSub
-            : this.compactFontTables!.GSub;
-
-        return gSubTable is not null;
-    }
+    internal override GSubTable GetGSubTable() => this.substitution;
 
     /// <inheritdoc/>
     internal override bool HasMarkPositioning(ScriptClass script)

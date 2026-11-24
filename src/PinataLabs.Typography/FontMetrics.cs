@@ -217,11 +217,11 @@ public abstract class FontMetrics
         bool hasVerticalForm = false);
 
     /// <summary>
-    /// Tries to get the GSUB table.
+    /// Gets the GSUB table that the font is shaped with. A font without a GSUB table gives an empty one, so that
+    /// a shaper does the same work for it.
     /// </summary>
-    /// <param name="gSubTable">The GSUB table.</param>
-    /// <returns>true, if the glyph class could be retrieved.</returns>
-    internal abstract bool TryGetGSubTable([NotNullWhen(true)] out GSubTable? gSubTable);
+    /// <returns>The GSUB table.</returns>
+    internal abstract GSubTable GetGSubTable();
 
     /// <summary>
     /// Gets a value indicating whether the GPOS language system that the font uses for the script lists a

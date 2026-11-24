@@ -102,7 +102,13 @@
     {"name": "HangulWithoutSyllablesMovesToneMarkBeforeJamo", "font": "NormalizationHangulJamo.ttf", "text": "\u1100\u1161\u11ab\u302e", "glyphs": [8, 2, 4, 6]},
     {"name": "HangulWithoutSyllablesPutsDottedCircleAfterLoneToneMark", "font": "NormalizationHangulJamo.ttf", "text": "\u302e", "glyphs": [8, 7]},
     {"name": "HangulWithoutSyllablesComposesEachSyllableInAWord", "font": "NormalizationHangulJamo.ttf", "text": "\u1100\u1161\u11a8\u1102\u1161 \u1100\u1161", "glyphs": [2, 4, 5, 3, 4, 0, 2, 4]},
-    {"name": "HangulWithoutSyllablesComposesAfterLatinText", "font": "NormalizationHangulJamo.ttf", "text": "aa\u1100\u1161\u11ab\u302e\uac00\u11a8", "glyphs": [1, 1, 8, 2, 4, 6, 2, 4, 5]}
+    {"name": "HangulWithoutSyllablesComposesAfterLatinText", "font": "NormalizationHangulJamo.ttf", "text": "aa\u1100\u1161\u11ab\u302e\uac00\u11a8", "glyphs": [1, 1, 8, 2, 4, 6, 2, 4, 5]},
+    {"name": "DevanagariWithoutGsubMovesShortIBeforeItsConsonant", "font": "NormalizationDevanagari.ttf", "text": "\u0915\u093f", "glyphs": [5, 2]},
+    {"name": "DevanagariWithoutGsubMovesShortIBeforeConsonantWithNukta", "font": "NormalizationDevanagari.ttf", "text": "\u0915\u093c\u093f", "glyphs": [5, 2, 4]},
+    {"name": "DevanagariWithoutGsubMovesShortIBeforeTheLastConsonant", "font": "NormalizationDevanagari.ttf", "text": "\u0915\u094d\u0930\u093f", "glyphs": [2, 6, 5, 3]},
+    {"name": "DevanagariWithoutGsubKeepsRaAndHalantFirstWithoutRephGlyph", "font": "NormalizationDevanagari.ttf", "text": "\u0930\u094d\u0915\u093f", "glyphs": [3, 6, 5, 2]},
+    {"name": "DevanagariWithoutGsubPutsDottedCircleAfterLoneShortI", "font": "NormalizationDevanagari.ttf", "text": "\u093f", "glyphs": [5, 7]},
+    {"name": "DevanagariWithoutGsubReordersEachSyllableInAWord", "font": "NormalizationDevanagari.ttf", "text": "\u0915\u093f \u093f\u0915", "glyphs": [5, 2, 1, 5, 7, 2]}
   ],
   "positioned": [
     {"name": "NoBreakSpaceBecomesSpace", "font": "NormalizationSpace.ttf", "text": "a\u00a0a", "glyphs": [{"id": 4, "x": 0, "y": 0}, {"id": 1, "x": 600, "y": 0}, {"id": 4, "x": 850, "y": 0}]},

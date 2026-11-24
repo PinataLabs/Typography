@@ -263,10 +263,7 @@ internal sealed class IndicShaper : DefaultShaper
             }
 
             FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
-            if (!fontMetrics.TryGetGSubTable(out GSubTable? gSubTable))
-            {
-                break;
-            }
+            GSubTable gSubTable = fontMetrics.GetGSubTable();
 
             if (dataInfo != null && type == "broken_cluster" && fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
             {
@@ -805,39 +802,34 @@ internal sealed class IndicShaper : DefaultShaper
         GlyphShapingData data = buffer[0];
         FontMetrics fontMetrics = collection.GetFontMetrics(data);
 
-        if (fontMetrics.TryGetGSubTable(out GSubTable? gSubTable))
-        {
-            const int index = 0;
-            SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
-            int initialCount = collection.Count;
-            int collectionCount = initialCount;
-            int count = initialCount - index;
-            int i = index;
+        const int index = 0;
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
+        int initialCount = collection.Count;
+        int collectionCount = initialCount;
+        int count = initialCount - index;
+        int last = index;
 
-            // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
-            int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
-            int maxOperationsCount = AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(collection.Count);
-            int currentOperations = 0;
+        // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
+        int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
+        int maxOperationsCount = AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(collection.Count);
+        int currentOperations = 0;
 
-            gSubTable.ApplyFeatures(
-                fontMetrics,
-                collection,
-                ref iterator,
-                [featureTag],
-                false,
-                this.ScriptClass,
-                index,
-                ref count,
-                ref i,
-                ref collectionCount,
-                maxCount,
-                maxOperationsCount,
-                ref currentOperations);
+        fontMetrics.GetGSubTable().ApplyFeatures(
+            fontMetrics,
+            collection,
+            ref iterator,
+            [featureTag],
+            false,
+            this.ScriptClass,
+            index,
+            ref count,
+            ref last,
+            ref collectionCount,
+            maxCount,
+            maxOperationsCount,
+            ref currentOperations);
 
-            return collection.Count != initialCount;
-        }
-
-        return false;
+        return collection.Count != initialCount;
     }
 
     private static bool IsConsonant(GlyphShapingData data)
@@ -888,11 +880,7 @@ internal sealed class IndicShaper : DefaultShaper
             // cluster.
             GlyphShapingData data = substitutionCollection[start];
             FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
-            if (!fontMetrics.TryGetGSubTable(out GSubTable? gSubTable))
-            {
-                break;
-            }
-
+            GSubTable gSubTable = fontMetrics.GetGSubTable();
             bool tryPref = gSubTable.TryGetFeatureLookups(in PrefTag, this.ScriptClass, out _);
 
             // Find base consonant again.

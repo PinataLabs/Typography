@@ -145,8 +145,8 @@ internal sealed class FileFontMetrics : FontMetrics
         => this.fontMetrics.Value.GetAvailableCodePoints();
 
     /// <inheritdoc/>
-    internal override bool TryGetGSubTable([NotNullWhen(true)] out GSubTable? gSubTable)
-        => this.fontMetrics.Value.TryGetGSubTable(out gSubTable);
+    internal override GSubTable GetGSubTable()
+        => this.fontMetrics.Value.GetGSubTable();
 
     /// <inheritdoc/>
     internal override bool HasMarkPositioning(ScriptClass script)

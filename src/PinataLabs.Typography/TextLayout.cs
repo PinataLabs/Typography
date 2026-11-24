@@ -902,13 +902,8 @@ internal static class TextLayout
 
     private static bool HasVertFeature(FontMetrics fontMetrics)
     {
-        if (!fontMetrics.TryGetGSubTable(out GSubTable? gsub))
-        {
-            return false;
-        }
-
         Tag vert = Tag.Parse("vert");
-        foreach (FeatureTable feature in gsub.FeatureList.FeatureTables)
+        foreach (FeatureTable feature in fontMetrics.GetGSubTable().FeatureList.FeatureTables)
         {
             if (feature.FeatureTag == vert)
             {
