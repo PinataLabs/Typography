@@ -169,7 +169,10 @@ internal class GPosTable : Table
                 features.AddRange(stage.FeatureTags);
             }
 
-            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, true, out List<(ushort Index, LookupFeatures Features)>? lookups))
+            bool withRequiredFeature = collection.TextOptions.KerningMode != KerningMode.None
+                || !this.RequiredFeatureIsKerning(current);
+
+            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
@@ -320,5 +323,19 @@ internal class GPosTable : Table
             int currentIndex = i + index;
             collection.UpdatePosition(fontMetrics, currentIndex);
         }
+    }
+
+    // KerningMode.None promises no kerning. HarfBuzz still applies a required kern feature, but here the caller's
+    // explicit request wins, so a font that makes kern or vkrn its required feature is not kerned then.
+    private bool RequiredFeatureIsKerning(ScriptClass script)
+    {
+        LangSysTable? langSysTable = this.ScriptList?.GetDefaultLangSys(script);
+        if (langSysTable is null || langSysTable.RequiredFeatureIndex >= this.FeatureList.FeatureTables.Length)
+        {
+            return false;
+        }
+
+        Tag tag = this.FeatureList.FeatureTables[langSysTable.RequiredFeatureIndex].FeatureTag;
+        return tag == KernTag || tag == VKernTag;
     }
 }
