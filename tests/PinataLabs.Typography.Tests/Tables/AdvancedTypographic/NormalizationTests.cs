@@ -108,13 +108,12 @@ public class NormalizationTests
 
     // HarfBuzz composes a Hebrew letter and point to the presentation form (U+FB1D to U+FB4E) when the font has no
     // GPOS 'mark' feature, although Unicode excludes those forms from composition. The library does not.
-    // HarfBuzz shapes Dives Akuru (U+11900 to U+1195F) with its universal shaper, and the library with its default one.
     private static bool IsKnownDifference(string text)
     {
         int first = char.ConvertToUtf32(text, 0);
         bool hebrewLetter = first is (>= 0x05D0 and <= 0x05F2) or (>= 0xFB2A and <= 0xFB4A);
         bool hebrewPoint = text[^1] is >= 'ִ' and <= 'ׂ';
-        return (hebrewLetter && hebrewPoint) || first is >= 0x11900 and <= 0x1195F;
+        return hebrewLetter && hebrewPoint;
     }
 
     private static int[] Shape(Font font, string text)

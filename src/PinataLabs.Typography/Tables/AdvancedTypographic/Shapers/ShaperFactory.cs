@@ -83,35 +83,55 @@ internal static class ShaperFactory
             // Myanmar
             ScriptClass.Myanmar => ShaperKind.Myanmar,
 
-            // Universal
-            ScriptClass.Balinese
+            // Universal. HarfBuzz also shapes Adlam, Chorasmian, Hanifi Rohingya, Old Uyghur and Sogdian with its
+            // universal shaper, which joins their letters. UniversalShaper does not join, so they stay with the default.
+            ScriptClass.Ahom
+            or ScriptClass.Balinese
             or ScriptClass.Batak
+            or ScriptClass.Bhaiksuki
             or ScriptClass.Brahmi
             or ScriptClass.Buginese
             or ScriptClass.Buhid
             or ScriptClass.Chakma
             or ScriptClass.Cham
+            or ScriptClass.CyproMinoan
+            or ScriptClass.DivesAkuru
+            or ScriptClass.Dogra
             or ScriptClass.Duployan
             or ScriptClass.EgyptianHieroglyphs
+            or ScriptClass.Elymaic
             or ScriptClass.Grantha
+            or ScriptClass.GunjalaGondi
             or ScriptClass.Hanunoo
             or ScriptClass.Javanese
             or ScriptClass.Kaithi
             or ScriptClass.KayahLi
             or ScriptClass.Kharoshthi
+            or ScriptClass.KhitanSmallScript
             or ScriptClass.Khojki
             or ScriptClass.Khudawadi
             or ScriptClass.Lepcha
             or ScriptClass.Limbu
             or ScriptClass.Mahajani
+            or ScriptClass.Makasar
+            or ScriptClass.Marchen
+            or ScriptClass.MasaramGondi
+            or ScriptClass.Medefaidrin
             or ScriptClass.MeeteiMayek
+            or ScriptClass.Miao
             or ScriptClass.Modi
+            or ScriptClass.Multani
+            or ScriptClass.Nandinagari
+            or ScriptClass.Newa
+            or ScriptClass.NyiakengPuachueHmong
+            or ScriptClass.OldSogdian
             or ScriptClass.PahawhHmong
             or ScriptClass.Rejang
             or ScriptClass.Saurashtra
             or ScriptClass.Sharada
             or ScriptClass.Siddham
             or ScriptClass.Sinhala
+            or ScriptClass.Soyombo
             or ScriptClass.Sundanese
             or ScriptClass.SylotiNagri
             or ScriptClass.Tagalog
@@ -120,9 +140,15 @@ internal static class ShaperFactory
             or ScriptClass.TaiTham
             or ScriptClass.TaiViet
             or ScriptClass.Takri
+            or ScriptClass.Tangsa
             or ScriptClass.Tibetan
             or ScriptClass.Tifinagh
             or ScriptClass.Tirhuta
+            or ScriptClass.Toto
+            or ScriptClass.Vithkuqi
+            or ScriptClass.Wancho
+            or ScriptClass.Yezidi
+            or ScriptClass.ZanabazarSquare
             => ShaperKind.Universal,
             _ => ShaperKind.Default,
         };
