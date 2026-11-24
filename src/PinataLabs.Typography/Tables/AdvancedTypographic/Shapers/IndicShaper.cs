@@ -71,20 +71,23 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, LoclTag, preAction: SetupSyllables);
         this.AddFeature(collection, index, count, CcmpTag);
 
+        // Each basic shaping feature is a stage of its own: the lookups of one form
+        // must all have run before the next form is tried.
         this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
-        this.AddFeature(collection, index, count, AkhnTag);
-
-        this.AddFeature(collection, index, count, RphfTag, false);
-        this.AddFeature(collection, index, count, RkrfTag);
-        this.AddFeature(collection, index, count, PrefTag, false);
-        this.AddFeature(collection, index, count, BlwfTag, false);
-        this.AddFeature(collection, index, count, AbvfTag, false);
-        this.AddFeature(collection, index, count, HalfTag, false);
-        this.AddFeature(collection, index, count, PstfTag, false);
-        this.AddFeature(collection, index, count, VatuTag);
-        this.AddFeature(collection, index, count, CjctTag);
+        this.EndStage();
+        this.AddBasicFeature(collection, index, count, AkhnTag);
+        this.AddBasicFeature(collection, index, count, RphfTag, false);
+        this.AddBasicFeature(collection, index, count, RkrfTag);
+        this.AddBasicFeature(collection, index, count, PrefTag, false);
+        this.AddBasicFeature(collection, index, count, BlwfTag, false);
+        this.AddBasicFeature(collection, index, count, AbvfTag, false);
+        this.AddBasicFeature(collection, index, count, HalfTag, false);
+        this.AddBasicFeature(collection, index, count, PstfTag, false);
+        this.AddBasicFeature(collection, index, count, VatuTag);
+        this.AddBasicFeature(collection, index, count, CjctTag);
         this.AddFeature(collection, index, count, CfarTag, false, postAction: this.FinalReorder);
 
+        // The presentation features that follow share one stage with the common features.
         this.AddFeature(collection, index, count, InitTag, false);
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, AbvsTag);
@@ -94,6 +97,12 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
+    }
+
+    private void AddBasicFeature(IGlyphShapingCollection collection, int index, int count, Tag feature, bool enabled = true)
+    {
+        this.AddFeature(collection, index, count, feature, enabled);
+        this.EndStage();
     }
 
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
@@ -809,11 +818,11 @@ internal sealed class IndicShaper : DefaultShaper
             int maxOperationsCount = AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(collection.Count);
             int currentOperations = 0;
 
-            gSubTable.ApplyFeature(
+            gSubTable.ApplyFeatures(
                 fontMetrics,
                 collection,
                 ref iterator,
-                in featureTag,
+                [featureTag],
                 this.ScriptClass,
                 index,
                 ref count,

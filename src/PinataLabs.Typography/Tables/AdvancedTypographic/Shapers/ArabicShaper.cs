@@ -2,6 +2,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -81,15 +82,28 @@ internal sealed class ArabicShaper : DefaultShaper
     {
         this.AddFeature(collection, index, count, CcmpTag);
         this.AddFeature(collection, index, count, LoclTag);
+        this.EndStage();
 
-        this.AddFeature(collection, index, count, IsolTag, false);
-        this.AddFeature(collection, index, count, FinaTag, false);
-        this.AddFeature(collection, index, count, Fin2Tag, false);
-        this.AddFeature(collection, index, count, Fin3Tag, false);
-        this.AddFeature(collection, index, count, MediTag, false);
-        this.AddFeature(collection, index, count, Med2Tag, false);
-        this.AddFeature(collection, index, count, InitTag, false);
+        // Each joining form is a stage of its own, and so is `rlig`: fonts rely on the
+        // lookups of one form having all run before the next form is tried.
+        ReadOnlySpan<Tag> joiningForms = [IsolTag, FinaTag, Fin2Tag, Fin3Tag, MediTag, Med2Tag, InitTag];
+        foreach (Tag joiningForm in joiningForms)
+        {
+            this.AddFeature(collection, index, count, joiningForm, false);
+            this.EndStage();
+        }
+
         this.AddFeature(collection, index, count, MsetTag);
+        this.EndStage();
+
+        this.AddFeature(collection, index, count, RligTag);
+        this.EndStage();
+
+        // A count of zero places these features in a stage of their own without assigning them
+        // to any glyph. The glyphs get them where the default shaper plans them.
+        this.AddFeature(collection, index, 0, CaltTag);
+        this.AddFeature(collection, index, 0, RcltTag);
+        this.EndStage();
     }
 
     /// <inheritdoc/>

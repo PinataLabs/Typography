@@ -32,3 +32,17 @@ python tests/tools/central_baseline/measure_browser.py [path-to-browser]
 ```
 
 In both columns the ink centre of every glyph, upright and rotated, is the column centre to within 0.01px. `VerticalGlyphFormTests.RotatedGlyphCentralBaselineIsAtTheColumnCentre` checks the library against the same layout.
+
+## GSUB lookup order font
+
+`generate_gsub_lookup_order_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/GsubLookupOrder.ttf`
+from feature code with fontTools feaLib. The LookupList of the font has the `vrtr` lookup first, then `liga`,
+then `calt`. `GsubLookupOrderTests` uses the font to check that lookups are applied in LookupList order.
+
+To write the font again, run this from the repository root:
+
+```
+python tests/tools/generate_gsub_lookup_order_font.py
+```
+
+The output is deterministic.

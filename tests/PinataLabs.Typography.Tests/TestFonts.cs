@@ -36,6 +36,9 @@ public static class TestFonts
 
     public static string SimpleFontFileWoff => GetFullPath("SixLaborsSampleAB.woff");
 
+    // Built by tests/tools/generate_gsub_lookup_order_font.py.
+    public static string GsubLookupOrderFile => GetFullPath("GsubLookupOrder.ttf");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");

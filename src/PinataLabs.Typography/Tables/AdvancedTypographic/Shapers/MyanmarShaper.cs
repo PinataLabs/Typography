@@ -146,11 +146,15 @@ internal sealed class MyanmarShaper : DefaultShaper
         // and before the first positional form is chosen.
         // Only the kinzi takes part in rphf, which is enabled for it when the syllables are found.
         this.AddFeature(collection, index, count, RphfTag, false, preAction: Reorder);
+        this.EndStage();
         this.AddFeature(collection, index, count, PrefTag);
+        this.EndStage();
         this.AddFeature(collection, index, count, BlwfTag);
+        this.EndStage();
         this.AddFeature(collection, index, count, PstfTag);
+        this.EndStage();
 
-        // Presentation forms.
+        // Presentation forms. They share one stage with the common features.
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
