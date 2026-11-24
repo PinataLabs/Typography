@@ -145,9 +145,35 @@ internal static class FontProgramOracle
             throw new FuzzFindingException($"{font.Format} load allocated {allocated} bytes, above {maxAllocated}.");
         }
 
+        CheckRetainedByteLimit(data, font.RetainedByteCount);
         ProgramFont adapter = new(font);
         Exercise(ref adapter);
         return $"loaded {font.Format}, {font.GlyphCount} glyphs, {font.RetainedByteCount} bytes retained";
+    }
+
+    // A limit equal to the retained size loads the same program, and a limit one byte below it refuses the font.
+    private static void CheckRetainedByteLimit(byte[] data, long retained)
+    {
+        try
+        {
+            FontProgram atLimit = FontProgram.Load(data, new FontProgramOptions { MaxRetainedBytes = retained });
+            if (atLimit.RetainedByteCount != retained)
+            {
+                throw new FuzzFindingException($"A load under a limit retains {atLimit.RetainedByteCount} bytes, not {retained}.");
+            }
+
+            FontProgram.Load(data, new FontProgramOptions { MaxRetainedBytes = retained - 1 });
+        }
+        catch (FontProgramTooLargeException e) when (e.MaxRetainedBytes == retained - 1)
+        {
+            return;
+        }
+        catch (Exception e) when (e is not FuzzFindingException)
+        {
+            throw new FuzzFindingException($"A load under a limit threw {e.GetType().Name}.", e);
+        }
+
+        throw new FuzzFindingException($"A limit of {retained - 1} bytes loaded a program that retains {retained}.");
     }
 
     // Until FontProgram.Load sniffs a bare CFF (#70), the internal parser is the CFF program path of PdfPinata.
