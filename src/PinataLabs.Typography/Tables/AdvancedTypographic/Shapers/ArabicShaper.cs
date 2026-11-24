@@ -80,6 +80,9 @@ internal sealed class ArabicShaper : DefaultShaper
     /// <inheritdoc/>
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
     {
+        // The directional features planned before these run to completion first.
+        this.EndStage();
+
         this.AddFeature(collection, index, count, CcmpTag);
         this.AddFeature(collection, index, count, LoclTag);
         this.EndStage();

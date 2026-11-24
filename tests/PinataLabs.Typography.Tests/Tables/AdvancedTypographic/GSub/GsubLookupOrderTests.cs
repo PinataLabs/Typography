@@ -26,6 +26,7 @@ public class GsubLookupOrderTests
     private const ushort LigatureAB = 10;
     private const ushort LigatureCCopyright = 14;
     private const ushort LigatureDCopyright = 15;
+    private const ushort BehAfterRtlmThenCcmp = 18;
 
     private static List<ushort> GlyphIds(string text, LayoutMode mode, params Tag[] features)
     {
@@ -73,6 +74,10 @@ public class GsubLookupOrderTests
     [Test]
     public async Task LigatureIsNotFormedWhenAComponentHasNoFeatureOfTheLookup()
         => await Assert.That(GlyphIds("c©", LayoutMode.VerticalMixedRightLeft).Count).IsEqualTo(2);
+
+    [Test]
+    public async Task ArabicDirectionalLookupsRunBeforeAnEarlierCcmpLookup()
+        => await Assert.That(GlyphIds("ب", LayoutMode.HorizontalTopBottom)).IsEquivalentTo(new[] { BehAfterRtlmThenCcmp });
 
     [Test]
     public async Task ArabicShaperLeavesContextualAlternatesToTheLayoutMode()
