@@ -424,12 +424,14 @@ internal static class TextLayout
                 continue;
             }
 
+            Vector2 baselinePenLocation = penLocation + new Vector2(0, textLine.ScaledMaxAscender);
             foreach (GlyphMetrics metric in data.Metrics)
             {
                 glyphs.Add(new GlyphLayout(
                     new Glyph(metric, data.PointSize),
                     boxLocation,
-                    penLocation + new Vector2(0, textLine.ScaledMaxAscender),
+                    baselinePenLocation,
+                    baselinePenLocation,
                     Vector2.Zero,
                     data.ScaledAdvance,
                     advanceY,
@@ -552,6 +554,7 @@ internal static class TextLayout
                 continue;
             }
 
+            Vector2 uprightPenLocation = penLocation + new Vector2((scaledMaxLineHeight - data.ScaledLineHeight) * .5F, 0);
             foreach (GlyphMetrics metric in data.Metrics)
             {
                 // Align the glyph horizontally and vertically centering horizontally around the baseline.
@@ -562,7 +565,8 @@ internal static class TextLayout
                 glyphs.Add(new GlyphLayout(
                     new Glyph(metric, data.PointSize),
                     boxLocation,
-                    penLocation + new Vector2((scaledMaxLineHeight - data.ScaledLineHeight) * .5F, 0),
+                    uprightPenLocation,
+                    uprightPenLocation,
                     offset,
                     advanceX,
                     data.ScaledAdvance,
@@ -684,6 +688,8 @@ internal static class TextLayout
                 continue;
             }
 
+            // A rotated glyph's pen moves onto its baseline, but its advance spans the same column as an upright glyph.
+            Vector2 uprightPenLocation = penLocation + new Vector2((scaledMaxLineHeight - data.ScaledLineHeight) * .5F, 0);
             if (data.IsRotated)
             {
                 foreach (GlyphMetrics metric in data.Metrics)
@@ -700,6 +706,7 @@ internal static class TextLayout
                         new Glyph(metric, data.PointSize),
                         boxLocation,
                         penLocation + new Vector2((scaledMaxLineHeight * .5F) - central, 0),
+                        uprightPenLocation,
                         Vector2.Zero,
                         advanceX,
                         data.ScaledAdvance,
@@ -719,7 +726,8 @@ internal static class TextLayout
                     glyphs.Add(new GlyphLayout(
                         new Glyph(metric, data.PointSize),
                         boxLocation,
-                        penLocation + new Vector2((scaledMaxLineHeight - data.ScaledLineHeight) * .5F, 0),
+                        uprightPenLocation,
+                        uprightPenLocation,
                         offset,
                         advanceX,
                         data.ScaledAdvance,

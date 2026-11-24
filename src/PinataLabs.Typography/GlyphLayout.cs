@@ -16,6 +16,7 @@ internal readonly struct GlyphLayout
         Glyph glyph,
         Vector2 boxLocation,
         Vector2 penLocation,
+        Vector2 advanceLocation,
         Vector2 offset,
         float advanceWidth,
         float advanceHeight,
@@ -26,6 +27,7 @@ internal readonly struct GlyphLayout
         this.CodePoint = glyph.GlyphMetrics.CodePoint;
         this.BoxLocation = boxLocation;
         this.PenLocation = penLocation;
+        this.AdvanceLocation = advanceLocation;
         this.Offset = offset;
         this.AdvanceX = advanceWidth;
         this.AdvanceY = advanceHeight;
@@ -52,6 +54,12 @@ internal readonly struct GlyphLayout
     /// Gets the location to render the glyph at.
     /// </summary>
     public Vector2 PenLocation { get; }
+
+    /// <summary>
+    /// Gets the location the glyph advance is measured from. This is the <see cref="PenLocation"/>, except for a
+    /// rotated glyph, whose pen sits on its baseline inside the column rather than at the column edge.
+    /// </summary>
+    public Vector2 AdvanceLocation { get; }
 
     /// <summary>
     /// Gets the offset of the glyph vector relative to the top-left position of the glyph advance.

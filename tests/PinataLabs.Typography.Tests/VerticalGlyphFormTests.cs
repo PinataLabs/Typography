@@ -147,8 +147,7 @@ public class VerticalGlyphFormTests
         InkBoundsRenderer renderer = new();
         TextRenderer.RenderTextTo(renderer, text, options);
 
-        // The column is one em wide, like the browser's line-height: 1 column. MeasureAdvance is not used
-        // because it counts a rotated glyph's baseline shift as column width.
+        // The column is one em wide, like the browser's line-height: 1 column.
         const float columnCentre = originX + 50F;
 
         List<float> rotated = renderer.InkCentres(GlyphLayoutMode.VerticalRotated);

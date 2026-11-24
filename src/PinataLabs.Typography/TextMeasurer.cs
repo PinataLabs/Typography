@@ -161,7 +161,7 @@ public static class TextMeasurer
         for (int i = 0; i < glyphLayouts.Count; i++)
         {
             GlyphLayout glyph = glyphLayouts[i];
-            Vector2 location = glyph.PenLocation;
+            Vector2 location = glyph.AdvanceLocation;
             float x = location.X;
             float y = location.Y;
 
