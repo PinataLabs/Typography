@@ -1,0 +1,1269 @@
+{
+  "harfbuzz": "15.0.0",
+  "scripts": [
+    {
+      "name": "Unknown",
+      "iso": "Zzzz",
+      "tags": [
+        "zzzz"
+      ]
+    },
+    {
+      "name": "Common",
+      "iso": "Zyyy",
+      "tags": [
+        "zyyy"
+      ]
+    },
+    {
+      "name": "Inherited",
+      "iso": "Zinh",
+      "tags": [
+        "zinh"
+      ]
+    },
+    {
+      "name": "Adlam",
+      "iso": "Adlm",
+      "tags": [
+        "adlm"
+      ]
+    },
+    {
+      "name": "CaucasianAlbanian",
+      "iso": "Aghb",
+      "tags": [
+        "aghb"
+      ]
+    },
+    {
+      "name": "Ahom",
+      "iso": "Ahom",
+      "tags": [
+        "ahom"
+      ]
+    },
+    {
+      "name": "Arabic",
+      "iso": "Arab",
+      "tags": [
+        "arab"
+      ]
+    },
+    {
+      "name": "ImperialAramaic",
+      "iso": "Armi",
+      "tags": [
+        "armi"
+      ]
+    },
+    {
+      "name": "Armenian",
+      "iso": "Armn",
+      "tags": [
+        "armn"
+      ]
+    },
+    {
+      "name": "Avestan",
+      "iso": "Avst",
+      "tags": [
+        "avst"
+      ]
+    },
+    {
+      "name": "Balinese",
+      "iso": "Bali",
+      "tags": [
+        "bali"
+      ]
+    },
+    {
+      "name": "Bamum",
+      "iso": "Bamu",
+      "tags": [
+        "bamu"
+      ]
+    },
+    {
+      "name": "BassaVah",
+      "iso": "Bass",
+      "tags": [
+        "bass"
+      ]
+    },
+    {
+      "name": "Batak",
+      "iso": "Batk",
+      "tags": [
+        "batk"
+      ]
+    },
+    {
+      "name": "Bengali",
+      "iso": "Beng",
+      "tags": [
+        "bng3",
+        "bng2",
+        "beng"
+      ]
+    },
+    {
+      "name": "Bhaiksuki",
+      "iso": "Bhks",
+      "tags": [
+        "bhks"
+      ]
+    },
+    {
+      "name": "Bopomofo",
+      "iso": "Bopo",
+      "tags": [
+        "bopo"
+      ]
+    },
+    {
+      "name": "Brahmi",
+      "iso": "Brah",
+      "tags": [
+        "brah"
+      ]
+    },
+    {
+      "name": "Braille",
+      "iso": "Brai",
+      "tags": [
+        "brai"
+      ]
+    },
+    {
+      "name": "Buginese",
+      "iso": "Bugi",
+      "tags": [
+        "bugi"
+      ]
+    },
+    {
+      "name": "Buhid",
+      "iso": "Buhd",
+      "tags": [
+        "buhd"
+      ]
+    },
+    {
+      "name": "Chakma",
+      "iso": "Cakm",
+      "tags": [
+        "cakm"
+      ]
+    },
+    {
+      "name": "CanadianAboriginal",
+      "iso": "Cans",
+      "tags": [
+        "cans"
+      ]
+    },
+    {
+      "name": "Carian",
+      "iso": "Cari",
+      "tags": [
+        "cari"
+      ]
+    },
+    {
+      "name": "Cham",
+      "iso": "Cham",
+      "tags": [
+        "cham"
+      ]
+    },
+    {
+      "name": "Cherokee",
+      "iso": "Cher",
+      "tags": [
+        "cher"
+      ]
+    },
+    {
+      "name": "Chorasmian",
+      "iso": "Chrs",
+      "tags": [
+        "chrs"
+      ]
+    },
+    {
+      "name": "Coptic",
+      "iso": "Copt",
+      "tags": [
+        "copt"
+      ]
+    },
+    {
+      "name": "CyproMinoan",
+      "iso": "Cpmn",
+      "tags": [
+        "cpmn"
+      ]
+    },
+    {
+      "name": "Cypriot",
+      "iso": "Cprt",
+      "tags": [
+        "cprt"
+      ]
+    },
+    {
+      "name": "Cyrillic",
+      "iso": "Cyrl",
+      "tags": [
+        "cyrl"
+      ]
+    },
+    {
+      "name": "Devanagari",
+      "iso": "Deva",
+      "tags": [
+        "dev3",
+        "dev2",
+        "deva"
+      ]
+    },
+    {
+      "name": "DivesAkuru",
+      "iso": "Diak",
+      "tags": [
+        "diak"
+      ]
+    },
+    {
+      "name": "Dogra",
+      "iso": "Dogr",
+      "tags": [
+        "dogr"
+      ]
+    },
+    {
+      "name": "Deseret",
+      "iso": "Dsrt",
+      "tags": [
+        "dsrt"
+      ]
+    },
+    {
+      "name": "Duployan",
+      "iso": "Dupl",
+      "tags": [
+        "dupl"
+      ]
+    },
+    {
+      "name": "EgyptianHieroglyphs",
+      "iso": "Egyp",
+      "tags": [
+        "egyp"
+      ]
+    },
+    {
+      "name": "Elbasan",
+      "iso": "Elba",
+      "tags": [
+        "elba"
+      ]
+    },
+    {
+      "name": "Elymaic",
+      "iso": "Elym",
+      "tags": [
+        "elym"
+      ]
+    },
+    {
+      "name": "Ethiopic",
+      "iso": "Ethi",
+      "tags": [
+        "ethi"
+      ]
+    },
+    {
+      "name": "Georgian",
+      "iso": "Geor",
+      "tags": [
+        "geor"
+      ]
+    },
+    {
+      "name": "Glagolitic",
+      "iso": "Glag",
+      "tags": [
+        "glag"
+      ]
+    },
+    {
+      "name": "GunjalaGondi",
+      "iso": "Gong",
+      "tags": [
+        "gong"
+      ]
+    },
+    {
+      "name": "MasaramGondi",
+      "iso": "Gonm",
+      "tags": [
+        "gonm"
+      ]
+    },
+    {
+      "name": "Gothic",
+      "iso": "Goth",
+      "tags": [
+        "goth"
+      ]
+    },
+    {
+      "name": "Grantha",
+      "iso": "Gran",
+      "tags": [
+        "gran"
+      ]
+    },
+    {
+      "name": "Greek",
+      "iso": "Grek",
+      "tags": [
+        "grek"
+      ]
+    },
+    {
+      "name": "Gujarati",
+      "iso": "Gujr",
+      "tags": [
+        "gjr3",
+        "gjr2",
+        "gujr"
+      ]
+    },
+    {
+      "name": "Gurmukhi",
+      "iso": "Guru",
+      "tags": [
+        "gur3",
+        "gur2",
+        "guru"
+      ]
+    },
+    {
+      "name": "Hangul",
+      "iso": "Hang",
+      "tags": [
+        "hang"
+      ]
+    },
+    {
+      "name": "Han",
+      "iso": "Hani",
+      "tags": [
+        "hani"
+      ]
+    },
+    {
+      "name": "Hanunoo",
+      "iso": "Hano",
+      "tags": [
+        "hano"
+      ]
+    },
+    {
+      "name": "Hatran",
+      "iso": "Hatr",
+      "tags": [
+        "hatr"
+      ]
+    },
+    {
+      "name": "Hebrew",
+      "iso": "Hebr",
+      "tags": [
+        "hebr"
+      ]
+    },
+    {
+      "name": "Hiragana",
+      "iso": "Hira",
+      "tags": [
+        "kana"
+      ]
+    },
+    {
+      "name": "AnatolianHieroglyphs",
+      "iso": "Hluw",
+      "tags": [
+        "hluw"
+      ]
+    },
+    {
+      "name": "PahawhHmong",
+      "iso": "Hmng",
+      "tags": [
+        "hmng"
+      ]
+    },
+    {
+      "name": "NyiakengPuachueHmong",
+      "iso": "Hmnp",
+      "tags": [
+        "hmnp"
+      ]
+    },
+    {
+      "name": "KatakanaOrHiragana",
+      "iso": "Hrkt",
+      "tags": [
+        "kana"
+      ]
+    },
+    {
+      "name": "OldHungarian",
+      "iso": "Hung",
+      "tags": [
+        "hung"
+      ]
+    },
+    {
+      "name": "OldItalic",
+      "iso": "Ital",
+      "tags": [
+        "ital"
+      ]
+    },
+    {
+      "name": "Javanese",
+      "iso": "Java",
+      "tags": [
+        "java"
+      ]
+    },
+    {
+      "name": "KayahLi",
+      "iso": "Kali",
+      "tags": [
+        "kali"
+      ]
+    },
+    {
+      "name": "Katakana",
+      "iso": "Kana",
+      "tags": [
+        "kana"
+      ]
+    },
+    {
+      "name": "Kharoshthi",
+      "iso": "Khar",
+      "tags": [
+        "khar"
+      ]
+    },
+    {
+      "name": "Khmer",
+      "iso": "Khmr",
+      "tags": [
+        "khmr"
+      ]
+    },
+    {
+      "name": "Khojki",
+      "iso": "Khoj",
+      "tags": [
+        "khoj"
+      ]
+    },
+    {
+      "name": "KhitanSmallScript",
+      "iso": "Kits",
+      "tags": [
+        "kits"
+      ]
+    },
+    {
+      "name": "Kannada",
+      "iso": "Knda",
+      "tags": [
+        "knd3",
+        "knd2",
+        "knda"
+      ]
+    },
+    {
+      "name": "Kaithi",
+      "iso": "Kthi",
+      "tags": [
+        "kthi"
+      ]
+    },
+    {
+      "name": "TaiTham",
+      "iso": "Lana",
+      "tags": [
+        "lana"
+      ]
+    },
+    {
+      "name": "Lao",
+      "iso": "Laoo",
+      "tags": [
+        "lao "
+      ]
+    },
+    {
+      "name": "Latin",
+      "iso": "Latn",
+      "tags": [
+        "latn"
+      ]
+    },
+    {
+      "name": "Lepcha",
+      "iso": "Lepc",
+      "tags": [
+        "lepc"
+      ]
+    },
+    {
+      "name": "Limbu",
+      "iso": "Limb",
+      "tags": [
+        "limb"
+      ]
+    },
+    {
+      "name": "LinearA",
+      "iso": "Lina",
+      "tags": [
+        "lina"
+      ]
+    },
+    {
+      "name": "LinearB",
+      "iso": "Linb",
+      "tags": [
+        "linb"
+      ]
+    },
+    {
+      "name": "Lisu",
+      "iso": "Lisu",
+      "tags": [
+        "lisu"
+      ]
+    },
+    {
+      "name": "Lycian",
+      "iso": "Lyci",
+      "tags": [
+        "lyci"
+      ]
+    },
+    {
+      "name": "Lydian",
+      "iso": "Lydi",
+      "tags": [
+        "lydi"
+      ]
+    },
+    {
+      "name": "Mahajani",
+      "iso": "Mahj",
+      "tags": [
+        "mahj"
+      ]
+    },
+    {
+      "name": "Makasar",
+      "iso": "Maka",
+      "tags": [
+        "maka"
+      ]
+    },
+    {
+      "name": "Mandaic",
+      "iso": "Mand",
+      "tags": [
+        "mand"
+      ]
+    },
+    {
+      "name": "Manichaean",
+      "iso": "Mani",
+      "tags": [
+        "mani"
+      ]
+    },
+    {
+      "name": "Marchen",
+      "iso": "Marc",
+      "tags": [
+        "marc"
+      ]
+    },
+    {
+      "name": "Medefaidrin",
+      "iso": "Medf",
+      "tags": [
+        "medf"
+      ]
+    },
+    {
+      "name": "MendeKikakui",
+      "iso": "Mend",
+      "tags": [
+        "mend"
+      ]
+    },
+    {
+      "name": "MeroiticCursive",
+      "iso": "Merc",
+      "tags": [
+        "merc"
+      ]
+    },
+    {
+      "name": "MeroiticHieroglyphs",
+      "iso": "Mero",
+      "tags": [
+        "mero"
+      ]
+    },
+    {
+      "name": "Malayalam",
+      "iso": "Mlym",
+      "tags": [
+        "mlm3",
+        "mlm2",
+        "mlym"
+      ]
+    },
+    {
+      "name": "Modi",
+      "iso": "Modi",
+      "tags": [
+        "modi"
+      ]
+    },
+    {
+      "name": "Mongolian",
+      "iso": "Mong",
+      "tags": [
+        "mong"
+      ]
+    },
+    {
+      "name": "Mro",
+      "iso": "Mroo",
+      "tags": [
+        "mroo"
+      ]
+    },
+    {
+      "name": "MeeteiMayek",
+      "iso": "Mtei",
+      "tags": [
+        "mtei"
+      ]
+    },
+    {
+      "name": "Multani",
+      "iso": "Mult",
+      "tags": [
+        "mult"
+      ]
+    },
+    {
+      "name": "Myanmar",
+      "iso": "Mymr",
+      "tags": [
+        "mym2",
+        "mymr"
+      ]
+    },
+    {
+      "name": "Nandinagari",
+      "iso": "Nand",
+      "tags": [
+        "nand"
+      ]
+    },
+    {
+      "name": "OldNorthArabian",
+      "iso": "Narb",
+      "tags": [
+        "narb"
+      ]
+    },
+    {
+      "name": "Nabataean",
+      "iso": "Nbat",
+      "tags": [
+        "nbat"
+      ]
+    },
+    {
+      "name": "Newa",
+      "iso": "Newa",
+      "tags": [
+        "newa"
+      ]
+    },
+    {
+      "name": "Nko",
+      "iso": "Nkoo",
+      "tags": [
+        "nko "
+      ]
+    },
+    {
+      "name": "Nushu",
+      "iso": "Nshu",
+      "tags": [
+        "nshu"
+      ]
+    },
+    {
+      "name": "Ogham",
+      "iso": "Ogam",
+      "tags": [
+        "ogam"
+      ]
+    },
+    {
+      "name": "OlChiki",
+      "iso": "Olck",
+      "tags": [
+        "olck"
+      ]
+    },
+    {
+      "name": "OldTurkic",
+      "iso": "Orkh",
+      "tags": [
+        "orkh"
+      ]
+    },
+    {
+      "name": "Oriya",
+      "iso": "Orya",
+      "tags": [
+        "ory3",
+        "ory2",
+        "orya"
+      ]
+    },
+    {
+      "name": "Osage",
+      "iso": "Osge",
+      "tags": [
+        "osge"
+      ]
+    },
+    {
+      "name": "Osmanya",
+      "iso": "Osma",
+      "tags": [
+        "osma"
+      ]
+    },
+    {
+      "name": "OldUyghur",
+      "iso": "Ougr",
+      "tags": [
+        "ougr"
+      ]
+    },
+    {
+      "name": "Palmyrene",
+      "iso": "Palm",
+      "tags": [
+        "palm"
+      ]
+    },
+    {
+      "name": "PauCinHau",
+      "iso": "Pauc",
+      "tags": [
+        "pauc"
+      ]
+    },
+    {
+      "name": "OldPermic",
+      "iso": "Perm",
+      "tags": [
+        "perm"
+      ]
+    },
+    {
+      "name": "PhagsPa",
+      "iso": "Phag",
+      "tags": [
+        "phag"
+      ]
+    },
+    {
+      "name": "InscriptionalPahlavi",
+      "iso": "Phli",
+      "tags": [
+        "phli"
+      ]
+    },
+    {
+      "name": "PsalterPahlavi",
+      "iso": "Phlp",
+      "tags": [
+        "phlp"
+      ]
+    },
+    {
+      "name": "Phoenician",
+      "iso": "Phnx",
+      "tags": [
+        "phnx"
+      ]
+    },
+    {
+      "name": "Miao",
+      "iso": "Plrd",
+      "tags": [
+        "plrd"
+      ]
+    },
+    {
+      "name": "InscriptionalParthian",
+      "iso": "Prti",
+      "tags": [
+        "prti"
+      ]
+    },
+    {
+      "name": "Rejang",
+      "iso": "Rjng",
+      "tags": [
+        "rjng"
+      ]
+    },
+    {
+      "name": "HanifiRohingya",
+      "iso": "Rohg",
+      "tags": [
+        "rohg"
+      ]
+    },
+    {
+      "name": "Runic",
+      "iso": "Runr",
+      "tags": [
+        "runr"
+      ]
+    },
+    {
+      "name": "Samaritan",
+      "iso": "Samr",
+      "tags": [
+        "samr"
+      ]
+    },
+    {
+      "name": "OldSouthArabian",
+      "iso": "Sarb",
+      "tags": [
+        "sarb"
+      ]
+    },
+    {
+      "name": "Saurashtra",
+      "iso": "Saur",
+      "tags": [
+        "saur"
+      ]
+    },
+    {
+      "name": "SignWriting",
+      "iso": "Sgnw",
+      "tags": [
+        "sgnw"
+      ]
+    },
+    {
+      "name": "Shavian",
+      "iso": "Shaw",
+      "tags": [
+        "shaw"
+      ]
+    },
+    {
+      "name": "Sharada",
+      "iso": "Shrd",
+      "tags": [
+        "shrd"
+      ]
+    },
+    {
+      "name": "Siddham",
+      "iso": "Sidd",
+      "tags": [
+        "sidd"
+      ]
+    },
+    {
+      "name": "Khudawadi",
+      "iso": "Sind",
+      "tags": [
+        "sind"
+      ]
+    },
+    {
+      "name": "Sinhala",
+      "iso": "Sinh",
+      "tags": [
+        "sinh"
+      ]
+    },
+    {
+      "name": "Sogdian",
+      "iso": "Sogd",
+      "tags": [
+        "sogd"
+      ]
+    },
+    {
+      "name": "OldSogdian",
+      "iso": "Sogo",
+      "tags": [
+        "sogo"
+      ]
+    },
+    {
+      "name": "SoraSompeng",
+      "iso": "Sora",
+      "tags": [
+        "sora"
+      ]
+    },
+    {
+      "name": "Soyombo",
+      "iso": "Soyo",
+      "tags": [
+        "soyo"
+      ]
+    },
+    {
+      "name": "Sundanese",
+      "iso": "Sund",
+      "tags": [
+        "sund"
+      ]
+    },
+    {
+      "name": "SylotiNagri",
+      "iso": "Sylo",
+      "tags": [
+        "sylo"
+      ]
+    },
+    {
+      "name": "Syriac",
+      "iso": "Syrc",
+      "tags": [
+        "syrc"
+      ]
+    },
+    {
+      "name": "Tagbanwa",
+      "iso": "Tagb",
+      "tags": [
+        "tagb"
+      ]
+    },
+    {
+      "name": "Takri",
+      "iso": "Takr",
+      "tags": [
+        "takr"
+      ]
+    },
+    {
+      "name": "TaiLe",
+      "iso": "Tale",
+      "tags": [
+        "tale"
+      ]
+    },
+    {
+      "name": "NewTaiLue",
+      "iso": "Talu",
+      "tags": [
+        "talu"
+      ]
+    },
+    {
+      "name": "Tamil",
+      "iso": "Taml",
+      "tags": [
+        "tml3",
+        "tml2",
+        "taml"
+      ]
+    },
+    {
+      "name": "Tangut",
+      "iso": "Tang",
+      "tags": [
+        "tang"
+      ]
+    },
+    {
+      "name": "TaiViet",
+      "iso": "Tavt",
+      "tags": [
+        "tavt"
+      ]
+    },
+    {
+      "name": "Telugu",
+      "iso": "Telu",
+      "tags": [
+        "tel3",
+        "tel2",
+        "telu"
+      ]
+    },
+    {
+      "name": "Tifinagh",
+      "iso": "Tfng",
+      "tags": [
+        "tfng"
+      ]
+    },
+    {
+      "name": "Tagalog",
+      "iso": "Tglg",
+      "tags": [
+        "tglg"
+      ]
+    },
+    {
+      "name": "Thaana",
+      "iso": "Thaa",
+      "tags": [
+        "thaa"
+      ]
+    },
+    {
+      "name": "Thai",
+      "iso": "Thai",
+      "tags": [
+        "thai"
+      ]
+    },
+    {
+      "name": "Tibetan",
+      "iso": "Tibt",
+      "tags": [
+        "tibt"
+      ]
+    },
+    {
+      "name": "Tirhuta",
+      "iso": "Tirh",
+      "tags": [
+        "tirh"
+      ]
+    },
+    {
+      "name": "Tangsa",
+      "iso": "Tnsa",
+      "tags": [
+        "tnsa"
+      ]
+    },
+    {
+      "name": "Toto",
+      "iso": "Toto",
+      "tags": [
+        "toto"
+      ]
+    },
+    {
+      "name": "Ugaritic",
+      "iso": "Ugar",
+      "tags": [
+        "ugar"
+      ]
+    },
+    {
+      "name": "Vai",
+      "iso": "Vaii",
+      "tags": [
+        "vai "
+      ]
+    },
+    {
+      "name": "Vithkuqi",
+      "iso": "Vith",
+      "tags": [
+        "vith"
+      ]
+    },
+    {
+      "name": "WarangCiti",
+      "iso": "Wara",
+      "tags": [
+        "wara"
+      ]
+    },
+    {
+      "name": "Wancho",
+      "iso": "Wcho",
+      "tags": [
+        "wcho"
+      ]
+    },
+    {
+      "name": "OldPersian",
+      "iso": "Xpeo",
+      "tags": [
+        "xpeo"
+      ]
+    },
+    {
+      "name": "Cuneiform",
+      "iso": "Xsux",
+      "tags": [
+        "xsux"
+      ]
+    },
+    {
+      "name": "Yezidi",
+      "iso": "Yezi",
+      "tags": [
+        "yezi"
+      ]
+    },
+    {
+      "name": "Yi",
+      "iso": "Yiii",
+      "tags": [
+        "yi  "
+      ]
+    },
+    {
+      "name": "ZanabazarSquare",
+      "iso": "Zanb",
+      "tags": [
+        "zanb"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "Nko",
+      "font": "ScriptTags.ttf",
+      "text": "ߊߊ",
+      "glyphs": [
+        {
+          "id": 3,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 3,
+          "x": 600,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "Lao",
+      "font": "ScriptTags.ttf",
+      "text": "ກກ",
+      "glyphs": [
+        {
+          "id": 4,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 4,
+          "x": 570,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "Vai",
+      "font": "ScriptTags.ttf",
+      "text": "ꔀꔀ",
+      "glyphs": [
+        {
+          "id": 5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 5,
+          "x": 560,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "Yi",
+      "font": "ScriptTags.ttf",
+      "text": "ꀀꀀ",
+      "glyphs": [
+        {
+          "id": 6,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 6,
+          "x": 550,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "Katakana",
+      "font": "ScriptTags.ttf",
+      "text": "アア",
+      "glyphs": [
+        {
+          "id": 7,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 7,
+          "x": 540,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "Hiragana",
+      "font": "ScriptTags.ttf",
+      "text": "ああ",
+      "glyphs": [
+        {
+          "id": 7,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 7,
+          "x": 540,
+          "y": 0
+        }
+      ]
+    }
+  ]
+}
