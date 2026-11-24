@@ -191,6 +191,22 @@ public class VerticalGlyphFormTests
     }
 
     [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight)]
+    public async Task RotatedGlyphLaysOutWhenTheDescenderIsTheSmallestShort(LayoutMode mode)
+    {
+        byte[] font = WithDescender(File.ReadAllBytes(TestFonts.CentralBaselineTestFile), short.MinValue);
+        using MemoryStream stream = new(font);
+        FontFamily family = new FontCollection().Add(stream);
+        TextOptions options = new(family.CreateFont(100)) { LayoutMode = mode };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, "ABC", options);
+
+        await Assert.That(renderer.InkCentres(GlyphLayoutMode.VerticalRotated).Count).IsEqualTo(3);
+    }
+
+    [Test]
     [Arguments("あーい", 1)]
     [Arguments("ー", 0)]
     public async Task TrCharacterUsesVertFormInVerticalMixedLayout(string text, int index)
@@ -380,6 +396,15 @@ public class VerticalGlyphFormTests
         new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);
 
         return collection[0].Features.Select(f => f.Tag.ToString()).ToList();
+    }
+
+    private static byte[] WithDescender(byte[] font, short descender)
+    {
+        byte[] hhea = SfntRewriter.GetTable(font, "hhea")!;
+        byte[] os2 = SfntRewriter.GetTable(font, "OS/2")!;
+        BinaryPrimitives.WriteInt16BigEndian(hhea.AsSpan(6), descender);
+        BinaryPrimitives.WriteInt16BigEndian(os2.AsSpan(70), descender);
+        return SfntRewriter.Replace(SfntRewriter.Replace(font, "hhea", hhea), "OS/2", os2);
     }
 
     private static byte[] WithPositiveDescender(byte[] font)

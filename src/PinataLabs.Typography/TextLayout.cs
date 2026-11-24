@@ -695,7 +695,7 @@ internal static class TextLayout
 
                     // Some fonts store the descent as a positive number; the line metrics take its magnitude too.
                     HorizontalMetrics metrics = metric.FontMetrics.HorizontalMetrics;
-                    float central = (metrics.Ascender - Math.Abs(metrics.Descender)) * .5F * scaleY;
+                    float central = (metrics.Ascender - Math.Abs((int)metrics.Descender)) * .5F * scaleY;
                     glyphs.Add(new GlyphLayout(
                         new Glyph(metric, data.PointSize),
                         boxLocation,
