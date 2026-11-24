@@ -169,7 +169,8 @@ def chosen_tag(font, tags, code):
     buffer.direction = "ltr"
     hb.shape(hb.Font(hb.Face(data.getvalue())), buffer)
     glyph = buffer.glyph_infos[0].codepoint
-    return tags[glyph - 2] if glyph >= 2 else None
+    assert glyph >= 2, f"HarfBuzz chose no probe script for {code}"
+    return tags[glyph - 2]
 
 
 def derive_tags(classes):
