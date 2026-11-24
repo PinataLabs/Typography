@@ -39,6 +39,42 @@ public class NormalizationTests
         await Assert.That(Shape(font, expected.Text)).IsEquivalentTo(expected.Glyphs, CollectionOrdering.Matching);
     }
 
+    public static IEnumerable<string> PositionedCaseNames() => HarfBuzz.Positioned.Select(c => c.Name);
+
+    // A space that the font lacks takes the glyph of U+0020 and a width of its own, and a mark takes no width
+    // in a font that has no GPOS table. So these cases compare the place of each glyph, in font units.
+    [Test]
+    [MethodDataSource(nameof(PositionedCaseNames))]
+    public async Task GlyphsAreDrawnWhereHarfBuzzDrawsThem(string name)
+    {
+        PositionedCase expected = HarfBuzz.Positioned.Single(c => c.Name == name);
+        FontFamily family = new FontCollection().Add(TestFonts.GetPath(expected.Font));
+
+        // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
+        Font font = family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(expected.Text.AsSpan(), new TextOptions(font));
+
+        (int Id, int X, int Y)[] actual = layout
+            .Select(g => (
+                (int)g.Glyph.GlyphMetrics.GlyphId,
+                (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
+                (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y)))
+            .ToArray();
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
+    }
+
+    // The glyph of U+0020 draws a no-break space that the font lacks. The line must still not break there.
+    [Test]
+    [Arguments("aaa aaa", 1)]
+    [Arguments("aaa aaa", 2)]
+    public async Task SpaceThatTheFontLacksBreaksTheLineAsItsCharacterDoes(string text, int lines)
+    {
+        Font font = new FontCollection().Add(TestFonts.GetPath("NormalizationSpace.ttf")).CreateFont(10);
+
+        await Assert.That(TextMeasurer.CountLines(text, new TextOptions(font) { Dpi = 72, WrappingLength = 30 })).IsEqualTo(lines);
+    }
+
     // Each row is one character with a canonical decomposition, its parts, or two marks after a base.
     [Test]
     public async Task EveryCanonicalMappingGivesTheGlyphsThatHarfBuzzGives()
@@ -127,6 +163,8 @@ public class NormalizationTests
 
         public ReferenceCase[] Cases { get; set; } = [];
 
+        public PositionedCase[] Positioned { get; set; } = [];
+
         public Dictionary<string, string> ScanFonts { get; set; } = [];
 
         public JsonElement[][] Scan { get; set; } = [];
@@ -139,5 +177,25 @@ public class NormalizationTests
         public string Text { get; set; } = string.Empty;
 
         public int[] Glyphs { get; set; } = [];
+    }
+
+    private sealed class PositionedCase
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Font { get; set; } = string.Empty;
+
+        public string Text { get; set; } = string.Empty;
+
+        public PositionedGlyph[] Glyphs { get; set; } = [];
+    }
+
+    private sealed class PositionedGlyph
+    {
+        public int Id { get; set; }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
     }
 }

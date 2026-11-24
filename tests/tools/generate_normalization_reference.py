@@ -97,6 +97,43 @@ CASES = [
     ("ArabicComposesHamzaAboveAcrossFatha", "أَ"),
 ]
 
+# A space or a hyphen that the font lacks becomes the space or the hyphen that the font has. Each text ends with
+# a letter, so that the place of the letter shows the advance of the space.
+SPACE_FONT = "NormalizationSpace.ttf"
+SPACE_BARE_FONT = "NormalizationSpaceBare.ttf"
+SPACE_CHARACTERS = " a0. ‐"
+SPACE_ADVANCES = {0x20: 250, ord("0"): 555, ord("."): 222, 0x2002: 480}
+SPACE_BARE_CHARACTERS = " a,-"
+SPACE_BARE_ADVANCES = {0x20: 250, ord(","): 333}
+
+SPACE_CASES = [
+    ("NoBreakSpaceBecomesSpace", "a a"),
+    ("EnQuadDecomposesToEnSpace", "a a"),
+    ("EmQuadIsOneEm", "a a"),
+    ("EmSpaceIsOneEm", "a a"),
+    ("ThreePerEmSpace", "a a"),
+    ("FourPerEmSpace", "a a"),
+    ("SixPerEmSpace", "a a"),
+    ("FigureSpaceIsAsWideAsADigit", "a a"),
+    ("PunctuationSpaceIsAsWideAsAFullStop", "a a"),
+    ("ThinSpace", "a a"),
+    ("HairSpace", "a a"),
+    ("NarrowNoBreakSpaceIsHalfASpace", "a a"),
+    ("MediumMathematicalSpace", "a a"),
+    ("IdeographicSpaceIsOneEm", "a　a"),
+    ("NoBreakHyphenBecomesHyphen", "a‑a"),
+    ("OghamSpaceMarkStaysMissing", "a a"),
+    ("FigureDashStaysMissing", "a‒a"),
+    ("SpacesInAWord", "a  a‑ a"),
+]
+
+SPACE_BARE_CASES = [
+    ("EnQuadWithoutEnSpaceIsHalfAnEm", "a a"),
+    ("FigureSpaceWithoutDigitsKeepsTheSpaceAdvance", "a a"),
+    ("PunctuationSpaceIsAsWideAsAComma", "a a"),
+    ("NoBreakHyphenDoesNotBecomeHyphenMinus", "a‑a"),
+]
+
 # Hangul syllables decompose by arithmetic and the Hangul shaper owns them.
 HANGUL = range(0xAC00, 0xD7A4)
 CJK_COMPATIBILITY = (range(0xF900, 0xFB00), range(0x2F800, 0x2FA20))
@@ -127,13 +164,16 @@ def box():
     return pen.glyph()
 
 
-def build(file_name, code_points, outlines, features=None):
+def build(file_name, code_points, outlines, features=None, advances=None):
     names = [".notdef"] + ["u%04X" % c for c in code_points]
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(names)
     builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
     builder.setupGlyf({name: box() if outlines else Glyph() for name in names})
-    builder.setupHorizontalMetrics({name: (600, 50 if outlines else 0) for name in names})
+    metrics = {name: (600, 50 if outlines else 0) for name in names}
+    for code_point, advance in (advances or {}).items():
+        metrics["u%04X" % code_point] = (advance, 50)
+    builder.setupHorizontalMetrics(metrics)
     builder.setupHorizontalHeader(ascent=800, descent=-200)
     builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
     builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
@@ -152,6 +192,24 @@ def shape(font, text):
     buffer.guess_segment_properties()
     hb.shape(font, buffer)
     return [info.codepoint for info in buffer.glyph_infos]
+
+
+def shape_positions(font, text):
+    """Gives the glyph ID of each glyph, and where HarfBuzz draws it, in font units from the start of the line."""
+    buffer = hb.Buffer()
+    buffer.add_str(text)
+    buffer.guess_segment_properties()
+    hb.shape(font, buffer)
+    glyphs = []
+    x = 0
+    for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
+        glyphs.append({"id": info.codepoint, "x": x + position.x_offset, "y": position.y_offset})
+        x += position.x_advance
+    return glyphs
+
+
+def positioned_cases(font_name, font, cases):
+    return [{"name": name, "font": font_name, "text": text, "glyphs": shape_positions(font, text)} for name, text in cases]
 
 
 def full_decomposition(code_point, decompositions):
@@ -180,6 +238,11 @@ def main():
     case_font = build(CASE_FONT, sorted(set(map(ord, CASE_CHARACTERS))), True, CASE_FEATURES)
     cases = [{"name": name, "text": text, "glyphs": shape(case_font, text)} for name, text in CASES]
     build(BASE_FONT, sorted(set(map(ord, BASE_CHARACTERS))), True)
+
+    space_font = build(SPACE_FONT, sorted(set(map(ord, SPACE_CHARACTERS))), True, advances=SPACE_ADVANCES)
+    space_bare_font = build(SPACE_BARE_FONT, sorted(set(map(ord, SPACE_BARE_CHARACTERS))), True, advances=SPACE_BARE_ADVANCES)
+    positioned = positioned_cases(SPACE_FONT, space_font, SPACE_CASES)
+    positioned += positioned_cases(SPACE_BARE_FONT, space_bare_font, SPACE_BARE_CASES)
 
     composed = list(scanned(decompositions))
     values = sorted(set(classes.values()))
@@ -220,11 +283,14 @@ def main():
         file.write('  "cases": [\n')
         file.write(",\n".join("    " + json.dumps(case) for case in cases))
         file.write("\n  ],\n")
+        file.write('  "positioned": [\n')
+        file.write(",\n".join("    " + json.dumps(case) for case in positioned))
+        file.write("\n  ],\n")
         file.write('  "scanFonts": %s,\n' % json.dumps({"scan": SCAN_FONT, "parts": PARTS_FONT}))
         file.write('  "scan": [\n')
         file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
         file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases", len(rows), "scan rows")
+    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases", len(positioned), "positioned cases", len(rows), "scan rows")
 
 
 if __name__ == "__main__":

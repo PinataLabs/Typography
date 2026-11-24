@@ -133,6 +133,35 @@ internal ref struct GlyphNormalizer
         {
             ArrayPool<Item>.Shared.Return(rented);
         }
+
+        this.ReplaceMissingSpaces();
+    }
+
+    /// <summary>
+    /// Gives a space that the font still lacks the glyph of U+0020, and the no-break hyphen the glyph of the hyphen.
+    /// The character stays, so the line breaker still sees a space that does not break.
+    /// </summary>
+    private readonly void ReplaceMissingSpaces()
+    {
+        for (int i = 0; i < this.collection.Count; i++)
+        {
+            GlyphShapingData data = this.collection[i];
+            if (data.GlyphId != 0)
+            {
+                continue;
+            }
+
+            SpaceFallbackKind kind = SpaceFallback.GetKind(data.CodePoint);
+            if (kind != SpaceFallbackKind.None && this.TryGetGlyph(SpaceFallback.Space, out ushort glyphId))
+            {
+                data.GlyphId = glyphId;
+                data.SpaceFallback = kind;
+            }
+            else if (data.CodePoint.Value == SpaceFallback.NoBreakHyphen && this.TryGetGlyph(SpaceFallback.Hyphen, out glyphId))
+            {
+                data.GlyphId = glyphId;
+            }
+        }
     }
 
     // A character with no mark after it changes only when the font lacks it, or when the shaper decomposes everything.
