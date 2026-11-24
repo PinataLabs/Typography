@@ -18,6 +18,9 @@ internal static class ShaperFactory
         Myanmar,
         Thai,
         Universal,
+
+        // The scripts that HarfBuzz gives to its universal shaper and that ArabicShaper joins here.
+        UniversalJoining,
     }
 
     /// <summary>
@@ -30,7 +33,7 @@ internal static class ShaperFactory
     public static BaseShaper Create(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
         => GetShaperKind(script) switch
         {
-            ShaperKind.Arabic => new ArabicShaper(script, textOptions),
+            ShaperKind.Arabic or ShaperKind.UniversalJoining => new ArabicShaper(script, textOptions),
             ShaperKind.Hangul => new HangulShaper(script, textOptions),
             ShaperKind.Indic => new IndicShaper(script, unicodeScriptTag, textOptions),
             ShaperKind.Myanmar => new MyanmarShaper(script, textOptions),
@@ -46,7 +49,7 @@ internal static class ShaperFactory
     public static NormalizationProfile GetNormalizationProfile(ScriptClass script)
         => GetShaperKind(script) switch
         {
-            ShaperKind.Arabic => NormalizationProfile.Arabic,
+            ShaperKind.Arabic or ShaperKind.UniversalJoining => NormalizationProfile.Arabic,
             ShaperKind.Hangul => NormalizationProfile.Hangul,
             ShaperKind.Hebrew => NormalizationProfile.Hebrew,
             ShaperKind.Indic => NormalizationProfile.Indic,
@@ -67,16 +70,18 @@ internal static class ShaperFactory
     private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch
         {
-            // Arabic. HarfBuzz gives only Arabic and Syriac to its Arabic shaper, and the other six to its universal
-            // shaper, which also joins their letters. UniversalShaper does not join, so they stay here.
+            // Arabic
             ScriptClass.Arabic
-            or ScriptClass.Mongolian
-            or ScriptClass.Syriac
+            or ScriptClass.Syriac => ShaperKind.Arabic,
+
+            // HarfBuzz gives these six to its universal shaper, which also joins their letters. UniversalShaper does
+            // not join, so ArabicShaper shapes them. Without GPOS their marks are still those of the universal shaper.
+            ScriptClass.Mongolian
             or ScriptClass.Nko
             or ScriptClass.PhagsPa
             or ScriptClass.Mandaic
             or ScriptClass.Manichaean
-            or ScriptClass.PsalterPahlavi => ShaperKind.Arabic,
+            or ScriptClass.PsalterPahlavi => ShaperKind.UniversalJoining,
 
             // Hangul
             ScriptClass.Hangul => ShaperKind.Hangul,

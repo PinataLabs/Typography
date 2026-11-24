@@ -64,29 +64,16 @@ public class NormalizationTests
     }
 
     // What a font without GPOS does with a mark shows the shaper of the script: the default shaper places the mark,
-    // the universal shaper only takes its advance away, and the Indic shaper leaves it. HarfBuzz gives these scripts
-    // to its universal shaper, which also joins their letters. UniversalShaper does not join, so the library keeps
-    // them with its Arabic shaper, which places the mark.
-    private static readonly string[] ScriptsWithAnotherShaper =
-    [
-        "Mandaic", "Manichaean", "Mongolian", "Nko", "Phags_Pa", "Psalter_Pahlavi",
-    ];
-
+    // the universal shaper only takes its advance away, and the Indic shaper leaves it.
     [Test]
     public async Task EveryScriptHasTheShaperThatHarfBuzzGivesIt()
-    {
-        List<string> different = [];
-        foreach (PositionedCase expected in HarfBuzz.Scripts)
-        {
-            if (!Place(expected).SequenceEqual(expected.Glyphs.Select(g => (g.Id, g.X, g.Y))))
-            {
-                different.Add(expected.Name);
-            }
-        }
+        => await Assert.That(NamesOfDifferentCases(HarfBuzz.Scripts)).IsEmpty();
 
-        await Assert.That(different.Except(ScriptsWithAnotherShaper)).IsEmpty();
-        await Assert.That(ScriptsWithAnotherShaper.Except(different)).IsEmpty();
-    }
+    private static List<string> NamesOfDifferentCases(PositionedCase[] cases)
+        => cases
+            .Where(expected => !Place(expected).SequenceEqual(expected.Glyphs.Select(g => (g.Id, g.X, g.Y))))
+            .Select(expected => expected.Name)
+            .ToList();
 
     // Gives the glyph ID and the place of each glyph, in font units from the start of the line.
     private static (int Id, int X, int Y)[] Place(PositionedCase text, IReadOnlyList<TextRun>? textRuns = null)
