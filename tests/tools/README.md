@@ -206,3 +206,32 @@ python tests/tools/derive_harfbuzz_script_tags.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Universal shaper reference
+
+`generate_universal_shaper_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/UniversalShaper.harfbuzz.json`.
+
+It builds `UniversalShaperJoining.ttf`. The font has every character of the eleven scripts whose letters the
+universal shaper of HarfBuzz joins: Adlam, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N'Ko,
+Old Uyghur, Phags-pa, Psalter Pahlavi and Sogdian. Each character has a glyph for each of the `isol`, `init`, `medi`
+and `fina` features. The `joining` list of the reference holds the glyph IDs that HarfBuzz gives for:
+
+- each character alone, after a letter that joins on both sides, before that letter, and between two of them;
+- every text of two or three characters, from one character of each joining type and general category of the script;
+- a Mongolian letter and a free variation selector. Each feature has a ligature of the two, which HarfBuzz forms
+  only when the selector has the feature of the letter.
+
+The font has no other character that is Default_Ignorable_Code_Point. HarfBuzz takes the glyph of such a character
+out of its output, and the library keeps it and does not draw it.
+
+`UniversalShaperTests` checks that the library gives the same glyphs.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_universal_shaper_reference.py
+```
+
+The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
+HarfBuzz version that wrote it.

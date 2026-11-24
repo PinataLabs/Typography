@@ -19,7 +19,7 @@ internal static class ShaperFactory
         Thai,
         Universal,
 
-        // The scripts that HarfBuzz gives to its universal shaper and that ArabicShaper joins here.
+        // The scripts of the universal shaper whose letters join as Arabic letters do.
         UniversalJoining,
     }
 
@@ -33,11 +33,12 @@ internal static class ShaperFactory
     public static BaseShaper Create(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
         => GetShaperKind(script) switch
         {
-            ShaperKind.Arabic or ShaperKind.UniversalJoining => new ArabicShaper(script, textOptions),
+            ShaperKind.Arabic => new ArabicShaper(script, textOptions),
             ShaperKind.Hangul => new HangulShaper(script, textOptions),
             ShaperKind.Indic => new IndicShaper(script, unicodeScriptTag, textOptions),
             ShaperKind.Myanmar => new MyanmarShaper(script, textOptions),
-            ShaperKind.Universal => new UniversalShaper(script, textOptions),
+            ShaperKind.Universal => new UniversalShaper(script, false, textOptions),
+            ShaperKind.UniversalJoining => new UniversalShaper(script, true, textOptions),
             _ => new DefaultShaper(script, textOptions),
         };
 
@@ -49,12 +50,12 @@ internal static class ShaperFactory
     public static NormalizationProfile GetNormalizationProfile(ScriptClass script)
         => GetShaperKind(script) switch
         {
-            ShaperKind.Arabic or ShaperKind.UniversalJoining => NormalizationProfile.Arabic,
+            ShaperKind.Arabic => NormalizationProfile.Arabic,
             ShaperKind.Hangul => NormalizationProfile.Hangul,
             ShaperKind.Hebrew => NormalizationProfile.Hebrew,
             ShaperKind.Indic => NormalizationProfile.Indic,
             ShaperKind.Myanmar => NormalizationProfile.Myanmar,
-            ShaperKind.Universal => NormalizationProfile.Universal,
+            ShaperKind.Universal or ShaperKind.UniversalJoining => NormalizationProfile.Universal,
             _ => NormalizationProfile.Default,
         };
 
@@ -75,14 +76,18 @@ internal static class ShaperFactory
             ScriptClass.Arabic
             or ScriptClass.Syriac => ShaperKind.Arabic,
 
-            // HarfBuzz gives these six to its universal shaper, which also joins their letters. UniversalShaper does
-            // not join, so ArabicShaper shapes them. Without GPOS their marks are still those of the universal shaper.
-            ScriptClass.Mongolian
-            or ScriptClass.Nko
-            or ScriptClass.PhagsPa
+            // Universal, with letters that join
+            ScriptClass.Adlam
+            or ScriptClass.Chorasmian
+            or ScriptClass.HanifiRohingya
             or ScriptClass.Mandaic
             or ScriptClass.Manichaean
-            or ScriptClass.PsalterPahlavi => ShaperKind.UniversalJoining,
+            or ScriptClass.Mongolian
+            or ScriptClass.Nko
+            or ScriptClass.OldUyghur
+            or ScriptClass.PhagsPa
+            or ScriptClass.PsalterPahlavi
+            or ScriptClass.Sogdian => ShaperKind.UniversalJoining,
 
             // Hangul
             ScriptClass.Hangul => ShaperKind.Hangul,
@@ -110,8 +115,7 @@ internal static class ShaperFactory
             or ScriptClass.Lao => ShaperKind.Thai,
 
             // Universal
-            ScriptClass.Adlam
-            or ScriptClass.Ahom
+            ScriptClass.Ahom
             or ScriptClass.Balinese
             or ScriptClass.Batak
             or ScriptClass.Bhaiksuki
@@ -120,7 +124,6 @@ internal static class ShaperFactory
             or ScriptClass.Buhid
             or ScriptClass.Chakma
             or ScriptClass.Cham
-            or ScriptClass.Chorasmian
             or ScriptClass.CyproMinoan
             or ScriptClass.DivesAkuru
             or ScriptClass.Dogra
@@ -129,7 +132,6 @@ internal static class ShaperFactory
             or ScriptClass.Elymaic
             or ScriptClass.Grantha
             or ScriptClass.GunjalaGondi
-            or ScriptClass.HanifiRohingya
             or ScriptClass.Hanunoo
             or ScriptClass.Javanese
             or ScriptClass.Kaithi
@@ -153,14 +155,12 @@ internal static class ShaperFactory
             or ScriptClass.Newa
             or ScriptClass.NyiakengPuachueHmong
             or ScriptClass.OldSogdian
-            or ScriptClass.OldUyghur
             or ScriptClass.PahawhHmong
             or ScriptClass.Rejang
             or ScriptClass.Saurashtra
             or ScriptClass.Sharada
             or ScriptClass.Siddham
             or ScriptClass.Sinhala
-            or ScriptClass.Sogdian
             or ScriptClass.Soyombo
             or ScriptClass.Sundanese
             or ScriptClass.SylotiNagri

@@ -33,6 +33,11 @@ internal sealed class UniversalShaper : DefaultShaper
     private static readonly Tag VatuTag = Tag.Parse("vatu");
     private static readonly Tag CjctTag = Tag.Parse("cjct");
 
+    private static readonly Tag IsolTag = Tag.Parse("isol");
+    private static readonly Tag InitTag = Tag.Parse("init");
+    private static readonly Tag MediTag = Tag.Parse("medi");
+    private static readonly Tag FinaTag = Tag.Parse("fina");
+
     private static readonly Tag AbvsTag = Tag.Parse("abvs");
     private static readonly Tag BlwsTag = Tag.Parse("blws");
     private static readonly Tag PresTag = Tag.Parse("pres");
@@ -43,10 +48,17 @@ internal sealed class UniversalShaper : DefaultShaper
 
     private const int DottedCircle = 0x25cc;
 
-    public UniversalShaper(ScriptClass script, TextOptions textOptions)
+    private readonly bool joinsLetters;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UniversalShaper"/> class.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="joinsLetters">Whether the letters of the script join as Arabic letters do.</param>
+    /// <param name="textOptions">The text options.</param>
+    public UniversalShaper(ScriptClass script, bool joinsLetters, TextOptions textOptions)
        : base(script, MarkZeroingMode.PreGPos, textOptions)
-    {
-    }
+        => this.joinsLetters = joinsLetters;
 
     /// <inheritdoc/>
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
@@ -70,6 +82,16 @@ internal sealed class UniversalShaper : DefaultShaper
         this.AddFeature(collection, index, count, VatuTag);
         this.AddFeature(collection, index, count, CjctTag, postAction: Reorder);
 
+        // As in HarfBuzz, the joining forms are a stage of their own, after the reordering.
+        if (this.joinsLetters)
+        {
+            this.AddFeature(collection, index, count, IsolTag, false);
+            this.AddFeature(collection, index, count, InitTag, false);
+            this.AddFeature(collection, index, count, MediTag, false);
+            this.AddFeature(collection, index, count, FinaTag, false);
+            this.EndStage();
+        }
+
         // Standard topographic presentation and positional feature application
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
@@ -82,7 +104,14 @@ internal sealed class UniversalShaper : DefaultShaper
 
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
-        => DecomposeSplitVowels(collection, index, count);
+    {
+        if (this.joinsLetters)
+        {
+            ArabicShaper.AssignJoiningForms(collection, index, count);
+        }
+
+        DecomposeSplitVowels(collection, index, count);
+    }
 
     private static void DecomposeSplitVowels(IGlyphShapingCollection collection, int index, int count)
     {
