@@ -53,8 +53,6 @@ public static class TestFonts
     // Written by tests/tools/generate_normalization_reference.py, with the Normalization fonts.
     public static string NormalizationHarfBuzzReference => GetFullPath("Normalization.harfbuzz.json");
 
-    public static string NormalizationBaseFile => GetFullPath("NormalizationBase.ttf");
-
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");

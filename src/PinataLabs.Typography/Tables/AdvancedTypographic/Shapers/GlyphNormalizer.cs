@@ -52,8 +52,6 @@ internal ref struct GlyphNormalizer
 
     private readonly bool hasFallbackFonts;
 
-    private readonly HashSet<int>? unresolvedOffsets;
-
     // The run of glyphs that one shaper shapes. HarfBuzz normalizes each such run as one buffer.
     private NormalizationProfile profile = NormalizationProfile.Default;
 
@@ -65,12 +63,11 @@ internal ref struct GlyphNormalizer
 
     private bool composesPresentationForms;
 
-    private GlyphNormalizer(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts, HashSet<int>? unresolvedOffsets)
+    private GlyphNormalizer(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts)
     {
         this.fontMetrics = fontMetrics;
         this.collection = collection;
         this.hasFallbackFonts = hasFallbackFonts;
-        this.unresolvedOffsets = unresolvedOffsets;
     }
 
     /// <summary>
@@ -82,13 +79,8 @@ internal ref struct GlyphNormalizer
     /// Whether a fallback font can replace the glyphs that this font lacks. A fallback font replaces glyphs offset
     /// by offset. So a mark that this font lacks must keep its offset, and its run of marks is not sorted.
     /// </param>
-    /// <param name="unresolvedOffsets">
-    /// For a fallback font, the offsets of the characters that no earlier font has a glyph for. Only a character
-    /// and marks that are all unresolved are normalized, so that no glyph of an earlier font loses its mark.
-    /// <see langword="null"/> for the font of the text run.
-    /// </param>
-    public static void Normalize(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts, HashSet<int>? unresolvedOffsets)
-        => new GlyphNormalizer(fontMetrics, collection, hasFallbackFonts, unresolvedOffsets).NormalizeRuns();
+    public static void Normalize(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts)
+        => new GlyphNormalizer(fontMetrics, collection, hasFallbackFonts).NormalizeRuns();
 
     private void NormalizeRuns()
     {
@@ -255,14 +247,9 @@ internal ref struct GlyphNormalizer
             {
                 return false;
             }
-
-            if (this.unresolvedOffsets?.Contains(offset) == false)
-            {
-                return false;
-            }
         }
 
-        return true;
+        return this.collection.IsUnresolved(start, end);
     }
 
     /// <summary>

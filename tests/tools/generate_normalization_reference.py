@@ -25,16 +25,21 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
 * NormalizationParts.ttf has the same characters, except those that have a canonical decomposition.
 * NormalizationBase.ttf has a, e, o, q and U+0323 only. The tests use it as a primary font that lacks marks,
   with Normalization.ttf as its fallback font. HarfBuzz has no font fallback, so the reference has no case for it.
-* NormalizationHebrew.ttf, NormalizationHebrewMark.ttf and NormalizationHebrewKern.ttf have the Hebrew letters,
-  points and presentation forms. They differ in the GPOS `mark` feature that decides whether a letter and a
-  point compose.
+  NormalizationHangulLead.ttf and NormalizationBaseKern.ttf are primary fonts of the same kind.
+* NormalizationHebrew.ttf, NormalizationHebrewMark.ttf, NormalizationHebrewKern.ttf and
+  NormalizationHebrewRequiredMark.ttf have the Hebrew letters, points and presentation forms. They differ in the
+  GPOS `mark` feature that decides whether a letter and a point compose.
 * NormalizationHangul.ttf, NormalizationHangulGsub.ttf and NormalizationHangulJamo.ttf have Hangul jamo, with and
   without syllables and a GSUB table.
 * NormalizationSpace.ttf and NormalizationSpaceBare.ttf have U+0020 and lack the other spaces.
+  NormalizationSpaceLigature.ttf and NormalizationSpaceSingle.ttf also substitute U+0020 in GSUB.
 * NormalizationMarks.ttf, NormalizationMarksGdef.ttf and NormalizationMarksKern.ttf have a base and marks of
-  eight scripts. They differ in their GDEF and GPOS tables. NormalizationMarksLegacyKern.ttf has a `kern` table
-  in place of them, and NormalizationMarksBothKern.ttf has a `kern` table and a GPOS table.
+  eight scripts. They differ in their GDEF and GPOS tables. NormalizationMarksGdefKern.ttf has both tables.
+  NormalizationMarksLegacyKern.ttf has a `kern` table in place of them, and NormalizationMarksBothKern.ttf has a
+  `kern` table and a GPOS table.
 * NormalizationDevanagari.ttf has Devanagari letters, signs and the dotted circle, and no GSUB table.
+* NormalizationDivesAkuru.ttf, NormalizationDivesAkuruWithoutE.ttf and NormalizationDivesAkuruWithoutAa.ttf have a
+  Dives Akuru letter and a split vowel sign, with and without its parts.
 * NormalizationScripts.ttf has the first letter of every script and U+0301. NormalizationScriptsKern.ttf also has
   a `kern` table.
 
@@ -144,6 +149,16 @@ feature kern { pos u05D0 u05D1 -50; } kern;
 feature mark { script latn; pos base [u05D1] <anchor 300 350> mark @DAGESH; } mark;
 """
 
+# A `mark` feature that is only the required feature of the language system does not stop the composition.
+HEBREW_REQUIRED_MARK_FONT = "NormalizationHebrewRequiredMark.ttf"
+
+HEBREW_REQUIRED_MARK_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem hebr dflt;
+markClass [u05BC] <anchor 300 0> @DAGESH;
+feature mark { script hebr; language dflt required; pos base [u05D1] <anchor 300 350> mark @DAGESH; } mark;
+"""
+
 HEBREW_CASES = [
     ("ComposesDagesh", "בּ"),
     ("ComposesShinDotThenDagesh", "שּׁ"),
@@ -187,6 +202,26 @@ HANGUL_CASES = [
     ("PutsDottedCircleAfterLoneToneMark", "\u302E"),
     ("ComposesEachSyllableInAWord", "\u1100\u1161\u11A8\u1102\u1161 \u1100\u1161"),
     ("ComposesAfterLatinText", ("aa", "\u1100\u1161\u11AB\u302E\uAC00\u11A8")),
+]
+
+# NormalizationHangulLead.ttf has only the lead U+1100. The tests use it as a primary font with Hangul.ttf as its fallback.
+HANGUL_LEAD_FONT = "NormalizationHangulLead.ttf"
+
+# The universal shaper splits a vowel sign in two parts only when the font has both parts. DivesAkuru has the letter
+# KA, the vowel sign O and its parts E and AA. DivesAkuruWithoutE lacks E, and DivesAkuruWithoutAa lacks AA.
+DIVES_AKURU_KA = 0x1190C
+DIVES_AKURU_O = 0x11938
+DIVES_AKURU_E = 0x11935
+DIVES_AKURU_AA = 0x11930
+DIVES_AKURU_FONTS = [
+    ("DivesAkuru", "NormalizationDivesAkuru.ttf", [DIVES_AKURU_KA, DIVES_AKURU_O, DIVES_AKURU_E, DIVES_AKURU_AA]),
+    ("DivesAkuruWithoutE", "NormalizationDivesAkuruWithoutE.ttf", [DIVES_AKURU_KA, DIVES_AKURU_O, DIVES_AKURU_AA]),
+    ("DivesAkuruWithoutAa", "NormalizationDivesAkuruWithoutAa.ttf", [DIVES_AKURU_KA, DIVES_AKURU_O, DIVES_AKURU_E]),
+]
+
+DIVES_AKURU_CASES = [
+    ("VowelSign", "\U0001190C\U00011938"),
+    ("PartsOfVowelSign", "\U0001190C\U00011935\U00011930"),
 ]
 
 # The Indic shaper reorders each syllable and gives a broken syllable a dotted circle before GSUB, so it does the
@@ -287,6 +322,16 @@ MARKS_BOTH_KERN_CASES = [
     ("GposKernsAPairThatTheKernTableAlsoHas", "ax"),
 ]
 
+# MarksGdefKern has the GDEF table of MarksGdef and the GPOS table of MarksKern, so U+0323 is a base that keeps its
+# advance. NormalizationBaseKern.ttf has a and x and a GPOS `kern` feature. The tests use it as a primary font that
+# lacks U+0323, with MarksGdefKern as its fallback font.
+MARKS_GDEF_KERN_FONT = "NormalizationMarksGdefKern.ttf"
+BASE_KERN_FONT = "NormalizationBaseKern.ttf"
+
+MARKS_GDEF_KERN_CASES = [
+    ("GposKeepsTheAdvanceOfAGdefBase", "ạa"),
+]
+
 MARKS_KERN_CASES = [
     ("GposWithoutGdefTakesTheAdvanceOfAMark", "a\u0301a"),
     ("GposWithoutGdefTakesTheAdvanceOfThaiMarks", "\u0E01\u0E38\u0E48\u0E01"),
@@ -340,6 +385,31 @@ SPACE_CASES = [
     ("OghamSpaceMarkStaysMissing", "a a"),
     ("FigureDashStaysMissing", "a‒a"),
     ("SpacesInAWord", "a  a‑ a"),
+]
+
+# A space that GSUB substitutes keeps the advance of the space it stands for, unless it became part of a ligature.
+# SpaceLigature ligates U+0020 and a to b, and SpaceSingle substitutes b for U+0020. b has an advance of 700.
+SPACE_LIGATURE_FONT = "NormalizationSpaceLigature.ttf"
+SPACE_SINGLE_FONT = "NormalizationSpaceSingle.ttf"
+SPACE_SUBSTITUTED_CHARACTERS = [0x20, ord("a"), ord("b")]
+SPACE_SUBSTITUTED_ADVANCES = {0x20: 250, ord("b"): 700}
+SPACE_LIGATURE_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+feature liga { sub u0020 u0061 by u0062; } liga;
+"""
+SPACE_SINGLE_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+feature ccmp { sub u0020 by u0062; } ccmp;
+"""
+
+SPACE_LIGATURE_CASES = [
+    ("LigatureOfASpaceKeepsItsAdvance", "a aa"),
+]
+
+SPACE_SINGLE_CASES = [
+    ("SubstitutedSpaceKeepsTheAdvanceOfTheSpace", "a aa"),
 ]
 
 SPACE_BARE_CASES = [
@@ -503,6 +573,7 @@ def main():
         ("HebrewWithoutMarkFeature", HEBREW_FONT, None),
         ("HebrewWithMarkFeature", HEBREW_MARK_FONT, HEBREW_MARK_FEATURES),
         ("HebrewWithMarkFeatureOfAnotherScript", HEBREW_KERN_FONT, HEBREW_KERN_FEATURES),
+        ("HebrewWithRequiredMarkFeature", HEBREW_REQUIRED_MARK_FONT, HEBREW_REQUIRED_MARK_FEATURES),
     ):
         hebrew_fonts[file_name] = build(file_name, HEBREW_CHARACTERS, True, features)
         cases += named_cases(prefix, file_name, hebrew_fonts[file_name], HEBREW_CASES)
@@ -513,15 +584,26 @@ def main():
     ):
         cases += named_cases(prefix, file_name, build(file_name, characters, True, features), HANGUL_CASES)
     cases += named_cases("DevanagariWithoutGsub", DEVANAGARI_FONT, build(DEVANAGARI_FONT, DEVANAGARI_CHARACTERS, True), DEVANAGARI_CASES)
+    build(HANGUL_LEAD_FONT, [0x1100], True)
+    for prefix, file_name, characters in DIVES_AKURU_FONTS:
+        cases += named_cases(prefix, file_name, build(file_name, characters, True), DIVES_AKURU_CASES)
     build(BASE_FONT, sorted(set(map(ord, BASE_CHARACTERS))), True)
+    build(BASE_KERN_FONT, [ord("a"), ord("x")], True, MARKS_KERN_FEATURES)
 
     space_font = build(SPACE_FONT, sorted(set(map(ord, SPACE_CHARACTERS))), True, advances=SPACE_ADVANCES)
     space_bare_font = build(SPACE_BARE_FONT, sorted(set(map(ord, SPACE_BARE_CHARACTERS))), True, advances=SPACE_BARE_ADVANCES)
     positioned = positioned_cases(SPACE_FONT, space_font, SPACE_CASES)
     positioned += positioned_cases(SPACE_BARE_FONT, space_bare_font, SPACE_BARE_CASES)
+    for file_name, features, space_cases in (
+        (SPACE_LIGATURE_FONT, SPACE_LIGATURE_FEATURES, SPACE_LIGATURE_CASES),
+        (SPACE_SINGLE_FONT, SPACE_SINGLE_FEATURES, SPACE_SINGLE_CASES),
+    ):
+        font = build(file_name, SPACE_SUBSTITUTED_CHARACTERS, True, features, SPACE_SUBSTITUTED_ADVANCES)
+        positioned += positioned_cases(file_name, font, space_cases)
     for file_name, features, kern, mark_cases in (
         (MARKS_FONT, None, None, MARKS_CASES),
         (MARKS_GDEF_FONT, MARKS_GDEF_FEATURES, None, MARKS_GDEF_CASES),
+        (MARKS_GDEF_KERN_FONT, MARKS_KERN_FEATURES + MARKS_GDEF_FEATURES, None, MARKS_GDEF_KERN_CASES),
         (MARKS_KERN_FONT, MARKS_KERN_FEATURES, None, MARKS_KERN_CASES),
         (MARKS_LEGACY_KERN_FONT, None, MARKS_LEGACY_KERN, MARKS_LEGACY_KERN_CASES),
         (MARKS_BOTH_KERN_FONT, MARKS_KERN_FEATURES, MARKS_LEGACY_KERN, MARKS_BOTH_KERN_CASES),

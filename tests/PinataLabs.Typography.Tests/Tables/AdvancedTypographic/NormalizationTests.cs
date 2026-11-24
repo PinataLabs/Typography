@@ -21,6 +21,12 @@ public class NormalizationTests
 
     private const string BaseFont = "NormalizationBase";
 
+    private const string BaseKernFont = "NormalizationBaseKern";
+
+    private const string HangulFont = "NormalizationHangul";
+
+    private const string HangulLeadFont = "NormalizationHangulLead";
+
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
     private static readonly Reference HarfBuzz = JsonSerializer.Deserialize<Reference>(
@@ -158,11 +164,49 @@ public class NormalizationTests
         await Assert.That(glyphs).IsEquivalentTo([(0x71, BaseFont), (0x301, CaseFont), (0x323, BaseFont)], CollectionOrdering.Matching);
     }
 
-    private static (int CodePoint, string Font)[] ShapeWithFallback(string text)
+    // The Hangul shaper composes a syllable before GSUB, so a fallback font must not compose a vowel into a lead
+    // that the primary font has already drawn.
+    [Test]
+    public async Task FallbackFontKeepsTheVowelOfALeadThatThePrimaryFontHas()
+    {
+        (int CodePoint, string Font)[] glyphs = ShapeWithFallback("\u1100\u1161", HangulLeadFont, HangulFont);
+
+        await Assert.That(glyphs).IsEquivalentTo([(0x1100, HangulLeadFont), (0x1161, HangulFont)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task FallbackFontComposesASyllableThatThePrimaryFontLacks()
+    {
+        (int CodePoint, string Font)[] glyphs = ShapeWithFallback("\u1100\u1161", BaseFont, HangulFont);
+
+        await Assert.That(glyphs).IsEquivalentTo([(0xAC00, HangulFont)], CollectionOrdering.Matching);
+    }
+
+    // The primary font has GPOS and lacks U+0323. The fallback font calls U+0323 a base, so the mark keeps its advance
+    // as it does when the fallback font draws the whole text.
+    [Test]
+    public async Task FallbackFontPositionsItsOwnMark()
+    {
+        PositionedCase expected = HarfBuzz.Positioned.Single(c => c.Name == "GposKeepsTheAdvanceOfAGdefBase");
+        FontFamily primary = new FontCollection().Add(TestFonts.GetPath(BaseKernFont + ".ttf"));
+        FontFamily fallback = new FontCollection().Add(TestFonts.GetPath(expected.Font));
+        Font font = primary.CreateFont(72 * primary.CreateFont(1).FontMetrics.UnitsPerEm);
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(expected.Text.AsSpan(), new TextOptions(font) { FallbackFontFamilies = [fallback] });
+
+        (int X, int Y)[] actual = layout
+            .Select(g => (
+                (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
+                (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y)))
+            .ToArray();
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => (g.X, g.Y)), CollectionOrdering.Matching);
+    }
+
+    private static (int CodePoint, string Font)[] ShapeWithFallback(string text, string primaryFont = BaseFont, string fallbackFont = CaseFont)
     {
         FontCollection collection = new();
-        Font primary = collection.Add(TestFonts.NormalizationBaseFile).CreateFont(12);
-        FontFamily fallback = collection.Add(TestFonts.GetPath(HarfBuzz.Font));
+        Font primary = collection.Add(TestFonts.GetPath(primaryFont + ".ttf")).CreateFont(12);
+        FontFamily fallback = collection.Add(TestFonts.GetPath(fallbackFont + ".ttf"));
         TextOptions options = new(primary) { FallbackFontFamilies = [fallback] };
 
         return TextLayout.GenerateLayout(text.AsSpan(), options)

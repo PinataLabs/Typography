@@ -96,7 +96,8 @@ internal static class SpaceFallback
     /// <param name="isVertical">Whether the glyph advances down the line.</param>
     public static void SetAdvance(IReadOnlyList<GlyphMetrics> metrics, GlyphShapingData data, FontMetrics fontMetrics, TextOptions options, bool isVertical)
     {
-        if (data.SpaceFallback is SpaceFallbackKind.None or SpaceFallbackKind.Space)
+        // A ligature that formed from the space keeps the advance that the font gives it.
+        if (data.SpaceFallback is SpaceFallbackKind.None or SpaceFallbackKind.Space || data.IsLigated)
         {
             return;
         }

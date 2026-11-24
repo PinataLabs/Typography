@@ -303,7 +303,8 @@ internal sealed class HangulShaper : DefaultShaper
         }
 
         CodePoint t = tjmo >= 0 ? collection[tjmo].CodePoint : new CodePoint(TBase);
-        if ((lv != default) && (t.Value == TBase || IsCombiningT(t)))
+        bool canCompose = collection.IsUnresolved(index - (prevType == V ? 2 : 1), index + 1);
+        if (canCompose && (lv != default) && (t.Value == TBase || IsCombiningT(t)))
         {
             CodePoint s = new(lv.Value + (t.Value - TBase));
 
@@ -336,7 +337,7 @@ internal sealed class HangulShaper : DefaultShaper
             collection.EnableShapingFeature(tjmo, TjmoTag);
         }
 
-        if (prevType == LV)
+        if (prevType == LV && canCompose)
         {
             // Sequence was originally <L,V>, which got combined earlier.
             // Either the T was non-combining, or the LVT glyph wasn't supported.

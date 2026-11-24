@@ -50,6 +50,12 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     internal FontMetrics? FontMetrics { get; set; }
 
     /// <summary>
+    /// Gets or sets, for a fallback font, the offsets of the characters that no earlier font has a glyph for.
+    /// <see langword="null"/> for the font of the text run.
+    /// </summary>
+    internal HashSet<int>? UnresolvedOffsets { get; set; }
+
+    /// <summary>
     /// Gets or sets the running id of any ligature glyphs contained withing this collection are a member of.
     /// </summary>
     public int LigatureId { get; set; } = 1;
@@ -80,6 +86,32 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         OffsetGlyphDataPair pair = this.glyphs[index];
         offset = pair.Offset;
         return pair.Data;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the glyphs in the range may become other glyphs. A fallback font replaces glyphs
+    /// offset by offset, so it may compose or decompose only characters that no earlier font has a glyph for. Otherwise
+    /// a glyph of an earlier font would lose the characters that the fallback font folded into it.
+    /// </summary>
+    /// <param name="start">The zero-based index of the first glyph.</param>
+    /// <param name="end">The zero-based index after the last glyph.</param>
+    /// <returns><see langword="true"/> if every glyph in the range is unresolved.</returns>
+    internal bool IsUnresolved(int start, int end)
+    {
+        if (this.UnresolvedOffsets is null)
+        {
+            return true;
+        }
+
+        for (int i = start; i < end; i++)
+        {
+            if (!this.UnresolvedOffsets.Contains(this.glyphs[i].Offset))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <inheritdoc />

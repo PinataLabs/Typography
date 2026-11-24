@@ -779,6 +779,7 @@ internal static class TextLayout
         // For each run we start with a fresh substitution collection to avoid
         // overwriting the glyph ids.
         substitutions.Clear();
+        substitutions.UnresolvedOffsets = isFallbackRun ? positionings.GetUnresolvedOffsets() : null;
 
         // Enumerate through each grapheme in the text.
         int graphemeIndex = start;
@@ -837,8 +838,7 @@ internal static class TextLayout
         GlyphNormalizer.Normalize(
             font.FontMetrics,
             substitutions,
-            substitutions.TextOptions.FallbackFontFamilies?.Count > 0,
-            isFallbackRun ? positionings.GetUnresolvedOffsets() : null);
+            substitutions.TextOptions.FallbackFontFamilies?.Count > 0);
         SubstituteBidiMirrors(font.FontMetrics, substitutions);
         SubstituteVerticalForms(font.FontMetrics, substitutions);
         font.FontMetrics.ApplySubstitution(substitutions);
