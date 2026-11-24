@@ -151,3 +151,28 @@ python tests/tools/generate_normalization_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Script tags
+
+`derive_harfbuzz_script_tags.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ScriptTags.harfbuzz.json`. For each
+script of `ScriptClass.cs`, it holds the OpenType script tags that HarfBuzz looks for in a font, in the order that
+HarfBuzz tries them. For example, Devanagari gives `dev3`, `dev2`, `deva`, N'Ko gives `nko `, and Hiragana gives `kana`.
+
+The script does not read the HarfBuzz source. It builds a probe font with a GSUB script for each candidate tag, where
+each script has a required feature that gives a glyph of its own. It shapes text with the ISO 15924 code of the script
+as the buffer script, and reads which script HarfBuzz chose. It hides that script and shapes again, until HarfBuzz
+chooses `DFLT`.
+
+It also builds `ScriptTags.ttf`, whose scripts are `nko `, `lao `, `vai `, `yi  `, `kana` and `DFLT`, and writes the
+glyphs that HarfBuzz gives for text of each script. It copies `NotoSansKannada-Regular.ttf` to
+`ScriptTagsKannadaVersion3.ttf` with `knd2` renamed to `knd3`, and writes the glyphs of Kannada text in it. `ScriptTagTests` checks the map of the library and the glyphs
+against the reference.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/derive_harfbuzz_script_tags.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

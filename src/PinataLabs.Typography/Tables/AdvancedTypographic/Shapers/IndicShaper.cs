@@ -63,7 +63,8 @@ internal sealed class IndicShaper : DefaultShaper
             this.indicConfiguration = ShapingConfiguration.Default;
         }
 
-        this.isOldSpec = this.indicConfiguration.HasOldSpec && !unicodeScriptTag.ToString().EndsWith("2");
+        // Only the old tags such as deva are old spec. The version 3 tags such as dev3 are new spec too.
+        this.isOldSpec = this.indicConfiguration.HasOldSpec && unicodeScriptTag.ToString()[3] is not '2' and not '3';
     }
 
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
