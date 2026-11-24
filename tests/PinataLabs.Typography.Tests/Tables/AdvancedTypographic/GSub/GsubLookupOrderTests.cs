@@ -4,6 +4,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GSub;
 
@@ -52,4 +54,24 @@ public class GsubLookupOrderTests
     [Test]
     public async Task LookupIsNotAppliedToGlyphWithoutItsFeature()
         => await Assert.That(GlyphIds("if", LayoutMode.HorizontalTopBottom)).IsEquivalentTo(new[] { I, F });
+
+    [Test]
+    public async Task ArabicShaperLeavesContextualAlternatesToTheLayoutMode()
+    {
+        // The Arabic shaper orders calt and rclt in a stage of their own. That must not
+        // assign them to upright glyphs in vertical layout, which only get vert.
+        const string text = "\u0628";
+        Font font = FakeFont.CreateFont(text);
+        TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalRightLeft };
+        GlyphSubstitutionCollection collection = new(options);
+        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.RightToLeft, new TextRun { Start = 0, End = 1, Font = font }, 0);
+
+        new ArabicShaper(ScriptClass.Arabic, options).Plan(collection, 0, 1);
+
+        List<string> tags = collection[0].Features.Select(f => f.Tag.ToString()).ToList();
+        await Assert.That(tags).Contains("vert");
+        await Assert.That(tags).Contains("rlig");
+        await Assert.That(tags).DoesNotContain("calt");
+        await Assert.That(tags).DoesNotContain("rclt");
+    }
 }

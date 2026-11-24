@@ -99,8 +99,10 @@ internal sealed class ArabicShaper : DefaultShaper
         this.AddFeature(collection, index, count, RligTag);
         this.EndStage();
 
-        this.AddFeature(collection, index, count, CaltTag);
-        this.AddFeature(collection, index, count, RcltTag);
+        // A count of zero places these features in a stage of their own without assigning them
+        // to any glyph. The glyphs get them where the default shaper plans them.
+        this.AddFeature(collection, index, 0, CaltTag);
+        this.AddFeature(collection, index, 0, RcltTag);
         this.EndStage();
     }
 
