@@ -43,7 +43,7 @@ of them. The first ScriptRecord of three of the fonts is `arab`.
 
 The `vert` of the ScriptFallback fonts is listed only under `arab`. HarfBuzz looks for `vert` in the
 whole FeatureList when the chosen LangSys lacks it, so vertical Han text gets a.vert in these fonts.
-The cases with a direction are shaped in that direction.
+The cases with a direction are shaped in that direction, and those with a feature have it turned on.
 
 The reference holds the glyph IDs and positions that HarfBuzz gives for each case, in font units
 from the origin of the line. DefaultLangSysTests reads it.
@@ -107,6 +107,7 @@ CASES = [
     ("FallbackToNone", "ScriptFallbackNone.ttf", "\u03b1\u03b1"),
     ("VertNotInLangSys", "ScriptFallbackLatn.ttf", "\u4e2d\u4e2d", "ttb"),
     ("VertWithoutLangSys", "ScriptFallbackNone.ttf", "\u4e2d\u4e2d", "ttb"),
+    ("VertRequestedHorizontal", "ScriptFallbackLatn.ttf", "\u4e2d\u4e2d", "ltr", "vert"),
 ]
 
 REQUIRED_GLYPHS = [".notdef", "a", "b", "c", "d"]
@@ -237,7 +238,7 @@ def build_script_fallback(path, scripts):
     builder.font.save(os.path.join(FONTS, path))
 
 
-def shape(path, text, direction=None):
+def shape(path, text, direction=None, feature=None):
     with open(os.path.join(FONTS, path), "rb") as file:
         font = hb.Font(hb.Face(file.read()))
 
@@ -246,7 +247,7 @@ def shape(path, text, direction=None):
     buffer.guess_segment_properties()
     if direction:
         buffer.direction = direction
-    hb.shape(font, buffer)
+    hb.shape(font, buffer, {feature: True} if feature else None)
 
     glyphs = []
     x = y = 0
@@ -263,11 +264,13 @@ def main():
     for path, scripts in FALLBACK_FONTS.items():
         build_script_fallback(path, scripts)
     cases = []
-    for name, path, text, *direction in CASES:
+    for name, path, text, *options in CASES:
         case = {"name": name, "font": path, "text": text}
-        if direction:
-            case["direction"] = direction[0]
-        case["glyphs"] = shape(path, text, *direction)
+        if options:
+            case["direction"] = options[0]
+        if len(options) > 1:
+            case["feature"] = options[1]
+        case["glyphs"] = shape(path, text, *options)
         cases.append(case)
     reference = {"harfbuzz": hb.version_string(), "cases": cases}
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:

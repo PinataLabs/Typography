@@ -466,6 +466,25 @@
           "y": -1850
         }
       ]
+    },
+    {
+      "name": "VertRequestedHorizontal",
+      "font": "ScriptFallbackLatn.ttf",
+      "text": "中中",
+      "direction": "ltr",
+      "feature": "vert",
+      "glyphs": [
+        {
+          "id": 6,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 6,
+          "x": 550,
+          "y": 0
+        }
+      ]
     }
   ]
 }

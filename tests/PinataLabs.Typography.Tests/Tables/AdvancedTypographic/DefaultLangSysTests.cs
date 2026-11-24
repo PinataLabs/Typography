@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using TUnit.Assertions.Enums;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
@@ -73,6 +74,23 @@ public class DefaultLangSysTests
         IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(
             expected.Text.AsSpan(),
             new TextOptions(font) { LayoutMode = LayoutMode.VerticalLeftRight });
+
+        int[] actual = layout.Select(g => (int)g.Glyph.GlyphMetrics.GlyphId).ToArray();
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => g.Id), CollectionOrdering.Matching);
+    }
+
+    /// <summary>
+    /// HarfBuzz looks outside the chosen language system only for the vert of vertical text, not for a vert that
+    /// the caller requests for horizontal text.
+    /// </summary>
+    [Test]
+    public async Task RequestedVertInHorizontalTextComesOnlyFromTheLanguageSystem()
+    {
+        ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == "VertRequestedHorizontal");
+        Font font = new FontCollection().Add(TestFonts.GetPath(expected.Font)).CreateFont(12);
+        TextOptions options = new(font) { FeatureTags = [Tag.Parse("vert")] };
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(expected.Text.AsSpan(), options);
 
         int[] actual = layout.Select(g => (int)g.Glyph.GlyphMetrics.GlyphId).ToArray();
 

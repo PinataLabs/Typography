@@ -92,7 +92,8 @@ An additive or breaking public API change needs all of these:
   give the precomposed glyph when the font has it, so `o` + U+0301 draws ó. A character that the font lacks is drawn
   from its canonical parts when the font has them, so U+0162 draws as T + U+0327. Each run of combining marks is
   sorted in the order that HarfBuzz uses. The Indic, universal and Myanmar shapers decompose first, and the Arabic
-  shaper moves modifier marks such as U+0654, as HarfBuzz 15.0.0 does. (#95)
+  shaper moves modifier marks such as U+0654, as HarfBuzz 15.0.0 does. `TextMeasurer.TryMeasureCharacter*` report the
+  glyphs after this step, so `o` + U+0301 gives one entry for U+00F3, and U+0162 gives two entries, T and U+0327. (#95)
 - **One TrueType decoder.** Text layout draws TrueType glyphs with the decoder that `FontProgram` uses, and it
   no longer decodes the `glyf` table when it loads a font. A loaded font keeps the bytes of `glyf` and `loca`.
   OpenSans-Regular keeps about 295 KB after load, down from 585 KB. A contour starts at its first on-curve point,
