@@ -16,6 +16,8 @@ public static class TextMeasurer
 {
     private const float FloatErrorTolerance = 1E-6F;
 
+    private const float MaxFloatError = 1F / 64;
+
     /// <summary>
     /// Measures the advance (line-height and horizontal/vertical advance) of the text in pixel units.
     /// </summary>
@@ -227,10 +229,14 @@ public static class TextMeasurer
     // Layout works in inches, where a whole pixel such as 100 / 72 is inexact, so a whole-pixel extent comes
     // back a few float steps over or under, about 3e-7 of the extent at most. That error scales with the extent,
     // so the tolerance does too; a real ink overhang, such as 399.0037px, still rounds up.
+    // The tolerance stops at 1/64px, the finest step of 26.6 fixed-point rasterizers, so a fraction larger than
+    // that rounds up at any size. The float error reaches 1/64px only past about 50,000px, where a whole-pixel
+    // extent can then measure one pixel over, which is safe.
     private static float CeilingToPixel(float extent)
     {
         float nearest = MathF.Round(extent);
-        return MathF.Abs(extent - nearest) <= nearest * FloatErrorTolerance ? nearest : MathF.Ceiling(extent);
+        float tolerance = MathF.Min(nearest * FloatErrorTolerance, MaxFloatError);
+        return MathF.Abs(extent - nearest) <= tolerance ? nearest : MathF.Ceiling(extent);
     }
 
     internal static FontRectangle GetBounds(IReadOnlyList<GlyphLayout> glyphLayouts, float dpi)

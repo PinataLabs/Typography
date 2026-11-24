@@ -70,4 +70,29 @@ public class TextMeasurerRoundingTests
         float lineExtent = mode == LayoutMode.HorizontalTopBottom ? advance.Height : advance.Width;
         await Assert.That(lineExtent).IsEqualTo(101F);
     }
+
+    [Test]
+    [Arguments(100000.05F, 100001F)]
+    [Arguments(500000.25F, 500001F)]
+    public async Task MeasureAdvanceRoundsAFractionalExtentUpAtALargeSize(float size, float expected)
+    {
+        // The line is as high as the font size. Float error at these sizes is a few hundredths of a pixel at most.
+        TextOptions options = new(CentralBaselineFont(size));
+
+        FontRectangle advance = TextMeasurer.MeasureAdvance("A", options);
+
+        await Assert.That(advance.Height).IsEqualTo(expected);
+    }
+
+    [Test]
+    [Arguments(10000F)]
+    [Arguments(16384F)]
+    public async Task MeasureAdvanceOfAWholePixelLineIsExactAtALargeSize(float size)
+    {
+        TextOptions options = new(CentralBaselineFont(size));
+
+        FontRectangle advance = TextMeasurer.MeasureAdvance("A", options);
+
+        await Assert.That(advance.Height).IsEqualTo(size);
+    }
 }
