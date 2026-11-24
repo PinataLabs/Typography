@@ -347,6 +347,25 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
+    /// Moves the glyphs at the given index and id by dx and dy. Their advance stays the same.
+    /// </summary>
+    /// <param name="fontMetrics">The font face with metrics.</param>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <param name="glyphId">The id of the glyph to move.</param>
+    /// <param name="dx">The delta x-offset.</param>
+    /// <param name="dy">The delta y-offset.</param>
+    public void Offset(FontMetrics fontMetrics, int index, ushort glyphId, short dx, short dy)
+    {
+        foreach (GlyphMetrics m in this.glyphs[index].Metrics)
+        {
+            if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
+            {
+                m.ApplyOffset(dx, dy);
+            }
+        }
+    }
+
+    /// <summary>
     /// Returns a value indicating whether the element at the given index should be processed.
     /// </summary>
     /// <param name="fontMetrics">The font face with metrics.</param>

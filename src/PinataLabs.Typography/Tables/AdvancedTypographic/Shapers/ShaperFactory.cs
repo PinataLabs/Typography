@@ -59,12 +59,13 @@ internal static class ShaperFactory
         };
 
     /// <summary>
-    /// Gets a value indicating whether the shaper of the script places a mark on its base from the boxes of the two
-    /// glyphs when the font has no GPOS table. The default, Arabic, Hebrew and Hangul shapers of HarfBuzz do.
+    /// Gets a value indicating whether the shaper of the script positions glyphs without GPOS: it kerns with the
+    /// <c>kern</c> table of the font, and in a font without a GPOS table it places a mark on its base from the boxes
+    /// of the two glyphs. The default, Arabic, Hebrew and Hangul shapers of HarfBuzz do.
     /// </summary>
     /// <param name="script">The script of the text.</param>
-    /// <returns><see langword="true"/> if the shaper places marks without GPOS.</returns>
-    public static bool PlacesMarksWithoutGpos(ScriptClass script)
+    /// <returns><see langword="true"/> if the shaper positions glyphs without GPOS.</returns>
+    public static bool HasFallbackPositioning(ScriptClass script)
         => GetShaperKind(script) is ShaperKind.Default or ShaperKind.Arabic or ShaperKind.Hebrew or ShaperKind.Hangul;
 
     private static ShaperKind GetShaperKind(ScriptClass script)

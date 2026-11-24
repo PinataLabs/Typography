@@ -8,7 +8,7 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 /// <summary>
 /// Positions the marks of a font that has no GPOS table, as HarfBuzz does. A mark loses its advance, and the
-/// shapers that <see cref="ShaperFactory.PlacesMarksWithoutGpos"/> names place it on its base from the boxes
+/// shapers that <see cref="ShaperFactory.HasFallbackPositioning"/> names place it on its base from the boxes
 /// of the two glyphs. <see cref="UnicodeData.GetCombiningClassData"/> gives the side of the base for each mark.
 /// </summary>
 internal static class FallbackMarkPositioner
@@ -49,7 +49,7 @@ internal static class FallbackMarkPositioner
         {
             int end = GetScriptRunEnd(collection, start, out ScriptClass script);
             bool zeroes = GetMarkZeroingMode(script, collection.TextOptions) == MarkZeroingMode.PostGpos;
-            bool places = ShaperFactory.PlacesMarksWithoutGpos(script);
+            bool places = ShaperFactory.HasFallbackPositioning(script);
             if (zeroes)
             {
                 ZeroMarks(fontMetrics, collection, start, end);
@@ -130,10 +130,11 @@ internal static class FallbackMarkPositioner
         int gap = fontMetrics.UnitsPerEm / GapDivisor;
 
         // The advance of the base, not its box, aligns the mark across the line. So a base without ink also works.
+        // It is the advance that the font gives the base. Kerning moves the base and leaves its marks in place.
         Box baseBox = Box.Of(baseMetrics);
         baseBox.Top += baseData.Bounds.Y;
         baseBox.Left = 0;
-        baseBox.Width = baseMetrics.AdvanceWidth;
+        baseBox.Width = GetFontAdvance(fontMetrics, collection, baseData);
 
         // The pen is after the base in text that runs forward, and still before it in text that runs backward.
         int penOffset = isForward ? -GetAdvance(collection, baseIndex) : 0;
@@ -244,6 +245,19 @@ internal static class FallbackMarkPositioner
         return data.Bounds.IsDirtyWH ? data.Bounds.Width : collection.GetMetrics(index).AdvanceWidth;
     }
 
+    private static int GetFontAdvance(FontMetrics fontMetrics, GlyphPositioningCollection collection, GlyphShapingData data)
+    {
+        TextOptions options = collection.TextOptions;
+        return fontMetrics.GetGlyphMetrics(
+            data.CodePoint,
+            data.GlyphId,
+            data.TextRun.TextAttributes,
+            data.TextRun.TextDecorations,
+            options.LayoutMode,
+            options.ColorFontSupport,
+            data.HasVerticalForm)[0].AdvanceWidth;
+    }
+
     private static void UpdatePositions(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
     {
         for (int i = start; i < end; i++)
@@ -259,7 +273,7 @@ internal static class FallbackMarkPositioner
     /// Gets the end of the run of glyphs that one shaper positions. Characters of no script of their own join the
     /// script before or after them, as in <see cref="GPosTable.TryUpdatePositions"/>.
     /// </summary>
-    private static int GetScriptRunEnd(GlyphPositioningCollection collection, int start, out ScriptClass script)
+    public static int GetScriptRunEnd(GlyphPositioningCollection collection, int start, out ScriptClass script)
     {
         script = CodePoint.GetScriptClass(collection[start].CodePoint);
         int end = start + 1;

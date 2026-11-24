@@ -69,6 +69,11 @@ public class NormalizationTests
     public async Task EveryScriptHasTheShaperThatHarfBuzzGivesIt()
         => await Assert.That(NamesOfDifferentCases(HarfBuzz.Scripts)).IsEmpty();
 
+    // Only the shapers that place a mark without GPOS also kern with the `kern` table of the font.
+    [Test]
+    public async Task EveryScriptIsKernedByTheKernTableAsInHarfBuzz()
+        => await Assert.That(NamesOfDifferentCases(HarfBuzz.KernedScripts)).IsEmpty();
+
     private static List<string> NamesOfDifferentCases(PositionedCase[] cases)
         => cases
             .Where(expected => !Place(expected).SequenceEqual(expected.Glyphs.Select(g => (g.Id, g.X, g.Y))))
@@ -179,6 +184,8 @@ public class NormalizationTests
         public PositionedCase[] Positioned { get; set; } = [];
 
         public PositionedCase[] Scripts { get; set; } = [];
+
+        public PositionedCase[] KernedScripts { get; set; } = [];
 
         public Dictionary<string, string> ScanFonts { get; set; } = [];
 

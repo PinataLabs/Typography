@@ -32,9 +32,11 @@ The script builds these fonts in tests/PinataLabs.Typography.Tests/Fonts:
   without syllables and a GSUB table.
 * NormalizationSpace.ttf and NormalizationSpaceBare.ttf have U+0020 and lack the other spaces.
 * NormalizationMarks.ttf, NormalizationMarksGdef.ttf and NormalizationMarksKern.ttf have a base and marks of
-  eight scripts. They differ in their GDEF and GPOS tables.
+  eight scripts. They differ in their GDEF and GPOS tables. NormalizationMarksLegacyKern.ttf has a `kern` table
+  in place of them, and NormalizationMarksBothKern.ttf has a `kern` table and a GPOS table.
 * NormalizationDevanagari.ttf has Devanagari letters, signs and the dotted circle, and no GSUB table.
-* NormalizationScripts.ttf has the first letter of every script and U+0301.
+* NormalizationScripts.ttf has the first letter of every script and U+0301. NormalizationScriptsKern.ttf also has
+  a `kern` table.
 
 The comment above the cases of each group says what the group shows.
 
@@ -42,9 +44,9 @@ The glyphs of the two scan fonts have no outline. The scan shapes each character
 the two parts of each decomposition and the full decomposition in NormalizationScan.ttf, and each pair of
 combining classes after a base.
 
-The reference holds four lists, in the order of the HarfBuzz output. `cases` and `scan` hold the glyph IDs
-that HarfBuzz gives. `positioned` and `scripts` also hold where HarfBuzz draws each glyph, in font units from
-the start of the line. NormalizationTests reads the reference.
+The reference holds five lists, in the order of the HarfBuzz output. `cases` and `scan` hold the glyph IDs
+that HarfBuzz gives. `positioned`, `scripts` and `kernedScripts` also hold where HarfBuzz draws each glyph, in font
+units from the start of the line. NormalizationTests reads the reference.
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
@@ -59,7 +61,9 @@ import uharfbuzz as hb
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import newTable
 from fontTools.ttLib.tables._g_l_y_f import Glyph
+from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 RULES = os.path.join(ROOT, "src", "PinataLabs.Typography.UnicodeTrieGenerator", "Rules")
@@ -251,6 +255,38 @@ MARKS_GDEF_CASES = [
     ("ThaiMarksWithoutGdefClassKeepTheirAdvance", "\u0E01\u0E38\u0E48\u0E01"),
 ]
 
+# A font without GPOS is kerned by its `kern` table. HarfBuzz gives half of the kerning to each glyph of a pair,
+# looks for the pair across marks and in the order of the line, and still places a mark by the advance that the
+# font gives its base.
+MARKS_LEGACY_KERN_FONT = "NormalizationMarksLegacyKern.ttf"
+MARKS_LEGACY_KERN = {
+    (ord("x"), ord("a")): -100,
+    (ord("a"), ord("x")): -60,
+    (0x05D0, 0x05D0): -40,
+    (0x0628, 0x0628): -80,
+    (0x0E01, 0x0E01): -30,
+}
+
+MARKS_LEGACY_KERN_CASES = [
+    ("LegacyKernMovesTheSecondGlyphOfAPair", "xa"),
+    ("LegacyKernOfThreeGlyphs", "xax"),
+    ("LegacyKernSkipsAMark", "a\u0301x"),
+    ("MarkOfAKernedBaseIsPlacedByTheAdvanceOfTheFont", "xa\u0301"),
+    ("MarksOfTwoKernedBases", "a\u0301xa\u0323\u0301"),
+    ("HebrewLegacyKern", "\u05D0\u05B7\u05D0\u05B7"),
+    ("ArabicLegacyKern", "\u0628\u064E\u0628\u0650"),
+    ("ThaiHasNoLegacyKern", "\u0E01\u0E38\u0E48\u0E01"),
+]
+
+# HarfBuzz leaves the `kern` table alone when the GPOS table has a `kern` feature for the script, even for a pair
+# that only the `kern` table has. MarksBothKern has the GPOS table of MarksKern and the `kern` table of MarksLegacyKern.
+MARKS_BOTH_KERN_FONT = "NormalizationMarksBothKern.ttf"
+
+MARKS_BOTH_KERN_CASES = [
+    ("KernTableIsIgnoredWhenGposHasAKernFeature", "xa"),
+    ("GposKernsAPairThatTheKernTableAlsoHas", "ax"),
+]
+
 MARKS_KERN_CASES = [
     ("GposWithoutGdefTakesTheAdvanceOfAMark", "a\u0301a"),
     ("GposWithoutGdefTakesTheAdvanceOfThaiMarks", "\u0E01\u0E38\u0E48\u0E01"),
@@ -269,8 +305,12 @@ HEBREW_MARK_POSITIONED_CASES = [
 # The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
 # mark is placed on its base, it only loses its advance, or it keeps its advance. Scripts has the first letter of
 # every script of Scripts.txt and U+0301, and the reference has that letter and mark for each script.
+# The same shaper decides whether the `kern` table of the font kerns the text. ScriptsKern also has a `kern` table
+# with the pair of each letter and itself, and the reference has that pair for each script.
 SCRIPTS_FONT = "NormalizationScripts.ttf"
+SCRIPTS_KERN_FONT = "NormalizationScriptsKern.ttf"
 SCRIPTS_MARK = 0x0301
+SCRIPTS_KERN = -100
 
 # A space or a hyphen that the font lacks becomes the space or the hyphen that the font has. Each text ends with
 # a letter, so that the place of the letter shows the advance of the space.
@@ -361,7 +401,7 @@ def box(x_min=50, y_min=0, x_max=450, y_max=700):
     return pen.glyph()
 
 
-def build(file_name, code_points, outlines, features=None, advances=None, boxes=None):
+def build(file_name, code_points, outlines, features=None, advances=None, boxes=None, kern=None):
     names = [".notdef"] + ["u%04X" % c for c in code_points]
     boxes = {"u%04X" % c: b for c, b in (boxes or {}).items()}
     builder = FontBuilder(1000, isTTF=True)
@@ -379,6 +419,16 @@ def build(file_name, code_points, outlines, features=None, advances=None, boxes=
     builder.setupPost(keepGlyphNames=False)
     if features:
         addOpenTypeFeaturesFromString(builder.font, features)
+    if kern:
+        subtable = KernTable_format_0()
+        subtable.version = 0
+        subtable.coverage = 1
+        subtable.apple = False
+        subtable.tupleIndex = None
+        subtable.kernTable = {("u%04X" % left, "u%04X" % right): value for (left, right), value in kern.items()}
+        builder.font["kern"] = table = newTable("kern")
+        table.version = 0
+        table.kernTables = [subtable]
     path = os.path.join(FONTS, file_name)
     builder.font.save(path)
     with open(path, "rb") as file:
@@ -469,27 +519,37 @@ def main():
     space_bare_font = build(SPACE_BARE_FONT, sorted(set(map(ord, SPACE_BARE_CHARACTERS))), True, advances=SPACE_BARE_ADVANCES)
     positioned = positioned_cases(SPACE_FONT, space_font, SPACE_CASES)
     positioned += positioned_cases(SPACE_BARE_FONT, space_bare_font, SPACE_BARE_CASES)
-    for file_name, features, mark_cases in (
-        (MARKS_FONT, None, MARKS_CASES),
-        (MARKS_GDEF_FONT, MARKS_GDEF_FEATURES, MARKS_GDEF_CASES),
-        (MARKS_KERN_FONT, MARKS_KERN_FEATURES, MARKS_KERN_CASES),
+    for file_name, features, kern, mark_cases in (
+        (MARKS_FONT, None, None, MARKS_CASES),
+        (MARKS_GDEF_FONT, MARKS_GDEF_FEATURES, None, MARKS_GDEF_CASES),
+        (MARKS_KERN_FONT, MARKS_KERN_FEATURES, None, MARKS_KERN_CASES),
+        (MARKS_LEGACY_KERN_FONT, None, MARKS_LEGACY_KERN, MARKS_LEGACY_KERN_CASES),
+        (MARKS_BOTH_KERN_FONT, MARKS_KERN_FEATURES, MARKS_LEGACY_KERN, MARKS_BOTH_KERN_CASES),
     ):
-        marks_font = build(file_name, MARKS_CHARACTERS, True, features, MARK_ADVANCES, MARK_BOXES)
+        marks_font = build(file_name, MARKS_CHARACTERS, True, features, MARK_ADVANCES, MARK_BOXES, kern)
         positioned += positioned_cases(file_name, marks_font, mark_cases)
     positioned += positioned_cases(HEBREW_MARK_FONT, hebrew_fonts[HEBREW_MARK_FONT], HEBREW_MARK_POSITIONED_CASES)
 
     script_letters = read_script_letters()
-    scripts_font = build(
-        SCRIPTS_FONT,
-        sorted([SCRIPTS_MARK, *(letter for letter, _ in script_letters.values())]),
-        True,
-        advances={SCRIPTS_MARK: MARK_ADVANCES[0x0301]},
-        boxes={SCRIPTS_MARK: MARK_BOXES[0x0301]})
+    scripts_font, scripts_kern_font = (
+        build(
+            file_name,
+            sorted([SCRIPTS_MARK, *(letter for letter, _ in script_letters.values())]),
+            True,
+            advances={SCRIPTS_MARK: MARK_ADVANCES[0x0301]},
+            boxes={SCRIPTS_MARK: MARK_BOXES[0x0301]},
+            kern=kern)
+        for file_name, kern in (
+            (SCRIPTS_FONT, None),
+            (SCRIPTS_KERN_FONT, {(letter, letter): SCRIPTS_KERN for letter, _ in script_letters.values()}),
+        ))
     # HarfBuzz has no direction of its own for a script such as Old Hungarian. Its caller gives it the bidi direction.
-    scripts = []
+    scripts, kerned_scripts = [], []
     for name, (letter, direction) in script_letters.items():
         text = chr(letter) + chr(SCRIPTS_MARK)
         scripts.append({"name": name, "font": SCRIPTS_FONT, "text": text, "glyphs": shape_positions(scripts_font, text, direction)})
+        text = chr(letter) + chr(letter)
+        kerned_scripts.append({"name": name, "font": SCRIPTS_KERN_FONT, "text": text, "glyphs": shape_positions(scripts_kern_font, text, direction)})
 
     composed = list(scanned(decompositions))
     values = sorted(set(classes.values()))
@@ -536,11 +596,14 @@ def main():
         file.write('  "scripts": [\n')
         file.write(",\n".join("    " + json.dumps(case) for case in scripts))
         file.write("\n  ],\n")
+        file.write('  "kernedScripts": [\n')
+        file.write(",\n".join("    " + json.dumps(case) for case in kerned_scripts))
+        file.write("\n  ],\n")
         file.write('  "scanFonts": %s,\n' % json.dumps({"scan": SCAN_FONT, "parts": PARTS_FONT}))
         file.write('  "scan": [\n')
         file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
         file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases", len(positioned), "positioned cases", len(scripts), "scripts", len(rows), "scan rows")
+    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases", len(positioned), "positioned cases", len(scripts), "scripts", len(kerned_scripts), "kerned scripts", len(rows), "scan rows")
 
 
 if __name__ == "__main__":

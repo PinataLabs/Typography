@@ -299,39 +299,23 @@ internal partial class StreamFontMetrics : FontMetrics
             ? this.trueTypeFontTables!.GPos
             : this.compactFontTables!.GPos;
 
-        bool kerned = false;
-        KerningMode kerningMode = collection.TextOptions.KerningMode;
-
         if (gpos is null)
         {
             FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection);
         }
         else
         {
-            gpos.TryUpdatePositions(this, collection, out kerned);
+            gpos.TryUpdatePositions(this, collection);
         }
 
         // TODO: I don't think we should disable kerning here.
-        if (!kerned && kerningMode != KerningMode.None)
+        if (collection.TextOptions.KerningMode != KerningMode.None)
         {
             KerningTable? kern = isTTF
                 ? this.trueTypeFontTables!.Kern
                 : this.compactFontTables!.Kern;
 
-            if (kern?.Count > 0)
-            {
-                // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
-                int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
-                for (int index = 1; index < collection.Count; index++)
-                {
-                    if (index >= maxCount)
-                    {
-                        break;
-                    }
-
-                    kern.UpdatePositions(this, collection, index - 1, index);
-                }
-            }
+            kern?.UpdatePositions(this, collection, gpos);
         }
 
         if (gpos is null)
