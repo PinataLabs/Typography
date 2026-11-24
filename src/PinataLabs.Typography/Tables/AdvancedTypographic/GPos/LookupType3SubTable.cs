@@ -77,7 +77,7 @@ internal static class LookupType3SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {

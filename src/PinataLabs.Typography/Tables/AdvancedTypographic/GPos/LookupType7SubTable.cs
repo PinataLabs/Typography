@@ -51,7 +51,7 @@ internal static class LookupType7SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {
@@ -89,7 +89,7 @@ internal static class LookupType7SubTable
                 return AdvancedTypographicUtils.ApplyLookupList(
                     fontMetrics,
                     table,
-                    feature,
+                    features,
                     this.LookupFlags,
                     ruleTable.SequenceLookupRecords,
                     collection,
@@ -130,7 +130,7 @@ internal static class LookupType7SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {
@@ -171,7 +171,7 @@ internal static class LookupType7SubTable
                 return AdvancedTypographicUtils.ApplyLookupList(
                     fontMetrics,
                     table,
-                    feature,
+                    features,
                     this.LookupFlags,
                     ruleTable.SequenceLookupRecords,
                     collection,
@@ -206,7 +206,7 @@ internal static class LookupType7SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {
@@ -225,7 +225,7 @@ internal static class LookupType7SubTable
             return AdvancedTypographicUtils.ApplyLookupList(
                 fontMetrics,
                 table,
-                feature,
+                features,
                 this.LookupFlags,
                 this.sequenceLookupRecords,
                 collection,

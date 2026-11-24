@@ -48,3 +48,23 @@ python tests/tools/generate_gsub_lookup_order_font.py
 ```
 
 The output is deterministic.
+
+## GPOS lookup order font
+
+`generate_gpos_lookup_order_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/GposLookupOrder.ttf`
+from feature code with fontTools feaLib. The LookupList of the font has a `kern` lookup first, then `mkmk`,
+then `mark`. Two later lookups belong to both `kern` and `mark`, and the `abvm` and `calt` lookups that
+come last attach a mark that the `mark` lookup also attaches.
+
+The script then shapes each test text with HarfBuzz and writes the glyph positions to
+`GposLookupOrder.harfbuzz.json`, next to the font. `GposLookupOrderTests` checks that the library gives
+the same positions. It does so only when it applies each lookup once, in LookupList order.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this
+from the repository root:
+
+```
+python tests/tools/generate_gpos_lookup_order_font.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

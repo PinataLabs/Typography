@@ -1,0 +1,122 @@
+{
+  "harfbuzz": "15.0.0",
+  "cases": [
+    {
+      "name": "MarkAlone",
+      "text": "o\u0301",
+      "glyphs": [
+        {
+          "id": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 8,
+          "x": 250,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "name": "KernBeforeMark",
+      "text": "o\u0300",
+      "glyphs": [
+        {
+          "id": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 7,
+          "x": 250,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "name": "MkmkBeforeMark",
+      "text": "o\u0301\u0302",
+      "glyphs": [
+        {
+          "id": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 8,
+          "x": 250,
+          "y": 50
+        },
+        {
+          "id": 9,
+          "x": 250,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "name": "PairOfTwoFeatures",
+      "text": "AV",
+      "glyphs": [
+        {
+          "id": 2,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 3,
+          "x": 500,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "ContextOfTwoFeatures",
+      "text": "To",
+      "glyphs": [
+        {
+          "id": 4,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 1,
+          "x": 530,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "name": "MarkBeforeAbvm",
+      "text": "\u0915\u0902",
+      "glyphs": [
+        {
+          "id": 6,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": 11,
+          "x": 250,
+          "y": 200
+        }
+      ]
+    },
+    {
+      "name": "MarkBeforeCalt",
+      "text": "\u0628\u064e",
+      "glyphs": [
+        {
+          "id": 10,
+          "x": 250,
+          "y": 200
+        },
+        {
+          "id": 5,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    }
+  ]
+}

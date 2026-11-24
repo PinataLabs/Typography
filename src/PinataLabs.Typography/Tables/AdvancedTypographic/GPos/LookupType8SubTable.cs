@@ -54,7 +54,7 @@ internal static class LookupType8SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {
@@ -101,7 +101,7 @@ internal static class LookupType8SubTable
                     SequenceLookupRecord sequenceLookupRecord = rule.SequenceLookupRecords[j];
                     LookupTable lookup = table.LookupList.LookupTables[sequenceLookupRecord.LookupListIndex];
                     ushort sequenceIndex = sequenceLookupRecord.SequenceIndex;
-                    if (lookup.TryUpdatePosition(fontMetrics, table, collection, feature, index + sequenceIndex, 1))
+                    if (lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1))
                     {
                         hasChanged = true;
                     }
@@ -155,7 +155,7 @@ internal static class LookupType8SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {
@@ -199,7 +199,7 @@ internal static class LookupType8SubTable
                     SequenceLookupRecord sequenceLookupRecord = rule.SequenceLookupRecords[j];
                     LookupTable lookup = table.LookupList.LookupTables[sequenceLookupRecord.LookupListIndex];
                     ushort sequenceIndex = sequenceLookupRecord.SequenceIndex;
-                    if (lookup.TryUpdatePosition(fontMetrics, table, collection, feature, index + sequenceIndex, 1))
+                    if (lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1))
                     {
                         hasChanged = true;
                     }
@@ -249,7 +249,7 @@ internal static class LookupType8SubTable
             FontMetrics fontMetrics,
             GPosTable table,
             GlyphPositioningCollection collection,
-            Tag feature,
+            LookupFeatures features,
             int index,
             int count)
         {
@@ -272,7 +272,7 @@ internal static class LookupType8SubTable
                 ushort lookupIndex = lookupRecord.LookupListIndex;
 
                 LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-                if (lookup.TryUpdatePosition(fontMetrics, table, collection, feature, index + sequenceIndex, count - sequenceIndex))
+                if (lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, count - sequenceIndex))
                 {
                     hasChanged = true;
                 }

@@ -144,7 +144,7 @@ internal sealed class LookupTable
         FontMetrics fontMetrics,
         GPosTable table,
         GlyphPositioningCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
@@ -152,7 +152,7 @@ internal sealed class LookupTable
         {
             // A lookup is finished for a glyph after the client locates the target
             // glyph or glyph context and performs a positioning action, if specified.
-            if (subTable.TryUpdatePosition(fontMetrics, table, collection, feature, index, count))
+            if (subTable.TryUpdatePosition(fontMetrics, table, collection, features, index, count))
             {
                 return true;
             }
@@ -172,7 +172,7 @@ internal abstract class LookupSubTable
         FontMetrics fontMetrics,
         GPosTable table,
         GlyphPositioningCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count);
 }

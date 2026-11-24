@@ -99,6 +99,14 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- GPOS lookups are applied in LookupList order across all the positioning features that are active on a glyph, as
+  the OpenType specification requires and as HarfBuzz does. Each lookup is applied once, even when more than one active
+  feature refers to it. A font whose lookup order differs from the old feature order can position differently. In
+  DejaVu Sans, whose `mkmk` lookups come before its `mark` lookups, a second combining mark now attaches to the base,
+  as it does in HarfBuzz. (#88)
+- In `VerticalMixedLeftRight` and `VerticalMixedRightLeft`, `TextMeasurer.MeasureAdvance` no longer reports a column
+  wider than the one laid out when it holds rotated glyphs. It now matches the width of the upright column. Rendering
+  does not change. (#87)
 - GSUB lookups are applied in LookupList order across all the features that are active in a shaping stage, as the
   OpenType specification requires. Before, each feature was applied in turn, in the order that the shaper planned
   it. A font whose `vrtr` lookup precedes its `liga` lookup now gives a rotated ligature its `vrtr` form in vertical

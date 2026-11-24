@@ -258,13 +258,14 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (!this.TryGetFeatureLookups(featureTags, current, out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? lookups))
+        if (!this.TryGetFeatureLookups(featureTags, current, out List<(ushort Index, LookupFeatures Features)>? lookups))
         {
             return;
         }
 
-        foreach ((ushort _, LookupTable lookupTable, LookupFeatures features) in lookups)
+        foreach ((ushort lookupIndex, LookupFeatures features) in lookups)
         {
+            LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
             iterator.Reset(index, lookupTable.LookupFlags);
 
             while (iterator.Index < index + count)
@@ -295,41 +296,14 @@ internal class GSubTable : Table
     internal bool TryGetFeatureLookups(
         in Tag feature,
         ScriptClass script,
-        [NotNullWhen(true)] out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? value)
+        [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
         => this.TryGetFeatureLookups([feature], script, out value);
 
     internal bool TryGetFeatureLookups(
         IReadOnlyList<Tag> stageFeatures,
         ScriptClass script,
-        [NotNullWhen(true)] out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? value)
-    {
-        if (this.ScriptList is null)
-        {
-            value = null;
-            return false;
-        }
-
-        ScriptListTable scriptListTable = this.ScriptList.Default();
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
-        {
-            if (this.ScriptList.TryGetValue(tags[i].Value, out ScriptListTable? table))
-            {
-                scriptListTable = table;
-                break;
-            }
-        }
-
-        LangSysTable? defaultLangSysTable = scriptListTable.DefaultLangSysTable;
-        if (defaultLangSysTable != null)
-        {
-            value = this.GetFeatureLookups(stageFeatures, defaultLangSysTable);
-            return value.Count > 0;
-        }
-
-        value = this.GetFeatureLookups(stageFeatures, scriptListTable.LangSysTables);
-        return value.Count > 0;
-    }
+        [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
+        => LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, stageFeatures, script, out value);
 
     private Tag GetUnicodeScriptTag(ScriptClass script)
     {
@@ -348,88 +322,5 @@ internal class GSubTable : Table
         }
 
         return default;
-    }
-
-    /// <summary>
-    /// Gets the lookups that the given features reference, in LookupList order.
-    /// Each lookup appears once, with all the features that reference it.
-    /// </summary>
-    private List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)> GetFeatureLookups(IReadOnlyList<Tag> stageFeatures, params LangSysTable[] langSysTables)
-    {
-        List<(ushort Index, int Order, Tag Feature)> references = [];
-        for (int i = 0; i < langSysTables.Length; i++)
-        {
-            ushort[] featureIndices = langSysTables[i].FeatureIndices;
-            for (int j = 0; j < featureIndices.Length; j++)
-            {
-                // Skip feature indices that fall outside the feature list.
-                if (featureIndices[j] >= this.FeatureList.FeatureTables.Length)
-                {
-                    continue;
-                }
-
-                FeatureTable featureTable = this.FeatureList.FeatureTables[featureIndices[j]];
-                Tag feature = featureTable.FeatureTag;
-
-                int order = IndexOf(stageFeatures, feature);
-                if (order < 0)
-                {
-                    continue;
-                }
-
-                ushort[] lookupListIndices = featureTable.LookupListIndices;
-                for (int k = 0; k < lookupListIndices.Length; k++)
-                {
-                    ushort lookupIndex = lookupListIndices[k];
-
-                    // Skip lookup indices that fall outside the lookup list.
-                    if (lookupIndex >= this.LookupList.LookupTables.Length)
-                    {
-                        continue;
-                    }
-
-                    references.Add(new(lookupIndex, order, feature));
-                }
-            }
-        }
-
-        // List.Sort is unstable. The plan order of the feature makes the order total,
-        // so the result does not depend on the order of the feature records.
-        references.Sort((x, y) => x.Index != y.Index ? x.Index - y.Index : x.Order - y.Order);
-
-        List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)> lookups = [];
-        Tag[] tags = new Tag[references.Count];
-        int tagCount = 0;
-        int end;
-        for (int start = 0; start < references.Count; start = end)
-        {
-            ushort lookupIndex = references[start].Index;
-            int tagStart = tagCount;
-            for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
-            {
-                // Feature records of several language systems can repeat a reference.
-                if (end == start || references[end].Order != references[end - 1].Order)
-                {
-                    tags[tagCount++] = references[end].Feature;
-                }
-            }
-
-            lookups.Add(new(lookupIndex, this.LookupList.LookupTables[lookupIndex], new LookupFeatures(tags, tagStart, tagCount - tagStart)));
-        }
-
-        return lookups;
-    }
-
-    private static int IndexOf(IReadOnlyList<Tag> tags, Tag tag)
-    {
-        for (int i = 0; i < tags.Count; i++)
-        {
-            if (tags[i] == tag)
-            {
-                return i;
-            }
-        }
-
-        return -1;
     }
 }
