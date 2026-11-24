@@ -258,6 +258,12 @@ MARKS_KERN_CASES = [
     ("GposWithoutGdefKeepsTheAdvanceOfAHangulMark", "\uAC00\u0301\uAC00"),
     ("GposWithoutGdefKeepsTheAdvanceOfADevanagariMark", "\u0915\u093C\u0915"),
     ("GposWithoutGdefKeepsTheAdvanceOfAnEnclosingMark", "a\u20DDa"),
+    ("GposKernsAPair", "axa"),
+]
+
+# The `mark` feature of HebrewMark attaches a dagesh to its letter.
+HEBREW_MARK_POSITIONED_CASES = [
+    ("GposAttachesAMark", "\u05D0\u05D1\u05BC\u05D0"),
 ]
 
 # The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
@@ -442,12 +448,14 @@ def main():
     classes, decompositions = read_unicode_data()
     case_font = build(CASE_FONT, sorted(set(map(ord, CASE_CHARACTERS))), True, CASE_FEATURES)
     cases = named_cases("", CASE_FONT, case_font, CASES)
+    hebrew_fonts = {}
     for prefix, file_name, features in (
         ("HebrewWithoutMarkFeature", HEBREW_FONT, None),
         ("HebrewWithMarkFeature", HEBREW_MARK_FONT, HEBREW_MARK_FEATURES),
         ("HebrewWithMarkFeatureOfAnotherScript", HEBREW_KERN_FONT, HEBREW_KERN_FEATURES),
     ):
-        cases += named_cases(prefix, file_name, build(file_name, HEBREW_CHARACTERS, True, features), HEBREW_CASES)
+        hebrew_fonts[file_name] = build(file_name, HEBREW_CHARACTERS, True, features)
+        cases += named_cases(prefix, file_name, hebrew_fonts[file_name], HEBREW_CASES)
     for prefix, file_name, characters, features in (
         ("HangulWithoutGsub", HANGUL_FONT, HANGUL_CHARACTERS, None),
         ("HangulWithGsub", HANGUL_GSUB_FONT, HANGUL_CHARACTERS, HANGUL_FEATURES),
@@ -468,6 +476,7 @@ def main():
     ):
         marks_font = build(file_name, MARKS_CHARACTERS, True, features, MARK_ADVANCES, MARK_BOXES)
         positioned += positioned_cases(file_name, marks_font, mark_cases)
+    positioned += positioned_cases(HEBREW_MARK_FONT, hebrew_fonts[HEBREW_MARK_FONT], HEBREW_MARK_POSITIONED_CASES)
 
     script_letters = read_script_letters()
     scripts_font = build(

@@ -201,14 +201,22 @@ internal static class TextLayout
         // Update the positions of the glyphs in the completed collection.
         // Each set of metrics is associated with single font and will only be updated
         // by that font so it's safe to use a single collection.
+        // A font positions all of its glyphs in one pass, so the text runs and fallbacks that share it take one turn.
+        HashSet<FontMetrics> positioned = [];
         foreach (TextRun textRun in textRuns)
         {
-            textRun.Font!.FontMetrics.UpdatePositions(positionings);
+            if (positioned.Add(textRun.Font!.FontMetrics))
+            {
+                textRun.Font.FontMetrics.UpdatePositions(positionings);
+            }
         }
 
         foreach (Font font in fallbackFonts)
         {
-            font.FontMetrics.UpdatePositions(positionings);
+            if (positioned.Add(font.FontMetrics))
+            {
+                font.FontMetrics.UpdatePositions(positionings);
+            }
         }
 
         return BreakLines(text, options, paragraphDirection, bidiRuns, bidiMap, positionings, layoutMode);

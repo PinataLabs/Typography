@@ -52,6 +52,17 @@ public class NormalizationTests
         await Assert.That(Place(expected)).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
     }
 
+    // Text runs that have the same font share its glyphs. Each glyph must still be positioned once.
+    [Test]
+    [MethodDataSource(nameof(PositionedCaseNames))]
+    public async Task GlyphsOfTwoTextRunsAreDrawnWhereHarfBuzzDrawsThem(string name)
+    {
+        PositionedCase expected = HarfBuzz.Positioned.Single(c => c.Name == name);
+        (int Id, int X, int Y)[] actual = Place(expected, [new TextRun { Start = 0, End = 1 }]);
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
+    }
+
     // What a font without GPOS does with a mark shows the shaper of the script: the default shaper places the mark,
     // the universal shaper only takes its advance away, and the Indic shaper leaves it. HarfBuzz gives these scripts
     // to its universal shaper, which also joins their letters. UniversalShaper does not join, so the library keeps
@@ -78,13 +89,13 @@ public class NormalizationTests
     }
 
     // Gives the glyph ID and the place of each glyph, in font units from the start of the line.
-    private static (int Id, int X, int Y)[] Place(PositionedCase text)
+    private static (int Id, int X, int Y)[] Place(PositionedCase text, IReadOnlyList<TextRun>? textRuns = null)
     {
         FontFamily family = new FontCollection().Add(TestFonts.GetPath(text.Font));
 
         // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
         Font font = family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.Text.AsSpan(), new TextOptions(font));
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.Text.AsSpan(), new TextOptions(font) { TextRuns = textRuns ?? [] });
 
         return layout
             .Select(g => (

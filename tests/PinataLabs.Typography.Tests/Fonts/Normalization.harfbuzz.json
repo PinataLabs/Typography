@@ -160,7 +160,9 @@
     {"name": "GposWithoutGdefTakesTheAdvanceOfAMyanmarMark", "font": "NormalizationMarksKern.ttf", "text": "\u1000\u1036\u1000", "glyphs": [{"id": 22, "x": 0, "y": 0}, {"id": 23, "x": 600, "y": 0}, {"id": 22, "x": 600, "y": 0}]},
     {"name": "GposWithoutGdefKeepsTheAdvanceOfAHangulMark", "font": "NormalizationMarksKern.ttf", "text": "\uac00\u0301\uac00", "glyphs": [{"id": 27, "x": 0, "y": 0}, {"id": 3, "x": 600, "y": 0}, {"id": 27, "x": 900, "y": 0}]},
     {"name": "GposWithoutGdefKeepsTheAdvanceOfADevanagariMark", "font": "NormalizationMarksKern.ttf", "text": "\u0915\u093c\u0915", "glyphs": [{"id": 17, "x": 0, "y": 0}, {"id": 18, "x": 600, "y": 0}, {"id": 17, "x": 900, "y": 0}]},
-    {"name": "GposWithoutGdefKeepsTheAdvanceOfAnEnclosingMark", "font": "NormalizationMarksKern.ttf", "text": "a\u20dda", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 26, "x": 600, "y": 0}, {"id": 1, "x": 900, "y": 0}]}
+    {"name": "GposWithoutGdefKeepsTheAdvanceOfAnEnclosingMark", "font": "NormalizationMarksKern.ttf", "text": "a\u20dda", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 26, "x": 600, "y": 0}, {"id": 1, "x": 900, "y": 0}]},
+    {"name": "GposKernsAPair", "font": "NormalizationMarksKern.ttf", "text": "axa", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 2, "x": 550, "y": 0}, {"id": 1, "x": 1150, "y": 0}]},
+    {"name": "GposAttachesAMark", "font": "NormalizationHebrewMark.ttf", "text": "\u05d0\u05d1\u05bc\u05d0", "glyphs": [{"id": 1, "x": 0, "y": 0}, {"id": 42, "x": 600, "y": 350}, {"id": 2, "x": 600, "y": 0}, {"id": 1, "x": 1200, "y": 0}]}
   ],
   "scripts": [
     {"name": "Adlam", "font": "NormalizationScripts.ttf", "text": "\ud83a\udd00\u0301", "glyphs": [{"id": 3, "x": 0, "y": 0}, {"id": 159, "x": 0, "y": 0}]},
