@@ -38,8 +38,8 @@ internal partial class StreamFontMetrics : FontMetrics
     private readonly GSubTable substitution;
 
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
-    private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
-    private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]>? colorGlyphCache;
+    private readonly ConcurrentDictionary<(ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
+    private readonly ConcurrentDictionary<(ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]>? colorGlyphCache;
     private readonly FontDescription description;
     private readonly HorizontalMetrics horizontalMetrics;
     private readonly VerticalMetrics verticalMetrics;
@@ -232,13 +232,12 @@ internal partial class StreamFontMetrics : FontMetrics
             return metrics;
         }
 
-        // We overwrite the cache entry for this type should the attributes change.
         return this.glyphCache.GetOrAdd(
               CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm),
               key =>
               [
                 this.CreateGlyphMetrics(
-                codePoint,
+                key.CodePoint,
                 key.Id,
                 glyphType,
                 key.Attributes,
@@ -535,13 +534,16 @@ internal partial class StreamFontMetrics : FontMetrics
         return fonts;
     }
 
-    private static (ushort Id, TextAttributes Attributes, bool IsVerticalLayout) CreateCacheKey(
+    // The cached metrics report the code point they were created for, so the code point is part of
+    // the key. Otherwise a glyph shared by several code points (a no-break space on the space glyph,
+    // or .notdef) would report whichever code point asked first.
+    private static (ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout) CreateCacheKey(
         CodePoint codePoint,
         ushort glyphId,
         TextAttributes textAttributes,
         LayoutMode layoutMode,
         bool hasVerticalForm)
-        => (glyphId, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, hasVerticalForm));
+        => (glyphId, codePoint, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, hasVerticalForm));
 
     private bool TryGetColoredMetrics(
         CodePoint codePoint,
@@ -562,7 +564,6 @@ internal partial class StreamFontMetrics : FontMetrics
             return false;
         }
 
-        // We overwrite the cache entry for this type should the attributes change.
         metrics = this.colorGlyphCache.GetOrAdd(CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm), key =>
         {
             GlyphMetrics[] m = [];
@@ -573,7 +574,7 @@ internal partial class StreamFontMetrics : FontMetrics
                 for (int i = 0; i < indexes.Length; i++)
                 {
                     LayerRecord layer = indexes[i];
-                    m[i] = this.CreateGlyphMetrics(codePoint, layer.GlyphId, GlyphType.ColrLayer, key.Attributes, textDecorations, key.IsVerticalLayout, layer.PaletteIndex);
+                    m[i] = this.CreateGlyphMetrics(key.CodePoint, layer.GlyphId, GlyphType.ColrLayer, key.Attributes, textDecorations, key.IsVerticalLayout, layer.PaletteIndex);
                 }
             }
 
