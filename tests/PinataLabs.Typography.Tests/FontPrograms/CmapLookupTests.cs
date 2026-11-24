@@ -17,6 +17,10 @@ namespace PinataLabs.Typography.Tests.FontPrograms;
 /// </summary>
 public class CmapLookupTests
 {
+    private static readonly int[] SyntheticFormats = [0, 2, 4, 6, 12, 13];
+
+    private static readonly JsonSerializerOptions FixtureJsonOptions = new() { PropertyNameCaseInsensitive = true };
+
     private const string NamesFont = "FontPrograms/tt-names.ttf";
 
     public static IEnumerable<object[]> Fonts
@@ -67,7 +71,7 @@ public class CmapLookupTests
         await Assert.That(subtables.Any(x => x is { Platform: 3, Encoding: 1 })).IsTrue();
         await Assert.That(subtables.Any(x => x is { Platform: 3, Encoding: 0 })).IsTrue();
         await Assert.That(subtables.Any(x => x is { Platform: 1, Encoding: 0 })).IsTrue();
-        await Assert.That(subtables.Select(x => x.Format).Distinct().Order()).IsEquivalentTo(new[] { 0, 2, 4, 6, 12, 13 });
+        await Assert.That(subtables.Select(x => x.Format).Distinct().Order()).IsEquivalentTo(SyntheticFormats);
     }
 
     [Test]
@@ -354,7 +358,7 @@ public class CmapLookupTests
     private static Fixture ReadFixture()
         => JsonSerializer.Deserialize<Fixture>(
             File.ReadAllText(TestFonts.GetPath("FontPrograms/cmap/lookups.json")),
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+            FixtureJsonOptions)!;
 
     internal sealed class Fixture
     {
