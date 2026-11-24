@@ -1,0 +1,115 @@
+{
+  "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "columns": {
+    "em": {
+      "left": 200.0,
+      "width": 100.0,
+      "centre": 50.0,
+      "glyphs": [
+        {
+          "rotated": false,
+          "inkLeft": 9.9,
+          "inkRight": 90.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 9.9,
+          "inkRight": 90.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 9.9,
+          "inkRight": 90.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": true,
+          "inkLeft": -15.1,
+          "inkRight": 115.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": true,
+          "inkLeft": -15.1,
+          "inkRight": 115.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": true,
+          "inkLeft": -15.1,
+          "inkRight": 115.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 9.9,
+          "inkRight": 90.1,
+          "inkCentre": 50.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 9.9,
+          "inkRight": 90.1,
+          "inkCentre": 50.0
+        }
+      ]
+    },
+    "normal": {
+      "left": 500.0,
+      "width": 140.0,
+      "centre": 70.0,
+      "glyphs": [
+        {
+          "rotated": false,
+          "inkLeft": 29.9,
+          "inkRight": 110.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 29.9,
+          "inkRight": 110.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 29.9,
+          "inkRight": 110.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": true,
+          "inkLeft": 4.9,
+          "inkRight": 135.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": true,
+          "inkLeft": 4.9,
+          "inkRight": 135.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": true,
+          "inkLeft": 4.9,
+          "inkRight": 135.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 29.9,
+          "inkRight": 110.1,
+          "inkCentre": 70.0
+        },
+        {
+          "rotated": false,
+          "inkLeft": 29.9,
+          "inkRight": 110.1,
+          "inkCentre": 70.0
+        }
+      ]
+    }
+  }
+}
