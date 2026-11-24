@@ -18,7 +18,7 @@ internal static class TrueTypeGlyphDecoder
     private const int MaxDepth = 16;
 
     // Components can repeat work without a limit on the glyph size, so bound the number of components
-    // and the number of sink calls per outline.
+    // and the number of sink calls per outline. Points that a point lookup reads count as sink calls.
     private const int MaxComponents = 4096;
     private const int MaxSinkCalls = 1_000_000;
 
@@ -180,6 +180,14 @@ internal static class TrueTypeGlyphDecoder
         {
             index -= points.Count;
             return true;
+        }
+
+        // Finding a point reads every point before it, and a composite can look up points many times,
+        // so the reads count against the budget of the outline too.
+        budget.SinkCalls -= index + 1;
+        if (budget.SinkCalls < 0)
+        {
+            return false;
         }
 
         for (int i = 0; i <= index; i++)
