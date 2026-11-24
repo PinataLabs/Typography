@@ -88,7 +88,7 @@ internal class LookupType2Format1SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {

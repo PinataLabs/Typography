@@ -65,7 +65,7 @@ internal sealed class LookupType1Format1SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {
@@ -124,7 +124,7 @@ internal sealed class LookupType1Format2SubTable : LookupSubTable
         FontMetrics fontMetrics,
         GSubTable table,
         GlyphSubstitutionCollection collection,
-        Tag feature,
+        LookupFeatures features,
         int index,
         int count)
     {

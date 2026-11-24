@@ -12,9 +12,17 @@ The font's LookupList order differs from the order in which a shaper plans the f
 * lookup 0, `vrtr`: f -> f.vrtr, i -> i.vrtr
 * lookup 1, `liga`: f i -> f_i, f.vrtr i.vrtr -> f_i.vrtr, a b -> a_b
 * lookup 2, `calt`: a -> a.alt
+* lookup 3, `liga` and `ss01`: c copyright -> c_copyright
+* lookup 4, no feature: d copyright -> d_copyright
+* lookup 5, `liga` and `ss01`: d followed by copyright -> lookup 4
+* lookup 6, `ccmp`: beh.rtlm -> beh.ccmp
+* lookup 7, `rtlm`: beh -> beh.rtlm
 
 A shaper that applies lookups in LookupList order gives f_i.vrtr for a rotated "fi" and
-a_b for "ab". The output is deterministic, so a second run changes no file.
+a_b for "ab". Lookups 3 and 5 belong to two features, so they apply to a glyph that has
+either one. Lookups 6 and 7 are in the reverse of the order in which the Arabic shaper
+needs them, so beh.ccmp shows that `rtlm` ran in a stage before `ccmp`.
+The output is deterministic, so a second run changes no file.
 """
 
 import os
@@ -29,12 +37,19 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 OUT = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts", "GsubLookupOrder.ttf")
 
 # The glyph order is the glyph ID order that GsubLookupOrderTests relies on.
-GLYPHS = [".notdef", "f", "i", "a", "b", "f.vrtr", "i.vrtr", "f_i", "f_i.vrtr", "a.alt", "a_b"]
-CMAP = {ord("f"): "f", ord("i"): "i", ord("a"): "a", ord("b"): "b"}
+GLYPHS = [
+    ".notdef", "f", "i", "a", "b", "f.vrtr", "i.vrtr", "f_i", "f_i.vrtr", "a.alt", "a_b",
+    "c", "d", "copyright", "c_copyright", "d_copyright", "beh", "beh.rtlm", "beh.ccmp",
+]
+CMAP = {
+    ord("f"): "f", ord("i"): "i", ord("a"): "a", ord("b"): "b",
+    ord("c"): "c", ord("d"): "d", 0x00A9: "copyright", 0x0628: "beh",
+}
 
 FEATURES = """
 languagesystem DFLT dflt;
 languagesystem latn dflt;
+languagesystem arab dflt;
 
 feature vrtr {
     sub f by f.vrtr;
@@ -50,6 +65,35 @@ feature liga {
 feature calt {
     sub a by a.alt;
 } calt;
+
+feature ss01 {
+    lookup SHARED_LIGATURE {
+        sub c copyright by c_copyright;
+    } SHARED_LIGATURE;
+} ss01;
+
+lookup NESTED_LIGATURE {
+    sub d copyright by d_copyright;
+} NESTED_LIGATURE;
+
+feature ss01 {
+    lookup SHARED_CONTEXT {
+        sub d' lookup NESTED_LIGATURE copyright';
+    } SHARED_CONTEXT;
+} ss01;
+
+feature liga {
+    lookup SHARED_LIGATURE;
+    lookup SHARED_CONTEXT;
+} liga;
+
+feature ccmp {
+    sub beh.rtlm by beh.ccmp;
+} ccmp;
+
+feature rtlm {
+    sub beh by beh.rtlm;
+} rtlm;
 """
 
 
@@ -78,7 +122,8 @@ def main():
 
     gsub = builder.font["GSUB"].table
     features = {record.FeatureTag: record.Feature.LookupListIndex for record in gsub.FeatureList.FeatureRecord}
-    assert features == {"vrtr": [0], "liga": [1], "calt": [2]}, features
+    expected = {"vrtr": [0], "liga": [1, 3, 5], "calt": [2], "ss01": [3, 5], "ccmp": [6], "rtlm": [7]}
+    assert features == expected, features
 
     builder.font.save(OUT)
     print(os.path.relpath(OUT, ROOT))

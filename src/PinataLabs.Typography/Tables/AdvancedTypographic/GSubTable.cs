@@ -258,23 +258,13 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (!this.TryGetFeatureLookups(featureTags, current, out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? lookups))
+        if (!this.TryGetFeatureLookups(featureTags, current, out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? lookups))
         {
             return;
         }
 
-        // The lookups are sorted by lookup index, so the entries of a lookup that several
-        // features reference are adjacent. Such a lookup is applied once.
-        int end;
-        for (int start = 0; start < lookups.Count; start = end)
+        foreach ((ushort _, LookupTable lookupTable, LookupFeatures features) in lookups)
         {
-            end = start + 1;
-            while (end < lookups.Count && lookups[end].Index == lookups[start].Index)
-            {
-                end++;
-            }
-
-            LookupTable lookupTable = lookups[start].LookupTable;
             iterator.Reset(index, lookupTable.LookupFlags);
 
             while (iterator.Index < index + count)
@@ -284,15 +274,14 @@ internal class GSubTable : Table
                     return;
                 }
 
-                List<TagEntry> glyphFeatures = collection[iterator.Index].Features;
-                if (!TryGetGlyphFeature(glyphFeatures, lookups, start, end, out Tag feature))
+                if (!features.AnyEnabledOn(collection[iterator.Index].Features))
                 {
                     iterator.Next();
                     continue;
                 }
 
                 collectionCount = collection.Count;
-                lookupTable.TrySubstitution(fontMetrics, this, collection, feature, iterator.Index, count - (iterator.Index - index));
+                lookupTable.TrySubstitution(fontMetrics, this, collection, features, iterator.Index, count - (iterator.Index - index));
                 iterator.Next();
 
                 // Account for substitutions changing the length of the collection.
@@ -306,13 +295,13 @@ internal class GSubTable : Table
     internal bool TryGetFeatureLookups(
         in Tag feature,
         ScriptClass script,
-        [NotNullWhen(true)] out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? value)
+        [NotNullWhen(true)] out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? value)
         => this.TryGetFeatureLookups([feature], script, out value);
 
     internal bool TryGetFeatureLookups(
         IReadOnlyList<Tag> stageFeatures,
         ScriptClass script,
-        [NotNullWhen(true)] out List<(Tag Feature, ushort Index, LookupTable LookupTable)>? value)
+        [NotNullWhen(true)] out List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)>? value)
     {
         if (this.ScriptList is null)
         {
@@ -361,9 +350,13 @@ internal class GSubTable : Table
         return default;
     }
 
-    private List<(Tag Feature, ushort Index, LookupTable LookupTable)> GetFeatureLookups(IReadOnlyList<Tag> stageFeatures, params LangSysTable[] langSysTables)
+    /// <summary>
+    /// Gets the lookups that the given features reference, in LookupList order.
+    /// Each lookup appears once, with all the features that reference it.
+    /// </summary>
+    private List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)> GetFeatureLookups(IReadOnlyList<Tag> stageFeatures, params LangSysTable[] langSysTables)
     {
-        List<(Tag Feature, ushort Index, LookupTable LookupTable)> lookups = [];
+        List<(ushort Index, int Order, Tag Feature)> references = [];
         for (int i = 0; i < langSysTables.Length; i++)
         {
             ushort[] featureIndices = langSysTables[i].FeatureIndices;
@@ -378,7 +371,8 @@ internal class GSubTable : Table
                 FeatureTable featureTable = this.FeatureList.FeatureTables[featureIndices[j]];
                 Tag feature = featureTable.FeatureTag;
 
-                if (!Contains(stageFeatures, feature))
+                int order = IndexOf(stageFeatures, feature);
+                if (order < 0)
                 {
                     continue;
                 }
@@ -394,53 +388,48 @@ internal class GSubTable : Table
                         continue;
                     }
 
-                    LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-                    lookups.Add(new(feature, lookupIndex, lookupTable));
+                    references.Add(new(lookupIndex, order, feature));
                 }
             }
         }
 
-        lookups.Sort((x, y) => x.Index - y.Index);
+        // List.Sort is unstable. The plan order of the feature makes the order total,
+        // so the result does not depend on the order of the feature records.
+        references.Sort((x, y) => x.Index != y.Index ? x.Index - y.Index : x.Order - y.Order);
+
+        List<(ushort Index, LookupTable LookupTable, LookupFeatures Features)> lookups = [];
+        Tag[] tags = new Tag[references.Count];
+        int tagCount = 0;
+        int end;
+        for (int start = 0; start < references.Count; start = end)
+        {
+            ushort lookupIndex = references[start].Index;
+            int tagStart = tagCount;
+            for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
+            {
+                // Feature records of several language systems can repeat a reference.
+                if (end == start || references[end].Order != references[end - 1].Order)
+                {
+                    tags[tagCount++] = references[end].Feature;
+                }
+            }
+
+            lookups.Add(new(lookupIndex, this.LookupList.LookupTables[lookupIndex], new LookupFeatures(tags, tagStart, tagCount - tagStart)));
+        }
+
         return lookups;
     }
 
-    private static bool Contains(IReadOnlyList<Tag> tags, Tag tag)
+    private static int IndexOf(IReadOnlyList<Tag> tags, Tag tag)
     {
         for (int i = 0; i < tags.Count; i++)
         {
             if (tags[i] == tag)
             {
-                return true;
+                return i;
             }
         }
 
-        return false;
-    }
-
-    /// <summary>
-    /// Finds the first feature in the given run of lookup entries that is enabled on the glyph.
-    /// </summary>
-    private static bool TryGetGlyphFeature(
-        List<TagEntry> glyphFeatures,
-        List<(Tag Feature, ushort Index, LookupTable LookupTable)> lookups,
-        int start,
-        int end,
-        out Tag feature)
-    {
-        for (int i = start; i < end; i++)
-        {
-            feature = lookups[i].Feature;
-            for (int j = 0; j < glyphFeatures.Count; j++)
-            {
-                TagEntry entry = glyphFeatures[j];
-                if (entry.Tag == feature && entry.Enabled)
-                {
-                    return true;
-                }
-            }
-        }
-
-        feature = default;
-        return false;
+        return -1;
     }
 }

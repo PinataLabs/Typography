@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
@@ -23,11 +24,13 @@ public class GsubLookupOrderTests
     private const ushort RotatedLigatureFI = 8;
     private const ushort AlternateA = 9;
     private const ushort LigatureAB = 10;
+    private const ushort LigatureCCopyright = 14;
+    private const ushort LigatureDCopyright = 15;
 
-    private static List<ushort> GlyphIds(string text, LayoutMode mode)
+    private static List<ushort> GlyphIds(string text, LayoutMode mode, params Tag[] features)
     {
         FontFamily family = new FontCollection().Add(TestFonts.GsubLookupOrderFile);
-        TextOptions options = new(family.CreateFont(30)) { LayoutMode = mode };
+        TextOptions options = new(family.CreateFont(30)) { LayoutMode = mode, FeatureTags = features };
         GlyphRenderer renderer = new();
         TextRenderer.RenderTextTo(renderer, text, options);
         return renderer.GlyphKeys.Select(k => k.GlyphId).ToList();
@@ -54,6 +57,22 @@ public class GsubLookupOrderTests
     [Test]
     public async Task LookupIsNotAppliedToGlyphWithoutItsFeature()
         => await Assert.That(GlyphIds("if", LayoutMode.HorizontalTopBottom)).IsEquivalentTo(new[] { I, F });
+
+    // In vertical mixed layout the rotated letter has liga and ss01, and the upright copyright sign
+    // has ss01 but not liga. Both features reference the ligature lookup.
+    [Test]
+    public async Task LookupOfTwoFeaturesFormsLigatureWhenAComponentHasOnlyOneOfThem()
+        => await Assert.That(GlyphIds("c©", LayoutMode.VerticalMixedRightLeft, Tag.Parse("ss01")))
+            .IsEquivalentTo(new[] { LigatureCCopyright });
+
+    [Test]
+    public async Task NestedLookupOfTwoFeaturesFormsLigatureWhenAComponentHasOnlyOneOfThem()
+        => await Assert.That(GlyphIds("d©", LayoutMode.VerticalMixedRightLeft, Tag.Parse("ss01")))
+            .IsEquivalentTo(new[] { LigatureDCopyright });
+
+    [Test]
+    public async Task LigatureIsNotFormedWhenAComponentHasNoFeatureOfTheLookup()
+        => await Assert.That(GlyphIds("c©", LayoutMode.VerticalMixedRightLeft).Count).IsEqualTo(2);
 
     [Test]
     public async Task ArabicShaperLeavesContextualAlternatesToTheLayoutMode()

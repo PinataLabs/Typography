@@ -37,7 +37,9 @@ In both columns the ink centre of every glyph, upright and rotated, is the colum
 
 `generate_gsub_lookup_order_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/GsubLookupOrder.ttf`
 from feature code with fontTools feaLib. The LookupList of the font has the `vrtr` lookup first, then `liga`,
-then `calt`. `GsubLookupOrderTests` uses the font to check that lookups are applied in LookupList order.
+then `calt`. Two later lookups belong to both `liga` and `ss01`, and a `ccmp` lookup comes before the `rtlm`
+lookup that feeds it. `GsubLookupOrderTests` uses the font to check that lookups are applied in LookupList order,
+to every glyph that has one of their features, and that the Arabic shaper keeps its stage boundaries.
 
 To write the font again, run this from the repository root:
 
