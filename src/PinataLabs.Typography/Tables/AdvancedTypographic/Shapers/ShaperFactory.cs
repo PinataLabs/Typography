@@ -67,7 +67,8 @@ internal static class ShaperFactory
     private static ShaperKind GetShaperKind(ScriptClass script)
         => script switch
         {
-            // Arabic
+            // Arabic. HarfBuzz gives only Arabic and Syriac to its Arabic shaper, and the other six to its universal
+            // shaper, which also joins their letters. UniversalShaper does not join, so they stay here.
             ScriptClass.Arabic
             or ScriptClass.Mongolian
             or ScriptClass.Syriac
@@ -102,9 +103,9 @@ internal static class ShaperFactory
             ScriptClass.Thai
             or ScriptClass.Lao => ShaperKind.Thai,
 
-            // Universal. HarfBuzz also shapes Adlam, Chorasmian, Hanifi Rohingya, Old Uyghur and Sogdian with its
-            // universal shaper, which joins their letters. UniversalShaper does not join, so they stay with the default.
-            ScriptClass.Ahom
+            // Universal
+            ScriptClass.Adlam
+            or ScriptClass.Ahom
             or ScriptClass.Balinese
             or ScriptClass.Batak
             or ScriptClass.Bhaiksuki
@@ -113,6 +114,7 @@ internal static class ShaperFactory
             or ScriptClass.Buhid
             or ScriptClass.Chakma
             or ScriptClass.Cham
+            or ScriptClass.Chorasmian
             or ScriptClass.CyproMinoan
             or ScriptClass.DivesAkuru
             or ScriptClass.Dogra
@@ -121,6 +123,7 @@ internal static class ShaperFactory
             or ScriptClass.Elymaic
             or ScriptClass.Grantha
             or ScriptClass.GunjalaGondi
+            or ScriptClass.HanifiRohingya
             or ScriptClass.Hanunoo
             or ScriptClass.Javanese
             or ScriptClass.Kaithi
@@ -144,12 +147,14 @@ internal static class ShaperFactory
             or ScriptClass.Newa
             or ScriptClass.NyiakengPuachueHmong
             or ScriptClass.OldSogdian
+            or ScriptClass.OldUyghur
             or ScriptClass.PahawhHmong
             or ScriptClass.Rejang
             or ScriptClass.Saurashtra
             or ScriptClass.Sharada
             or ScriptClass.Siddham
             or ScriptClass.Sinhala
+            or ScriptClass.Sogdian
             or ScriptClass.Soyombo
             or ScriptClass.Sundanese
             or ScriptClass.SylotiNagri

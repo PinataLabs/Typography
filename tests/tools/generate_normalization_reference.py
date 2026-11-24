@@ -33,6 +33,7 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 
 import json
 import os
+import re
 
 os.environ["SOURCE_DATE_EPOCH"] = "0"
 
@@ -227,6 +228,12 @@ MARKS_KERN_CASES = [
     ("GposWithoutGdefKeepsTheAdvanceOfAnEnclosingMark", "a\u20DDa"),
 ]
 
+# The shaper that HarfBuzz gives a script decides what happens to a mark in a font without GPOS and GDEF: the
+# mark is placed on its base, it only loses its advance, or it keeps its advance. Scripts has the first letter of
+# every script of Scripts.txt and U+0301, and the reference has that letter and mark for each script.
+SCRIPTS_FONT = "NormalizationScripts.ttf"
+SCRIPTS_MARK = 0x0301
+
 # A space or a hyphen that the font lacks becomes the space or the hyphen that the font has. Each text ends with
 # a letter, so that the place of the letter shows the advance of the space.
 SPACE_FONT = "NormalizationSpace.ttf"
@@ -284,6 +291,28 @@ def read_unicode_data():
     return classes, decompositions
 
 
+def read_script_letters():
+    """Gives the first letter of each script and the direction of its text, by the name of the script."""
+    letters = {}
+    with open(os.path.join(RULES, "UnicodeData.txt"), encoding="utf-8") as file:
+        for line in file:
+            fields = line.split(";")
+            if fields[2] in ("Lu", "Ll", "Lo") and not fields[1].startswith("<"):
+                letters[int(fields[0], 16)] = "rtl" if fields[4] in ("R", "AL") else "ltr"
+    first = {}
+    with open(os.path.join(RULES, "Scripts.txt"), encoding="utf-8") as file:
+        for line in file:
+            match = re.match(r"([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(\w+)", line)
+            if not match or match.group(3) in first:
+                continue
+            start = int(match.group(1), 16)
+            for code_point in range(start, int(match.group(2) or match.group(1), 16) + 1):
+                if code_point in letters:
+                    first[match.group(3)] = (code_point, letters[code_point])
+                    break
+    return dict(sorted(first.items()))
+
+
 def box(x_min=50, y_min=0, x_max=450, y_max=700):
     pen = TTGlyphPen(None)
     pen.moveTo((x_min, y_min))
@@ -336,11 +365,13 @@ def named_cases(prefix, font_name, font, cases):
     return result
 
 
-def shape_positions(font, text):
+def shape_positions(font, text, direction=None):
     """Gives the glyph ID of each glyph, and where HarfBuzz draws it, in font units from the start of the line."""
     buffer = hb.Buffer()
     buffer.add_str(text)
     buffer.guess_segment_properties()
+    if direction:
+        buffer.direction = direction
     hb.shape(font, buffer)
     glyphs = []
     x = 0
@@ -405,6 +436,19 @@ def main():
         marks_font = build(file_name, MARKS_CHARACTERS, True, features, MARK_ADVANCES, MARK_BOXES)
         positioned += positioned_cases(file_name, marks_font, mark_cases)
 
+    script_letters = read_script_letters()
+    scripts_font = build(
+        SCRIPTS_FONT,
+        sorted([SCRIPTS_MARK, *(letter for letter, _ in script_letters.values())]),
+        True,
+        advances={SCRIPTS_MARK: MARK_ADVANCES[0x0301]},
+        boxes={SCRIPTS_MARK: MARK_BOXES[0x0301]})
+    # HarfBuzz has no direction of its own for a script such as Old Hungarian. Its caller gives it the bidi direction.
+    scripts = []
+    for name, (letter, direction) in script_letters.items():
+        text = chr(letter) + chr(SCRIPTS_MARK)
+        scripts.append({"name": name, "font": SCRIPTS_FONT, "text": text, "glyphs": shape_positions(scripts_font, text, direction)})
+
     composed = list(scanned(decompositions))
     values = sorted(set(classes.values()))
     probes = [min(c for c in classes if classes[c] == value and c not in decompositions) for value in values]
@@ -447,11 +491,14 @@ def main():
         file.write('  "positioned": [\n')
         file.write(",\n".join("    " + json.dumps(case) for case in positioned))
         file.write("\n  ],\n")
+        file.write('  "scripts": [\n')
+        file.write(",\n".join("    " + json.dumps(case) for case in scripts))
+        file.write("\n  ],\n")
         file.write('  "scanFonts": %s,\n' % json.dumps({"scan": SCAN_FONT, "parts": PARTS_FONT}))
         file.write('  "scan": [\n')
         file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
         file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases", len(positioned), "positioned cases", len(rows), "scan rows")
+    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases", len(positioned), "positioned cases", len(scripts), "scripts", len(rows), "scan rows")
 
 
 if __name__ == "__main__":

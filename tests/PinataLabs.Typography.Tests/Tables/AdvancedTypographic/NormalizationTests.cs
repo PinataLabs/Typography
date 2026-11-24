@@ -48,20 +48,50 @@ public class NormalizationTests
     public async Task GlyphsAreDrawnWhereHarfBuzzDrawsThem(string name)
     {
         PositionedCase expected = HarfBuzz.Positioned.Single(c => c.Name == name);
-        FontFamily family = new FontCollection().Add(TestFonts.GetPath(expected.Font));
+
+        await Assert.That(Place(expected)).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
+    }
+
+    // What a font without GPOS does with a mark shows the shaper of the script: the default shaper places the mark,
+    // the universal shaper only takes its advance away, and the Indic shaper leaves it. HarfBuzz gives these scripts
+    // to its universal shaper, which also joins their letters. UniversalShaper does not join, so the library keeps
+    // them with its Arabic shaper, which places the mark.
+    private static readonly string[] ScriptsWithAnotherShaper =
+    [
+        "Mandaic", "Manichaean", "Mongolian", "Nko", "Phags_Pa", "Psalter_Pahlavi",
+    ];
+
+    [Test]
+    public async Task EveryScriptHasTheShaperThatHarfBuzzGivesIt()
+    {
+        List<string> different = [];
+        foreach (PositionedCase expected in HarfBuzz.Scripts)
+        {
+            if (!Place(expected).SequenceEqual(expected.Glyphs.Select(g => (g.Id, g.X, g.Y))))
+            {
+                different.Add(expected.Name);
+            }
+        }
+
+        await Assert.That(different.Except(ScriptsWithAnotherShaper)).IsEmpty();
+        await Assert.That(ScriptsWithAnotherShaper.Except(different)).IsEmpty();
+    }
+
+    // Gives the glyph ID and the place of each glyph, in font units from the start of the line.
+    private static (int Id, int X, int Y)[] Place(PositionedCase text)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.GetPath(text.Font));
 
         // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
         Font font = family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(expected.Text.AsSpan(), new TextOptions(font));
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.Text.AsSpan(), new TextOptions(font));
 
-        (int Id, int X, int Y)[] actual = layout
+        return layout
             .Select(g => (
                 (int)g.Glyph.GlyphMetrics.GlyphId,
                 (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
                 (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y)))
             .ToArray();
-
-        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
     }
 
     // The glyph of U+0020 draws a no-break space that the font lacks. The line must still not break there.
@@ -149,6 +179,8 @@ public class NormalizationTests
         public ReferenceCase[] Cases { get; set; } = [];
 
         public PositionedCase[] Positioned { get; set; } = [];
+
+        public PositionedCase[] Scripts { get; set; } = [];
 
         public Dictionary<string, string> ScanFonts { get; set; } = [];
 
