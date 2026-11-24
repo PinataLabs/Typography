@@ -1,9 +1,11 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -120,6 +122,41 @@ public class VerticalGlyphFormTests
         float columnCentre = originX + (TextMeasurer.MeasureAdvance(text, options).Width * .5F);
 
         await Assert.That(inkCentre).IsEqualTo(columnCentre).Within(1.5F);
+    }
+
+    [Test]
+    [Arguments(LayoutMode.VerticalMixedRightLeft)]
+    [Arguments(LayoutMode.VerticalMixedLeftRight)]
+    public async Task RotatedGlyphCentralBaselineIsAtTheColumnCentre(LayoutMode mode)
+    {
+        // The font's ascent (1100) and descent (-200) are far from symmetric and it has a line gap (100).
+        // Its Latin glyphs fill the ascent to descent range, so a rotated Latin glyph's ink centre is its
+        // central baseline. Edge puts it at the column centre to within 0.01px, see tests/tools/central_baseline.
+        const float originX = 200F;
+        const string text = "あいうABCえお";
+        FontFamily family = new FontCollection().Add(TestFonts.CentralBaselineTestFile);
+        TextOptions options = new(family.CreateFont(100))
+        {
+            LayoutMode = mode,
+            Origin = new Vector2(originX, 20),
+        };
+
+        InkBoundsRenderer renderer = new();
+        TextRenderer.RenderTextTo(renderer, text, options);
+
+        // The column is one em wide, like the browser's line-height: 1 column. MeasureAdvance is not used
+        // because it counts a rotated glyph's baseline shift as column width.
+        const float columnCentre = originX + 50F;
+
+        List<float> rotated = renderer.InkCentres(GlyphLayoutMode.VerticalRotated);
+        List<float> upright = renderer.InkCentres(GlyphLayoutMode.Vertical);
+
+        await Assert.That(rotated.Count).IsEqualTo(3);
+        await Assert.That(upright.Count).IsEqualTo(5);
+        foreach (float centre in rotated.Concat(upright))
+        {
+            await Assert.That(centre).IsEqualTo(columnCentre).Within(0.01F);
+        }
     }
 
     [Test]
@@ -312,5 +349,62 @@ public class VerticalGlyphFormTests
         new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);
 
         return collection[0].Features.Select(f => f.Tag.ToString()).ToList();
+    }
+
+    private sealed class InkBoundsRenderer : IGlyphRenderer
+    {
+        private readonly List<(GlyphLayoutMode Mode, float MinX, float MaxX)> glyphs = [];
+        private GlyphLayoutMode mode;
+        private float minX;
+        private float maxX;
+
+        public List<float> InkCentres(GlyphLayoutMode layoutMode)
+            => this.glyphs.Where(g => g.Mode == layoutMode).Select(g => (g.MinX + g.MaxX) * .5F).ToList();
+
+        public bool BeginGlyph(in FontRectangle bounds, in GlyphRendererParameters parameters)
+        {
+            this.mode = parameters.LayoutMode;
+            this.minX = float.MaxValue;
+            this.maxX = float.MinValue;
+            return true;
+        }
+
+        public void EndGlyph() => this.glyphs.Add((this.mode, this.minX, this.maxX));
+
+        public void MoveTo(Vector2 point) => this.Add(point);
+
+        public void LineTo(Vector2 point) => this.Add(point);
+
+        public void QuadraticBezierTo(Vector2 secondControlPoint, Vector2 point) => this.Add(point);
+
+        public void CubicBezierTo(Vector2 secondControlPoint, Vector2 thirdControlPoint, Vector2 point) => this.Add(point);
+
+        public void BeginFigure()
+        {
+        }
+
+        public void EndFigure()
+        {
+        }
+
+        public void BeginText(in FontRectangle bounds)
+        {
+        }
+
+        public void EndText()
+        {
+        }
+
+        public TextDecorations EnabledDecorations() => TextDecorations.None;
+
+        public void SetDecoration(TextDecorations textDecorations, Vector2 start, Vector2 end, float thickness)
+        {
+        }
+
+        private void Add(Vector2 point)
+        {
+            this.minX = MathF.Min(this.minX, point.X);
+            this.maxX = MathF.Max(this.maxX, point.X);
+        }
     }
 }

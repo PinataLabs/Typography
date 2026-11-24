@@ -227,6 +227,11 @@ public static class TestFonts
 
     public static string NotoSansKRRegular => GetFullPath("NotoSansKR-Regular.otf");
 
+    /// <summary>
+    /// Gets an asymmetric-metric font built by tests/tools/central_baseline/build_font.py.
+    /// </summary>
+    public static string CentralBaselineTestFile => GetFullPath("CentralBaselineTest.ttf");
+
     public static string NotoSansBalineseRegular => GetFullPath("NotoSansBalinese-Regular.ttf");
 
     public static string NotoSansBengaliRegular => GetFullPath("NotoSansBengali-Regular.ttf");
