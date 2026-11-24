@@ -188,5 +188,10 @@ public enum IndicSyllabicCategory
     /// <summary>
     /// Vowel_Independent
     /// </summary>
-    VowelIndependent
+    VowelIndependent,
+
+    /// <summary>
+    /// Reordering_Killer.
+    /// </summary>
+    ReorderingKiller,
 }
