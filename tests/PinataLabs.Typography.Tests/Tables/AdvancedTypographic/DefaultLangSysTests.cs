@@ -7,13 +7,16 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using TUnit.Assertions.Enums;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// With no language requested, a shaper uses the features of the LangSysRecord tagged <c>dflt</c>, or else of the
-/// default LangSys of the script. A script with neither contributes no feature, as in HarfBuzz.
+/// default LangSys of the script. A script with neither contributes no feature, as in HarfBuzz. A font without the
+/// script of the text gives the LangSys of its <c>DFLT</c>, <c>dflt</c> or <c>latn</c> script, in that order. The
+/// required feature of the LangSys applies to every glyph.
 /// </summary>
 public class DefaultLangSysTests
 {
@@ -31,6 +34,14 @@ public class DefaultLangSysTests
     [Arguments("DejaVuSansKern")]
     [Arguments("DfltRecordOnly")]
     [Arguments("DfltRecordBeforeDefault")]
+    [Arguments("RequiredBeforeLiga")]
+    [Arguments("RequiredListedLiga")]
+    [Arguments("RequiredUnlistedLiga")]
+    [Arguments("RequiredWithRvrn")]
+    [Arguments("FallbackToDFLT")]
+    [Arguments("FallbackToDfltScript")]
+    [Arguments("FallbackToLatn")]
+    [Arguments("FallbackToNone")]
     public async Task GlyphsAreShapedAsHarfBuzzShapesThem(string name)
     {
         ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);
@@ -48,6 +59,42 @@ public class DefaultLangSysTests
             .ToArray();
 
         await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => (g.Id, g.X, g.Y)), CollectionOrdering.Matching);
+    }
+
+    /// <summary>
+    /// HarfBuzz takes <c>vert</c> from the whole FeatureList when the chosen language system lacks it.
+    /// </summary>
+    [Test]
+    [Arguments("VertNotInLangSys")]
+    [Arguments("VertWithoutLangSys")]
+    public async Task VerticalGlyphsAreSubstitutedAsHarfBuzzSubstitutesThem(string name)
+    {
+        ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == name);
+        Font font = new FontCollection().Add(TestFonts.GetPath(expected.Font)).CreateFont(12);
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(
+            expected.Text.AsSpan(),
+            new TextOptions(font) { LayoutMode = LayoutMode.VerticalLeftRight });
+
+        int[] actual = layout.Select(g => (int)g.Glyph.GlyphMetrics.GlyphId).ToArray();
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => g.Id), CollectionOrdering.Matching);
+    }
+
+    /// <summary>
+    /// HarfBuzz looks outside the chosen language system only for the vert of vertical text, not for a vert that
+    /// the caller requests for horizontal text.
+    /// </summary>
+    [Test]
+    public async Task RequestedVertInHorizontalTextComesOnlyFromTheLanguageSystem()
+    {
+        ReferenceCase expected = HarfBuzz.Cases.Single(c => c.Name == "VertRequestedHorizontal");
+        Font font = new FontCollection().Add(TestFonts.GetPath(expected.Font)).CreateFont(12);
+        TextOptions options = new(font) { FeatureTags = [Tag.Parse("vert")] };
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(expected.Text.AsSpan(), options);
+
+        int[] actual = layout.Select(g => (int)g.Glyph.GlyphMetrics.GlyphId).ToArray();
+
+        await Assert.That(actual).IsEquivalentTo(expected.Glyphs.Select(g => g.Id), CollectionOrdering.Matching);
     }
 
     private sealed class Reference

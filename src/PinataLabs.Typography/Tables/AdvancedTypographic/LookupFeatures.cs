@@ -3,25 +3,31 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
 /// <summary>
 /// The features of a shaping stage that reference one lookup.
-/// The lookup applies to a glyph that has any of them enabled.
+/// The lookup applies to a glyph that has any of them enabled, and to every glyph when the
+/// required feature of the language system references it.
 /// </summary>
 internal readonly struct LookupFeatures
 {
+    private static readonly Tag VertTag = Tag.Parse("vert");
+
     private readonly Tag[]? tags;
     private readonly int offset;
     private readonly int count;
+    private readonly bool required;
 
-    public LookupFeatures(Tag[] tags, int offset, int count)
+    public LookupFeatures(Tag[] tags, int offset, int count, bool required)
     {
         this.tags = tags;
         this.offset = offset;
         this.count = count;
+        this.required = required;
     }
 
     /// <summary>
@@ -34,6 +40,7 @@ internal readonly struct LookupFeatures
     /// <param name="lookupCount">The number of lookups in the LookupList of the table.</param>
     /// <param name="features">The features, in the order in which the shaper planned them.</param>
     /// <param name="script">The script of the text.</param>
+    /// <param name="withRequiredFeature">Whether the lookups of the required feature of the language system are included.</param>
     /// <param name="value">The lookups, when the features reference any.</param>
     /// <returns><see langword="true"/> when the features reference a lookup.</returns>
     public static bool TryGetLookups(
@@ -42,35 +49,46 @@ internal readonly struct LookupFeatures
         int lookupCount,
         IReadOnlyList<Tag> features,
         ScriptClass script,
+        bool withRequiredFeature,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
-        if (scriptList is null)
+        // No language is requested, so only one language system applies. A script without one has no features but vert.
+        LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
+        value = GetLookups(featureList, lookupCount, features, langSysTable, withRequiredFeature);
+        return value.Count > 0;
+    }
+
+    /// <summary>
+    /// Gets the shaping stage whose lookups include those of the required feature. As in HarfBuzz, this is the
+    /// stage that plans a feature with the tag of the required feature, or else the first stage.
+    /// </summary>
+    /// <param name="scriptList">The script list of the GSUB table.</param>
+    /// <param name="featureList">The feature list of the table.</param>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="stages">The shaping stages.</param>
+    /// <returns>The index of the stage.</returns>
+    public static int GetRequiredFeatureStage(
+        ScriptList? scriptList,
+        FeatureListTable featureList,
+        ScriptClass script,
+        IReadOnlyList<ShapingStage> stages)
+    {
+        LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
+        if (langSysTable is null || langSysTable.RequiredFeatureIndex >= featureList.FeatureTables.Length)
         {
-            value = null;
-            return false;
+            return 0;
         }
 
-        ScriptListTable scriptListTable = scriptList.Default();
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
+        Tag feature = featureList.FeatureTables[langSysTable.RequiredFeatureIndex].FeatureTag;
+        for (int i = 0; i < stages.Count; i++)
         {
-            if (scriptList.TryGetValue(tags[i].Value, out ScriptListTable? table))
+            if (IndexOf(stages[i].FeatureTags, feature) >= 0)
             {
-                scriptListTable = table;
-                break;
+                return i;
             }
         }
 
-        // No language is requested, so only one language system applies. A script without one has no features.
-        LangSysTable? langSysTable = scriptListTable.GetDefaultLangSys();
-        if (langSysTable is null)
-        {
-            value = null;
-            return false;
-        }
-
-        value = GetLookups(featureList, lookupCount, features, langSysTable);
-        return value.Count > 0;
+        return 0;
     }
 
     public bool Contains(Tag tag)
@@ -88,6 +106,11 @@ internal readonly struct LookupFeatures
 
     public bool AnyEnabledOn(List<TagEntry> glyphFeatures)
     {
+        if (this.required)
+        {
+            return true;
+        }
+
         for (int i = 0; i < glyphFeatures.Count; i++)
         {
             TagEntry entry = glyphFeatures[i];
@@ -112,10 +135,12 @@ internal readonly struct LookupFeatures
         FeatureListTable featureList,
         int lookupCount,
         IReadOnlyList<Tag> features,
-        LangSysTable langSysTable)
+        LangSysTable? langSysTable,
+        bool withRequiredFeature)
     {
-        List<(ushort Index, int Order, Tag Feature)> references = [];
-        ushort[] featureIndices = langSysTable.FeatureIndices;
+        List<(ushort Index, int Order, Tag Feature, bool Required)> references = [];
+        ushort[] featureIndices = langSysTable?.FeatureIndices ?? [];
+        bool hasVert = false;
         for (int i = 0; i < featureIndices.Length; i++)
         {
             // Skip feature indices that fall outside the feature list.
@@ -125,27 +150,33 @@ internal readonly struct LookupFeatures
             }
 
             FeatureTable featureTable = featureList.FeatureTables[featureIndices[i]];
-            Tag feature = featureTable.FeatureTag;
-
-            int order = IndexOf(features, feature);
-            if (order < 0)
+            hasVert |= featureTable.FeatureTag == VertTag;
+            int order = IndexOf(features, featureTable.FeatureTag);
+            if (order >= 0)
             {
-                continue;
+                AddReferences(references, featureTable, lookupCount, order, false);
             }
+        }
 
-            ushort[] lookupListIndices = featureTable.LookupListIndices;
-            for (int j = 0; j < lookupListIndices.Length; j++)
+        // As in HarfBuzz, vertical text gets the first vert feature of the font when the language system lacks one.
+        int vertOrder = IndexOf(features, VertTag);
+        if (!hasVert && vertOrder >= 0)
+        {
+            for (int i = 0; i < featureList.FeatureTables.Length; i++)
             {
-                ushort lookupIndex = lookupListIndices[j];
-
-                // Skip lookup indices that fall outside the lookup list.
-                if (lookupIndex >= lookupCount)
+                if (featureList.FeatureTables[i].FeatureTag == VertTag)
                 {
-                    continue;
+                    AddReferences(references, featureList.FeatureTables[i], lookupCount, vertOrder, false);
+                    break;
                 }
-
-                references.Add(new(lookupIndex, order, feature));
             }
+        }
+
+        // The shaper need not plan the tag of the required feature. Its order is then -1, before every planned feature.
+        if (withRequiredFeature && langSysTable is not null && langSysTable.RequiredFeatureIndex < featureList.FeatureTables.Length)
+        {
+            FeatureTable featureTable = featureList.FeatureTables[langSysTable.RequiredFeatureIndex];
+            AddReferences(references, featureTable, lookupCount, IndexOf(features, featureTable.FeatureTag), true);
         }
 
         // List.Sort is unstable. The plan order of the feature makes the order total,
@@ -160,8 +191,11 @@ internal readonly struct LookupFeatures
         {
             ushort lookupIndex = references[start].Index;
             int tagStart = tagCount;
+            bool required = false;
             for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
             {
+                required |= references[end].Required;
+
                 // Feature records that share a tag, or a feature that lists a lookup twice, repeat a reference.
                 if (end == start || references[end].Order != references[end - 1].Order)
                 {
@@ -169,10 +203,28 @@ internal readonly struct LookupFeatures
                 }
             }
 
-            lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart)));
+            lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart, required)));
         }
 
         return lookups;
+    }
+
+    private static void AddReferences(
+        List<(ushort Index, int Order, Tag Feature, bool Required)> references,
+        FeatureTable featureTable,
+        int lookupCount,
+        int order,
+        bool required)
+    {
+        ushort[] lookupListIndices = featureTable.LookupListIndices;
+        for (int i = 0; i < lookupListIndices.Length; i++)
+        {
+            // Skip lookup indices that fall outside the lookup list.
+            if (lookupListIndices[i] < lookupCount)
+            {
+                references.Add(new(lookupListIndices[i], order, featureTable.FeatureTag, required));
+            }
+        }
     }
 
     private static int IndexOf(IReadOnlyList<Tag> tags, Tag tag)

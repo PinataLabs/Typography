@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) PinataLabs.
 # Licensed under the Apache License, Version 2.0.
-"""Writes DefaultLangSys.harfbuzz.json, the HarfBuzz reference for language system selection.
+"""Writes DefaultLangSys.harfbuzz.json, the HarfBuzz reference for script and language system selection.
 
 Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
 
@@ -23,6 +23,28 @@ HarfBuzz looks for a `dflt` record before it uses the default LangSys, so it joi
 Arabic text and gives a.dflt for "a". feaLib writes `dflt` as the default LangSys, so the script
 moves or renames the LangSys after feaLib has built it.
 
+The script builds RequiredFeature.ttf, whose language systems have a required feature. HarfBuzz
+applies the required feature to every glyph, even when the LangSys does not list it. It applies the
+lookups in the stage of the shaper feature that has the same tag, or else in the first stage, which
+holds only `rvrn`. Within the stage it applies them in LookupList order:
+
+* `latn` requires `rqd1` (b to c), which is not listed. Its lookup comes after the `liga` lookup
+  (a to b), but the first stage runs before `liga`, so "aba" becomes b c b. The GPOS of `latn` requires
+  `rqdp`, which moves every b by -100.
+* `grek` requires `liga` (a to b) and also lists it. `armn` requires the same feature and does not
+  list it. Both list `calt` (b to d), whose lookup comes first, so it sees no b and "a" stays b.
+* `cyrl` requires `rqd2` (b to c), whose lookup comes before the `rvrn` lookup (a to b). Both run in
+  the first stage, so "a" becomes b and "b" becomes c.
+
+The script also builds four ScriptFallback fonts. Each has a `liga` that gives a distinct glyph and a
+`kern` with a distinct value for each script. None has a `grek` script, so HarfBuzz shapes Greek text
+with the `DFLT` script, else the `dflt` script, else `latn`, and with no feature when the font has none
+of them. The first ScriptRecord of three of the fonts is `arab`.
+
+The `vert` of the ScriptFallback fonts is listed only under `arab`. HarfBuzz looks for `vert` in the
+whole FeatureList when the chosen LangSys lacks it, so vertical Han text gets a.vert in these fonts.
+The cases with a direction are shaped in that direction, and those with a feature have it turned on.
+
 The reference holds the glyph IDs and positions that HarfBuzz gives for each case, in font units
 from the origin of the line. DefaultLangSysTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -43,6 +65,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 REFERENCE = os.path.join(FONTS, "DefaultLangSys.harfbuzz.json")
 DFLT_RECORD_FONT = "DfltLangSysRecord.ttf"
+REQUIRED_FONT = "RequiredFeature.ttf"
 
 GLYPHS = [".notdef", "beh", "beh.init", "beh.medi", "beh.fina", "a", "a.default", "a.dflt"]
 CMAP = {0x0628: "beh", ord("a"): "a"}
@@ -74,7 +97,62 @@ CASES = [
     ("DejaVuSansKern", "DejaVuSans.ttf", "AVATAR Wavy To"),
     ("DfltRecordOnly", DFLT_RECORD_FONT, "ببب"),
     ("DfltRecordBeforeDefault", DFLT_RECORD_FONT, "a"),
+    ("RequiredBeforeLiga", REQUIRED_FONT, "aba"),
+    ("RequiredListedLiga", REQUIRED_FONT, "\u03b1"),
+    ("RequiredUnlistedLiga", REQUIRED_FONT, "\u0561"),
+    ("RequiredWithRvrn", REQUIRED_FONT, "\u0430\u0431"),
+    ("FallbackToDFLT", "ScriptFallbackDFLT.ttf", "\u03b1\u03b1"),
+    ("FallbackToDfltScript", "ScriptFallbackLowercaseDflt.ttf", "\u03b1\u03b1"),
+    ("FallbackToLatn", "ScriptFallbackLatn.ttf", "\u03b1\u03b1"),
+    ("FallbackToNone", "ScriptFallbackNone.ttf", "\u03b1\u03b1"),
+    ("VertNotInLangSys", "ScriptFallbackLatn.ttf", "\u4e2d\u4e2d", "ttb"),
+    ("VertWithoutLangSys", "ScriptFallbackNone.ttf", "\u4e2d\u4e2d", "ttb"),
+    ("VertRequestedHorizontal", "ScriptFallbackLatn.ttf", "\u4e2d\u4e2d", "ltr", "vert"),
 ]
+
+REQUIRED_GLYPHS = [".notdef", "a", "b", "c", "d"]
+REQUIRED_CMAP = {
+    ord("a"): "a", ord("b"): "b",
+    0x03B1: "a", 0x03B2: "b",
+    0x0430: "a", 0x0431: "b",
+    0x0561: "a", 0x0562: "b",
+}
+
+# feaLib cannot declare a required feature, so build_required_feature() sets REQUIRED.
+REQUIRED_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem armn dflt;
+languagesystem cyrl dflt;
+languagesystem grek dflt;
+languagesystem latn dflt;
+
+feature calt { script grek; sub b by d; script armn; sub b by d; } calt;
+feature liga { script latn; sub a by b; script grek; sub a by b; script armn; sub a by b; } liga;
+feature rqd2 { script cyrl; sub b by c; } rqd2;
+feature rvrn { script cyrl; sub a by b; } rvrn;
+feature rqd1 { script latn; sub b by c; } rqd1;
+feature rqdp { script latn; pos b -100; } rqdp;
+"""
+
+# (table, script): (required feature, whether the LangSys also lists it)
+REQUIRED = {
+    ("GSUB", "latn"): ("rqd1", False),
+    ("GSUB", "grek"): ("liga", True),
+    ("GSUB", "armn"): ("liga", False),
+    ("GSUB", "cyrl"): ("rqd2", True),
+    ("GPOS", "latn"): ("rqdp", False),
+}
+
+FALLBACK_GLYPHS = [".notdef", "a", "a.arab", "a.cyrl", "a.DFLT", "a.dflt", "a.latn", "a.vert"]
+FALLBACK_KERN = {"arab": -10, "cyrl": -20, "DFLT": -30, "dflt": -40, "latn": -50}
+
+# feaLib has no `dflt` script, so `thai` stands in for it and build_script_fallback() renames it.
+FALLBACK_FONTS = {
+    "ScriptFallbackDFLT.ttf": ["DFLT", "arab", "dflt", "latn"],
+    "ScriptFallbackLowercaseDflt.ttf": ["arab", "dflt", "latn"],
+    "ScriptFallbackLatn.ttf": ["arab", "cyrl", "latn"],
+    "ScriptFallbackNone.ttf": ["arab", "cyrl"],
+}
 
 
 def box():
@@ -94,17 +172,22 @@ def dflt_record(lang_sys):
     return record
 
 
-def build():
+def new_font(family, glyphs, cmap, features):
     builder = FontBuilder(1000, isTTF=True)
-    builder.setupGlyphOrder(GLYPHS)
-    builder.setupCharacterMap(CMAP)
-    builder.setupGlyf({name: box() for name in GLYPHS})
-    builder.setupHorizontalMetrics({name: (600, 50) for name in GLYPHS})
+    builder.setupGlyphOrder(glyphs)
+    builder.setupCharacterMap(cmap)
+    builder.setupGlyf({name: box() for name in glyphs})
+    builder.setupHorizontalMetrics({name: (600, 50) for name in glyphs})
     builder.setupHorizontalHeader(ascent=800, descent=-200)
-    builder.setupNameTable({"familyName": "DfltLangSysRecord", "styleName": "Regular"})
+    builder.setupNameTable({"familyName": family, "styleName": "Regular"})
     builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
     builder.setupPost()
-    addOpenTypeFeaturesFromString(builder.font, FEATURES)
+    addOpenTypeFeaturesFromString(builder.font, features)
+    return builder
+
+
+def build():
+    builder = new_font("DfltLangSysRecord", GLYPHS, CMAP, FEATURES)
 
     for table in ("GSUB", "GPOS"):
         for script_record in builder.font[table].table.ScriptList.ScriptRecord:
@@ -119,14 +202,52 @@ def build():
     builder.font.save(os.path.join(FONTS, DFLT_RECORD_FONT))
 
 
-def shape(path, text):
+def build_required_feature():
+    builder = new_font("RequiredFeature", REQUIRED_GLYPHS, REQUIRED_CMAP, REQUIRED_FEATURES)
+    for (table, script), (feature, listed) in REQUIRED.items():
+        layout = builder.font[table].table
+        records = layout.FeatureList.FeatureRecord
+        lang_sys = next(r.Script.DefaultLangSys for r in layout.ScriptList.ScriptRecord if r.ScriptTag == script)
+        index = next(i for i in lang_sys.FeatureIndex if records[i].FeatureTag == feature)
+        lang_sys.ReqFeatureIndex = index
+        if not listed:
+            lang_sys.FeatureIndex = [i for i in lang_sys.FeatureIndex if i != index]
+            lang_sys.FeatureCount = len(lang_sys.FeatureIndex)
+
+    builder.font.save(os.path.join(FONTS, REQUIRED_FONT))
+
+
+def build_script_fallback(path, scripts):
+    fea_scripts = ["thai" if s == "dflt" else s for s in scripts]
+    features = "".join(f"languagesystem {s} dflt;\n" for s in fea_scripts)
+    features += "feature liga {\n"
+    features += "".join(f"    script {f}; sub a by a.{s};\n" for f, s in zip(fea_scripts, scripts))
+    features += "} liga;\nfeature kern {\n"
+    features += "".join(f"    script {f}; pos a.{s} a.{s} {FALLBACK_KERN[s]};\n" for f, s in zip(fea_scripts, scripts))
+    features += "} kern;\n"
+    features += "feature vert { script arab; sub a by a.vert; } vert;\n"
+
+    builder = new_font(os.path.splitext(path)[0], FALLBACK_GLYPHS, {0x03B1: "a", 0x4E2D: "a"}, features)
+    for table in ("GSUB", "GPOS"):
+        script_list = builder.font[table].table.ScriptList
+        for record in script_list.ScriptRecord:
+            if record.ScriptTag == "thai":
+                record.ScriptTag = "dflt"
+        script_list.ScriptRecord.sort(key=lambda r: r.ScriptTag)
+
+    builder.font.save(os.path.join(FONTS, path))
+
+
+def shape(path, text, direction=None, feature=None):
     with open(os.path.join(FONTS, path), "rb") as file:
         font = hb.Font(hb.Face(file.read()))
 
     buffer = hb.Buffer()
     buffer.add_str(text)
     buffer.guess_segment_properties()
-    hb.shape(font, buffer)
+    if direction:
+        buffer.direction = direction
+    hb.shape(font, buffer, {feature: True} if feature else None)
 
     glyphs = []
     x = y = 0
@@ -139,10 +260,18 @@ def shape(path, text):
 
 def main():
     build()
-    cases = [
-        {"name": name, "font": path, "text": text, "glyphs": shape(path, text)}
-        for name, path, text in CASES
-    ]
+    build_required_feature()
+    for path, scripts in FALLBACK_FONTS.items():
+        build_script_fallback(path, scripts)
+    cases = []
+    for name, path, text, *options in CASES:
+        case = {"name": name, "font": path, "text": text}
+        if options:
+            case["direction"] = options[0]
+        if len(options) > 1:
+            case["feature"] = options[1]
+        case["glyphs"] = shape(path, text, *options)
+        cases.append(case)
     reference = {"harfbuzz": hb.version_string(), "cases": cases}
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
         json.dump(reference, file, indent=2, ensure_ascii=False)

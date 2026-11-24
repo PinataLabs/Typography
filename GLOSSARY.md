@@ -31,3 +31,9 @@ _Avoid_: Instance font, variable instance, location
 **Named instance**:
 A variation instance that the font itself lists in `fvar`, with a name such as "Semibold".
 _Avoid_: Predefined instance, preset
+
+## Shaping
+
+**Glyph normalization**:
+The step before GSUB that maps the characters of a run to the glyphs that the font has. It decomposes a character that the font lacks into its canonical parts, sorts each run of combining marks, and composes a base and a mark into the precomposed character when the font has it.
+_Avoid_: Unicode normalization (NFC and NFD do not look at the font), normalising (that word is for normalised coordinates)

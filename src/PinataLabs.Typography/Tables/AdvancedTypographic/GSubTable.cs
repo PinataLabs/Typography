@@ -156,9 +156,11 @@ internal class GSubTable : Table
             count += delta;
 
             IReadOnlyList<ShapingStage> stages = shaper.GetShapingStages();
+            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, current, stages);
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
-            foreach (ShapingStage stage in stages)
+            for (int s = 0; s < stages.Count; s++)
             {
+                ShapingStage stage = stages[s];
                 collectionCount = collection.Count;
                 stage.PreProcessFeatures(collection, index, count);
 
@@ -172,6 +174,7 @@ internal class GSubTable : Table
                     collection,
                     ref iterator,
                     stage.FeatureTags,
+                    s == requiredFeatureStage,
                     current,
                     index,
                     ref count,
@@ -235,20 +238,22 @@ internal class GSubTable : Table
             int probeIndex = 0;
             int probeCollectionCount = 1;
             int operations = 0;
-            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
+            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, false, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
             data.HasVerticalForm = probe[0].GlyphId != data.GlyphId;
         }
     }
 
     /// <summary>
     /// Applies the lookups of all the given features in LookupList order, as the OpenType specification
-    /// requires. Each lookup is applied only to the glyphs that have a feature which references it.
+    /// requires. Each lookup is applied only to the glyphs that have a feature which references it, and
+    /// the lookups of the required feature, when included, to every glyph.
     /// </summary>
     internal void ApplyFeatures(
         FontMetrics fontMetrics,
         GlyphSubstitutionCollection collection,
         ref SkippingGlyphIterator iterator,
         IReadOnlyList<Tag> featureTags,
+        bool withRequiredFeature,
         ScriptClass current,
         int index,
         ref int count,
@@ -258,7 +263,7 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (!this.TryGetFeatureLookups(featureTags, current, out List<(ushort Index, LookupFeatures Features)>? lookups))
+        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, featureTags, current, withRequiredFeature, out List<(ushort Index, LookupFeatures Features)>? lookups))
         {
             return;
         }
@@ -303,7 +308,7 @@ internal class GSubTable : Table
         IReadOnlyList<Tag> stageFeatures,
         ScriptClass script,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
-        => LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, stageFeatures, script, out value);
+        => LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, stageFeatures, script, false, out value);
 
     private Tag GetUnicodeScriptTag(ScriptClass script)
     {

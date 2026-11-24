@@ -118,6 +118,24 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
+    /// Gets the offsets of the codepoints that no font so far has a glyph for.
+    /// </summary>
+    /// <returns>The offsets within the input codepoint collection.</returns>
+    public HashSet<int> GetUnresolvedOffsets()
+    {
+        HashSet<int> offsets = [];
+        foreach (GlyphPositioningData glyph in this.glyphs)
+        {
+            if (glyph.Metrics[0].GlyphType == GlyphType.Fallback)
+            {
+                offsets.Add(glyph.Offset);
+            }
+        }
+
+        return offsets;
+    }
+
+    /// <summary>
     /// Updates the collection of glyph ids to the metrics collection to overwrite any glyphs that have been previously
     /// identified as fallbacks.
     /// </summary>

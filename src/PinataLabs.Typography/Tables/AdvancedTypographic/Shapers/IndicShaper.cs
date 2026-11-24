@@ -823,6 +823,7 @@ internal sealed class IndicShaper : DefaultShaper
                 collection,
                 ref iterator,
                 [featureTag],
+                false,
                 this.ScriptClass,
                 index,
                 ref count,

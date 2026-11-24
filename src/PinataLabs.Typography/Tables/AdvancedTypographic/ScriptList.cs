@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
@@ -16,9 +17,11 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// </summary>
 internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
 {
-    private readonly Tag scriptTag;
+    private static readonly Tag DfltScriptTag = Tag.Parse("DFLT");
 
-    private ScriptList(Tag scriptTag) => this.scriptTag = scriptTag;
+    private static readonly Tag LowercaseDfltScriptTag = Tag.Parse("dflt");
+
+    private static readonly Tag LatnScriptTag = Tag.Parse("latn");
 
     public static ScriptList? Load(BigEndianBinaryReader reader, long offset)
     {
@@ -44,25 +47,50 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
             scriptOffsets[i] = reader.ReadUInt16();
         }
 
+        if (scriptCount == 0)
+        {
+            return null;
+        }
+
         // Read each table and add it to the dictionary
-        ScriptList? scriptList = null;
+        ScriptList scriptList = [];
         for (int i = 0; i < scriptCount; ++i)
         {
             Tag scriptTag = scriptTags[i];
-            if (i == 0)
-            {
-                scriptList = new ScriptList(scriptTag);
-            }
-
             var scriptTable = ScriptListTable.Load(scriptTag, reader, offset + scriptOffsets[i]);
-            scriptList!.Add(scriptTag, scriptTable);
+            scriptList.Add(scriptTag, scriptTable);
         }
 
         return scriptList;
     }
 
-    // Dictionaries are unordered.
-    public ScriptListTable Default() => this[this.scriptTag];
+    /// <summary>
+    /// Gets the language system that applies to text of a script when no language is requested. As in HarfBuzz,
+    /// a font without the script gives the <c>DFLT</c> script, else the <c>dflt</c> script, else <c>latn</c>.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns>The language system, or <see langword="null"/> when no script or language system applies.</returns>
+    public LangSysTable? GetDefaultLangSys(ScriptClass script)
+    {
+        ScriptListTable? table;
+        Tag[] tags = UnicodeScriptTagMap.Instance[script];
+        for (int i = 0; i < tags.Length; i++)
+        {
+            if (this.TryGetValue(tags[i], out table))
+            {
+                return table.GetDefaultLangSys();
+            }
+        }
+
+        if (this.TryGetValue(DfltScriptTag, out table)
+            || this.TryGetValue(LowercaseDfltScriptTag, out table)
+            || this.TryGetValue(LatnScriptTag, out table))
+        {
+            return table.GetDefaultLangSys();
+        }
+
+        return null;
+    }
 }
 
 internal sealed class ScriptListTable
