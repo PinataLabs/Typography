@@ -95,8 +95,8 @@ public sealed class FontProgram
     /// so for example a TrueType program without a 'post' table has no glyph names, and one without 'hhea' and 'hmtx' has no advance widths.
     /// </para>
     /// <para>
-    /// This property and <see cref="MalformedOptionalTables"/> never have a table in common. A Type 1 program has no sfnt tables
-    /// and reports <see cref="OptionalFontTables.None"/>. A table that the font has but that cannot be used is in
+    /// This property and <see cref="MalformedOptionalTables"/> never have a table in common. A Type 1 program and a bare CFF program have no sfnt tables
+    /// and report <see cref="OptionalFontTables.None"/>. A table that the font has but that cannot be used is in
     /// <see cref="MalformedOptionalTables"/>.
     /// </para>
     /// </remarks>
