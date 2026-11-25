@@ -94,7 +94,8 @@ An additive or breaking public API change needs all of these:
   scripts, general category, line break, East Asian width, bidi, grapheme break, vertical orientation, Arabic joining,
   Indic categories, emoji and canonical mappings. Line breaking follows the UAX #14 rules of Unicode 18.0.0, including
   the quotation, hyphen, East Asian and Aksara rules added since Unicode 15.1, so lines can break in new places.
-  Grapheme clusters follow rule GB9c of UAX #29. (#103)
+  Grapheme clusters follow rule GB9c of UAX #29. A line can break after leading spaces, as UAX #14 allows, so an
+  indented first word that does not fit can move to the next line. (#103)
 - **The shaper depends on the script tag that the font provides.** A version 3 Indic tag such as `dev3` gives the
   universal shaper. `DFLT` or `latn` gives the default shaper to Indic, Myanmar and universal scripts, as does `mymr`
   for Myanmar and `DFLT` for Syriac, as in HarfBuzz 15.0.0. The normalization, the `kern` table, fallback mark
