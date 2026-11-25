@@ -116,7 +116,7 @@ public abstract class GlyphMetrics
     /// <summary>
     /// Gets the Unicode codepoint of the glyph.
     /// </summary>
-    public CodePoint CodePoint { get; }
+    public CodePoint CodePoint { get; private set; }
 
     /// <summary>
     /// Gets the advance width for horizontal layout, expressed in font units.
@@ -213,8 +213,29 @@ public abstract class GlyphMetrics
     /// This allows caching the original in the font metrics.
     /// </summary>
     /// <param name="textRun">The current text run this glyph belongs to.</param>
+    /// <param name="codePoint">
+    /// The codepoint of the text that the glyph stands for. The font keeps one set of metrics for a glyph that
+    /// several codepoints share, so the cached original can report another one.
+    /// </param>
     /// <returns>The new <see cref="GlyphMetrics"/>.</returns>
-    internal abstract GlyphMetrics CloneForRendering(TextRun textRun);
+    internal abstract GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint);
+
+    /// <summary>
+    /// Gets these metrics for another codepoint that the glyph stands for.
+    /// </summary>
+    /// <param name="codePoint">The codepoint.</param>
+    /// <returns>These metrics when they report the codepoint, and a copy that reports it otherwise.</returns>
+    internal GlyphMetrics WithCodePoint(CodePoint codePoint)
+    {
+        if (this.CodePoint == codePoint)
+        {
+            return this;
+        }
+
+        GlyphMetrics metrics = (GlyphMetrics)this.MemberwiseClone();
+        metrics.CodePoint = codePoint;
+        return metrics;
+    }
 
     /// <summary>
     /// Apply an offset to the glyph.

@@ -7,7 +7,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Threading;
 using PinataLabs.Typography.Tables;
@@ -40,8 +39,12 @@ internal partial class StreamFontMetrics : FontMetrics
     private ArabicFallbackPlan? arabicFallbackPlan;
 
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
-    private readonly ConcurrentDictionary<(ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
-    private readonly ConcurrentDictionary<(ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]>? colorGlyphCache;
+    // The caches hold one entry for a glyph, its attributes and its orientation, so they cannot grow past the
+    // glyphs of the font. A cached entry reports the code point that first asked for the glyph. A caller that
+    // gives metrics out gives them the code point of its text: see GlyphMetrics.WithCodePoint and
+    // GlyphMetrics.CloneForRendering.
+    private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
+    private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]>? colorGlyphCache;
     private readonly FontDescription description;
     private readonly HorizontalMetrics horizontalMetrics;
     private readonly VerticalMetrics verticalMetrics;
@@ -206,8 +209,9 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         // We return metrics for the special glyph representing a missing character, commonly known as .notdef.
         this.TryGetGlyphId(codePoint, out ushort glyphId);
-        metrics = this.GetGlyphMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, support);
-        return metrics.Any();
+        GlyphMetrics[] cached = this.GetCachedGlyphMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, support, false);
+        metrics = WithCodePoint(cached, codePoint);
+        return cached.Length > 0;
     }
 
     /// <inheritdoc/>
@@ -219,34 +223,7 @@ internal partial class StreamFontMetrics : FontMetrics
         LayoutMode layoutMode,
         ColorFontSupport support,
         bool hasVerticalForm = false)
-    {
-        GlyphType glyphType = GlyphType.Standard;
-        if (glyphId == 0)
-        {
-            // A glyph was not found in this face for the previously matched
-            // codepoint. Set to fallback.
-            glyphType = GlyphType.Fallback;
-        }
-
-        if (support == ColorFontSupport.MicrosoftColrFormat
-            && this.TryGetColoredMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, hasVerticalForm, out GlyphMetrics[]? metrics))
-        {
-            return metrics;
-        }
-
-        return this.glyphCache.GetOrAdd(
-              CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm),
-              key =>
-              [
-                this.CreateGlyphMetrics(
-                key.CodePoint,
-                key.Id,
-                glyphType,
-                key.Attributes,
-                textDecorations,
-                key.IsVerticalLayout)
-              ]);
-    }
+        => this.GetCachedGlyphMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, support, hasVerticalForm);
 
     /// <inheritdoc />
     internal override IReadOnlyList<CodePoint> GetAvailableCodePoints()
@@ -541,24 +518,62 @@ internal partial class StreamFontMetrics : FontMetrics
         return fonts;
     }
 
-    // The cached metrics report the code point they were created for, so the code point is part of
-    // the key. Otherwise a glyph shared by several code points (a no-break space on the space glyph,
-    // or .notdef) would report whichever code point asked first.
-    private static (ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout) CreateCacheKey(
+    private static (ushort Id, TextAttributes Attributes, bool IsVerticalLayout) CreateCacheKey(
         CodePoint codePoint,
         ushort glyphId,
         TextAttributes textAttributes,
         LayoutMode layoutMode,
         bool hasVerticalForm)
-        => (glyphId, codePoint, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, hasVerticalForm));
+        => (glyphId, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, hasVerticalForm));
 
-    private bool TryGetColoredMetrics(
+    // A glyph that several code points share, such as the space glyph of a no-break space or .notdef, has its
+    // cached metrics copied for every code point but the first that asked.
+    private static GlyphMetrics[] WithCodePoint(GlyphMetrics[] cached, CodePoint codePoint)
+    {
+        if (cached.Length == 0 || cached[0].CodePoint == codePoint)
+        {
+            return cached;
+        }
+
+        GlyphMetrics[] metrics = new GlyphMetrics[cached.Length];
+        for (int i = 0; i < cached.Length; i++)
+        {
+            metrics[i] = cached[i].WithCodePoint(codePoint);
+        }
+
+        return metrics;
+    }
+
+    private GlyphMetrics[] GetCachedGlyphMetrics(
         CodePoint codePoint,
         ushort glyphId,
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         LayoutMode layoutMode,
-        bool hasVerticalForm,
+        ColorFontSupport support,
+        bool hasVerticalForm)
+    {
+        (ushort Id, TextAttributes Attributes, bool IsVerticalLayout) key = CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm);
+        if (support == ColorFontSupport.MicrosoftColrFormat
+            && this.TryGetColoredMetrics(codePoint, key, textDecorations, out GlyphMetrics[]? colored))
+        {
+            return colored;
+        }
+
+        if (this.glyphCache.TryGetValue(key, out GlyphMetrics[]? metrics))
+        {
+            return metrics;
+        }
+
+        // A glyph id of zero means that no glyph was found in this face for the codepoint.
+        GlyphType glyphType = glyphId == 0 ? GlyphType.Fallback : GlyphType.Standard;
+        return this.glyphCache.GetOrAdd(key, [this.CreateGlyphMetrics(codePoint, glyphId, glyphType, textAttributes, textDecorations, key.IsVerticalLayout)]);
+    }
+
+    private bool TryGetColoredMetrics(
+        CodePoint codePoint,
+        (ushort Id, TextAttributes Attributes, bool IsVerticalLayout) key,
+        TextDecorations textDecorations,
         [NotNullWhen(true)] out GlyphMetrics[]? metrics)
     {
         ColrTable? colr = this.outlineType == OutlineType.TrueType
@@ -571,22 +586,18 @@ internal partial class StreamFontMetrics : FontMetrics
             return false;
         }
 
-        metrics = this.colorGlyphCache.GetOrAdd(CreateCacheKey(codePoint, glyphId, textAttributes, layoutMode, hasVerticalForm), key =>
+        if (!this.colorGlyphCache.TryGetValue(key, out metrics))
         {
-            GlyphMetrics[] m = [];
-            Span<LayerRecord> indexes = colr.GetLayers(key.Id);
-            if (indexes.Length > 0)
+            Span<LayerRecord> layers = colr.GetLayers(key.Id);
+            GlyphMetrics[] created = layers.Length == 0 ? [] : new GlyphMetrics[layers.Length];
+            for (int i = 0; i < layers.Length; i++)
             {
-                m = new GlyphMetrics[indexes.Length];
-                for (int i = 0; i < indexes.Length; i++)
-                {
-                    LayerRecord layer = indexes[i];
-                    m[i] = this.CreateGlyphMetrics(key.CodePoint, layer.GlyphId, GlyphType.ColrLayer, key.Attributes, textDecorations, key.IsVerticalLayout, layer.PaletteIndex);
-                }
+                LayerRecord layer = layers[i];
+                created[i] = this.CreateGlyphMetrics(codePoint, layer.GlyphId, GlyphType.ColrLayer, key.Attributes, textDecorations, key.IsVerticalLayout, layer.PaletteIndex);
             }
 
-            return m;
-        });
+            metrics = this.colorGlyphCache.GetOrAdd(key, created);
+        }
 
         return metrics.Length > 0;
     }

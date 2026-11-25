@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
 
@@ -55,6 +56,19 @@ public class Issues_105
     }
 
     [Test]
+    [MethodDataSource(nameof(FontsAndOrders))]
+    public async Task GlyphsReportTheRequestedCodePoint(string path, int first, int second)
+    {
+        Font font = CreateFont(path);
+
+        font.TryGetGlyphs(new CodePoint(first), out IReadOnlyList<Glyph>? firstGlyphs);
+        font.TryGetGlyphs(new CodePoint(second), out IReadOnlyList<Glyph>? secondGlyphs);
+
+        await Assert.That(firstGlyphs![0].GlyphMetrics.CodePoint.Value).IsEqualTo(first);
+        await Assert.That(secondGlyphs![0].GlyphMetrics.CodePoint.Value).IsEqualTo(second);
+    }
+
+    [Test]
     [MethodDataSource(nameof(Fonts))]
     public async Task NoBreakSpaceBeforeSolidusDoesNotBreakAfterSpaceWasLaidOut(string path)
     {
@@ -70,6 +84,26 @@ public class Issues_105
         await Assert.That(fresh.Distinct().Count()).IsEqualTo(2);
         await Assert.That(fresh.Take(6).Distinct().Count()).IsEqualTo(1);
         await Assert.That(afterSpace).IsEquivalentTo(fresh);
+    }
+
+    // The font keeps one set of metrics for a glyph, whatever the number of code points that ask for it. A font
+    // that kept a set for each code point would grow with every missing character that a caller probes.
+    [Test]
+    [MethodDataSource(nameof(Fonts))]
+    public async Task MetricsOfMissingCodePointsAreNotKeptForEachCodePoint(string path)
+    {
+        const int count = 2000;
+        Font font = CreateFont(path);
+        WeakReference[] probed = ProbeMissingCodePoints(font, count);
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        // The glyph for missing characters has one set of metrics that the font keeps.
+        await Assert.That(probed.Length).IsEqualTo(count);
+        await Assert.That(probed.Count(reference => reference.IsAlive)).IsLessThanOrEqualTo(1);
+        GC.KeepAlive(font);
     }
 
     public static IEnumerable<string> Fonts()
@@ -89,6 +123,31 @@ public class Issues_105
 
     // Each font comes from a new collection so no earlier test has filled its glyph cache.
     private static Font CreateFont(string path) => new FontCollection().Add(path).CreateFont(12);
+
+    // The metrics are out of reach when this returns, so only the font can keep them alive.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference[] ProbeMissingCodePoints(Font font, int count)
+    {
+        List<WeakReference> probed = [];
+        for (int value = 0x20000; probed.Count < count; value++)
+        {
+            CodePoint codePoint = new(value);
+            if (font.FontMetrics.TryGetGlyphId(codePoint, out _))
+            {
+                continue;
+            }
+
+            font.FontMetrics.TryGetGlyphMetrics(codePoint, TextAttributes.None, TextDecorations.None, LayoutMode.HorizontalTopBottom, ColorFontSupport.None, out IReadOnlyList<GlyphMetrics>? metrics);
+            if (metrics![0].CodePoint != codePoint)
+            {
+                throw new InvalidOperationException($"U+{value:X} reports U+{metrics[0].CodePoint.Value:X}.");
+            }
+
+            probed.Add(new WeakReference(metrics[0]));
+        }
+
+        return probed.ToArray();
+    }
 
     private static float[] LineOrigins(Font font, string text)
     {

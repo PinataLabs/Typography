@@ -86,11 +86,11 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         => this.glyphs = glyphs;
 
     /// <inheritdoc/>
-    internal override GlyphMetrics CloneForRendering(TextRun textRun)
+    internal override GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint)
         => new TrueTypeGlyphMetrics(
             this.FontMetrics,
             this.GlyphId,
-            this.CodePoint,
+            codePoint,
             this.glyphs,
             this.Bounds,
             this.AdvanceWidth,
