@@ -211,9 +211,10 @@ internal sealed class MyanmarShaper : DefaultShaper
                 FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(first);
                 if (fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
                 {
-                    // The dotted circle is the base, so it goes after any kinzi.
+                    // The dotted circle is the base, so it goes after any kinzi. It copies a glyph of its own
+                    // syllable: after a syllable of only kinzi, the glyph at its place is of the next syllable.
                     int at = index + start + (HasKinzi(categories.AsSpan(start, end - start)) ? KinziLength : 0);
-                    substitutionCollection.InsertGlyph(at, id, new(DottedCircle));
+                    substitutionCollection.InsertGlyph(at, Math.Min(at, index + end - 1), id, new(DottedCircle));
                     substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, s + 1);
                 }
             }

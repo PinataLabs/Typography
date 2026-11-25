@@ -302,6 +302,16 @@
     ["ClustersDevanagari.ttf","Deva","\u27e7\u093e",[[58,0],[57,600],[49,1200]]],
     ["ClustersDevanagari.ttf","Deva","\u27e7\u093f",[[58,0],[50,600],[57,1200]]],
     ["ClustersDevanagari.ttf","Deva","\u3000\u093e",[[59,0],[57,600],[49,1200]]],
-    ["ClustersDevanagari.ttf","Deva","\u3000\u093f",[[59,0],[50,600],[57,1200]]]
+    ["ClustersDevanagari.ttf","Deva","\u3000\u093f",[[59,0],[50,600],[57,1200]]],
+    ["ClustersMalayalam.ttf","Mlym","\u0d4e",[[4,0],[3,600]]],
+    ["ClustersMalayalam.ttf","Mlym","\u0d4e\u0d15",[[2,0],[3,600]]],
+    ["ClustersMalayalam.ttf","Mlym","\u0d4e \u0d15",[[4,0],[3,600],[1,1200],[2,1800]]],
+    ["ClustersMalayalam.ttf","Mlym","\u0d4e\u0d4e\u0d15",[[4,0],[3,600],[2,1200],[3,1800]]],
+    ["ClustersMalayalam.ttf","Mlym","\u0d15\u0d4e\u0d4e\u0d15",[[2,0],[4,600],[3,1200],[2,1800],[3,2400]]],
+    ["ClustersMasaramGondi.ttf","Gonm","\ud807\udd46",[[2,0],[4,600]]],
+    ["ClustersMasaramGondi.ttf","Gonm","\ud807\udd46\ud807\udd0c",[[3,0],[4,600]]],
+    ["ClustersMasaramGondi.ttf","Gonm","\ud807\udd46 \ud807\udd0c",[[2,0],[4,600],[1,1200],[3,1800]]],
+    ["ClustersMasaramGondi.ttf","Gonm","\ud807\udd46\ud807\udd46\ud807\udd0c",[[2,0],[4,600],[3,1200],[4,1800]]],
+    ["ClustersMasaramGondi.ttf","Gonm","\ud807\udd0c\ud807\udd46\ud807\udd46\ud807\udd0c",[[3,0],[2,600],[4,1200],[3,1800],[4,2400]]]
   ]
 }

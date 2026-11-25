@@ -7,7 +7,7 @@ Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
 
     python tests/tools/generate_cluster_reference.py
 
-The script does not read the HarfBuzz source. It builds two fonts that have no GSUB table, so only the shaper
+The script does not read the HarfBuzz source. It builds fonts that have no GSUB table, so only the shaper
 changes the order and the number of the glyphs:
 
 * ClustersBalinese.ttf has Balinese letters and signs, the dotted circle, and the characters of the Basic Latin
@@ -23,6 +23,11 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
   the Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
 * each Common character before a vowel sign that goes above or after the base, and before one that goes in front
   of it. The universal shaper takes most of these characters as the base of the sign.
+
+ClustersMalayalam.ttf and ClustersMasaramGondi.ttf have a letter, the repha that the text has before its letter,
+the dotted circle and the space. The reference holds the same for a repha alone and before a letter, a space or
+a second repha. A repha with no letter after it is a broken cluster of its own, and HarfBuzz puts the dotted
+circle after it and leaves the cluster that follows as it is.
 
 The fonts have no U+2015, U+2022 or U+25FB. They are bases in the Indic shaper of HarfBuzz and not in the library.
 
@@ -58,6 +63,15 @@ SCRIPTS = [
 
     # KA, the vowel signs AA and I, the signs ANUSVARA, NUKTA, II and U, and VIRAMA.
     ("ClustersDevanagari.ttf", "Deva", 0x0915, 0x093E, 0x093F, [0x0902, 0x093C, 0x0940, 0x0941], 0x094D),
+]
+
+# (font, ISO 15924 code, letter, repha that the text has before the letter)
+REPHA_SCRIPTS = [
+    # KA and DOT REPH, in the Indic shaper.
+    ("ClustersMalayalam.ttf", "Mlym", 0x0D15, 0x0D4E),
+
+    # KA and REPHA, in the universal shaper.
+    ("ClustersMasaramGondi.ttf", "Gonm", 0x11D0C, 0x11D46),
 ]
 
 
@@ -107,6 +121,13 @@ def main():
         for character in COMMON:
             texts += [[character, after], [character, front]]
         for text in dict.fromkeys("".join(map(chr, text)) for text in texts):
+            rows.append([file_name, script, text, shape(font, script, text)])
+
+    for file_name, script, letter, repha in REPHA_SCRIPTS:
+        font = build(file_name, sorted({SPACE, DOTTED_CIRCLE, letter, repha}))
+        texts = [[repha], [repha, letter], [repha, SPACE, letter], [repha, repha, letter], [letter, repha, repha, letter]]
+        for text in texts:
+            text = "".join(map(chr, text))
             rows.append([file_name, script, text, shape(font, script, text)])
 
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:

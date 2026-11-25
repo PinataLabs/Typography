@@ -176,14 +176,15 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <summary>
     /// Inserts a glyph before the glyph at the specified index. The new glyph copies the shaping data
-    /// of the glyph it is inserted before (or of the last glyph when appending), and represents no codepoints of its own.
+    /// of the source glyph, whose cluster it joins, and represents no codepoints of its own.
     /// </summary>
     /// <param name="index">The zero-based index to insert the glyph at. It can equal the count to append.</param>
+    /// <param name="sourceIndex">The zero-based index of the glyph to copy, before the insertion.</param>
     /// <param name="glyphId">The id of the glyph to insert.</param>
     /// <param name="codePoint">The codepoint the glyph represents.</param>
-    public void InsertGlyph(int index, ushort glyphId, CodePoint codePoint)
+    public void InsertGlyph(int index, int sourceIndex, ushort glyphId, CodePoint codePoint)
     {
-        OffsetGlyphDataPair pair = this.glyphs[index < this.glyphs.Count ? index : index - 1];
+        OffsetGlyphDataPair pair = this.glyphs[sourceIndex];
 
         // The two glyphs share an offset. The layout gives each of them an advance only when they are decomposed.
         pair.Data.IsDecomposed = true;

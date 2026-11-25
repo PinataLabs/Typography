@@ -347,7 +347,8 @@ internal sealed class UniversalShaper : DefaultShaper
                     i++;
                 }
 
-                substitutionCollection.InsertGlyph(i, id, new(DottedCircle));
+                // After a syllable of only repha, the glyph at the place of the circle is of the next syllable.
+                substitutionCollection.InsertGlyph(i, i < end ? i : end - 1, id, new(DottedCircle));
                 substitutionCollection[i].UniversalShapingEngineInfo = new(
                     UniversalShapingData.Categories[GetCategory(new(DottedCircle))],
                     type,
