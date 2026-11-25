@@ -218,17 +218,20 @@ public ref struct SpanGraphemeEnumerator
         private readonly ReadOnlySpan<char> source;
         private int charsConsumed;
 
+        // The grapheme trie value of the current scalar, which holds its two properties.
+        private uint value;
+
         public Processor(ReadOnlySpan<char> source)
         {
             this.source = source;
-            this.CurrentType = GraphemeClusterClass.Any;
+            this.value = (uint)GraphemeClusterClass.Any;
             this.charsConsumed = 0;
             this.CharsConsumed = 0;
         }
 
-        public GraphemeClusterClass CurrentType { get; private set; }
+        public readonly GraphemeClusterClass CurrentType => TrieValueLayout.GetGraphemeClusterClass(this.value);
 
-        public IndicConjunctBreak CurrentConjunctBreak { get; private set; }
+        public readonly IndicConjunctBreak CurrentConjunctBreak => TrieValueLayout.GetIndicConjunctBreak(this.value);
 
         /// <summary>
         /// Gets a value indicating whether the scalars before the current one end with a linker and any number of
@@ -249,9 +252,7 @@ public ref struct SpanGraphemeEnumerator
 
             this.CharsConsumed += this.charsConsumed;
             var codePoint = CodePoint.DecodeFromUtf16At(this.source, this.CharsConsumed, out this.charsConsumed);
-            uint value = UnicodeData.GetGraphemeValue((uint)codePoint.Value);
-            this.CurrentType = TrieValueLayout.GetGraphemeClusterClass(value);
-            this.CurrentConjunctBreak = TrieValueLayout.GetIndicConjunctBreak(value);
+            this.value = UnicodeData.GetGraphemeValue((uint)codePoint.Value);
         }
     }
 }
