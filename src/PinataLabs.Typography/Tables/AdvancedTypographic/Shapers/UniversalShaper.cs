@@ -108,7 +108,7 @@ internal sealed class UniversalShaper : DefaultShaper
         this.AddFeature(collection, index, count, HalnTag);
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, PstsTag);
-        this.AddFeature(collection, index, count, DistTag);
+        this.AddHorizontalFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
     }

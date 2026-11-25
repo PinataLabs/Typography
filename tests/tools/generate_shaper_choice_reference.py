@@ -37,6 +37,10 @@ The script also builds ShaperChoicePositioning.ttf. Its GSUB and GPOS tables hav
 letter moves by 7 units. The reference has no Hebrew letter for this font: HarfBuzz does not use the GPOS table of
 a font that has no `hebr` script for Hebrew text.
 
+In vertical text HarfBuzz applies `abvm` and `blwm` but not `dist`, so each letter moves by 3 units. The vertical
+cases of the reference hold the glyph ID of the letter and how far the letter of ShaperChoicePositioning.ttf is from
+the same letter of ShaperChoiceDFLT.ttf, which has no GPOS table, in text from top to bottom.
+
 ShaperChoiceTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
@@ -61,6 +65,7 @@ REFERENCE = os.path.join(FONTS, "ShaperChoice.harfbuzz.json")
 MARK = 0x0301
 POSITIONING_FONT = "ShaperChoicePositioning.ttf"
 POSITIONING_FEATURES = ["abvm", "blwm", "dist"]
+PLAIN_FONT = "ShaperChoiceDFLT.ttf"
 FEATURES = ["nukt", "pref", "pres", "haln", "isol"]
 NO_SCRIPT = "zzzz"
 
@@ -130,6 +135,8 @@ def main():
         else:
             tags = {name: choice for name in scripts}
         font = build(file_name, letters, set(tags.values()))
+        if file_name == PLAIN_FONT:
+            plain_font = font
         for name, tag in tags.items():
             letter, direction, _ = scripts[name]
             text = chr(letter) + chr(MARK)
@@ -150,13 +157,32 @@ def main():
                 "glyphs": shape_positions(font, chr(letter), direction),
             })
 
+    vertical_cases = []
+    for name, (letter, _, _) in scripts.items():
+        if name != "Hebrew":
+            moved = shape_positions(font, chr(letter), "ttb")[0]
+            unmoved = shape_positions(plain_font, chr(letter), "ttb")[0]
+            assert moved["id"] == unmoved["id"]
+            vertical_cases.append({
+                "name": f"{name}, vertical positioning",
+                "text": chr(letter),
+                "id": moved["id"],
+                "x": moved["x"] - unmoved["x"],
+                "y": moved["y"] - unmoved["y"],
+            })
+
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
         file.write("{\n")
         file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
         file.write('  "cases": [\n')
         file.write(",\n".join("    " + json.dumps(case) for case in cases))
+        file.write("\n  ],\n")
+        file.write('  "verticalPositioningFont": %s,\n' % json.dumps(POSITIONING_FONT))
+        file.write('  "verticalPlainFont": %s,\n' % json.dumps(PLAIN_FONT))
+        file.write('  "verticalCases": [\n')
+        file.write(",\n".join("    " + json.dumps(case) for case in vertical_cases))
         file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases")
+    print(os.path.relpath(REFERENCE, ROOT), len(cases), "cases,", len(vertical_cases), "vertical cases")
 
 
 if __name__ == "__main__":

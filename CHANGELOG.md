@@ -122,8 +122,9 @@ An additive or breaking public API change needs all of these:
   and Sogdian use the universal shaper, which now joins their letters. Phags-pa letters had no joining type. (#102)
 - In the universal shaper, a sign after a space, a digit, a punctuation mark or a symbol takes that character as its
   base. The dotted circle of a broken cluster goes before the sign in the Indic and universal shapers. Every shaper
-  applies `dist`, `abvm` and `blwm`, and the universal shaper applies `haln`. Text such as U+1B34 U+1B44 no longer
-  throws. The Myanmar shaper no longer draws the dotted circle of a lone vowel sign E on top of the sign. (#102)
+  applies `abvm` and `blwm`, and applies `dist` to horizontal text only, and the universal shaper applies `haln`.
+  Text such as U+1B34 U+1B44 no longer throws. The Myanmar shaper no longer draws the dotted circle of a lone vowel
+  sign E on top of the sign. (#102)
 - Hebrew is positioned with GPOS only when the GPOS table has the `hebr` script. Otherwise it is kerned with the `kern`
   table and its marks are placed without GPOS, as in HarfBuzz. (#102)
 - In a font without GPOS, a mark of a ligature is placed on its own component. GSUB gives the marks of a ligature their

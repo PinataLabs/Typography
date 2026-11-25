@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -34,10 +35,7 @@ public class ShaperChoiceTests
         {
             if (!fonts.TryGetValue(expected.Font, out Font? font))
             {
-                FontFamily family = new FontCollection().Add(TestFonts.GetPath(expected.Font));
-
-                // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
-                font = family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
+                font = CreateUnscaledFont(expected.Font);
                 fonts.Add(expected.Font, font);
             }
 
@@ -56,9 +54,63 @@ public class ShaperChoiceTests
         await Assert.That(different).IsEmpty();
     }
 
+    // Each case is one letter, upright in vertical text. Of the three GPOS features of the font, HarfBuzz applies
+    // abvm and blwm to vertical text, and not dist. A case names the glyph of the letter, because a feature of
+    // the font can put another glyph beside it.
+    [Test]
+    public async Task VerticalTextHasTheMarkPositioningFeaturesThatHarfBuzzApplies()
+    {
+        Font positioning = CreateUnscaledFont(HarfBuzz.VerticalPositioningFont);
+        Font plain = CreateUnscaledFont(HarfBuzz.VerticalPlainFont);
+        List<string> different = [];
+        foreach (VerticalCase expected in HarfBuzz.VerticalCases)
+        {
+            Vector2 actual = VerticalOffset(positioning, expected) - VerticalOffset(plain, expected);
+            if (actual != new Vector2(expected.X, expected.Y))
+            {
+                different.Add($"{expected.Name}: expected <{expected.X}, {expected.Y}> actual {actual}");
+            }
+        }
+
+        await Assert.That(HarfBuzz.VerticalCases).IsNotEmpty();
+        await Assert.That(different).IsEmpty();
+    }
+
+    // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
+    private static Font CreateUnscaledFont(string name)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.GetPath(name));
+        return family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
+    }
+
+    private static Vector2 VerticalOffset(Font font, VerticalCase letter)
+    {
+        TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalLeftRight };
+        return TextLayout.GenerateLayout(letter.Text.AsSpan(), options).Single(g => g.Glyph.GlyphMetrics.GlyphId == letter.Id).Glyph.GlyphMetrics.Offset;
+    }
+
     private sealed class Reference
     {
         public ReferenceCase[] Cases { get; set; } = [];
+
+        public string VerticalPositioningFont { get; set; } = string.Empty;
+
+        public string VerticalPlainFont { get; set; } = string.Empty;
+
+        public VerticalCase[] VerticalCases { get; set; } = [];
+    }
+
+    private sealed class VerticalCase
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Text { get; set; } = string.Empty;
+
+        public int Id { get; set; }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
     }
 
     private sealed class ReferenceCase

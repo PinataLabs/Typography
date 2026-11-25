@@ -159,7 +159,7 @@ internal sealed class MyanmarShaper : DefaultShaper
 
         // Positioning.
         this.AddFeature(collection, index, count, KernTag);
-        this.AddFeature(collection, index, count, DistTag);
+        this.AddHorizontalFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
         this.AddFeature(collection, index, count, MarkTag);
