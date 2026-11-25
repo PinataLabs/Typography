@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -43,4 +44,39 @@ public class ConcurrentRenderingTests
             }
         }
     }
+
+    // The font has no GSUB table, so its Arabic takes the presentation forms. The font builds what that needs once,
+    // on the first run of Arabic text, which here is on every thread at once.
+    [Test]
+    public async Task ParallelLayoutOfArabicWithoutJoiningFormsIsDeterministic()
+    {
+        const string text = "بسم الله";
+        string path = TestFonts.GetPath("NormalizationArabicFallback.ttf");
+        ushort[] expected = GlyphIds(new FontCollection().Add(path).CreateFont(15), text);
+        await Assert.That(expected).IsNotEquivalentTo(new ushort[expected.Length]);
+
+        for (int run = 0; run < Iterations; run++)
+        {
+            Font font = new FontCollection().Add(path).CreateFont(15);
+            ushort[][] results = new ushort[Threads][];
+            using Barrier barrier = new(Threads);
+            Parallel.For(
+                0,
+                Threads,
+                new ParallelOptions { MaxDegreeOfParallelism = Threads },
+                i =>
+                {
+                    barrier.SignalAndWait();
+                    results[i] = GlyphIds(font, text);
+                });
+
+            foreach (ushort[] result in results)
+            {
+                await Assert.That(result.SequenceEqual(expected)).IsTrue();
+            }
+        }
+    }
+
+    private static ushort[] GlyphIds(Font font, string text)
+        => TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font)).Select(g => g.Glyph.GlyphMetrics.GlyphId).ToArray();
 }

@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -36,6 +37,7 @@ internal partial class StreamFontMetrics : FontMetrics
 
     // The GSUB table of the font, or an empty one, so that the shapers also run for a font without GSUB.
     private readonly GSubTable substitution;
+    private ArabicFallbackPlan? arabicFallbackPlan;
 
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
     private readonly ConcurrentDictionary<(ushort Id, CodePoint CodePoint, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
@@ -258,6 +260,20 @@ internal partial class StreamFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     internal override GSubTable GetGSubTable() => this.substitution;
+
+    /// <inheritdoc/>
+    internal override ArabicFallbackPlan GetArabicFallbackPlan()
+    {
+        // Two threads can each build the plan. One of them wins, and the plans are equal and do not change.
+        ArabicFallbackPlan? plan = Volatile.Read(ref this.arabicFallbackPlan);
+        if (plan is null)
+        {
+            plan = ArabicFallbackPlan.Create(this);
+            plan = Interlocked.CompareExchange(ref this.arabicFallbackPlan, plan, null) ?? plan;
+        }
+
+        return plan;
+    }
 
     /// <inheritdoc/>
     internal override bool HasMarkPositioning(ScriptClass script)
