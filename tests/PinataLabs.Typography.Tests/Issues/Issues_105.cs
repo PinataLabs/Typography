@@ -90,7 +90,7 @@ public class Issues_105
     // Each font comes from a new collection so no earlier test has filled its glyph cache.
     private static Font CreateFont(string path) => new FontCollection().Add(path).CreateFont(12);
 
-    private static IReadOnlyList<float> LineOrigins(Font font, string text)
+    private static float[] LineOrigins(Font font, string text)
     {
         TextOptions measure = new(font);
         float wrap = TextMeasurer.MeasureAdvance("aa bb/c", measure).Width;

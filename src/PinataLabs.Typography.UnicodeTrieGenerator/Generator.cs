@@ -777,7 +777,7 @@ public static partial class Generator
     private static UnicodeTrie GenerateArabicShapingTrie()
     {
         // A schematic name can have a hyphen, as in PHAGS-PA KA and SOGDIAN RESH-AYIN.
-        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;[^;]+;\s*([A-Z]+);\s*([\w\s]+)");
+        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;[^;]+;\s*([A-Z]+);\s*([\w\s]+)", RegexOptions.None, TimeSpan.FromSeconds(1));
         const uint initial = ((int)ArabicJoiningType.NonJoining) | (((int)ArabicJoiningGroup.NoJoiningGroup) << 16);
         var builder = new UnicodeTrieBuilder(initial);
 
