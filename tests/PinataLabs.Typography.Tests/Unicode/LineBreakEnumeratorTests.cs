@@ -49,6 +49,41 @@ public class LineBreakEnumeratorTests
         await Assert.That(breaks[5].Required).IsFalse();
     }
 
+    // LB30b: [\p{Extended_Pictographic}&\p{Cn}] × EM, for every such code point.
+    [Test]
+    public async Task UnassignedPictographDoesNotBreakBeforeEmojiModifier()
+    {
+        const string modifier = "🏻";
+        List<int> breaking = [];
+        int count = 0;
+        for (int value = 0; value <= 0x10FFFF; value++)
+        {
+            if (value is >= 0xD800 and <= 0xDFFF)
+            {
+                continue;
+            }
+
+            CodePoint codePoint = new(value);
+            if (CodePoint.GetGeneralCategory(codePoint) != System.Globalization.UnicodeCategory.OtherNotAssigned
+                || CodePoint.GetGraphemeClusterClass(codePoint) != GraphemeClusterClass.ExtendedPictographic)
+            {
+                continue;
+            }
+
+            count++;
+            string text = char.ConvertFromUtf32(value) + modifier;
+            LineBreakEnumerator enumerator = new(text.AsSpan());
+            enumerator.MoveNext();
+            if (enumerator.Current.PositionWrap != 2)
+            {
+                breaking.Add(value);
+            }
+        }
+
+        await Assert.That(count).IsGreaterThan(0);
+        await Assert.That(breaking).IsEmpty();
+    }
+
     [Test]
     public async Task ForwardTextWithOuterWhitespace()
     {

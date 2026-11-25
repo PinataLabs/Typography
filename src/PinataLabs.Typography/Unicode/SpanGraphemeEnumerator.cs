@@ -249,8 +249,9 @@ public ref struct SpanGraphemeEnumerator
 
             this.CharsConsumed += this.charsConsumed;
             var codePoint = CodePoint.DecodeFromUtf16At(this.source, this.CharsConsumed, out this.charsConsumed);
-            this.CurrentType = CodePoint.GetGraphemeClusterClass(codePoint);
-            this.CurrentConjunctBreak = UnicodeData.GetIndicConjunctBreak((uint)codePoint.Value);
+            uint value = UnicodeData.GetGraphemeValue((uint)codePoint.Value);
+            this.CurrentType = TrieValueLayout.GetGraphemeClusterClass(value);
+            this.CurrentConjunctBreak = TrieValueLayout.GetIndicConjunctBreak(value);
         }
     }
 }

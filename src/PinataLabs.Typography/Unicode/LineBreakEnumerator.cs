@@ -19,6 +19,9 @@ namespace PinataLabs.Typography.Unicode;
 /// </remarks>
 internal ref struct LineBreakEnumerator
 {
+    private const int FirstPictographBlock = 0x1F000;
+    private const int LastPictographBlock = 0x1FFFF;
+
     private readonly ReadOnlySpan<char> source;
     private readonly int pointsLength;
     private int charPosition;
@@ -394,11 +397,14 @@ internal ref struct LineBreakEnumerator
     private readonly Character Read(int index, out int count)
     {
         var cp = CodePoint.DecodeFromUtf16At(this.source, index, out count);
-        LineBreakClass cls = CodePoint.GetLineBreakClass(cp);
-        Flags flags = UnicodeData.IsEastAsianWidth((uint)cp.Value) ? Flags.EastAsian : Flags.None;
+        uint value = UnicodeData.GetLineBreakValue((uint)cp.Value);
+        LineBreakClass cls = TrieValueLayout.GetLineBreakClass(value);
+        Flags flags = TrieValueLayout.IsEastAsianWidth(value) ? Flags.EastAsian : Flags.None;
 
-        // An unassigned code point is XX or ID.
+        // An unassigned code point is XX or ID. The unassigned pictographs are all in the blocks from U+1F000 to
+        // U+1FFFF, so the ideographs outside them, which are most of ID, need no further lookup.
         if (cls is LineBreakClass.XX or LineBreakClass.ID
+            && cp.Value is >= FirstPictographBlock and <= LastPictographBlock
             && CodePoint.GetGeneralCategory(cp) == UnicodeCategory.OtherNotAssigned
             && CodePoint.GetGraphemeClusterClass(cp) == GraphemeClusterClass.ExtendedPictographic)
         {

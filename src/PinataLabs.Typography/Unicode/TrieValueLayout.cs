@@ -5,7 +5,7 @@ namespace PinataLabs.Typography.Unicode;
 
 /// <summary>
 /// The bits of the trie values that hold more than one property. The trie generator writes them and
-/// UnicodeData reads them.
+/// UnicodeData reads them. A caller that needs both properties of a value reads the value once and takes them apart here.
 /// </summary>
 internal static class TrieValueLayout
 {
@@ -20,4 +20,16 @@ internal static class TrieValueLayout
 
     /// <summary>The flag in a line break trie value for East_Asian_Width F, W or H.</summary>
     public const uint EastAsianWidthFlag = 0x40;
+
+    public static GraphemeClusterClass GetGraphemeClusterClass(uint graphemeValue)
+        => (GraphemeClusterClass)(graphemeValue & GraphemeClusterClassMask);
+
+    public static IndicConjunctBreak GetIndicConjunctBreak(uint graphemeValue)
+        => (IndicConjunctBreak)(graphemeValue >> IndicConjunctBreakShift);
+
+    public static LineBreakClass GetLineBreakClass(uint lineBreakValue)
+        => (LineBreakClass)(lineBreakValue & LineBreakClassMask);
+
+    public static bool IsEastAsianWidth(uint lineBreakValue)
+        => (lineBreakValue & EastAsianWidthFlag) != 0;
 }
