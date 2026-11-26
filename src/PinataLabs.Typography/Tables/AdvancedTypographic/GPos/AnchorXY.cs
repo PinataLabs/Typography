@@ -5,11 +5,12 @@
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
 
 /// <summary>
-/// Represents the anchor coordinates for a given table.
+/// Represents the anchor coordinates for a given table. The deltas of a variation instance make them fractional,
+/// and the positioning rounds the result of its arithmetic, as HarfBuzz does.
 /// </summary>
 internal readonly struct AnchorXY
 {
-    public AnchorXY(short x, short y)
+    public AnchorXY(float x, float y)
     {
         this.XCoordinate = x;
         this.YCoordinate = y;
@@ -18,10 +19,17 @@ internal readonly struct AnchorXY
     /// <summary>
     /// Gets the horizontal value, in design units.
     /// </summary>
-    public short XCoordinate { get; }
+    public float XCoordinate { get; }
 
     /// <summary>
     /// Gets the vertical value, in design units.
     /// </summary>
-    public short YCoordinate { get; }
+    public float YCoordinate { get; }
+
+    /// <summary>
+    /// Rounds each coordinate to a whole design unit.
+    /// </summary>
+    /// <returns>The rounded coordinates.</returns>
+    public (int XCoordinate, int YCoordinate) Round()
+        => (AdvancedTypographicUtils.Round(this.XCoordinate), AdvancedTypographicUtils.Round(this.YCoordinate));
 }

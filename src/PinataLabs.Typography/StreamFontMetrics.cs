@@ -36,7 +36,10 @@ internal partial class StreamFontMetrics : FontMetrics
     private readonly OutlineType outlineType;
 
     // The GSUB table of the font, or an empty one, so that the shapers also run for a font without GSUB.
+    // The GSUB and GPOS tables that an instance holds have the feature tables that FeatureVariations selects for its
+    // coordinates, which are chosen once when the instance is made.
     private readonly GSubTable substitution;
+    private readonly GPosTable? positioning;
     private ArabicFallbackPlan? arabicFallbackPlan;
 
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
@@ -78,6 +81,10 @@ internal partial class StreamFontMetrics : FontMetrics
     private readonly NormalizedCoordinates coordinates;
     private readonly IReadOnlyList<FontVariation> variations;
 
+    // The scalars of the GDEF Item Variation Store for the coordinates of an instance, which give the deltas of the
+    // VariationIndex device tables of GPOS. A face has none, and its deltas are 0.
+    private readonly ItemVariationScalars layoutScalars;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class.
     /// </summary>
@@ -86,7 +93,9 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         this.trueTypeFontTables = tables;
         this.outlineType = OutlineType.TrueType;
-        this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
+        NormalizedCoordinates defaultCoordinates = tables.Fvar?.DefaultCoordinates ?? default;
+        this.substitution = (tables.GSub ?? GSubTable.CreateEmpty()).ForCoordinates(defaultCoordinates.Values, default);
+        this.positioning = tables.GPos?.ForCoordinates(defaultCoordinates.Values, default);
         this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle, tables.Fvar);
         this.glyphCache = new();
         if (tables.Colr is not null)
@@ -97,7 +106,7 @@ internal partial class StreamFontMetrics : FontMetrics
         (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) metrics = this.Initialize(tables);
         this.horizontalMetrics = metrics.HorizontalMetrics;
         this.verticalMetrics = metrics.VerticalMetrics;
-        this.coordinates = tables.Fvar?.DefaultCoordinates ?? default;
+        this.coordinates = defaultCoordinates;
         this.variations = tables.Fvar?.DefaultVariations ?? [];
         this.instances = tables.Fvar is null ? null : new();
     }
@@ -110,7 +119,9 @@ internal partial class StreamFontMetrics : FontMetrics
     {
         this.compactFontTables = tables;
         this.outlineType = OutlineType.CFF;
-        this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
+        NormalizedCoordinates defaultCoordinates = tables.Fvar?.DefaultCoordinates ?? default;
+        this.substitution = (tables.GSub ?? GSubTable.CreateEmpty()).ForCoordinates(defaultCoordinates.Values, default);
+        this.positioning = tables.GPos?.ForCoordinates(defaultCoordinates.Values, default);
         this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle, tables.Fvar);
         this.glyphCache = new();
         if (tables.Colr is not null)
@@ -121,7 +132,7 @@ internal partial class StreamFontMetrics : FontMetrics
         (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) metrics = this.Initialize(tables);
         this.horizontalMetrics = metrics.HorizontalMetrics;
         this.verticalMetrics = metrics.VerticalMetrics;
-        this.coordinates = tables.Fvar?.DefaultCoordinates ?? default;
+        this.coordinates = defaultCoordinates;
         this.variations = tables.Fvar?.DefaultVariations ?? [];
         this.instances = tables.Fvar is null ? null : new();
     }
@@ -142,7 +153,9 @@ internal partial class StreamFontMetrics : FontMetrics
         this.trueTypeFontTables = face.trueTypeFontTables;
         this.compactFontTables = face.compactFontTables;
         this.outlineType = face.outlineType;
-        this.substitution = face.substitution;
+        this.layoutScalars = this.FontTables.Gdef?.VariationStore.CreateScalars(coordinates.Values) ?? default;
+        this.substitution = (this.FontTables.GSub ?? GSubTable.CreateEmpty()).ForCoordinates(coordinates.Values, this.layoutScalars);
+        this.positioning = this.FontTables.GPos?.ForCoordinates(coordinates.Values, this.layoutScalars);
         this.description = face.Owner.Description;
         this.glyphCache = new();
         if (face.colorGlyphCache is not null)
@@ -159,6 +172,8 @@ internal partial class StreamFontMetrics : FontMetrics
         MvarVariation mvar = tables.Mvar?.CreateVariation(coordinates.Values) ?? default;
         (this.horizontalMetrics, this.verticalMetrics) = this.Initialize(tables, mvar);
     }
+
+    private IFontTables FontTables => this.outlineType == OutlineType.TrueType ? this.trueTypeFontTables! : this.compactFontTables!;
 
     /// <summary>
     /// Gets or sets the metrics that the caller sees in place of this object. A <see cref="FileFontMetrics"/>
@@ -359,6 +374,10 @@ internal partial class StreamFontMetrics : FontMetrics
     internal override GSubTable GetGSubTable() => this.substitution;
 
     /// <inheritdoc/>
+    internal override float GetDeviceDelta(VariationIndex index)
+        => index.IsNone ? 0 : this.layoutScalars.GetDelta(index.Outer, index.Inner);
+
+    /// <inheritdoc/>
     internal override ArabicFallbackPlan GetArabicFallbackPlan()
     {
         // Two threads can each build the plan. One of them wins, and the plans are equal and do not change.
@@ -374,13 +393,7 @@ internal partial class StreamFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     internal override bool HasMarkPositioning(ScriptClass script)
-    {
-        GPosTable? gpos = this.outlineType == OutlineType.TrueType
-            ? this.trueTypeFontTables!.GPos
-            : this.compactFontTables!.GPos;
-
-        return gpos?.HasFeature(script, GPosTable.MarkTag) == true;
-    }
+        => this.positioning?.HasFeature(script, GPosTable.MarkTag) == true;
 
     /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
@@ -407,12 +420,9 @@ internal partial class StreamFontMetrics : FontMetrics
     internal override void UpdatePositions(GlyphPositioningCollection collection)
     {
         bool isTTF = this.outlineType == OutlineType.TrueType;
-        GPosTable? gpos = isTTF
-            ? this.trueTypeFontTables!.GPos
-            : this.compactFontTables!.GPos;
 
-        FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection, gpos);
-        gpos?.TryUpdatePositions(this, collection);
+        FallbackMarkPositioner.ZeroMarksBeforeKerning(this, collection, this.positioning);
+        this.positioning?.TryUpdatePositions(this, collection);
 
         // TODO: I don't think we should disable kerning here.
         if (collection.TextOptions.KerningMode != KerningMode.None)
@@ -421,10 +431,10 @@ internal partial class StreamFontMetrics : FontMetrics
                 ? this.trueTypeFontTables!.Kern
                 : this.compactFontTables!.Kern;
 
-            kern?.UpdatePositions(this, collection, gpos);
+            kern?.UpdatePositions(this, collection, this.positioning);
         }
 
-        FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection, gpos);
+        FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection, this.positioning);
         collection.HideDefaultIgnorables(this);
     }
 

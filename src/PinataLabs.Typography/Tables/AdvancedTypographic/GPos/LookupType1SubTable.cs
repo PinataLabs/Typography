@@ -59,7 +59,7 @@ internal sealed class LookupType1Format1SubTable : LookupSubTable
         // +-------------+----------------+-----------------------------------------------+
         ushort coverageOffset = reader.ReadOffset16();
         ValueFormat valueFormat = reader.ReadUInt16<ValueFormat>();
-        var valueRecord = new ValueRecord(reader, valueFormat);
+        var valueRecord = new ValueRecord(reader, valueFormat, offset);
 
         var coverageTable = CoverageTable.Load(reader, offset + coverageOffset);
 
@@ -84,7 +84,7 @@ internal sealed class LookupType1Format1SubTable : LookupSubTable
         if (coverage > -1)
         {
             ValueRecord record = this.valueRecord;
-            AdvancedTypographicUtils.ApplyPosition(collection, index, record);
+            AdvancedTypographicUtils.ApplyPosition(fontMetrics, collection, index, record);
 
             return true;
         }
@@ -129,7 +129,7 @@ internal sealed class LookupType1Format2SubTable : LookupSubTable
         var valueRecords = new ValueRecord[valueCount];
         for (int i = 0; i < valueCount; i++)
         {
-            valueRecords[i] = new ValueRecord(reader, valueFormat);
+            valueRecords[i] = new ValueRecord(reader, valueFormat, offset);
         }
 
         var coverageTable = CoverageTable.Load(reader, offset + coverageOffset);
@@ -155,7 +155,7 @@ internal sealed class LookupType1Format2SubTable : LookupSubTable
         if (coverage > -1)
         {
             ValueRecord record = this.valueRecords[coverage];
-            AdvancedTypographicUtils.ApplyPosition(collection, index, record);
+            AdvancedTypographicUtils.ApplyPosition(fontMetrics, collection, index, record);
 
             return true;
         }

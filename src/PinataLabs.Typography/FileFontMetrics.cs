@@ -173,6 +173,10 @@ internal sealed class FileFontMetrics : FontMetrics
         => this.fontMetrics.Value.GetGSubTable();
 
     /// <inheritdoc/>
+    internal override float GetDeviceDelta(VariationIndex index)
+        => this.fontMetrics.Value.GetDeviceDelta(index);
+
+    /// <inheritdoc/>
     internal override ArabicFallbackPlan GetArabicFallbackPlan()
         => this.fontMetrics.Value.GetArabicFallbackPlan();
 

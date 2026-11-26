@@ -25,6 +25,26 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
+  `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
+  delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
+  The sums round as HarfBuzz rounds them, with halves up: the delta of a value record rounds on its own, an anchor
+  keeps its fractional coordinates until the mark anchor is taken from the base anchor, and a cursive chain rounds
+  the anchor of each glyph for its advance and the difference of the anchors once for its offset. The face of a
+  variable font and a font that does not vary have no delta, and the `Device` tables that hold deltas for sizes
+  stay ignored. A GDEF store that is missing or malformed counts as absent. The mark anchors of `Teko-Variable.ttf` and
+  the kerning and the mark anchors of `SourceSans3VF-Upright.otf` match HarfBuzz at the default instance, at masters
+  and at weights between them, and so do the mark-to-mark, mark-to-ligature and cursive anchors and the value records of
+  a test font that has a delta in each of them. Teko has no kerning. (#129)
+- **GSUB and GPOS FeatureVariations.** An instance uses the feature tables of the first FeatureVariations record whose
+  conditions hold for its coordinates, in place of those of the feature list. This covers `rvrn`, and the swap of the
+  lookups of any other feature. The library reads the condition formats 1 to 5 of OpenType 1.9: an axis range, a
+  value that the GDEF store varies, and AND, OR and NOT of conditions. A condition of another format never holds, and
+  an axis that the font does not have is at its default. The face selects with its default coordinates, as HarfBuzz
+  does. A FeatureVariations table whose header does not fit counts as absent, and the font keeps the feature tables of its
+  feature list. A record whose condition set or feature tables do not fit never matches, and the other records stay.
+  A table that shares or overlaps its subtables is read with a fixed amount of work. A variable font built with
+  fontTools `addFeatureVariations`, with records on both sides of each boundary, shapes as HarfBuzz shapes it. (#131)
 - **Variation axes and named instances.** The library reads the `fvar` and `avar` tables of a variable font.
   `FontMetrics.VariationAxes` lists the axes as `FontVariationAxis`: `Tag`, `MinValue`, `DefaultValue`, `MaxValue`,
   `IsHidden` and `Name(culture)`. `FontMetrics.NamedInstances` lists the instances that `fvar` names as
@@ -46,8 +66,7 @@ An additive or breaking public API change needs all of these:
   and the instance is collected when both are gone. The face keeps a weak reference to each instance, so a caller that
   creates a font for every draw does not rebuild glyphs, and one that changes the weight every frame does not
   accumulate instances. `FontMetrics.Variations` of an instance gives the values of the request that made it.
-  `CreateFont(12)` on Teko is the instance `wght` 400, and `FontStyle.Bold` is `wght` 700. An instance draws the
-  positions of the default instance until the GPOS variation data are read. (#125)
+  `CreateFont(12)` on Teko is the instance `wght` 400, and `FontStyle.Bold` is `wght` 700. (#125)
 - **CFF2 variation instances.** A variation instance of a CFF2 font draws the outlines of its coordinates. A `blend`
   operator adds each delta, scaled by the scalar of its region, to its value, for the regions that the `vsindex` of the
   glyph names, and the bounds of a glyph come from the varied outline. The scalars of an instance are made once, when

@@ -194,7 +194,7 @@ public class GposIndexHardeningTests
     {
         // One Class1Record holding one Class2Record, no value formats.
         BigEndianBinaryWriter writer = new();
-        Class1Record record = Class1Record.Load(writer.GetReader(), 1, default, default);
+        Class1Record record = Class1Record.Load(writer.GetReader(), 1, default, default, 0);
         return new(new FixedCoverageTable(0), [record], new FixedClassDef(classDef1), new FixedClassDef(classDef2), default);
     }
 

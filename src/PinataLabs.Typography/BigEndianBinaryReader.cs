@@ -24,6 +24,9 @@ internal class BigEndianBinaryReader : IDisposable
 
     private readonly bool leaveOpen;
 
+    // The number of bytes of the table that the reader reads, or -1 when the reader has no table of its own.
+    private readonly long length;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BigEndianBinaryReader" /> class.
     /// Constructs a new binary reader with the given bit converter, reading
@@ -32,13 +35,32 @@ internal class BigEndianBinaryReader : IDisposable
     /// <param name="stream">Stream to read data from</param>
     /// <param name="leaveOpen">if set to <c>true</c> [leave open].</param>
     public BigEndianBinaryReader(Stream stream, bool leaveOpen)
+        : this(stream, leaveOpen, -1)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BigEndianBinaryReader" /> class for a table in a stream.
+    /// </summary>
+    /// <param name="stream">Stream to read data from, positioned at the start of the table.</param>
+    /// <param name="leaveOpen">if set to <c>true</c> [leave open].</param>
+    /// <param name="length">The number of bytes of the table, or -1 for a table that runs to the end of the stream.</param>
+    public BigEndianBinaryReader(Stream stream, bool leaveOpen, long length)
     {
         this.BaseStream = stream;
         this.StartOfStream = stream.Position;
         this.leaveOpen = leaveOpen;
+        this.length = length;
     }
 
     private long StartOfStream { get; }
+
+    /// <summary>
+    /// Gets the position in the stream where the table that the reader reads ends. It is the end of the stream when the
+    /// reader was made without the length of the table, and never more than that.
+    /// </summary>
+    public long EndOfTable
+        => this.length < 0 ? this.BaseStream.Length : Math.Min(this.StartOfStream + this.length, this.BaseStream.Length);
 
     /// <summary>
     /// Gets the underlying stream of the EndianBinaryReader.

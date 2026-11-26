@@ -16,7 +16,8 @@ internal readonly struct PairValueRecord
     /// <param name="reader">The big endian binary reader.</param>
     /// <param name="valueFormat1">The types of data in valueRecord1 — for the first glyph in the pair (may be zero).</param>
     /// <param name="valueFormat2">The types of data in valueRecord2 — for the first glyph in the pair (may be zero).</param>
-    public PairValueRecord(BigEndianBinaryReader reader, ValueFormat valueFormat1, ValueFormat valueFormat2)
+    /// <param name="pairSetOffset">The position of the PairSet table from the beginning of the GPOS table.</param>
+    public PairValueRecord(BigEndianBinaryReader reader, ValueFormat valueFormat1, ValueFormat valueFormat2, long pairSetOffset)
     {
         // +--------------+------------------+--------------------------------------------------------------------------------------+
         // | Type         | Name             | Description                                                                          |
@@ -28,8 +29,8 @@ internal readonly struct PairValueRecord
         // | ValueRecord  | valueRecord2     | Positioning data for the second glyph in the pair.                                   |
         // +--------------+------------------+--------------------------------------------------------------------------------------+
         this.SecondGlyph = reader.ReadUInt16();
-        this.ValueRecord1 = new ValueRecord(reader, valueFormat1);
-        this.ValueRecord2 = new ValueRecord(reader, valueFormat2);
+        this.ValueRecord1 = new ValueRecord(reader, valueFormat1, pairSetOffset);
+        this.ValueRecord2 = new ValueRecord(reader, valueFormat2, pairSetOffset);
     }
 
     /// <summary>
