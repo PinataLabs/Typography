@@ -37,7 +37,16 @@ internal static partial class IndicShapingData
         Repha = 1 << 15, // Atomically-encoded logical or visual repha.
         Ra = 1 << 16,
         CM = 1 << 17, // Consonant-Medial.
-        Symbol = 1 << 18 // Avagraha, etc that take marks (SM,A,VD).
+        Symbol = 1 << 18, // Avagraha, etc that take marks (SM,A,VD).
+
+        // The categories of the Khmer syllable grammar, as HarfBuzz gives them to the Khmer block.
+        VAbv = 1 << 19, // Vowel sign above the base.
+        VBlw = 1 << 20, // Vowel sign below the base.
+        VPre = 1 << 21, // Vowel sign in front of the base.
+        VPst = 1 << 22, // Vowel sign after the base.
+        Robatic = 1 << 23, // ROBAT and the register shifters, which can follow a consonant.
+        Xgroup = 1 << 24, // Signs that go between the consonants and the vowel signs.
+        Ygroup = 1 << 25 // Signs that end a syllable.
     }
 
     // Visual positions in a syllable from left to right.
@@ -214,29 +223,7 @@ internal static partial class IndicShapingData
                 RephMode = RephMode.Log_Repha,
                 BlwfMode = BlwfMode.Pre_And_Post
             }
-        },
-        {
-            ScriptClass.Khmer,
-            new()
-            {
-                HasOldSpec = true,
-                Virama = 0x17D2,
-                BasePosition = BasePosition.First,
-                RephPosition = Positions.Ra_To_Become_Reph,
-                RephMode = RephMode.Vis_Repha,
-                BlwfMode = BlwfMode.Pre_And_Post
-            }
         }
-    };
-
-    public static Dictionary<int, int[]> Decompositions { get; } = new()
-    {
-        // Khmer
-        { 0x17BE, new int[] { 0x17C1, 0x17BE } },
-        { 0x17BF, new int[] { 0x17C1, 0x17BF } },
-        { 0x17C0, new int[] { 0x17C1, 0x17C0 } },
-        { 0x17C4, new int[] { 0x17C1, 0x17C4 } },
-        { 0x17C5, new int[] { 0x17C1, 0x17C5 } }
     };
 
     internal struct ShapingConfiguration

@@ -31,7 +31,6 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly Tag PstfTag = Tag.Parse("pstf");
     private static readonly Tag VatuTag = Tag.Parse("vatu");
     private static readonly Tag CjctTag = Tag.Parse("cjct");
-    private static readonly Tag CfarTag = Tag.Parse("cfar");
 
     private static readonly Tag InitTag = Tag.Parse("init");
     private static readonly Tag AbvsTag = Tag.Parse("abvs");
@@ -69,51 +68,28 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, LoclTag, preAction: SetupSyllables);
         this.AddFeature(collection, index, count, CcmpTag);
 
-        // The Khmer shaper of HarfBuzz applies fewer features than its Indic shaper.
-        bool isKhmer = this.ScriptClass == ScriptClass.Khmer;
-
-        // In the Indic shaper each basic shaping feature is a stage of its own: the lookups of one form must all have
-        // run before the next form is tried. The Khmer shaper applies its basic features, cfar included, in one
-        // stage, so their lookups run in the order of the lookup list.
-        if (isKhmer)
-        {
-            this.AddFeature(collection, index, count, PrefTag, false, preAction: this.InitialReorder);
-            this.AddFeature(collection, index, count, BlwfTag, false);
-            this.AddFeature(collection, index, count, AbvfTag, false);
-            this.AddFeature(collection, index, count, PstfTag, false);
-        }
-        else
-        {
-            this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
-            this.EndStage();
-            this.AddBasicFeature(collection, index, count, AkhnTag);
-            this.AddBasicFeature(collection, index, count, RphfTag, false);
-            this.AddBasicFeature(collection, index, count, RkrfTag);
-            this.AddBasicFeature(collection, index, count, PrefTag, false);
-            this.AddBasicFeature(collection, index, count, BlwfTag, false);
-            this.AddBasicFeature(collection, index, count, AbvfTag, false);
-            this.AddBasicFeature(collection, index, count, HalfTag, false);
-            this.AddBasicFeature(collection, index, count, PstfTag, false);
-            this.AddBasicFeature(collection, index, count, VatuTag);
-            this.AddBasicFeature(collection, index, count, CjctTag);
-        }
-
-        this.AddFeature(collection, index, count, CfarTag, false, postAction: this.FinalReorder);
+        // Each basic shaping feature is a stage of its own: the lookups of one form must all have run before the
+        // next form is tried.
+        this.AddFeature(collection, index, count, NuktTag, preAction: this.InitialReorder);
+        this.EndStage();
+        this.AddBasicFeature(collection, index, count, AkhnTag);
+        this.AddBasicFeature(collection, index, count, RphfTag, false);
+        this.AddBasicFeature(collection, index, count, RkrfTag);
+        this.AddBasicFeature(collection, index, count, PrefTag, false);
+        this.AddBasicFeature(collection, index, count, BlwfTag, false);
+        this.AddBasicFeature(collection, index, count, AbvfTag, false);
+        this.AddBasicFeature(collection, index, count, HalfTag, false);
+        this.AddBasicFeature(collection, index, count, PstfTag, false);
+        this.AddBasicFeature(collection, index, count, VatuTag);
+        this.AddFeature(collection, index, count, CjctTag, postAction: this.FinalReorder);
 
         // The presentation features that follow share one stage with the common features.
-        if (!isKhmer)
-        {
-            this.AddFeature(collection, index, count, InitTag, false);
-        }
-
+        this.AddFeature(collection, index, count, InitTag, false);
         this.AddFeature(collection, index, count, PresTag);
         this.AddFeature(collection, index, count, AbvsTag);
         this.AddFeature(collection, index, count, BlwsTag);
         this.AddFeature(collection, index, count, PstsTag);
-        if (!isKhmer)
-        {
-            this.AddFeature(collection, index, count, HalnTag);
-        }
+        this.AddFeature(collection, index, count, HalnTag);
 
         this.AddHorizontalFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
@@ -141,9 +117,7 @@ internal sealed class IndicShaper : DefaultShaper
             GlyphShapingData data = substitutionCollection[i];
             FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
 
-            if ((Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions) ||
-                UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out decompositions)) &&
-                decompositions != null)
+            if (UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions))
             {
                 Span<ushort> ids = buffer.Slice(0, decompositions.Length);
                 for (int j = 0; j < decompositions.Length; j++)
@@ -729,20 +703,6 @@ internal sealed class IndicShaper : DefaultShaper
                         for (int j = 0; j < prefLen; j++)
                         {
                             substitutionCollection.EnableShapingFeature(i++, PrefTag);
-                        }
-
-                        // Mark the subsequent stuff with 'cfar'.  Used in Khmer.
-                        // Read the feature spec.
-                        // This allows distinguishing the following cases with MS Khmer fonts:
-                        // U+1784,U+17D2,U+179A,U+17D2,U+1782
-                        // U+1784,U+17D2,U+1782,U+17D2,U+179A
-                        if (gSubTable.TryGetFeatureLookups(in CfarTag, this.ScriptClass, out _))
-                        {
-                            while (i < end)
-                            {
-                                substitutionCollection.EnableShapingFeature(i, CfarTag);
-                                i++;
-                            }
                         }
 
                         break;

@@ -306,6 +306,10 @@ An additive or breaking public API change needs all of these:
   contextual lookup calls makes no substitution (#121). A cursive chain keeps its first glyph on the baseline, or its
   last glyph when the lookup has the RightToLeft flag, and a chain of more than two glyphs adds up the offsets of all
   of them in either direction (#139).
+- A font with no `glyf`, `CFF ` or `CFF2` outline table is absent from `SystemFonts`. On macOS this is PingFang, which
+  keeps its outlines in Apple's `hvgl` table. Before, the font was listed and threw `MissingFontTableException` when it
+  was first used. `FontCollection.Add` and `FontCollection.AddCollection` throw `InvalidFontFileException` for such a
+  font when it is added, and not later when it is used. (#136)
 - A glyph at or past `hhea.numberOfHMetrics` takes the last advance width in `hmtx`, as the OpenType spec says.
   Before, it took the advance of glyph 0, so a font whose `.notdef` advance differs from the advance that its later
   glyphs share gave those glyphs the `.notdef` advance. `vmtx` and `vhea.numOfLongVerMetrics` had the same fault.
@@ -333,6 +337,16 @@ An additive or breaking public API change needs all of these:
   of syllables, as HarfBuzz does. Before, only the scripts whose letters join got these features. (#111)
 - Two signs moved in front of a dotted circle each keep their advance. (#111)
 - The Khmer basic features run in one stage, in the order of the lookup list, as in HarfBuzz. (#111)
+- Khmer has a shaper of its own, as in HarfBuzz, in place of the Indic shaper. Its syllables come from the Khmer
+  grammar of HarfBuzz 15.0.0, which the Unicode trie generator compiles. A ROBAT after a vowel sign starts a broken
+  cluster with a dotted circle. Before any lookup, a vowel sign that goes before the base and then COENG RO move in
+  front of it, and the glyphs after COENG RO take `cfar`, so a second subscript or a two-part vowel after COENG RO
+  gets its contextual form. The 1350 Khmer syllables of `Khmer.harfbuzz.json` all match HarfBuzz. The Indic shaper
+  no longer applies `cfar`, which only Khmer uses. (#114)
+- The Indic shaper takes U+2015 HORIZONTAL BAR, U+2022 BULLET and U+25FB to U+25FE, the medium squares, as bases, as
+  it does the dotted circle. A sign after one of them no longer gets a dotted circle of its own. (#116)
+- The cluster reference covers a sign before and after a virama with no letter before them, in Devanagari and
+  Balinese. The Indic and the universal shaper give the clusters and the one dotted circle that HarfBuzz gives. (#115)
 - GPOS pair positioning finds the second glyph past the glyphs that the lookup flags skip, so a lookup that ignores
   marks kerns the letters on both sides of a mark. GPOS mark-to-mark attaches a mark to a mark of the same base, as
   in HarfBuzz. A GPOS mark moves with a base that the `kern` table moved. (#111)

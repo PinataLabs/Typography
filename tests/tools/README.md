@@ -671,13 +671,13 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
 
 - each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and HarfBuzz
   gives it a dotted circle as its base.
-- each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next to
-  it in one cluster, and the library does not. When the first sign goes in front of the base, the sign after it
-  goes there too, before the dotted circle.
+- each sign after each other sign, and each sign before and after the virama. When the first sign goes in front of
+  the base, the sign after it goes there too, before the dotted circle. HarfBuzz joins a virama and some of the signs
+  next to it in one cluster with one dotted circle.
 - each Common character before a vowel sign that goes above or after the base, and before one that goes in front of
   it. The universal shaper takes most of these characters as the base of the sign.
-
-The fonts have no U+2015, U+2022 or U+25FB. They are bases in the Indic shaper of HarfBuzz and not in the library.
+- in `ClustersDevanagari.ttf`, each sign after U+2015, U+2022 and U+25FB to U+25FE. The Indic shaper takes these
+  characters as bases, as it does the dotted circle.
 
 `ClusterTests` checks that the library gives the same glyphs in the same places.
 
@@ -854,7 +854,7 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 shaper of HarfBuzz shapes 1350 syllables in `NotoSansKhmer-Regular.ttf`: a consonant with a vowel, with one or two
 subscript consonants before the vowel, with a register shifter, with ROBAT and with a sign after the vowel. The
 reference holds the glyph IDs and where HarfBuzz draws each glyph. `KhmerTests` checks that the library gives the
-same, except for the syllables that #114 tracks.
+same.
 
 To write the reference again, install uharfbuzz and run this from the repository root:
 

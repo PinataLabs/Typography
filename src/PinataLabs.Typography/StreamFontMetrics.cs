@@ -18,6 +18,7 @@ using PinataLabs.Typography.Tables.General.Colr;
 using PinataLabs.Typography.Tables.General.Kern;
 using PinataLabs.Typography.Tables.General.Post;
 using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
@@ -476,6 +477,7 @@ internal partial class StreamFontMetrics : FontMetrics
 
     internal static StreamFontMetrics LoadFont(FontReader reader)
     {
+        ThrowIfNoSupportedOutlines(reader);
         if (reader.OutlineType == OutlineType.TrueType)
         {
             return LoadTrueTypeFont(reader);
@@ -483,6 +485,23 @@ internal partial class StreamFontMetrics : FontMetrics
         else
         {
             return LoadCompactFont(reader);
+        }
+    }
+
+    /// <summary>
+    /// Throws when a face has no outline table that the loader reads: 'glyf' for a TrueType face, 'CFF ' or 'CFF2' for a CFF face.
+    /// The PingFang fonts of macOS keep their outlines in Apple's 'hvgl' table, and a bitmap font has no outlines.
+    /// </summary>
+    /// <param name="reader">The reader of the face.</param>
+    internal static void ThrowIfNoSupportedOutlines(FontReader reader)
+    {
+        bool hasOutlines = reader.OutlineType == OutlineType.TrueType
+            ? reader.GetHeader(GlyphTable.TableName) is not null
+            : reader.GetHeader(Cff1Table.TableName) is not null || reader.GetHeader(Cff2Table.TableName) is not null;
+
+        if (!hasOutlines)
+        {
+            throw new InvalidFontFileException("The font has no outlines in a format that the library reads ('glyf', 'CFF ' or 'CFF2').");
         }
     }
 

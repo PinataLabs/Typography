@@ -138,7 +138,7 @@ internal sealed class SystemFontCollection : IReadOnlySystemFontCollection, IRea
     IEnumerator<FontMetrics> IReadOnlyFontMetricsCollection.GetEnumerator()
         => ((IReadOnlyFontMetricsCollection)this.collection).GetEnumerator();
 
-    private static FontCollection CreateSystemFontCollection(IEnumerable<string> paths, IReadOnlyCollection<string> searchDirectories)
+    internal static FontCollection CreateSystemFontCollection(IEnumerable<string> paths, IReadOnlyCollection<string> searchDirectories)
     {
         var collection = new FontCollection(searchDirectories);
 
