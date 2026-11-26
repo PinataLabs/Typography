@@ -1,18 +1,18 @@
 {
   "harfbuzz": "15.0.0",
   "joiners": [
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u034f\u1b36",[[3,0],[2,600],[4,0]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u034f\u1b3e",[[5,0],[3,600],[2,1200]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u034f\u1b13",[[3,0],[2,600],[3,600]]],
-    ["SyllablesBalinese.ttf","Bali","\u034f\u1b36",[[2,0],[8,0],[4,0]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u200d\u1b36",[[3,0],[7,600],[4,0]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u200d\u1b3e",[[5,0],[3,600],[7,1200]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u200d\u1b13",[[3,0],[7,600],[3,600]]],
-    ["SyllablesBalinese.ttf","Bali","\u200d\u1b36",[[7,0],[8,0],[4,0]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u200c\u1b36",[[3,0],[6,600],[4,0]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u200c\u1b3e",[[5,0],[3,600],[6,1200]]],
-    ["SyllablesBalinese.ttf","Bali","\u1b13\u200c\u1b13",[[3,0],[6,600],[3,600]]],
-    ["SyllablesBalinese.ttf","Bali","\u200c\u1b36",[[6,0],[8,0],[4,0]]]
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u034f\u1b36",[[3,0],[1,600],[4,0]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u034f\u1b3e",[[5,0],[3,600],[1,1200]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u034f\u1b13",[[3,0],[1,600],[3,600]]],
+    ["SyllablesBalinese.ttf","Bali","\u034f\u1b36",[[1,0],[8,0],[4,0]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u200d\u1b36",[[3,0],[1,600],[4,0]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u200d\u1b3e",[[5,0],[3,600],[1,1200]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u200d\u1b13",[[3,0],[1,600],[3,600]]],
+    ["SyllablesBalinese.ttf","Bali","\u200d\u1b36",[[1,0],[8,0],[4,0]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u200c\u1b36",[[3,0],[1,600],[4,0]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u200c\u1b3e",[[5,0],[3,600],[1,1200]]],
+    ["SyllablesBalinese.ttf","Bali","\u1b13\u200c\u1b13",[[3,0],[1,600],[3,600]]],
+    ["SyllablesBalinese.ttf","Bali","\u200c\u1b36",[[1,0],[8,0],[4,0]]]
   ],
   "invalid": [
     ["SyllablesInvalid.ttf","Deva","\u0905\u0946",[[1,0],[91,600],[12,1200]]],

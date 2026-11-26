@@ -19,8 +19,8 @@ the order and the number of the glyphs:
   the script of the first character: Devanagari and the other Indic scripts with its Indic shaper, and Brahmi,
   Khojki, Khudawadi, Tirhuta and Takri with its universal shaper.
 
-HarfBuzz takes default-ignorable characters out of its output, and the library keeps them and does not draw them
-(see issue #110). The script shapes with HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES, so HarfBuzz keeps them too.
+The script shapes with the default buffer flags. HarfBuzz then draws each default-ignorable character with the glyph
+of the space and no advance, and so does the library (see issue #110).
 
 Each row holds the font, the ISO 15924 code of the script, the text, and the glyph ID of each glyph that HarfBuzz
 gives with where it draws it, in font units from the start of the line.
@@ -110,7 +110,6 @@ def shape(font, script, text):
     buffer.add_str(text)
     buffer.script = script
     buffer.direction = "ltr"
-    buffer.flags = hb.BufferFlags.PRESERVE_DEFAULT_IGNORABLES
     hb.shape(font, buffer)
     glyphs = []
     x = 0
