@@ -124,4 +124,37 @@ public class MvarFontTests
 
         await Assert.That(font.FontMetrics.VerticalMetrics.Descender).IsEqualTo(expected);
     }
+
+    [Test]
+    [Arguments(40000, 40000, 400, 32767, -32768, 32767)]
+    [Arguments(32770, 32770, 100, 32755, -32756, 32767)]
+    [Arguments(900, 300, 400, 900, -300, 1200)]
+    [Arguments(40000, 300, 900, 32767, -314, 32767)]
+    public async Task TheWinMetricsAreUnsignedAndClampedOnceAfterMvarVariesThem(
+        ushort winAscent,
+        ushort winDescent,
+        float weight,
+        short ascender,
+        short descender,
+        short lineHeight)
+    {
+        // The win ascent and descent are unsigned. A value above 32767 must not wrap through a short, so the sum of the value
+        // and its delta is made in int and clamped to the range of a short once. MVAR adds 25 to hcla and 14 to hcld at wght 900,
+        // and -15 and -14 at wght 100. The line height is the sum of the two, clamped too.
+        byte[] bytes = VariationFontBytes.Read(FontFile);
+        BinaryPrimitives.WriteInt16BigEndian(VariationFontBytes.Table(bytes, "hhea").Slice(4), 0);
+        BinaryPrimitives.WriteInt16BigEndian(VariationFontBytes.Table(bytes, "hhea").Slice(6), 0);
+        BinaryPrimitives.WriteInt16BigEndian(VariationFontBytes.Table(bytes, "OS/2").Slice(68), 0);
+        BinaryPrimitives.WriteInt16BigEndian(VariationFontBytes.Table(bytes, "OS/2").Slice(70), 0);
+        BinaryPrimitives.WriteUInt16BigEndian(VariationFontBytes.Table(bytes, "OS/2").Slice(74), winAscent);
+        BinaryPrimitives.WriteUInt16BigEndian(VariationFontBytes.Table(bytes, "OS/2").Slice(76), winDescent);
+        FontFamily family = VariationFontBytes.Load(bytes);
+
+        Font font = family.CreateFont(1000, default, [new(Tag.Parse("wght"), weight), new(Tag.Parse("wdth"), 100)]);
+        HorizontalMetrics metrics = font.FontMetrics.HorizontalMetrics;
+
+        await Assert.That(metrics.Ascender).IsEqualTo(ascender);
+        await Assert.That(metrics.Descender).IsEqualTo(descender);
+        await Assert.That(metrics.LineHeight).IsEqualTo(lineHeight);
+    }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 
 namespace PinataLabs.Typography.Tables.Variations;
@@ -55,4 +56,16 @@ internal readonly struct MvarVariation
     /// <returns>The value, rounded once after the delta is added. It is <paramref name="value"/> when the table has no record for the tag.</returns>
     public short Apply(Tag tag, short value)
         => this.table is null ? value : VariationRounding.ToInt16(value + (double)this.table.GetDelta(this.scalars, tag));
+
+    /// <summary>
+    /// Varies a metric that the font stores wider than a <see cref="short"/>, as the win ascent and descent are
+    /// <see cref="ushort"/>. The caller clamps once, after it does the rest of its arithmetic.
+    /// </summary>
+    /// <param name="tag">The tag of the metric.</param>
+    /// <param name="value">The value at the default instance.</param>
+    /// <returns>The value, rounded once after the delta is added. It is <paramref name="value"/> when the table has no record for the tag.</returns>
+    public int ApplyWide(Tag tag, int value)
+        => this.table is null
+            ? value
+            : (int)Math.Clamp(VariationRounding.Round(value + (double)this.table.GetDelta(this.scalars, tag)), int.MinValue, int.MaxValue);
 }

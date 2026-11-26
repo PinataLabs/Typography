@@ -551,8 +551,6 @@ internal partial class StreamFontMetrics : FontMetrics
             else
             {
                 useWinMetrics = true;
-                ascender = (short)os2.WinAscent;
-                descender = (short)-os2.WinDescent;
             }
         }
 
@@ -561,9 +559,13 @@ internal partial class StreamFontMetrics : FontMetrics
         short lineHeight;
         if (useWinMetrics)
         {
-            ascender = mvar.Apply(MvarVariation.HorizontalClippingAscent, ascender);
-            descender = (short)-mvar.Apply(MvarVariation.HorizontalClippingDescent, (short)-descender);
-            lineHeight = (short)(ascender - descender);
+            // The win metrics are unsigned and the descent is a distance below the baseline, so the arithmetic is in int and
+            // the clamp to short comes once at the end.
+            int winAscent = mvar.ApplyWide(MvarVariation.HorizontalClippingAscent, os2.WinAscent);
+            int winDescent = mvar.ApplyWide(MvarVariation.HorizontalClippingDescent, os2.WinDescent);
+            ascender = VariationRounding.ToInt16(winAscent);
+            descender = VariationRounding.ToInt16(-(double)winDescent);
+            lineHeight = VariationRounding.ToInt16((double)winAscent + winDescent);
         }
         else
         {
