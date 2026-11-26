@@ -43,20 +43,18 @@ public readonly struct ArabicJoiningClass
         // All others not explicitly listed have joining type U
         if (type == ArabicJoiningType.NonJoining)
         {
-            // 200C; ZERO WIDTH NON-JOINER; U; No_Joining_Group
-            // 200D; ZERO WIDTH JOINER; C; No_Joining_Group
-            // 202F; NARROW NO-BREAK SPACE; U; No_Joining_Group
-            // 2066; LEFT-TO-RIGHT ISOLATE; U; No_Joining_Group
-            // 2067; RIGHT-TO-LEFT ISOLATE; U; No_Joining_Group
-            // 2068; FIRST STRONG ISOLATE; U; No_Joining_Group
-            // 2069; POP DIRECTIONAL ISOLATE; U; No_Joining_Group
-            if (codePoint.Value is 0x200C
-                or 0x200D
-                or 0x202F
-                or 0x2066
-                or 0x2067
-                or 0x2068
-                or 0x2069)
+            // The trie gives U both to the characters that ArabicShaping.txt lists as U and to those it does not list.
+            // These are the characters of General Category Mn, Me or Cf that it lists as U, which stay U.
+            if (codePoint.Value is (>= 0x0600 and <= 0x0605)
+                or 0x06DD
+                or 0x0890
+                or 0x0891
+                or 0x08E2
+                or 0x180E
+                or 0x200C
+                or (>= 0x2066 and <= 0x2069)
+                or 0x110BD
+                or 0x110CD)
             {
                 return type;
             }
