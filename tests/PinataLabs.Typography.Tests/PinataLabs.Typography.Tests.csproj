@@ -18,6 +18,7 @@
   <!-- The oracle and the mutator of the fuzz harness, and its corpus, for the deterministic mutation tests. -->
   <ItemGroup>
     <Compile Include="..\PinataLabs.Typography.Fuzz\FontProgramOracle.cs" Link="FontPrograms\Fuzz\FontProgramOracle.cs" />
+    <Compile Include="..\PinataLabs.Typography.Fuzz\Cff2TopDict.cs" Link="FontPrograms\Fuzz\Cff2TopDict.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\Mutator.cs" Link="FontPrograms\Fuzz\Mutator.cs" />
     <None Include="..\PinataLabs.Typography.Fuzz\corpus\**\*" Link="FuzzCorpus\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

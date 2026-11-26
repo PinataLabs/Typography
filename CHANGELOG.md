@@ -119,6 +119,8 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- A CFF2 font with a malformed variation store loads. The store counts as absent, so only glyphs with a `blend`
+  operator fail, where a bad store used to fail the whole load. (#124)
 - `FontMetrics.TryGetGlyphMetrics` reports the text decorations that the caller passed. Before, a glyph reported the
   decorations of whichever caller asked for it first. (#106)
 - Letters on both sides of a `TextRun` boundary join as in one run: each run is shaped with up to five characters of
