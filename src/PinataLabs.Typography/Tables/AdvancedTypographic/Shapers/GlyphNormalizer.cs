@@ -25,6 +25,8 @@ internal ref struct GlyphNormalizer
 
     private const int StackItems = 64;
 
+    private static readonly Tag ThaiTag = Tag.Parse("thai");
+
     // The Arabic modifier marks sort before every other mark once they have moved, the ones below the base first.
     // Inferred: HarfBuzz gives the moved marks a class of their own, and no text shows where it sorts.
     private const byte ModifierBelowOrder = 1;
@@ -92,11 +94,18 @@ internal ref struct GlyphNormalizer
         {
             this.runStart = index;
             this.runEnd = GetScriptRunEnd(this.collection, index, out ScriptClass script);
-            this.profile = ShaperFactory.GetNormalizationProfile(script, this.fontMetrics.GetGSubTable().GetScriptTag(script));
+            Tag scriptTag = this.fontMetrics.GetGSubTable().GetScriptTag(script);
+            this.profile = ShaperFactory.GetNormalizationProfile(script, scriptTag);
             this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script);
             if (this.profile.SplitsVowels)
             {
                 this.SplitVowels();
+            }
+
+            // As in HarfBuzz, this comes before the marks are sorted.
+            if (script == ScriptClass.Thai && scriptTag != ThaiTag)
+            {
+                ThaiPrivateUseForms.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd);
             }
 
             // HarfBuzz sorts and composes only in a buffer that has a mark after its first character.
