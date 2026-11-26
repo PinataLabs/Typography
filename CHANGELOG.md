@@ -47,8 +47,32 @@ An additive or breaking public API change needs all of these:
   creates a font for every draw does not rebuild glyphs, and one that changes the weight every frame does not
   accumulate instances. `FontMetrics.Variations` of an instance gives the values of the request that made it.
   `CreateFont(12)` on Teko is the instance `wght` 400, and `FontStyle.Bold` is `wght` 700. An instance draws the
-  outlines, the advances and the positions of the default instance until the CFF2, `gvar`, `HVAR`, `MVAR` and GPOS
-  variation data are read. (#125)
+  TrueType outlines and the positions of the default instance until the `gvar` and GPOS variation data are read. (#125)
+- **CFF2 variation instances.** A variation instance of a CFF2 font draws the outlines of its coordinates. A `blend`
+  operator adds each delta, scaled by the scalar of its region, to its value, for the regions that the `vsindex` of the
+  glyph names, and the bounds of a glyph come from the varied outline. The scalars of an instance are made once, when
+  the instance is made. A face draws as before: the outlines, bounds and advances of all 2478 glyphs of
+  `SourceSans3VF-Upright.otf` at its default instance match what the library drew before this change. The outlines and
+  bounds of 38 glyphs, which blend in the charstring, blend in a subroutine, switch to `vsindex` 1 and do not blend,
+  match fontTools `getGlyphSet(location=...)` at the default instance, Regular, Bold, `wght` 900 and two locations
+  between them. (#126)
+- **Advances and global metrics of variation instances.** A variation instance adds the `HVAR` delta of a glyph to its
+  advance width, and the `VVAR` delta to its advance height. When the table maps the left or top side bearing, the
+  delta varies it too. A table with no advance mapping uses the glyph ID as its inner index and 0 as its outer
+  index. `MVAR` varies the ascender, descender and line gap of `HorizontalMetrics` and `VerticalMetrics`, the subscript
+  and superscript sizes and offsets, the strikeout size and position, and the underline position and thickness. `hasc`,
+  `hdsc` and `hlgp` vary the `hhea` or typo value that the existing rules choose, as HarfBuzz does, and `hcla` and `hcld`
+  vary the win values when the rules fall back to them. The rules look at the values of the font, not at the varied ones.
+  A value is rounded once after its delta is added, with a half rounding up as fontTools `otRound` does, and stays in the
+  range of its type. A table that is truncated, has another major version, or has a store or mapping that is malformed
+  counts as absent, and nothing throws when a glyph is drawn. A font without `fvar` does not load the tables. The right
+  side bearing and bottom side bearing mappings are not read, because those bearings follow from the advance, the other
+  bearing and the size of the glyph. Without a left side bearing mapping a CFF glyph has the left edge of its varied
+  outline as its bearing, and a TrueType glyph keeps the bearing of `hmtx` until its `gvar` variation is read. Advance
+  widths of every glyph that `hmtx` lists match fontTools and HarfBuzz for `Teko-Variable.ttf` and
+  `SourceSans3VF-Upright.otf` at the axis minimum, named instances, the axis maximum and between them. The global
+  metrics, advance heights and bearings match them for two built fonts that have every mapping and an `MVAR` record for
+  every metric. (#128)
 - **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
   axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
   italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face
