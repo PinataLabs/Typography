@@ -738,6 +738,28 @@ python tests/tools/generate_chain_backtrack_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Lookup flags reference
+
+`generate_lookup_flags_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/LookupFlags.ttf` and writes
+`LookupFlags.harfbuzz.json` next to it. Each case of the font has glyphs of its own: a GPOS chained context lookup of
+each format that applies a nested lookup past a mark that IgnoreMarks skips, a mark-to-mark lookup whose mark filtering
+set leaves out the mark between the two marks it attaches, a GSUB and a GPOS lookup with IgnoreMarks that cover the
+mark that starts the text, a chained context substitution that calls a reverse chaining lookup, and cursive chains of
+three glyphs with and without the RightToLeft flag, in left to right and right to left text. fontTools picks the
+smallest format of a chained context subtable, so the script makes it pick the format that each case names. The
+reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
+
+`LookupFlagsTests` checks that the library puts the same glyphs in the same places.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_lookup_flags_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Text run context reference
 
 `generate_text_run_context_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextRunContext.harfbuzz.json`.

@@ -298,6 +298,14 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- GSUB and GPOS lookups apply where HarfBuzz 15.0.0 applies them. A lookup starts at the first glyph that its flags
+  do not skip, where it used to apply to a first glyph that its flags or mark filtering set skip (#120). A chained
+  context positioning lookup counts the sequence index of a nested lookup over the glyphs that are not skipped (#118).
+  Mark-to-mark attachment finds the second mark with the mark attachment type and the mark filtering set of the
+  lookup, so a mark outside the set no longer takes the attachment (#119). A reverse chaining substitution that a
+  contextual lookup calls makes no substitution (#121). A cursive chain keeps its first glyph on the baseline, or its
+  last glyph when the lookup has the RightToLeft flag, and a chain of more than two glyphs adds up the offsets of all
+  of them in either direction (#139).
 - A CFF2 font with a malformed variation store loads, where a bad store used to fail the whole load. A glyph with a
   `blend` operator fails only when the region count it needs cannot be read. A wrong store length or a malformed region
   list does not matter, and a malformed subtable fails only the glyphs that use it. A store with a bad header counts as
