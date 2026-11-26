@@ -298,6 +298,10 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- A font with no `glyf`, `CFF ` or `CFF2` outline table is absent from `SystemFonts`. On macOS this is PingFang, which
+  keeps its outlines in Apple's `hvgl` table. Before, the font was listed and threw `MissingFontTableException` when it
+  was first used. `FontCollection.Add` and `FontCollection.AddCollection` throw `InvalidFontFileException` for such a
+  font when it is added, and not later when it is used. (#136)
 - A CFF2 font with a malformed variation store loads, where a bad store used to fail the whole load. A glyph with a
   `blend` operator fails only when the region count it needs cannot be read. A wrong store length or a malformed region
   list does not matter, and a malformed subtable fails only the glyphs that use it. A store with a bad header counts as

@@ -31,7 +31,7 @@ internal sealed class FileFontMetrics : FontMetrics
     }
 
     public FileFontMetrics(string path, long offset)
-        : this(FontDescription.LoadDescription(path), path, offset)
+        : this(LoadDescription(path, offset), path, offset)
     {
     }
 
@@ -212,10 +212,24 @@ internal sealed class FileFontMetrics : FontMetrics
         for (int i = 0; i < ttcHeader.NumFonts; ++i)
         {
             fs.Position = startPos + ttcHeader.OffsetTable[i];
-            var description = FontDescription.LoadDescription(fs);
-            fonts[i] = new FileFontMetrics(description, path, ttcHeader.OffsetTable[i]);
+            fonts[i] = new FileFontMetrics(LoadDescription(fs), path, ttcHeader.OffsetTable[i]);
         }
 
         return fonts;
+    }
+
+    private static FontDescription LoadDescription(string path, long offset)
+    {
+        using FileStream fs = File.OpenRead(path);
+        fs.Position = offset;
+        return LoadDescription(fs);
+    }
+
+    // The metrics of a face load when the face is first used, so a face that cannot load must fail here, when it is added.
+    private static FontDescription LoadDescription(Stream stream)
+    {
+        var reader = new FontReader(stream);
+        StreamFontMetrics.ThrowIfNoSupportedOutlines(reader);
+        return FontDescription.LoadDescription(reader);
     }
 }
