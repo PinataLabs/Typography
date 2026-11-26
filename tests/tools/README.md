@@ -83,6 +83,37 @@ python tests/tools/generate_font_variations_reference.py
 
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
 
+## Variation reference helpers
+
+`variation_reference.py` holds what the variation reference scripts share: the F2Dot14 coordinates of a user location
+(fontTools `normalizeValue`, the `avar` segment map, and a round to F2Dot14), the list of locations that a script records,
+and the JSON layout. A script imports it from its own folder, so each one still runs as `python tests/tools/<name>.py`
+from the repository root.
+
+## CFF2 outline reference
+
+`generate_cff2_outline_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/Cff2Outlines.fonttools.json`,
+the fontTools reference for the outlines of CFF2 variation instances (issue #126). It reads
+`SourceSans3VF-Upright.otf`, whose CFF2 table has a variation store of two `ItemVariationData` subtables, so a glyph blends
+with the regions of `vsindex` 0, or with those of `vsindex` 1 after a `vsindex` operator.
+
+The script records 38 glyphs at the default instance (wght 200), at the named instances Regular and Bold, at the axis
+maximum (wght 900) and at two user locations between them (wght 350 and 850). The glyphs blend in the charstring, blend
+only in a subroutine, switch to `vsindex` 1, and do not blend at all. The script checks that the list has each kind.
+
+For each glyph at each location the file holds what fontTools gives with `TTFont.getGlyphSet(location=..., normalized=True)`:
+the outline that a `RecordingPen` records, the exact bounds that a `BoundsPen` finds, and the advance width, which `HVAR`
+varies. fontTools gets the F2Dot14 coordinates that the library normalises to, which the file also holds, so both compute
+with the same coordinates.
+
+To write the file again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_cff2_outline_reference.py
+```
+
+The output is deterministic for one fontTools version. The file records the version that wrote it.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).
