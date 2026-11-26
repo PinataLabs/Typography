@@ -199,7 +199,7 @@ public sealed class FontStyleRange
             {
                 slope = FontSlope.Italic;
             }
-            else if (os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.OBLIQUE))
+            else if (os2.Version >= 4 && os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.OBLIQUE))
             {
                 // The italic angle is counter-clockwise, and the oblique angle of CSS is clockwise.
                 slope = FontSlope.Oblique(italicAngle != 0F ? -italicAngle : DefaultObliqueAngle);

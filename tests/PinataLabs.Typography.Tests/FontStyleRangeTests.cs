@@ -89,6 +89,20 @@ public class FontStyleRangeTests
     }
 
     [Test]
+    [Arguments(0)]
+    [Arguments(1)]
+    [Arguments(2)]
+    [Arguments(3)]
+    public async Task ObliqueBitIsReadOnlyFromVersion4(int version)
+    {
+        // Before version 4 bit 9 of fsSelection was reserved, so a font may have set it for another reason.
+        FontStyleRange range = FontStyleRange.FromTables(Os2(400, 5, OS2Table.FontStyleSelection.OBLIQUE, (ushort)version), null, -10F);
+
+        await Assert.That(range.HasOblique).IsFalse();
+        await Assert.That(range.HasNormal).IsTrue();
+    }
+
+    [Test]
     [Arguments(-10F, 10F)]
     [Arguments(-20.5F, 20.5F)]
     [Arguments(8F, -8F)]
@@ -268,6 +282,6 @@ public class FontStyleRangeTests
         await Assert.That(files.Length).IsEqualTo(MatchingSans.AllFaces.Length);
     }
 
-    private static OS2Table Os2(ushort weightClass, ushort widthClass, OS2Table.FontStyleSelection selection)
-        => new(1, weightClass, widthClass, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, [], 1, 1, 1, 1, string.Empty, selection, 1, 1, 20, 10, 20, 1, 1);
+    private static OS2Table Os2(ushort weightClass, ushort widthClass, OS2Table.FontStyleSelection selection, ushort version = 4)
+        => new(version, 1, weightClass, widthClass, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, [], 1, 1, 1, 1, string.Empty, selection, 1, 1, 20, 10, 20, 1, 1);
 }

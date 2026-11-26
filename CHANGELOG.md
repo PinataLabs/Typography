@@ -42,10 +42,11 @@ An additive or breaking public API change needs all of these:
 - **`FontStyleRange`.** `FontDescription.StyleRange` gives the weights, widths and slopes that a face covers:
   `MinWeight`, `MaxWeight`, `MinWidth`, `MaxWidth`, `HasNormal`, `HasItalic`, `HasOblique`, `MinObliqueAngle` and
   `MaxObliqueAngle`, with `Contains(style)`. A static face covers one point. The weight is `OS/2.usWeightClass`, with
-  1 to 9 of the legacy scale read as hundreds, or 700 or 400 from the `BOLD` bit when the class is 0. The width is `usWidthClass` as a percentage, with the table in the
-  OpenType `OS/2` chapter. The slope is italic when `fsSelection` has `ITALIC`, and oblique when it has `OBLIQUE`, at
-  the negated `post.italicAngle` (14 degrees when that is 0). A font without `OS/2` takes bold and italic from
-  `head.macStyle`. A renderer that makes a bold or oblique face compares `Font.Style` with `StyleRange`. (#123)
+  1 to 9 of the legacy scale read as hundreds, or 700 or 400 from the `BOLD` bit when the class is 0. The width is
+  `usWidthClass` as a percentage, with the table in the OpenType `OS/2` chapter. The slope is italic when
+  `fsSelection` has `ITALIC`, and oblique when it has `OBLIQUE` and `OS/2` is version 4 or later, at the negated
+  `post.italicAngle` (14 degrees when that is 0). A font without `OS/2` takes bold and italic from `head.macStyle`.
+  A renderer that makes a bold or oblique face compares `Font.Style` with `StyleRange`. (#123)
 - **`Font.Style`, `WithSize` and `WithStyle`.** `Font.Style` is the style that the font was created with.
   `font.WithSize(size)` and `font.WithStyle(style)` give a font of the same family with another size or style.
   The `Font` constructor and `FontFamily.CreateFont` take the style as an optional parameter, so `CreateFont(12)` is

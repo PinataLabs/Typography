@@ -32,6 +32,7 @@ internal sealed class OS2Table : Table
     private readonly short averageCharWidth;
 
     public OS2Table(
+        ushort version,
         short averageCharWidth,
         ushort weightClass,
         ushort widthClass,
@@ -62,6 +63,7 @@ internal sealed class OS2Table : Table
         ushort winAscent,
         ushort winDescent)
     {
+        this.Version = version;
         this.averageCharWidth = averageCharWidth;
         this.weightClass = weightClass;
         this.widthClass = widthClass;
@@ -103,6 +105,7 @@ internal sealed class OS2Table : Table
         ushort breakChar,
         ushort maxContext)
         : this(
+            version0Table.Version,
             version0Table.averageCharWidth,
             version0Table.weightClass,
             version0Table.widthClass,
@@ -191,6 +194,11 @@ internal sealed class OS2Table : Table
 
         // 10–15        <reserved>  Reserved; set to 0.
     }
+
+    /// <summary>
+    /// Gets the version of the table. Version 4 added the OBLIQUE bit of <see cref="FontStyle"/>.
+    /// </summary>
+    public ushort Version { get; }
 
     public FontStyleSelection FontStyle { get; }
 
@@ -319,6 +327,7 @@ internal sealed class OS2Table : Table
         ushort winDescent = reader.ReadUInt16();
 
         var version0Table = new OS2Table(
+                version,
                 averageCharWidth,
                 weightClass,
                 widthClass,
