@@ -321,6 +321,8 @@ An additive or breaking public API change needs all of these:
   of syllables, as HarfBuzz does. Before, only the scripts whose letters join got these features. (#111)
 - Two signs moved in front of a dotted circle each keep their advance. (#111)
 - The Khmer basic features run in one stage, in the order of the lookup list, as in HarfBuzz. (#111)
+- The Indic shaper takes U+2015 HORIZONTAL BAR, U+2022 BULLET and U+25FB to U+25FE, the medium squares, as bases, as
+  it does the dotted circle. A sign after one of them no longer gets a dotted circle of its own. (#116)
 - GPOS pair positioning finds the second glyph past the glyphs that the lookup flags skip, so a lookup that ignores
   marks kerns the letters on both sides of a mark. GPOS mark-to-mark attaches a mark to a mark of the same base, as
   in HarfBuzz. A GPOS mark moves with a base that the `kern` table moved. (#111)

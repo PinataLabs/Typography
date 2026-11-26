@@ -94,6 +94,14 @@ public static partial class Generator
         { 0x17C6, Categories.N },
         { 0x2010, Categories.Placeholder },
         { 0x2011, Categories.Placeholder },
+
+        // HarfBuzz takes these as bases, as the dotted circle.
+        { 0x2015, Categories.Placeholder },
+        { 0x2022, Categories.Placeholder },
+        { 0x25FB, Categories.Placeholder },
+        { 0x25FC, Categories.Placeholder },
+        { 0x25FD, Categories.Placeholder },
+        { 0x25FE, Categories.Placeholder },
         { 0x25CC, Categories.Dotted_Circle },
         { 0x0930, Categories.Ra },
         { 0x09B0, Categories.Ra },
