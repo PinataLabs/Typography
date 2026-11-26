@@ -48,7 +48,8 @@ An additive or breaking public API change needs all of these:
   `head.macStyle`. A renderer that makes a bold or oblique face compares `Font.Style` with `StyleRange`. (#123)
 - **`Font.Style`, `WithSize` and `WithStyle`.** `Font.Style` is the style that the font was created with.
   `font.WithSize(size)` and `font.WithStyle(style)` give a font of the same family with another size or style.
-  `Font`, `FontFamily.CreateFont` take the style as an optional parameter, so `CreateFont(12)` is regular. (#123)
+  The `Font` constructor and `FontFamily.CreateFont` take the style as an optional parameter, so `CreateFont(12)` is
+  regular. (#123)
 - **Legacy family name.** `FontDescription.LegacyFontFamily(culture)` gives name ID 1, the family name that groups
   at most four faces. `FontDescription.FontFamily(culture)` now gives the typographic family name (see Changed). (#123)
 - **Unicode 18.0.0 scripts and classes.** `ScriptClass` has members for the 16 scripts of Unicode 15.0 to 18.0, with

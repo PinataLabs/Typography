@@ -63,17 +63,16 @@ The fonts installed on the machine. The library finds them the first time you us
 
 `public struct FontFamily : IEquatable<FontFamily>`
 
-A set of fonts that share a family name. Get one from a collection. The `default` value is not a
+A set of fonts that share a typographic family name (`name` ID 16, or ID 1 when the font has no ID 16). Get one from a collection. The `default` value is not a
 valid family; its methods throw.
 
 | Member | Description |
 | --- | --- |
 | `Name` | The family name. |
 | `Culture` | The culture that the name is in. |
-| `CreateFont(float size)` | Makes a regular font at `size` points. |
-| `CreateFont(float size, FontStyle style)` | Makes a font in `style` at `size` points. |
-| `GetAvailableStyles()` | The styles in the family. |
-| `TryGetMetrics(FontStyle style, out FontMetrics? metrics)` | Gets the metrics of one style. Returns `false` if the family does not have it. |
+| `Faces` | The faces in the family, in the order in which they were added. |
+| `CreateFont(float size, FontStyle style = default)` | Makes a font in `style` at `size` points. The default style is regular. |
+| `MatchFace(FontStyle style)` | Gets the face that best matches `style`, as CSS Fonts Level 4 matches fonts: by width, then slope, then weight. It always returns a face. |
 | `TryGetPaths(out IEnumerable<string> paths)` | Gets the files of the fonts in the family. Returns `false` if they were loaded from streams. |
 
 ## FontDescription
@@ -88,12 +87,13 @@ The names and style of a font, read from its `name` table.
 | `static LoadDescription(Stream stream)` | Reads the description of the font in a stream. |
 | `static LoadFontCollectionDescriptions(string path)` | Reads the descriptions of every font in a `.ttc` file. |
 | `static LoadFontCollectionDescriptions(Stream stream)` | Reads the descriptions of every font in a `.ttc` stream. |
-| `Style` | The style of the font. |
+| `StyleRange` | The [styles](./font.md#fontstylerange) that the face covers. |
 | `FontNameInvariantCulture` | The full name, for example *Open Sans Bold*. |
-| `FontFamilyInvariantCulture` | The family name, for example *Open Sans*. |
+| `FontFamilyInvariantCulture` | The family name, for example *Open Sans*. It is the typographic family name. |
 | `FontSubFamilyNameInvariantCulture` | The style name, for example *Bold*. |
 | `FontName(CultureInfo culture)` | The full name in `culture`. |
-| `FontFamily(CultureInfo culture)` | The family name in `culture`. |
+| `FontFamily(CultureInfo culture)` | The typographic family name in `culture`: `name` ID 16, or ID 1 when the font has no ID 16. |
+| `LegacyFontFamily(CultureInfo culture)` | The legacy family name in `culture`, `name` ID 1, which groups at most four faces. |
 | `FontSubFamilyName(CultureInfo culture)` | The style name in `culture`. |
 | `GetNameById(CultureInfo culture, KnownNameIds nameId)` | Any name from the `name` table. Returns an empty string if the font does not have it. |
 

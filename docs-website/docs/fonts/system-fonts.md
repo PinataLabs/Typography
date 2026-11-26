@@ -34,8 +34,8 @@ Font font = family.CreateFont(12);
 ```csharp
 foreach (FontFamily family in SystemFonts.Families.OrderBy(f => f.Name))
 {
-    string styles = string.Join(", ", family.GetAvailableStyles());
-    Console.WriteLine($"{family.Name}: {styles}");
+    string faces = string.Join(", ", family.Faces.Select(f => f.Description.FontSubFamilyNameInvariantCulture));
+    Console.WriteLine($"{family.Name}: {faces}");
 }
 ```
 

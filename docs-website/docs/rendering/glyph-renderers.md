@@ -160,8 +160,7 @@ File.WriteAllText("hello.svg", renderer.ToSvg(size.Width + 20, size.Height + 20)
 | --- | --- |
 | `GlyphId` | The glyph's index in its font. |
 | `CodePoint` | The code point that the glyph came from. |
-| `Font` | The full name of the font that the glyph came from, in upper case, for example `OPEN SANS REGULAR`. A glyph from a fallback font has the name of that font. |
-| `FontStyle` | The style of that font. |
+| `FontMetrics` | The metrics that own the glyph. A glyph from a fallback font has the metrics of that font. The comparison is by reference, so two fonts with the same name from different files differ. |
 | `PointSize` | The font size in points. |
 | `Dpi` | The DPI of the layout. |
 | `GlyphType` | `Standard`, `Fallback` (no font had the character) or `ColrLayer` (one layer of a color glyph). |
