@@ -83,9 +83,11 @@ internal static class UntouchedPointInterpolation
     // and references on the same coordinate move a point only when they agree.
     private static float Interpolate(double x, double x1, double x2, double delta1, double delta2)
     {
+#pragma warning disable S1244 // IUP treats references on the same coordinate, and equal deltas, exactly.
         if (x1 == x2)
         {
             return (float)(delta1 == delta2 ? delta1 : 0);
+#pragma warning restore S1244
         }
 
         if (x1 > x2)
