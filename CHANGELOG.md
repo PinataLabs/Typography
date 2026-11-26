@@ -306,6 +306,10 @@ An additive or breaking public API change needs all of these:
   contextual lookup calls makes no substitution (#121). A cursive chain keeps its first glyph on the baseline, or its
   last glyph when the lookup has the RightToLeft flag, and a chain of more than two glyphs adds up the offsets of all
   of them in either direction (#139).
+- A glyph at or past `hhea.numberOfHMetrics` takes the last advance width in `hmtx`, as the OpenType spec says.
+  Before, it took the advance of glyph 0, so a font whose `.notdef` advance differs from the advance that its later
+  glyphs share gave those glyphs the `.notdef` advance. `vmtx` and `vhea.numOfLongVerMetrics` had the same fault.
+  `HVAR` and `VVAR` deltas now apply to the right advance. (#137)
 - A CFF2 font with a malformed variation store loads, where a bad store used to fail the whole load. A glyph with a
   `blend` operator fails only when the region count it needs cannot be read. A wrong store length or a malformed region
   list does not matter, and a malformed subtable fails only the glyphs that use it. A store with a bad header counts as
