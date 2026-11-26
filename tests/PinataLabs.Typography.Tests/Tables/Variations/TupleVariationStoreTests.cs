@@ -39,8 +39,8 @@ public class TupleVariationStoreTests
         await Assert.That(variations.Length).IsEqualTo(1);
         await Assert.That(variations[0].Scalar).IsEqualTo((float)expected);
         await Assert.That(variations[0].Points).IsNull();
-        await Assert.That(variations[0].DeltaX).IsEquivalentTo(new short[] { 10, -20, 30 });
-        await Assert.That(variations[0].DeltaY!).IsEquivalentTo(new short[] { 1, 2, 3 });
+        await Assert.That(variations[0].DeltaX).IsEquivalentTo(new int[] { 10, -20, 30 });
+        await Assert.That(variations[0].DeltaY!).IsEquivalentTo(new int[] { 1, 2, 3 });
     }
 
     [Test]
@@ -129,9 +129,9 @@ public class TupleVariationStoreTests
 
         await Assert.That(variations.Length).IsEqualTo(2);
         await Assert.That(variations[0].Points!).IsEquivalentTo(new ushort[] { 2, 4, 300 });
-        await Assert.That(variations[0].DeltaX).IsEquivalentTo(new short[] { 1, 2, 3 });
+        await Assert.That(variations[0].DeltaX).IsEquivalentTo(new int[] { 1, 2, 3 });
         await Assert.That(variations[1].Points!).IsEquivalentTo(new ushort[] { 0, 5 });
-        await Assert.That(variations[1].DeltaX).IsEquivalentTo(new short[] { 7, 8 });
+        await Assert.That(variations[1].DeltaX).IsEquivalentTo(new int[] { 7, 8 });
     }
 
     [Test]
@@ -144,8 +144,8 @@ public class TupleVariationStoreTests
         GetVariations(store, [One], 1000, true, out TupleVariation[] variations);
 
         await Assert.That(variations.Single().Points!.Select(point => (int)point).ToArray()).IsEquivalentTo(points);
-        await Assert.That(variations.Single().DeltaX.Select(delta => (int)delta).ToArray()).IsEquivalentTo(deltas);
-        await Assert.That(variations.Single().DeltaY!.Select(delta => (int)delta).ToArray()).IsEquivalentTo(deltas);
+        await Assert.That(variations.Single().DeltaX).IsEquivalentTo(deltas);
+        await Assert.That(variations.Single().DeltaY!).IsEquivalentTo(deltas);
     }
 
     [Test]
@@ -157,7 +157,45 @@ public class TupleVariationStoreTests
 
         GetVariations(store, [One], deltas.Length, false, out TupleVariation[] variations);
 
-        await Assert.That(variations.Single().DeltaX.Select(delta => (int)delta).ToArray()).IsEquivalentTo(deltas);
+        await Assert.That(variations.Single().DeltaX).IsEquivalentTo(deltas);
+    }
+
+    [Test]
+    public async Task DeltasInRunsOfLongsAreDecoded()
+    {
+        // A run of longs has both flag bits of the control byte, so it is not a run of zeros: OpenType 1.9.1 gives 0xC0 to 32-bit
+        // deltas. The runs here are zeros, bytes, a run of longs, words, and a run of longs that has a zero and a byte in it.
+        int[] deltas = [0, 0, 3, -4, 70000, -70000, int.MaxValue, int.MinValue, 100, -200, 0, 5, 40000, 1];
+        TupleVariationStore store = Read(Glyph(null, Peak([One], deltas, deltas)), 1);
+
+        bool read = GetVariations(store, [One], deltas.Length, true, out TupleVariation[] variations);
+
+        await Assert.That(read).IsTrue();
+        await Assert.That(variations.Single().DeltaX).IsEquivalentTo(deltas);
+        await Assert.That(variations.Single().DeltaY!).IsEquivalentTo(deltas);
+    }
+
+    [Test]
+    public async Task ARunOfLongsIsNotARunOfZeros()
+    {
+        // The control byte 0xC1 is two longs, 0x80 + 0x40 + 1. A reader that tests the zeros bit first skips both and reads the next byte as a control.
+        byte[] deltas = [0xC1, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFE];
+        TupleVariationStore store = Read(WithPrivatePoints([0, .. deltas]), 1);
+
+        GetVariations(store, [One], 2, false, out TupleVariation[] variations);
+
+        await Assert.That(variations.Single().DeltaX).IsEquivalentTo(new[] { 65536, -2 });
+    }
+
+    [Test]
+    public async Task ATruncatedRunOfLongsIsMalformed()
+    {
+        byte[] deltas = [0xC1, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xFF];
+        TupleVariationStore store = Read(WithPrivatePoints([0, .. deltas]), 1);
+
+        bool read = GetVariations(store, [One], 2, false, out _);
+
+        await Assert.That(read).IsFalse();
     }
 
     [Test]

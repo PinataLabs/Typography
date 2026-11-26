@@ -116,7 +116,7 @@ internal static class TupleVariationBytes
     }
 
     /// <summary>
-    /// Writes deltas as the data of a tuple does, in runs of zeros, bytes and words.
+    /// Writes deltas as the data of a tuple does, in runs of zeros, bytes, words and longs.
     /// </summary>
     public static byte[] Deltas(int[] deltas)
     {
@@ -232,12 +232,20 @@ internal static class TupleVariationBytes
                 bytes.Add((byte)(run.Length - 1));
                 bytes.AddRange(run.Select(delta => (byte)(sbyte)delta));
             }
-            else
+            else if (run.All(delta => delta is >= short.MinValue and <= short.MaxValue))
             {
                 bytes.Add((byte)(0x40 | (run.Length - 1)));
                 foreach (int delta in run)
                 {
                     UInt16(bytes, (ushort)delta);
+                }
+            }
+            else
+            {
+                bytes.Add((byte)(0xC0 | (run.Length - 1)));
+                foreach (int delta in run)
+                {
+                    UInt32(bytes, (uint)delta);
                 }
             }
         }

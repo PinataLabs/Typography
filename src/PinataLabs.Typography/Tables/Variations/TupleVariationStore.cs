@@ -32,8 +32,10 @@ internal readonly struct TupleVariationStore
     private const int PointsAreWordsFlag = 0x80;
     private const int PointRunCountMask = 0x7F;
 
-    private const int DeltasAreZeroFlag = 0x80;
-    private const int DeltasAreWordsFlag = 0x40;
+    private const int DeltaTypeMask = 0xC0;
+    private const int DeltasAreLongs = 0xC0;
+    private const int DeltasAreZero = 0x80;
+    private const int DeltasAreWords = 0x40;
     private const int DeltaRunCountMask = 0x3F;
 
     // The data that every offset in the store counts from. For 'gvar' it is the data of the glyph, and for 'cvar'
@@ -248,8 +250,9 @@ internal readonly struct TupleVariationStore
         return true;
     }
 
-    // Reads the deltas, which are runs of zeros, bytes or words.
-    private static bool TryReadDeltas(ref FontDataReader reader, short[] deltas)
+    // Reads the deltas, which are runs of zeros, bytes, words or longs. The two flag bits together mean longs, which OpenType 1.9.1
+    // added, so a run is tested for them before it is tested for the one bit of zeros or of words.
+    private static bool TryReadDeltas(ref FontDataReader reader, int[] deltas)
     {
         for (int i = 0; i < deltas.Length;)
         {
@@ -264,18 +267,33 @@ internal readonly struct TupleVariationStore
                 return false;
             }
 
-            if ((control & DeltasAreZeroFlag) != 0)
-            {
-                i += run;
-            }
-            else if ((control & DeltasAreWordsFlag) != 0)
+            int type = control & DeltaTypeMask;
+            if (type == DeltasAreLongs)
             {
                 for (int end = i + run; i < end; i++)
                 {
-                    if (!reader.TryReadInt16(out deltas[i]))
+                    if (!reader.TryReadUInt32(out uint value))
                     {
                         return false;
                     }
+
+                    deltas[i] = (int)value;
+                }
+            }
+            else if (type == DeltasAreZero)
+            {
+                i += run;
+            }
+            else if (type == DeltasAreWords)
+            {
+                for (int end = i + run; i < end; i++)
+                {
+                    if (!reader.TryReadInt16(out short value))
+                    {
+                        return false;
+                    }
+
+                    deltas[i] = value;
                 }
             }
             else
@@ -313,8 +331,8 @@ internal readonly struct TupleVariationStore
         }
 
         int count = points?.Length ?? pointCount;
-        short[] deltaX = new short[count];
-        short[]? deltaY = hasY ? new short[count] : null;
+        int[] deltaX = new int[count];
+        int[]? deltaY = hasY ? new int[count] : null;
         if (!TryReadDeltas(ref reader, deltaX) || (deltaY is not null && !TryReadDeltas(ref reader, deltaY)))
         {
             return false;
@@ -466,4 +484,4 @@ internal readonly struct TupleVariationStore
 /// a tuple that has a delta for every point.</param>
 /// <param name="DeltaX">The delta of each point, which is the x delta in 'gvar'.</param>
 /// <param name="DeltaY">The y delta of each point in 'gvar', and <see langword="null"/> in 'cvar'.</param>
-internal readonly record struct TupleVariation(float Scalar, ushort[]? Points, short[] DeltaX, short[]? DeltaY);
+internal readonly record struct TupleVariation(float Scalar, ushort[]? Points, int[] DeltaX, int[]? DeltaY);
