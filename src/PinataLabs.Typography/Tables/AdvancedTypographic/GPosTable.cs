@@ -215,7 +215,7 @@ internal class GPosTable : Table
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
                 {
                     LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-                    iterator.Reset(index, lookupTable.LookupFlags);
+                    iterator.Start(index, lookupTable.LookupFlags);
 
                     while (iterator.Index < index + count)
                     {

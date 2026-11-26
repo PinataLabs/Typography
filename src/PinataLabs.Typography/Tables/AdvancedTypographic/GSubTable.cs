@@ -323,7 +323,7 @@ internal class GSubTable : Table
                 continue;
             }
 
-            iterator.Reset(index, lookupTable.LookupFlags);
+            iterator.Start(index, lookupTable.LookupFlags);
             while (iterator.Index < index + count)
             {
                 if (collection.Count >= maxCount || currentOperations++ >= maxOperationsCount)
