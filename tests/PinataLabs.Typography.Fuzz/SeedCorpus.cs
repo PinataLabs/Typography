@@ -5,6 +5,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using PinataLabs.Typography.FontPrograms;
 using PinataLabs.Typography.FontPrograms.Type1;
@@ -18,7 +19,9 @@ namespace PinataLabs.Typography.Fuzz;
 /// the stores and the advance width map of the two variable test fonts, and a few synthetic stores and maps
 /// that have what the fonts lack: long words, several axes, a null subtable and a map of 32-bit entries.
 /// For the <c>metrics-variation</c> target it writes the HVAR, VVAR and MVAR tables of the variable test fonts and of the
-/// built font that has all three with every mapping.
+/// built font that has all three with every mapping. For the <c>tuple-variation-store</c> target it writes a small 'gvar'
+/// table of glyphs of Teko-Variable.ttf, one of its glyphs, and synthetic 'gvar' and 'cvar' tables that have what Teko lacks:
+/// intermediate regions, shared point numbers, point numbers in words, two axes and 32-bit offsets.
 /// </summary>
 internal static class SeedCorpus
 {
@@ -99,7 +102,9 @@ internal static class SeedCorpus
         WriteVariationStores(fonts, variationStore);
         string metricsVariation = Path.Combine(corpusRoot, MetricsVariationOracle.Target);
         WriteMetricsVariations(fonts, metricsVariation);
-        Console.WriteLine($"Wrote seeds to {program}, {type1Plain}, {variationStore} and {metricsVariation}.");
+        string tupleStore = Path.Combine(corpusRoot, TupleVariationStoreOracle.Target);
+        WriteTupleVariationStores(fonts, tupleStore);
+        Console.WriteLine($"Wrote seeds to {program}, {type1Plain}, {variationStore}, {metricsVariation} and {tupleStore}.");
         return 0;
     }
 
@@ -173,6 +178,64 @@ internal static class SeedCorpus
         WriteSeed(directory, "synthetic-cff2", VariationBytes.Cff2Store(2, twoAxes, [0, 1], [2]));
         WriteSeed(directory, "synthetic-map-format-0", VariationBytes.Map(0, 2, 4, (0, 1), (1, 2), (2, 3)));
         WriteSeed(directory, "synthetic-map-format-1", VariationBytes.Map(1, 4, 16, (0, 0), (5, 65535), (300, 2)));
+    }
+
+    // The glyphs of Teko that the seeds take: a simple glyph, a composite, a glyph with points a tuple leaves out, and the last glyph.
+    private static readonly int[] TekoGlyphs = [1, 3, 12, 1024];
+
+    private static void WriteTupleVariationStores(string fonts, string directory)
+    {
+        Directory.CreateDirectory(directory);
+        byte[] gvar = GetTable(File.ReadAllBytes(Path.Combine(fonts, "Teko/Teko-Variable.ttf")), "gvar");
+        int sharedCount = BinaryPrimitives.ReadUInt16BigEndian(gvar.AsSpan(6));
+        int sharedOffset = (int)BinaryPrimitives.ReadUInt32BigEndian(gvar.AsSpan(8));
+        int dataOffset = (int)BinaryPrimitives.ReadUInt32BigEndian(gvar.AsSpan(16));
+        short[][] shared = [.. Enumerable.Range(0, sharedCount).Select(i => new[] { BinaryPrimitives.ReadInt16BigEndian(gvar.AsSpan(sharedOffset + (2 * i))) })];
+
+        // Teko has short offsets, which count in words.
+        byte[][] glyphs = [.. TekoGlyphs.Select(glyph =>
+        {
+            int start = BinaryPrimitives.ReadUInt16BigEndian(gvar.AsSpan(20 + (2 * glyph))) * 2;
+            int end = BinaryPrimitives.ReadUInt16BigEndian(gvar.AsSpan(20 + (2 * (glyph + 1)))) * 2;
+            return gvar.AsSpan(dataOffset + start, end - start).ToArray();
+        })];
+        WriteSeed(directory, "teko-gvar", TupleVariationBytes.Gvar(1, shared, glyphs));
+        WriteSeed(directory, "teko-gvar-glyph", glyphs[0]);
+
+        short one = VariationBytes.F2Dot14(1);
+        short half = VariationBytes.F2Dot14(0.5);
+        short quarter = VariationBytes.F2Dot14(0.25);
+        int[] zeros = new int[12];
+        int[] ramp = [.. Enumerable.Range(0, 12).Select(i => (i * 20) - 100)];
+
+        // Two axes. The first glyph has shared point numbers and an intermediate region, the second has a shared tuple and
+        // point numbers in words, and the third has every point.
+        byte[] first = TupleVariationBytes.Glyph(
+            [1, 3, 5],
+            new TupleVariationBytes.TupleData([one, 0], null, null, null, [10, -20, 300], [5, 6, -7]),
+            new TupleVariationBytes.TupleData([half, one], [quarter, 0], [one, one], [0, 2], [1, 2], [3, 4]));
+        byte[] second = TupleVariationBytes.Glyph(
+            null,
+            new TupleVariationBytes.TupleData(null, null, null, [300, 700, 1300], ramp[..3], ramp[3..6], 1));
+        byte[] third = TupleVariationBytes.Glyph(null, new TupleVariationBytes.TupleData([(short)-one, (short)-half], null, null, null, ramp, zeros));
+        short[][] twoAxes = [[one, 0], [0, (short)-one]];
+        WriteSeed(directory, "synthetic-gvar-two-axes", TupleVariationBytes.Gvar(2, twoAxes, [first, [], third]));
+        WriteSeed(directory, "synthetic-gvar-long-offsets", TupleVariationBytes.Gvar(2, twoAxes, [second, third, first], longOffsets: true));
+        WriteSeed(directory, "synthetic-gvar-glyph", first);
+
+        // A count of more than 127 points takes two bytes.
+        int[] points = [.. Enumerable.Range(0, 200).Select(i => i * 2)];
+        int[] deltas = [.. Enumerable.Range(0, 200).Select(i => (i * 7) - 700)];
+        WriteSeed(directory, "synthetic-gvar-many-points", TupleVariationBytes.Glyph(null, new TupleVariationBytes.TupleData([one, half], null, null, points, deltas, deltas)));
+
+        // 'cvar' has no shared tuples, so every tuple holds its peak.
+        WriteSeed(
+            directory,
+            "synthetic-cvar",
+            TupleVariationBytes.Cvar(
+                [0, 2, 4],
+                new TupleVariationBytes.TupleData([one], null, null, null, [10, -10, 20], null),
+                new TupleVariationBytes.TupleData([half], [0], [one], [1, 3, 11], [-5, 6, 700], null)));
     }
 
     private static void WriteSeed(string directory, string name, ReadOnlySpan<byte> data)
