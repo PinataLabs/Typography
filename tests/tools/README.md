@@ -406,3 +406,25 @@ python tests/tools/generate_thai_pua_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Universal shaper forms reference
+
+`generate_universal_forms_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/UniversalForms.harfbuzz.json`.
+The universal shaper of HarfBuzz applies `isol`, `init`, `medi` and `fina` to every script. For a script whose
+letters do not join, it gives them by syllable: a run of syllables takes `init` on the first, `medi` on the middle
+ones and `fina` on the last, and a syllable alone takes `isol`. A character outside every syllable, such as WORD
+JOINER, ends the run.
+
+The script builds `UniversalForms.ttf`, with Balinese, Tibetan and Javanese letters and signs, the space, digits,
+ZWJ, ZWNJ, WORD JOINER and the dotted circle. Each of the four features gives every glyph a glyph of its own. The
+reference holds the glyph IDs and where HarfBuzz draws each glyph for texts of one to four syllables.
+`UniversalShaperTests` checks that the library gives the same.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_universal_forms_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

@@ -71,6 +71,9 @@ public static class TestFonts
     // Written by tests/tools/generate_thai_pua_reference.py, with the ThaiPua fonts.
     public static string ThaiPuaHarfBuzzReference => GetFullPath("ThaiPua.harfbuzz.json");
 
+    // Written by tests/tools/generate_universal_forms_reference.py, with UniversalForms.ttf.
+    public static string UniversalFormsHarfBuzzReference => GetFullPath("UniversalForms.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");
