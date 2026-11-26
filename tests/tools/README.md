@@ -896,3 +896,20 @@ python tests/tools/generate_font_matching_fonts.py
 ```
 
 The output is deterministic, so a second run changes no file.
+
+## Short metrics font
+
+`generate_short_metrics_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ShortMetrics.ttf` for issue #137.
+The font has five glyphs. The `.notdef` advance differs from the advance that the other four share, so fontTools
+stores two long metrics in `hmtx` and in `vmtx`, and glyphs 2 to 4 take the last advance of each table.
+The script writes the advances that fontTools reads from the saved font to `ShortMetrics.fonttools.json`, next to
+the font. `HorizontalVerticalMetricsTableTests` checks that the library gives the same advance width and advance
+height for each glyph.
+
+To write the font and the reference again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_short_metrics_font.py
+```
+
+The output is deterministic for one fontTools version. The reference records the version that wrote it.

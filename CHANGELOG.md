@@ -302,6 +302,10 @@ An additive or breaking public API change needs all of these:
   keeps its outlines in Apple's `hvgl` table. Before, the font was listed and threw `MissingFontTableException` when it
   was first used. `FontCollection.Add` and `FontCollection.AddCollection` throw `InvalidFontFileException` for such a
   font when it is added, and not later when it is used. (#136)
+- A glyph at or past `hhea.numberOfHMetrics` takes the last advance width in `hmtx`, as the OpenType spec says.
+  Before, it took the advance of glyph 0, so a font whose `.notdef` advance differs from the advance that its later
+  glyphs share gave those glyphs the `.notdef` advance. `vmtx` and `vhea.numOfLongVerMetrics` had the same fault.
+  `HVAR` and `VVAR` deltas now apply to the right advance. (#137)
 - A CFF2 font with a malformed variation store loads, where a bad store used to fail the whole load. A glyph with a
   `blend` operator fails only when the region count it needs cannot be read. A wrong store length or a malformed region
   list does not matter, and a malformed subtable fails only the glyphs that use it. A store with a bad header counts as
