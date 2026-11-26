@@ -2,3 +2,4 @@ Test data for Unicode 18.0.0, the version of the files in `src/PinataLabs.Typogr
 
 - https://www.unicode.org/Public/18.0.0/ucd/ : `BidiCharacterTest.txt` and `BidiTest.txt`
 - https://www.unicode.org/Public/18.0.0/ucd/auxiliary/ : `GraphemeBreakTest.txt` and `LineBreakTest.txt`
+- `tests/tools/derive_harfbuzz_use_categories.py` : `UniversalShapingCategory.harfbuzz.txt`, from HarfBuzz 15.0.0
