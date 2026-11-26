@@ -395,7 +395,9 @@ otherwise.
 The script builds `DefaultIgnorables.ttf`, which has U+0020, and `DefaultIgnorablesNoSpace.ttf`, which does not.
 Both have Latin, Arabic, Mongolian and Sinhala letters and the characters ZWJ, ZWNJ, the Mongolian free variation
 selectors, the Mongolian vowel separator, COMBINING GRAPHEME JOINER, SOFT HYPHEN and WORD JOINER, each 600 units
-wide. The `ccmp` feature of the first substitutes WORD JOINER, which HarfBuzz then keeps. The reference also has
+wide. They also have the Hangul fillers and SHORTHAND FORMAT LETTER OVERLAP, which Unicode makes default-ignorable
+and HarfBuzz draws with their own glyphs. The `ccmp` feature of the first substitutes WORD JOINER, which HarfBuzz then
+keeps. The reference also has
 text with ZWJ and ZWNJ in Segoe UI, Noto Sans Devanagari, Noto Sans Bengali and Open Sans, which has no glyph for
 ZWJ. It holds the glyph IDs, where HarfBuzz draws each glyph, and the advance of each text.
 
@@ -407,6 +409,26 @@ repository root:
 
 ```
 python tests/tools/generate_default_ignorable_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Chain backtrack reference
+
+`generate_chain_backtrack_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ChainBacktrack.ttf` and writes
+`ChainBacktrack.harfbuzz.json` next to it. A chained context or reverse chaining subtable lists its backtrack glyphs
+from the glyph nearest to the input to the farthest one. The `calt` feature of the font has a chained context
+subtable of each format and a reverse chaining subtable, each with the backtrack "a b", so each replaces its input
+glyph after "a b" and not after "b a". A last reverse chaining subtable covers two glyphs and has a substitute for
+only the first, so HarfBuzz leaves the second as it is. The reference holds the glyph IDs that HarfBuzz gives.
+
+`ChainBacktrackTests` checks that the library gives the same glyphs.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_chain_backtrack_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
