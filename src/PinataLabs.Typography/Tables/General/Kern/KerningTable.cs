@@ -84,6 +84,14 @@ internal sealed class KerningTable : Table
             if (ShaperFactory.HasFallbackPositioning(script, fontMetrics.GetGSubTable().GetScriptTag(script))
                 && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag)))
             {
+                // The change that the kerning makes to the advance and to the offset of each glyph of the run.
+                using Buffer<int> buffer = new((end - start) * 2);
+                Span<int> advances = buffer.GetSpan()[..(end - start)];
+                Span<int> offsets = buffer.GetSpan()[(end - start)..];
+                advances.Clear();
+                offsets.Clear();
+
+                bool kerned = false;
                 int left = start;
                 for (int right = start + 1; right < end; right++)
                 {
@@ -92,8 +100,13 @@ internal sealed class KerningTable : Table
                         continue;
                     }
 
-                    this.KernPair(fontMetrics, collection, left, right);
+                    kerned |= this.KernPair(fontMetrics, collection, left, right, advances[(left - start)..], offsets[(left - start)..]);
                     left = right;
+                }
+
+                if (kerned)
+                {
+                    MoveAttachedMarks(fontMetrics, collection, start, advances, offsets);
                 }
             }
 
@@ -101,13 +114,15 @@ internal sealed class KerningTable : Table
         }
     }
 
-    private void KernPair(FontMetrics fontMetrics, GlyphPositioningCollection collection, int left, int right)
+    // Adds the change to each advance and offset to the spans, which start at the left glyph. Returns whether the pair
+    // was kerned along the line.
+    private bool KernPair(FontMetrics fontMetrics, GlyphPositioningCollection collection, int left, int right, Span<int> advances, Span<int> offsets)
     {
         GlyphShapingData leftData = collection[left];
         GlyphShapingData rightData = collection[right];
         if (!collection.ShouldProcess(fontMetrics, left) || !collection.ShouldProcess(fontMetrics, right))
         {
-            return;
+            return false;
         }
 
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
@@ -120,19 +135,19 @@ internal sealed class KerningTable : Table
                 collection.Advance(fontMetrics, right, rightData.GlyphId, (short)vertical.X, (short)vertical.Y);
             }
 
-            return;
+            return false;
         }
 
         if (leftData.Direction != rightData.Direction)
         {
-            return;
+            return false;
         }
 
         // The table has the pairs in the order of the line, so the glyph that comes later in backward text is first.
         (int first, int second) = leftData.Direction == TextDirection.RightToLeft ? (right, left) : (left, right);
         if (!this.TryGetKerningOffset(collection[first].GlyphId, collection[second].GlyphId, out Vector2 kerning))
         {
-            return;
+            return false;
         }
 
         // Each glyph takes half of the kerning. The second glyph also moves by its half, so that it stays in
@@ -142,6 +157,63 @@ internal sealed class KerningTable : Table
         collection.Advance(fontMetrics, first, collection[first].GlyphId, (short)firstHalf, 0);
         collection.Advance(fontMetrics, second, collection[second].GlyphId, secondHalf, 0);
         collection.Offset(fontMetrics, second, collection[second].GlyphId, secondHalf, 0);
+        advances[first - left] += firstHalf;
+        advances[second - left] += secondHalf;
+        offsets[second - left] += secondHalf;
+        return true;
+    }
+
+    /// <summary>
+    /// Moves each GPOS mark as far as the kerning moved its base. HarfBuzz places a mark from its base after it kerns
+    /// with this table, and the GPOS table of the library placed the mark before.
+    /// </summary>
+    private static void MoveAttachedMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, Span<int> advances, Span<int> offsets)
+    {
+        // A glyph moves by the change to its offset and by the change to the advances before it on the line. Text
+        // that runs backward starts at the end of the run, so there the advances after the glyph in the text count.
+        int total = 0;
+        foreach (int advance in advances)
+        {
+            total += advance;
+        }
+
+        // The advances become the sum of the advances before each glyph in the text.
+        int sum = 0;
+        for (int i = 0; i < advances.Length; i++)
+        {
+            int advance = advances[i];
+            advances[i] = sum;
+            sum += advance;
+        }
+
+        for (int i = 0; i < advances.Length; i++)
+        {
+            GlyphShapingData data = collection[start + i];
+            int j = data.MarkAttachment - start;
+            if (j < 0 || j >= i || !collection.ShouldProcess(fontMetrics, start + i))
+            {
+                continue;
+            }
+
+            // The base comes first in the text, so it has already moved when it is itself a mark.
+            int dx = GetMove(collection, start, advances, offsets, total, j) - GetMove(collection, start, advances, offsets, total, i);
+            if (dx != 0)
+            {
+                offsets[i] += dx;
+                collection.Offset(fontMetrics, start + i, data.GlyphId, (short)dx, 0);
+            }
+        }
+    }
+
+    private static int GetMove(GlyphPositioningCollection collection, int start, Span<int> advancesBefore, Span<int> offsets, int total, int index)
+    {
+        if (collection[start + index].Direction == TextDirection.RightToLeft)
+        {
+            int advancesAfter = index + 1 < advancesBefore.Length ? total - advancesBefore[index + 1] : 0;
+            return advancesAfter + offsets[index];
+        }
+
+        return advancesBefore[index] + offsets[index];
     }
 
     public bool TryGetKerningOffset(ushort previous, ushort current, out Vector2 result)
