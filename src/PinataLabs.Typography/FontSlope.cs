@@ -79,8 +79,10 @@ public readonly struct FontSlope : IEquatable<FontSlope>
     }
 
     /// <inheritdoc/>
+#pragma warning disable S1244 // Value equality must be exact to agree with GetHashCode.
     public bool Equals(FontSlope other)
         => this.Kind == other.Kind && this.ObliqueAngle.Equals(other.ObliqueAngle);
+#pragma warning restore S1244
 
     /// <inheritdoc/>
     public override bool Equals(object? obj)

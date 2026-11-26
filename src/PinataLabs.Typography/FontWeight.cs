@@ -107,8 +107,10 @@ public readonly struct FontWeight : IEquatable<FontWeight>, IComparable<FontWeig
         => this.offset.CompareTo(other.offset);
 
     /// <inheritdoc/>
+#pragma warning disable S1244 // Value equality must be exact to agree with GetHashCode.
     public bool Equals(FontWeight other)
         => this.offset.Equals(other.offset);
+#pragma warning restore S1244
 
     /// <inheritdoc/>
     public override bool Equals(object? obj)
