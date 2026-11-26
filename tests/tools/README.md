@@ -596,3 +596,30 @@ python tests/tools/generate_mongolian_lookups_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Font matching fonts
+
+`generate_font_matching_fonts.py` writes the Matching Sans fonts into
+`tests/PinataLabs.Typography.Tests/Fonts/Matching`, the static family that the font matching tests use
+(issue #123). The family has nine static weights from 100 to 900, three italic faces (300, 400 and 700), two oblique
+faces (10 and 20 degrees), and faces with `usWidthClass` 2, 3, 7 and 8 (62.5%, 75%, 125% and 150%), 19 fonts in all.
+That is more faces than the four that name ID 1 can group, so the family exists only under the typographic family name.
+
+The fonts are built as the faces of a real family are:
+
+- Regular, Italic, Bold and Bold Italic have name ID 1 "Matching Sans" and no name IDs 16 and 17, so they test the
+  fallback to ID 1.
+- Every other face has its own name ID 1, such as "Matching Sans Light", and the typographic names ID 16
+  "Matching Sans" and ID 17.
+- `OS/2.usWeightClass` and `usWidthClass` give the weight and width, `fsSelection` `ITALIC` or `OBLIQUE` gives the
+  slope, and `post.italicAngle` gives the angle of an oblique face.
+- Glyph `A` has an advance that is different in each face, so a test can tell which face a layout drew.
+
+`FontMatchingTests` adds the files of the faces that a case needs to a `FontCollection`, so each case has its own
+family. To write the fonts again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_font_matching_fonts.py
+```
+
+The output is deterministic, so a second run changes no file.

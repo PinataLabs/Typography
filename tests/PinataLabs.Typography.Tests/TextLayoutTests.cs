@@ -432,7 +432,7 @@ public class TextLayoutTests
         Font font = c.Add(TestFonts.SimpleFontFileData()).CreateFont(12);
         FontRectangle size = TextMeasurer.MeasureBounds(
             text,
-            new TextOptions(new Font(font, 1))
+            new TextOptions(font.WithSize(1))
             {
                 Dpi = font.FontMetrics.ScaleFactor,
                 KerningMode = applyKerning ? KerningMode.Standard : KerningMode.None,
@@ -453,7 +453,7 @@ public class TextLayoutTests
         var renderer = new TextRenderer(glyphRenderer);
         renderer.RenderText(
             text,
-            new TextOptions(new Font(font, 1))
+            new TextOptions(font.WithSize(1))
             {
                 Dpi = font.FontMetrics.ScaleFactor,
                 Origin = new Vector2(x, y)
@@ -1218,9 +1218,9 @@ public class TextLayoutTests
     public async Task CanMeasureTextAdvance()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
         {
             LineSpacing = 1F
         };
@@ -1240,9 +1240,9 @@ public class TextLayoutTests
     public async Task CanMeasureCharacterLayouts()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
         {
             LineSpacing = 1.5F
         };
@@ -1283,9 +1283,9 @@ public class TextLayoutTests
     public async Task CanMeasureMultilineCharacterLayouts()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
         {
             LineSpacing = 1.5F
         };
@@ -1563,13 +1563,13 @@ public class TextLayoutTests
     {
         var fc = (IFontMetricsCollection)new FontCollection();
         Font d = fc.AddMetrics(new FakeFontInstance(text), CultureInfo.InvariantCulture).CreateFont(12);
-        return new Font(d, 1);
+        return d.WithSize(1);
     }
 
     public static Font CreateFont(string text, float pointSize)
     {
         var fc = (IFontMetricsCollection)new FontCollection();
         Font d = fc.AddMetrics(new FakeFontInstance(text), CultureInfo.InvariantCulture).CreateFont(12);
-        return new Font(d, pointSize);
+        return d.WithSize(pointSize);
     }
 }

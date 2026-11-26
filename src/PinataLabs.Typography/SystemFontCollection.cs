@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -132,16 +131,8 @@ internal sealed class SystemFontCollection : IReadOnlySystemFontCollection, IRea
         => this.collection.TryGet(name, culture, out family);
 
     /// <inheritdoc/>
-    bool IReadOnlyFontMetricsCollection.TryGetMetrics(string name, CultureInfo culture, FontStyle style, [NotNullWhen(true)] out FontMetrics? metrics)
-        => ((IReadOnlyFontMetricsCollection)this.collection).TryGetMetrics(name, culture, style, out metrics);
-
-    /// <inheritdoc/>
-    IEnumerable<FontMetrics> IReadOnlyFontMetricsCollection.GetAllMetrics(string name, CultureInfo culture)
+    IReadOnlyList<FontMetrics> IReadOnlyFontMetricsCollection.GetAllMetrics(string name, CultureInfo culture)
         => ((IReadOnlyFontMetricsCollection)this.collection).GetAllMetrics(name, culture);
-
-    /// <inheritdoc/>
-    IEnumerable<FontStyle> IReadOnlyFontMetricsCollection.GetAllStyles(string name, CultureInfo culture)
-        => ((IReadOnlyFontMetricsCollection)this.collection).GetAllStyles(name, culture);
 
     /// <inheritdoc/>
     IEnumerator<FontMetrics> IReadOnlyFontMetricsCollection.GetEnumerator()

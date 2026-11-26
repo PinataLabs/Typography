@@ -25,6 +25,10 @@ public static class TestFonts
 
     public static string TekoVariableFile => GetFullPath("Teko/Teko-Variable.ttf");
 
+    // A face of the Matching Sans family, built by tests/tools/generate_font_matching_fonts.py.
+    // The face is the file name without "MatchingSans-" and ".ttf", such as "Light" or "CondensedBold".
+    public static string MatchingSansFile(string face) => GetFullPath($"Matching/MatchingSans-{face}.ttf");
+
     // Font from: https://google-webfonts-helper.herokuapp.com/fonts/open-sans?subsets=cyrillic,cyrillic-ext,greek,greek-ext,hebrew,latin,latin-ext,vietnamese
     public static string OpenSansFile => GetFullPath("OpenSans-Regular.ttf");
 

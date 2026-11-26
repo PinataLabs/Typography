@@ -86,7 +86,7 @@ public class TabWidthTests
     public async Task FontWithoutSpaceGlyphFallsBackToQuarterEm(float tabWidth, float expectedExtra)
     {
         // The fake font has no U+0020 glyph, an em of 30 units and, resized to 100, a quarter em is 25 pixels per unit of TabWidth.
-        Font font = new(FakeFont.CreateFont("a	b"), 100);
+        Font font = FakeFont.CreateFont("a	b").WithSize(100);
 
         float Measure(float width) => TextMeasurer.MeasureAdvance("a	b", new TextOptions(font) { TabWidth = width }).Width;
 

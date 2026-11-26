@@ -29,8 +29,9 @@ FontCollection fonts = new();
 FontFamily family = fonts.Add("fonts/OpenSans-Regular.ttf");
 ```
 
-Add each style of a family as its own file. The fonts join the same family when their family names
-are the same:
+Add each style of a family as its own file. The fonts join the same family when their typographic
+family names are the same (`name` ID 16, or ID 1 for a font that has no ID 16). A family can have
+any number of weights, widths and slopes:
 
 ```csharp
 fonts.Add("fonts/OpenSans-Regular.ttf");
@@ -69,7 +70,7 @@ Each `Add` and `AddCollection` method has an overload with an `out` parameter. I
 
 ```csharp
 FontFamily family = fonts.Add("fonts/OpenSans-Bold.ttf", out FontDescription description);
-Console.WriteLine($"{description.FontNameInvariantCulture} ({description.Style})");
+Console.WriteLine($"{description.FontNameInvariantCulture} ({description.StyleRange.MinWeight})");
 ```
 
 See [Font descriptions](./font-descriptions.md) for what a description contains.
@@ -119,17 +120,29 @@ Font regular = family.CreateFont(12);
 Font boldItalic = family.CreateFont(12, FontStyle.BoldItalic);
 ```
 
+A style is a weight, a width and a slope, so you can ask for any of them:
+
+```csharp
+Font light = family.CreateFont(12, FontStyle.Regular.WithWeight(FontWeight.Light));
+Font condensed = family.CreateFont(12, FontStyle.Regular.WithWidth(FontWidth.Condensed));
+Font oblique = family.CreateFont(12, FontStyle.Regular.WithSlope(FontSlope.Oblique(10)));
+```
+
 You can also make a font from another font:
 
 ```csharp
-Font larger = new(regular, 18);                    // Same family and style, new size.
-Font italic = new(regular, FontStyle.Italic);      // Same family and size, new style.
+Font larger = regular.WithSize(18);                   // Same family and style, new size.
+Font italic = regular.WithStyle(FontStyle.Italic);    // Same family and size, new style.
 ```
 
-`family.GetAvailableStyles()` lists the styles that the family has. If you ask for a style that the
-family does not have, you get the nearest style that it has: for bold italic it tries italic, then
-bold, then regular. The library does not make a synthetic bold or italic. Check `font.IsBold` and
-`font.IsItalic` to see what you got.
+`family.Faces` lists the faces that the family has, and the `Description.StyleRange` of each face says
+which weights, widths and slopes it covers. The font uses the face that best matches the style, which
+`family.MatchFace(style)` also gives. If the family does not have the style, the face is the nearest one
+in the order that CSS Fonts Level 4 gives for matching fonts: width first, then slope, then weight. A
+weight from 400 to 500 tries the weights up to 500, then the lighter ones, then the heavier ones. A
+lighter weight tries the lighter ones first, and a heavier weight the heavier ones first.
+The library does not make a synthetic bold or italic. Compare `font.Style` with
+`font.FontMetrics.Description.StyleRange` to see whether the face has the style you asked for.
 
 ## Add the system fonts to your collection
 

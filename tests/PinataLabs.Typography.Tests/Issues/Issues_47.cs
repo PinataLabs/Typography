@@ -20,7 +20,7 @@ public class Issues_47
 
         var r = new GlyphRenderer();
 
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(new Font(font, 30))
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font.WithSize(30))
         {
             WrappingLength = 350,
             HorizontalAlignment = HorizontalAlignment.Left
@@ -48,7 +48,7 @@ public class Issues_47
 
         var r = new GlyphRenderer();
 
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(new Font(font, 30))
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font.WithSize(30))
         {
             WrappingLength = 350,
             HorizontalAlignment = horizontalAlignment
@@ -75,7 +75,7 @@ public class Issues_47
 
         var r = new GlyphRenderer();
 
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(new Font(font, 30))
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font.WithSize(30))
         {
             WrappingLength = 350
         });
@@ -93,7 +93,7 @@ public class Issues_47
 
         var r = new GlyphRenderer();
 
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(new Font(font, 30))
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font.WithSize(30))
         {
             WrappingLength = 350
         });
@@ -107,6 +107,6 @@ public class Issues_47
     {
         var fc = (IFontMetricsCollection)new FontCollection();
         Font d = fc.AddMetrics(new FakeFontInstance(text), CultureInfo.InvariantCulture).CreateFont(12);
-        return new Font(d, 1);
+        return d.WithSize(1);
     }
 }

@@ -25,6 +25,34 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Font weight, width and slope.** `FontWeight` (1 to 1000), `FontWidth` (50 to 200 percent) and `FontSlope`
+  (`Normal`, `Italic` or `Oblique(degrees)`, with `FontSlopeKind`) hold the parts of a font style with the ranges of
+  the CSS `font-weight`, `font-stretch` and `font-style` properties. `FontWeight` and `FontWidth` have the CSS
+  keywords as static properties, such as `FontWeight.Bold` and `FontWidth.Condensed`. The default value of each type
+  is its normal value. A constructor clamps a value to the CSS range and rejects `NaN`. (#123)
+- **Font matching as in CSS.** `FontFamily.Faces` lists the faces of a family in the order in which they were added,
+  and `FontFamily.MatchFace(style)` picks the face that best matches a `FontStyle`, with step 4 of CSS Fonts Level 4
+  section 5.2: it narrows the faces by width, then by slope, then by weight. A face that has the asked value matches
+  at once. Otherwise a width of 100% or less tries the narrower faces first, and a wider request the wider faces
+  first. An italic request tries italic, then oblique (11 degrees and up first), then upright faces. A weight from
+  400 to 500 tries the weights up to 500, then the lighter ones, then the heavier ones. A weight below 400 tries the
+  lighter weights first, and a weight above 500 the heavier ones first. It always returns a face, so
+  `Font.FontMetrics` no longer fails for a family that came from a collection. Of faces that match equally,
+  the one that was added first wins. The library does not make a bold or oblique face when the family has none. (#123)
+- **`FontStyleRange`.** `FontDescription.StyleRange` gives the weights, widths and slopes that a face covers:
+  `MinWeight`, `MaxWeight`, `MinWidth`, `MaxWidth`, `HasNormal`, `HasItalic`, `HasOblique`, `MinObliqueAngle` and
+  `MaxObliqueAngle`, with `Contains(style)`. A static face covers one point. The weight is `OS/2.usWeightClass`, with
+  1 to 9 of the legacy scale read as hundreds, or 700 or 400 from the `BOLD` bit when the class is 0. The width is
+  `usWidthClass` as a percentage, with the table in the OpenType `OS/2` chapter. The slope is italic when
+  `fsSelection` has `ITALIC`, and oblique when it has `OBLIQUE` and `OS/2` is version 4 or later, at the negated
+  `post.italicAngle` (14 degrees when that is 0). A font without `OS/2` takes bold and italic from `head.macStyle`.
+  A renderer that makes a bold or oblique face compares `Font.Style` with `StyleRange`. (#123)
+- **`Font.Style`, `WithSize` and `WithStyle`.** `Font.Style` is the style that the font was created with.
+  `font.WithSize(size)` and `font.WithStyle(style)` give a font of the same family with another size or style.
+  The `Font` constructor and `FontFamily.CreateFont` take the style as an optional parameter, so `CreateFont(12)` is
+  regular. (#123)
+- **Legacy family name.** `FontDescription.LegacyFontFamily(culture)` gives name ID 1, the family name that groups
+  at most four faces. `FontDescription.FontFamily(culture)` now gives the typographic family name (see Changed). (#123)
 - **Unicode 18.0.0 scripts and classes.** `ScriptClass` has members for the 16 scripts of Unicode 15.0 to 18.0, with
   their OpenType tags, and they use the universal shaper. `LineBreakClass` gains `AK`, `AP`, `AS`, `HH`, `VF` and `VI`,
   `IndicSyllabicCategory` gains `ReorderingKiller`, and `ArabicJoiningGroup` gains 12 members. (#103)
@@ -90,6 +118,31 @@ An additive or breaking public API change needs all of these:
 
 ### Changed
 
+- **`FontStyle` is a weight, a width and a slope.** The flags enum is now a struct with a `FontWeight`, a `FontWidth`
+  and a `FontSlope`. `FontStyle.Regular`, `Bold`, `Italic` and `BoldItalic` are static properties with the same
+  names and meanings, so `CreateFont(12, FontStyle.Bold)` still compiles, and `default(FontStyle)` is
+  `FontStyle.Regular`. Code that combines styles with `|` or calls `HasFlag` stops compiling, so each place shows up
+  for review: use `WithWeight`, `WithWidth` and `WithSlope`. (#123)
+- **A font takes the best face by weight, width and slope.** `Font.FontMetrics` is the face that
+  `FontFamily.MatchFace(font.Style)` gives. A family with static Regular and Bold faces renders as before. A
+  request that no face has now goes to the nearest weight, width or slope in the CSS order, where before it fell back
+  to the exact Italic, then Bold, then Regular. A face is bold or light by `usWeightClass` and not by the `BOLD`
+  bit of `fsSelection`, so a font whose class and bit disagree is matched by its class. (#123)
+- **`GlyphRendererParameters` identifies the font by its metrics.** The new `FontMetrics` property is the metrics
+  object that owns the glyph, and two `GlyphRendererParameters` are equal only when they hold the same object.
+  Before, `Font` (the full font name in upper case) and `FontStyle` identified the font, so two fonts that had the
+  same name and came from different files gave equal parameters, and a renderer that cached outlines by the
+  parameters could draw the glyph of the wrong font. `FontMetrics` is the same object that `Font.FontMetrics` and
+  `FontFamily.Faces` give, also for a font that is added from a file path. (#123)
+- **Families are grouped by the typographic family name.** `FontDescription.FontFamily(culture)`,
+  `FontDescription.FontFamilyInvariantCulture`, `FontFamily.Name` and the lookups of `FontCollection` and
+  `SystemFonts` now use name ID 16, and fall back to name ID 1 for a font that has no ID 16. A family with more than
+  four weights is one family, and `Teko-Variable.ttf` is the family "Teko" where it was "Teko Light". A font that
+  has an ID 16 that differs from its ID 1 is no longer found under its ID 1, so `Get("Teko Light")` fails.
+  Use `FontDescription.LegacyFontFamily(culture)` for the old name. In a culture, a name in the language of the
+  culture beats a name in another language, and in one language ID 16 beats ID 1. Faces are grouped by their
+  invariant family name, so faces whose names are in different languages stay in one family, and any of their
+  localized names finds the family. (#123)
 - **Unicode 18.0.0.** All Unicode data moves from Unicode 14.0.0 to 18.0.0, the version that HarfBuzz 15.0.0 uses:
   scripts, general category, line break, East Asian width, bidi, grapheme break, vertical orientation, Arabic joining,
   Indic categories, emoji and canonical mappings. Line breaking follows the UAX #14 rules of Unicode 18.0.0, including
@@ -256,6 +309,31 @@ An additive or breaking public API change needs all of these:
 - **`vrt2` in vertical mixed layout.** A `vrt2` feature requested in `TextOptions.FeatureTags` is no
   longer applied to glyphs that are rotated in vertical mixed layout. Its glyphs are pre-rotated, so
   before, these glyphs were rotated twice. `vrt2` is still never applied by default. (#51)
+
+### Removed
+
+These members are removed in #123. Each entry names its replacement.
+
+- `Font.IsBold` and `Font.IsItalic`: use `Font.Style` for the style that was asked for. Neither says what the face
+  has, because a weight of 600 needs a threshold to be bold and no standard sets one.
+- `Font(Font prototype, FontStyle style)`, `Font(Font prototype, float size)` and
+  `Font(Font prototype, float size, FontStyle style)`: use `prototype.WithStyle(style)`, `prototype.WithSize(size)`,
+  or `prototype.WithSize(size).WithStyle(style)`.
+- `Font(FontFamily family, float size)` and `Font(FontFamily family, float size, FontStyle style)`: use
+  `Font(FontFamily family, float size, FontStyle style = default)`. Code that calls either one still compiles.
+- `FontFamily.CreateFont(float size)` and `FontFamily.CreateFont(float size, FontStyle style)`: use
+  `FontFamily.CreateFont(float size, FontStyle style = default)`. Code that calls either one still compiles.
+
+- `GlyphRendererParameters.Font` (a `string`): use `GlyphRendererParameters.FontMetrics`. For the name, read
+  `FontMetrics.Description.FontNameInvariantCulture`.
+- `GlyphRendererParameters.FontStyle`: use `GlyphRendererParameters.FontMetrics`. For the style of the face, read
+  `FontMetrics.Description.StyleRange`.
+- `FontDescription.Style`: use `FontDescription.StyleRange`, which holds the range of styles that the face covers.
+- `FontFamily.GetAvailableStyles()`: use `FontFamily.Faces`, and read the `Description.StyleRange` of each face.
+- `FontFamily.TryGetMetrics(FontStyle style, out FontMetrics? metrics)`: use `FontFamily.MatchFace(FontStyle style)`,
+  which returns the best face and never fails for a family that has a face.
+- `FontStyle.Regular = 0`, `Bold = 1`, `Italic = 2` and `BoldItalic = 3` as members of the flags enum: they are now
+  static properties of the `FontStyle` struct with the same names.
 
 ## [0.1.0] - 2026-10-26
 

@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace PinataLabs.Typography;
@@ -43,6 +42,24 @@ public struct FontFamily : IEquatable<FontFamily>
     public CultureInfo Culture { get; }
 
     /// <summary>
+    /// Gets the faces of the family, in the order in which they were added to the collection.
+    /// The list is a snapshot, and a face that is added to the collection later is not in it.
+    /// </summary>
+    /// <exception cref="FontException">This is the default <see cref="FontFamily"/>.</exception>
+    public IReadOnlyList<FontMetrics> Faces
+    {
+        get
+        {
+            if (this == default)
+            {
+                FontsThrowHelper.ThrowDefaultInstance();
+            }
+
+            return this.collection.GetAllMetrics(this.Name, this.Culture);
+        }
+    }
+
+    /// <summary>
     /// Compares two <see cref="FontFamily"/> objects for equality.
     /// </summary>
     /// <param name="left">The <see cref="FontFamily"/> on the left side of the operand.</param>
@@ -67,27 +84,12 @@ public struct FontFamily : IEquatable<FontFamily>
         => !(left == right);
 
     /// <summary>
-    /// Create a new instance of the <see cref="Font" /> for the named font family with regular styling.
-    /// </summary>
-    /// <param name="size">The size of the font in PT units.</param>
-    /// <returns>The new <see cref="Font" />.</returns>
-    public Font CreateFont(float size)
-    {
-        if (this == default)
-        {
-            FontsThrowHelper.ThrowDefaultInstance();
-        }
-
-        return new Font(this, size);
-    }
-
-    /// <summary>
     /// Create a new instance of the <see cref="Font" /> for the named font family.
     /// </summary>
     /// <param name="size">The size of the font in PT units.</param>
-    /// <param name="style">The font style.</param>
+    /// <param name="style">The font style. The default value is <see cref="FontStyle.Regular"/>.</param>
     /// <returns>The new <see cref="Font" />.</returns>
-    public Font CreateFont(float size, FontStyle style)
+    public Font CreateFont(float size, FontStyle style = default)
     {
         if (this == default)
         {
@@ -95,20 +97,6 @@ public struct FontFamily : IEquatable<FontFamily>
         }
 
         return new Font(this, size, style);
-    }
-
-    /// <summary>
-    /// Gets the collection of <see cref="FontStyle" /> that are currently available.
-    /// </summary>
-    /// <returns>The <see cref="IEnumerable{T}" />.</returns>
-    public IEnumerable<FontStyle> GetAvailableStyles()
-    {
-        if (this == default)
-        {
-            FontsThrowHelper.ThrowDefaultInstance();
-        }
-
-        return this.collection.GetAllStyles(this.Name, this.Culture);
     }
 
     /// <summary>
@@ -130,10 +118,9 @@ public struct FontFamily : IEquatable<FontFamily>
         }
 
         var filePaths = new List<string>();
-        foreach (FontStyle style in this.GetAvailableStyles())
+        foreach (FontMetrics face in this.Faces)
         {
-            if (this.collection.TryGetMetrics(this.Name, this.Culture, style, out FontMetrics? metrics)
-                && metrics is FileFontMetrics fileMetrics)
+            if (face is FileFontMetrics fileMetrics)
             {
                 filePaths.Add(fileMetrics.Path);
             }
@@ -144,26 +131,46 @@ public struct FontFamily : IEquatable<FontFamily>
     }
 
     /// <summary>
-    /// Gets the specified font metrics matching the given font style.
+    /// Gets the face of the family that best matches a style, as CSS Fonts Level 4 section 5.2
+    /// "Matching font styles" does. It looks for a face of the requested width first, then of the requested slope,
+    /// then of the requested weight. When no face has the value that is asked for, the search goes to the nearest
+    /// value, in the direction that CSS gives for the part:
+    /// <list type="bullet">
+    /// <item>A width of 100% or less tries narrower faces first, and a wider request tries wider faces first.</item>
+    /// <item>
+    /// An italic request tries italic faces, then oblique faces, then upright faces.
+    /// An oblique request tries oblique faces, then italic faces, then upright faces.
+    /// An upright request tries upright faces, then oblique faces, then italic faces.
+    /// </item>
+    /// <item>
+    /// A weight between 400 and 500 tries the weights up to 500 first, then lighter weights, then heavier weights.
+    /// A weight below 400 tries lighter weights first, and a weight above 500 tries heavier weights first.
+    /// </item>
+    /// </list>
+    /// The library does not make a bold or an oblique face when the family has none. A renderer that wants one
+    /// compares the requested style with <see cref="FontDescription.StyleRange"/> of the face.
     /// </summary>
-    /// <param name="style">The font style to use when searching for a match.</param>
-    /// <param name="metrics">
-    /// When this method returns, contains the metrics associated with the specified name,
-    /// if the name is found; otherwise, the default value for the type of the metrics parameter.
-    /// This parameter is passed uninitialized.
-    /// </param>
+    /// <param name="style">The style to match.</param>
     /// <returns>
-    /// <see langword="true"/> if the <see cref="FontFamily"/> contains font metrics
-    /// with the specified name; otherwise, <see langword="false"/>.
+    /// The best face. Of the faces that match equally well, the one that was added first.
     /// </returns>
-    public bool TryGetMetrics(FontStyle style, [NotNullWhen(true)] out FontMetrics? metrics)
+    /// <exception cref="FontException">This is the default <see cref="FontFamily"/>, or it has no faces.</exception>
+    public FontMetrics MatchFace(FontStyle style)
     {
-        if (this == default)
+        IReadOnlyList<FontMetrics> faces = this.Faces;
+        FontStyleRange[] ranges = new FontStyleRange[faces.Count];
+        for (int i = 0; i < ranges.Length; i++)
         {
-            FontsThrowHelper.ThrowDefaultInstance();
+            ranges[i] = faces[i].Description.StyleRange;
         }
 
-        return this.collection.TryGetMetrics(this.Name, this.Culture, style, out metrics);
+        int match = FontStyleMatcher.Match(ranges, style);
+        if (match < 0)
+        {
+            throw new FontException($"The font family '{this.Name}' has no faces.");
+        }
+
+        return faces[match];
     }
 
     /// <inheritdoc/>

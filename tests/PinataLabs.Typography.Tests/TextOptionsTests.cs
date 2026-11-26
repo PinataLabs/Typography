@@ -198,7 +198,7 @@ public class TextOptionsTests
 
         GlyphRendererParameters glyph = await Assert.That(renderer.GlyphKeys).HasSingleItem();
         await Assert.That(glyph.GlyphType).IsEqualTo(GlyphType.Fallback);
-        await Assert.That(glyph.Font).IsEqualTo(abcFontInstance.Description.FontNameInvariantCulture.ToUpper());
+        await Assert.That(glyph.FontMetrics).IsSameReferenceAs(abcFontInstance);
     }
 
     [Test]
@@ -233,7 +233,7 @@ public class TextOptionsTests
             _ => throw new Exception("does not match")
         };
 
-        await Assert.That(glyph.Font).IsEqualTo(expectedInstance.Description.FontNameInvariantCulture.ToUpper());
+        await Assert.That(glyph.FontMetrics).IsSameReferenceAs(expectedInstance);
     }
 
     [Test]

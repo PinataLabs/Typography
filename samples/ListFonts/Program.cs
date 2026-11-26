@@ -19,12 +19,13 @@ public static class Program
         IOrderedEnumerable<FontFamily> ordered = SystemFonts.Families.OrderBy(x => x.Name);
         foreach (FontFamily family in ordered)
         {
-            IOrderedEnumerable<FontStyle> styles = family.GetAvailableStyles().OrderBy(x => x);
-            foreach (FontStyle style in styles)
+            // TryGetPaths lists one path for each face, in the order of Faces.
+            IReadOnlyList<FontMetrics> faces = family.Faces;
+            string[] paths = family.TryGetPaths(out IEnumerable<string> familyPaths) ? familyPaths.ToArray() : [];
+            for (int i = 0; i < faces.Count; i++)
             {
-                Font font = family.CreateFont(0F, style);
-                font.TryGetPath(out string? path);
-                pairings.Add(new Pairing(font.Name, path));
+                string? path = paths.Length == faces.Count ? paths[i] : null;
+                pairings.Add(new Pairing(faces[i].Description.FontNameInvariantCulture, path));
             }
         }
 

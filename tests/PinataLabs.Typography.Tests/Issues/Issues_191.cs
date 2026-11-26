@@ -16,7 +16,7 @@ public class Issues_191
     {
         Font font = new FontCollection()
             .AddCollection(TestFonts.HelveticaTTCFile)
-            .First(x => x.GetAvailableStyles().Contains(FontStyle.Regular)).CreateFont(12);
+            .First(x => x.Faces.Any(face => face.Description.StyleRange.Contains(FontStyle.Regular))).CreateFont(12);
 
         const ColorFontSupport support = ColorFontSupport.None;
 

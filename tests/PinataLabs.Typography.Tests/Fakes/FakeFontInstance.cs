@@ -57,6 +57,18 @@ internal class FakeFontInstance : StreamFontMetrics
         return new FakeFontInstance(tables);
     }
 
+    /// <summary>
+    /// Creates a fake font whose name table holds exactly the given records.
+    /// </summary>
+    /// <param name="names">The name records.</param>
+    /// <returns>The font.</returns>
+    public static FakeFontInstance CreateWithNames(params NameRecord[] names)
+    {
+        TrueTypeFontTables tables = CreateTrueTypeFontTables("A");
+        tables.Name = new NameTable(names, []);
+        return new FakeFontInstance(tables);
+    }
+
     internal static TrueTypeFontTables CreateTrueTypeFontTables(string text, string fontName = "name")
     {
         List<FakeGlyphSource> glyphs = GetGlyphs(text);
@@ -121,10 +133,10 @@ internal class FakeFontInstance : StreamFontMetrics
         => new(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
     private static OS2Table GenerateOS2Table()
-        => new(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, new byte[0], 1, 1, 1, 1, string.Empty, OS2Table.FontStyleSelection.USE_TYPO_METRICS, 1, 1, 20, 10, 20, 1, 1);
+        => new(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, Array.Empty<byte>(), 1, 1, 1, 1, string.Empty, OS2Table.FontStyleSelection.USE_TYPO_METRICS, 1, 1, 20, 10, 20, 1, 1);
 
     private static OS2Table GenerateOS2TableWithVaryingVerticalFontMetrics()
-        => new(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, new byte[0], 1, 1, 1, 1, string.Empty, OS2Table.FontStyleSelection.USE_TYPO_METRICS, 1, 1, 35, 8, 12, 33, 11);
+        => new(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, Array.Empty<byte>(), 1, 1, 1, 1, string.Empty, OS2Table.FontStyleSelection.USE_TYPO_METRICS, 1, 1, 35, 8, 12, 33, 11);
 
     private static HorizontalMetricsTable GenerateHorizontalMetricsTable(List<FakeGlyphSource> glyphs)
         => new(glyphs.Select(_ => (ushort)30).ToArray(), glyphs.Select(_ => (short)10).ToArray());

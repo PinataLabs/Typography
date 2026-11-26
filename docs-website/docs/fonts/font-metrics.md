@@ -46,10 +46,8 @@ float ascenderPx = h.Ascender * font.Size * 72F / (72F * metrics.UnitsPerEm); //
 You can also read the metrics of a style without making a `Font`:
 
 ```csharp
-if (family.TryGetMetrics(FontStyle.Bold, out FontMetrics? bold))
-{
-    Console.WriteLine(bold.Description.FontNameInvariantCulture);
-}
+FontMetrics bold = family.MatchFace(FontStyle.Bold);
+Console.WriteLine(bold.Description.FontNameInvariantCulture);
 ```
 
 ## Glyph metrics

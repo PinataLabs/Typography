@@ -107,31 +107,11 @@ public class SystemFontCollectionTests
     {
         var collection = (IReadOnlyFontMetricsCollection)SysFontCollection;
         FontFamily family = SysFontCollection.Families.First();
-        IEnumerable<FontMetrics> metrics = collection.GetAllMetrics(family.Name, family.Culture);
+        IReadOnlyList<FontMetrics> metrics = collection.GetAllMetrics(family.Name, family.Culture);
 
-        await Assert.That(metrics.Any()).IsTrue();
-
-        foreach (FontMetrics item in metrics)
-        {
-            await Assert.That(family.TryGetMetrics(item.Description.Style, out FontMetrics? familyMetrics)).IsTrue();
-            await Assert.That(collection.TryGetMetrics(
-                family.Name,
-                family.Culture,
-                item.Description.Style,
-                out FontMetrics? fontMetrics)).IsTrue();
-
-            await Assert.That(fontMetrics).IsEqualTo(familyMetrics);
-        }
-    }
-
-    [Test]
-    public async Task CanGetAllStylesByCulture()
-    {
-        FontFamily family = SysFontCollection.Families.First();
-        IEnumerable<FontStyle> styles = ((IReadOnlyFontMetricsCollection)SysFontCollection).GetAllStyles(family.Name, family.Culture);
-
-        await Assert.That(styles.Any()).IsTrue();
-        await Assert.That(styles).IsEquivalentTo(family.GetAvailableStyles(), CollectionOrdering.Matching);
+        await Assert.That(metrics.Count > 0).IsTrue();
+        await Assert.That(family.Faces).IsEquivalentTo(metrics, CollectionOrdering.Matching);
+        await Assert.That(metrics).Contains(family.MatchFace(FontStyle.Regular));
     }
 
     [Test]

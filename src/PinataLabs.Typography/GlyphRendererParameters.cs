@@ -4,6 +4,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -22,8 +23,7 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
         float dpi,
         GlyphLayoutMode layoutMode)
     {
-        this.Font = metrics.FontMetrics.Description.FontNameInvariantCulture?.ToUpper() ?? string.Empty;
-        this.FontStyle = metrics.FontMetrics.Description.Style;
+        this.FontMetrics = metrics.FontMetrics.Owner;
         this.GlyphId = metrics.GlyphId;
         this.PointSize = pointSize;
         this.Dpi = dpi;
@@ -35,9 +35,12 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
     }
 
     /// <summary>
-    /// Gets the name of the Font this glyph belongs to.
+    /// Gets the metrics that own this glyph, as <see cref="Font.FontMetrics"/> and <see cref="FontFamily.Faces"/> give them.
+    /// Two glyphs belong to the same font only when they have
+    /// the same <see cref="FontMetrics"/> object: the comparison is by reference, so two fonts that have
+    /// the same name but come from different files differ.
     /// </summary>
-    public string Font { get; }
+    public FontMetrics FontMetrics { get; }
 
     /// <summary>
     /// Gets the color details of this glyph.
@@ -48,11 +51,6 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
     /// Gets the type of this glyph.
     /// </summary>
     public GlyphType GlyphType { get; }
-
-    /// <summary>
-    /// Gets the style of the font this glyph belongs to.
-    /// </summary>
-    public FontStyle FontStyle { get; }
 
     /// <summary>
     /// Gets the id of the glyph within the font tables.
@@ -117,7 +115,6 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
     /// <inheritdoc/>
     public bool Equals(GlyphRendererParameters other)
         => other.PointSize == this.PointSize
-        && other.FontStyle == this.FontStyle
         && other.Dpi == this.Dpi
         && other.GlyphId == this.GlyphId
         && other.GlyphType == this.GlyphType
@@ -125,8 +122,7 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
         && other.TextRun.TextDecorations == this.TextRun.TextDecorations
         && other.LayoutMode == this.LayoutMode
         && other.GlyphColor.Equals(this.GlyphColor)
-        && ((other.Font is null && this.Font is null)
-        || (other.Font?.Equals(this.Font, StringComparison.OrdinalIgnoreCase) == true));
+        && ReferenceEquals(other.FontMetrics, this.FontMetrics);
 
     /// <inheritdoc/>
     public override bool Equals(object? obj)
@@ -136,14 +132,13 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
     public override int GetHashCode()
     {
         int a = HashCode.Combine(
-            this.Font,
+            RuntimeHelpers.GetHashCode(this.FontMetrics),
             this.PointSize,
             this.GlyphId,
             this.GlyphType,
             this.GlyphColor);
 
         int b = HashCode.Combine(
-            this.FontStyle,
             this.Dpi,
             this.TextRun.TextAttributes,
             this.TextRun.TextDecorations,

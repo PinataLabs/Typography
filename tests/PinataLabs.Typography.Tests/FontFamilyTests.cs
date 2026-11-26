@@ -55,12 +55,15 @@ public class FontFamilyTests
         await Assert.That(familyPaths).IsNotNull();
         await Assert.That(familyPaths.Any()).IsTrue();
 
-        foreach (FontStyle style in family.GetAvailableStyles())
+        foreach (FontMetrics face in family.Faces)
         {
-            Font font = family.CreateFont(12, style);
-            await Assert.That(font.TryGetPath(out string? fontPath)).IsTrue();
-            await Assert.That(familyPaths).Contains(fontPath!);
+            await Assert.That(face).IsTypeOf<FileFontMetrics>();
+            await Assert.That(familyPaths).Contains(((FileFontMetrics)face).Path);
         }
+
+        Font font = family.CreateFont(12);
+        await Assert.That(font.TryGetPath(out string? fontPath)).IsTrue();
+        await Assert.That(familyPaths).Contains(fontPath!);
     }
 
     [Test]
@@ -76,9 +79,15 @@ public class FontFamilyTests
     }
 
     [Test]
-    public async Task Throws_FontException_TryGetMetrics_WhenDefault()
+    public async Task Throws_FontException_MatchFace_WhenDefault()
     {
-        await Assert.That(() => default(FontFamily).TryGetMetrics(FontStyle.Regular, out FontMetrics? _)).ThrowsExactly<FontException>();
+        await Assert.That(() => default(FontFamily).MatchFace(FontStyle.Regular)).ThrowsExactly<FontException>();
+    }
+
+    [Test]
+    public async Task Throws_FontException_Faces_WhenDefault()
+    {
+        await Assert.That(() => default(FontFamily).Faces).ThrowsExactly<FontException>();
     }
 
     public static IEnumerable<FontFamily> SystemFontFamilies() => SystemFonts.Families;

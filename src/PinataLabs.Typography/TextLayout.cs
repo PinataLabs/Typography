@@ -119,7 +119,7 @@ internal static class TextLayout
     {
         // Gather the font and fallbacks.
         Font[] fallbackFonts = (options.FallbackFontFamilies?.Count > 0)
-            ? options.FallbackFontFamilies.Select(x => new Font(x, options.Font.Size, options.Font.RequestedStyle)).ToArray()
+            ? options.FallbackFontFamilies.Select(x => new Font(x, options.Font.Size, options.Font.Style)).ToArray()
             : [];
 
         LayoutMode layoutMode = options.LayoutMode;

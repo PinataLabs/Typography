@@ -25,7 +25,7 @@ The build fails if the public API differs from it, so it is always up to date.
 | Task | Types |
 | --- | --- |
 | Load and find fonts | [`FontCollection`, `SystemFonts`, `FontFamily`, `FontDescription`](./font-collections.md) |
-| Make a font | [`Font`, `FontStyle`](./font.md) |
+| Make a font | [`Font`, `FontStyle`, `FontStyleRange`](./font.md) |
 | Set up a layout | [`TextOptions`, `TextRun`](./text-options.md) |
 | Measure text | [`TextMeasurer`, `GlyphBounds`](./text-measurer.md) |
 | Get glyph outlines | [`TextRenderer`, `IGlyphRenderer`, `IColorGlyphRenderer`, `GlyphRendererParameters`](./text-renderer.md) |

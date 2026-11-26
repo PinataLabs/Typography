@@ -11,7 +11,7 @@ All values on this page are in font units unless the description says otherwise.
 
 `public abstract class FontMetrics`
 
-The metrics of one font face. Get it from `Font.FontMetrics` or `FontFamily.TryGetMetrics`.
+The metrics of one font face. Get it from `Font.FontMetrics`, `FontFamily.MatchFace` or `FontFamily.Faces`.
 
 | Property | Type | Description |
 | --- | --- | --- |

@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Numerics;
 using PinataLabs.Typography.Unicode;
 
@@ -17,7 +16,7 @@ namespace PinataLabs.Typography;
 /// </summary>
 public sealed class Font
 {
-    private readonly Lazy<FontMetrics?> metrics;
+    private readonly Lazy<FontMetrics> metrics;
     private readonly Lazy<string> fontName;
 
     /// <summary>
@@ -25,18 +24,8 @@ public sealed class Font
     /// </summary>
     /// <param name="family">The font family.</param>
     /// <param name="size">The size of the font in PT units.</param>
-    public Font(FontFamily family, float size)
-        : this(family, size, FontStyle.Regular)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Font"/> class.
-    /// </summary>
-    /// <param name="family">The font family.</param>
-    /// <param name="size">The size of the font in PT units.</param>
-    /// <param name="style">The font style.</param>
-    public Font(FontFamily family, float size, FontStyle style)
+    /// <param name="style">The font style. The default value is <see cref="FontStyle.Regular"/>.</param>
+    public Font(FontFamily family, float size, FontStyle style = default)
     {
         if (family == default)
         {
@@ -44,41 +33,10 @@ public sealed class Font
         }
 
         this.Family = family;
-        this.RequestedStyle = style;
+        this.Style = style;
         this.Size = size;
-        this.metrics = new Lazy<FontMetrics?>(this.LoadInstanceInternal);
+        this.metrics = new Lazy<FontMetrics>(() => family.MatchFace(style));
         this.fontName = new Lazy<string>(this.LoadFontName);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Font"/> class.
-    /// </summary>
-    /// <param name="prototype">The prototype.</param>
-    /// <param name="style">The font style.</param>
-    public Font(Font prototype, FontStyle style)
-        : this(prototype?.Family ?? throw new ArgumentNullException(nameof(prototype)), prototype.Size, style)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Font"/> class.
-    /// </summary>
-    /// <param name="prototype">The prototype.</param>
-    /// <param name="size">The size of the font in PT units.</param>
-    /// <param name="style">The font style.</param>
-    public Font(Font prototype, float size, FontStyle style)
-        : this(prototype?.Family ?? throw new ArgumentNullException(nameof(prototype)), size, style)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Font"/> class.
-    /// </summary>
-    /// <param name="prototype">The prototype.</param>
-    /// <param name="size">The size of the font in PT units.</param>
-    public Font(Font prototype, float size)
-        : this(prototype.Family, size, prototype.RequestedStyle)
-    {
     }
 
     /// <summary>
@@ -97,24 +55,15 @@ public sealed class Font
     public float Size { get; }
 
     /// <summary>
-    /// Gets the font metrics.
+    /// Gets the metrics of the face that matches <see cref="Style"/>, as <see cref="FontFamily.MatchFace(FontStyle)"/> picks it.
     /// </summary>
-    public FontMetrics FontMetrics => this.metrics.Value ?? throw new FontException("Font instance not found.");
+    public FontMetrics FontMetrics => this.metrics.Value;
 
     /// <summary>
-    /// Gets a value indicating whether this <see cref="Font"/> is bold.
+    /// Gets the style that was asked for. The face that the font draws can differ from it:
+    /// <see cref="FontMetrics"/> is the face that matches the style best.
     /// </summary>
-    public bool IsBold => (this.FontMetrics.Description.Style & FontStyle.Bold) == FontStyle.Bold;
-
-    /// <summary>
-    /// Gets a value indicating whether this <see cref="Font"/> is italic.
-    /// </summary>
-    public bool IsItalic => (this.FontMetrics.Description.Style & FontStyle.Italic) == FontStyle.Italic;
-
-    /// <summary>
-    /// Gets the requested style.
-    /// </summary>
-    internal FontStyle RequestedStyle { get; }
+    public FontStyle Style { get; }
 
     /// <summary>
     /// Gets the filesystem path to the font family source.
@@ -143,6 +92,22 @@ public sealed class Font
         path = null;
         return false;
     }
+
+    /// <summary>
+    /// Creates a font of the same family and style at another size.
+    /// </summary>
+    /// <param name="size">The size of the new font in PT units.</param>
+    /// <returns>The new <see cref="Font"/>.</returns>
+    public Font WithSize(float size)
+        => new(this.Family, size, this.Style);
+
+    /// <summary>
+    /// Creates a font of the same family and size in another style.
+    /// </summary>
+    /// <param name="style">The style of the new font.</param>
+    /// <returns>The new <see cref="Font"/>.</returns>
+    public Font WithStyle(FontStyle style)
+        => new(this.Family, this.Size, style);
 
     /// <summary>
     /// Gets the glyphs for the given codepoint.
@@ -284,42 +249,5 @@ public sealed class Font
     }
 
     private string LoadFontName()
-        => this.metrics.Value?.Description.FontName(this.Family.Culture) ?? string.Empty;
-
-    private FontMetrics? LoadInstanceInternal()
-    {
-        if (this.Family.TryGetMetrics(this.RequestedStyle, out FontMetrics? metrics))
-        {
-            return metrics;
-        }
-
-        if (this.RequestedStyle.HasFlag(FontStyle.Italic))
-        {
-            // Can't find style requested and they want one that's at least partial italic.
-            // Try the regular italic.
-            if (this.Family.TryGetMetrics(FontStyle.Italic, out metrics))
-            {
-                return metrics;
-            }
-        }
-
-        if (this.RequestedStyle.HasFlag(FontStyle.Bold))
-        {
-            // Can't find style requested and they want one that's at least partial bold.
-            // Try the regular bold.
-            if (this.Family.TryGetMetrics(FontStyle.Bold, out metrics))
-            {
-                return metrics;
-            }
-        }
-
-        // Can't find style requested so let's just try returning the default.
-        IEnumerable<FontStyle>? styles = this.Family.GetAvailableStyles();
-        FontStyle defaultStyle = styles.Contains(FontStyle.Regular)
-        ? FontStyle.Regular
-        : styles.First();
-
-        this.Family.TryGetMetrics(defaultStyle, out metrics);
-        return metrics;
-    }
+        => this.metrics.Value.Description.FontName(this.Family.Culture);
 }

@@ -72,8 +72,7 @@ the value can be a cache key.
 | --- | --- | --- |
 | `GlyphId` | `ushort` | The index of the glyph in its font. |
 | `CodePoint` | `CodePoint` | The code point that the glyph came from. |
-| `Font` | `string` | The full name of the font, in upper case. |
-| `FontStyle` | `FontStyle` | The style of the font. |
+| `FontMetrics` | `FontMetrics` | The metrics that own the glyph, compared by reference. |
 | `PointSize` | `float` | The size in points. |
 | `Dpi` | `float` | The DPI of the layout. |
 | `GlyphType` | `GlyphType` | `Standard`, `Fallback` or `ColrLayer`. |
@@ -81,5 +80,5 @@ the value can be a cache key.
 | `LayoutMode` | `GlyphLayoutMode` | `Horizontal`, `Vertical` or `VerticalRotated`. |
 | `TextRun` | `TextRun` | The run that the glyph is in. |
 
-Equality compares `GlyphId`, `Font`, `FontStyle`, `PointSize`, `Dpi`, `GlyphType`, `GlyphColor`,
+Equality compares `GlyphId`, `FontMetrics` by reference, `PointSize`, `Dpi`, `GlyphType`, `GlyphColor`,
 `LayoutMode`, and the `TextAttributes` and `TextDecorations` of the run.

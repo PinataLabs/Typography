@@ -58,7 +58,7 @@ public interface IGlyphRenderer
     /// </summary>
     /// <param name="bounds">The bounds the glyph will be rendered at and at what size.</param>
     /// <param name="parameters">
-    /// The set of parameters that uniquely represents a version of a glyph in at particular font size, font family, font style and DPI.
+    /// The set of parameters that uniquely represents a version of a glyph in at particular font size, font and DPI.
     /// </param>
     /// <returns>Returns true if the glyph should be rendered otherwise it returns false.</returns>
     bool BeginGlyph(in FontRectangle bounds, in GlyphRendererParameters parameters);

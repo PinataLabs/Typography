@@ -17,10 +17,14 @@ FontDescription description = FontDescription.LoadDescription("fonts/OpenSans-Re
 Console.WriteLine(description.FontNameInvariantCulture);          // Open Sans Regular
 Console.WriteLine(description.FontFamilyInvariantCulture);        // Open Sans
 Console.WriteLine(description.FontSubFamilyNameInvariantCulture); // Regular
-Console.WriteLine(description.Style);                             // Regular
+Console.WriteLine(description.StyleRange.Contains(FontStyle.Regular)); // True
 ```
 
 `LoadDescription` also takes a `Stream`.
+
+`FontFamily` is the typographic family name, `name` ID 16, or ID 1 for a font that has no ID 16. A font such as
+*Teko Light* that has ID 16 *Teko* belongs to the family *Teko*. `LegacyFontFamily(culture)` gives ID 1, the name
+that groups at most four faces. `StyleRange` gives the weights, widths and slopes that the face covers.
 
 ## Read every font in a collection file
 

@@ -8,6 +8,7 @@ using System.IO;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.General.Name;
+using PinataLabs.Typography.Tables.General.Post;
 using PinataLabs.Typography.WellKnownIds;
 
 namespace PinataLabs.Typography;
@@ -25,10 +26,11 @@ public class FontDescription
     /// <param name="nameTable">The name table.</param>
     /// <param name="os2">The os2 table.</param>
     /// <param name="head">The head table.</param>
-    internal FontDescription(NameTable nameTable, OS2Table? os2, HeadTable? head)
+    /// <param name="italicAngle">The italic angle of the post table.</param>
+    internal FontDescription(NameTable nameTable, OS2Table? os2, HeadTable? head, float italicAngle)
     {
         this.nameTable = nameTable;
-        this.Style = ConvertStyle(os2, head);
+        this.StyleRange = FontStyleRange.FromTables(os2, head, italicAngle);
 
         this.FontNameInvariantCulture = this.FontName(CultureInfo.InvariantCulture);
         this.FontFamilyInvariantCulture = this.FontFamily(CultureInfo.InvariantCulture);
@@ -36,9 +38,9 @@ public class FontDescription
     }
 
     /// <summary>
-    /// Gets the style.
+    /// Gets the styles that the face covers. A static face covers one weight, one width and one slope.
     /// </summary>
-    public FontStyle Style { get; }
+    public FontStyleRange StyleRange { get; }
 
     /// <summary>
     /// Gets the name of the font in the invariant culture.
@@ -46,7 +48,7 @@ public class FontDescription
     public string FontNameInvariantCulture { get; }
 
     /// <summary>
-    /// Gets the name of the font family in the invariant culture.
+    /// Gets the name of the font family in the invariant culture, as <see cref="FontFamily(CultureInfo)"/> gives it.
     /// </summary>
     public string FontFamilyInvariantCulture { get; }
 
@@ -63,11 +65,22 @@ public class FontDescription
     public string FontName(CultureInfo culture) => this.nameTable.FontName(culture);
 
     /// <summary>
-    /// Gets the name of the font family.
+    /// Gets the name of the font family. This is the typographic family name, name ID 16, which groups
+    /// every face of a family however many weights, widths and slopes it has. A font without name ID 16
+    /// gives the legacy family name, name ID 1.
     /// </summary>
     /// <param name="culture">The culture to load metadata in.</param>
     /// <returns>The font family name.</returns>
-    public string FontFamily(CultureInfo culture) => this.nameTable.FontFamilyName(culture);
+    public string FontFamily(CultureInfo culture) => this.nameTable.TypographicFamilyName(culture);
+
+    /// <summary>
+    /// Gets the legacy name of the font family, name ID 1, which groups up to four faces:
+    /// regular, italic, bold and bold italic. For a font that has no name ID 16 it is the same as
+    /// <see cref="FontFamily(CultureInfo)"/>.
+    /// </summary>
+    /// <param name="culture">The culture to load metadata in.</param>
+    /// <returns>The legacy font family name.</returns>
+    public string LegacyFontFamily(CultureInfo culture) => this.nameTable.FontFamilyName(culture);
 
     /// <summary>
     /// Gets the font sub family.
@@ -130,8 +143,9 @@ public class FontDescription
         HeadTable? head = reader.TryGetTable<HeadTable>();
         OS2Table? os2 = reader.TryGetTable<OS2Table>();
         NameTable nameTable = reader.GetTable<NameTable>();
+        float italicAngle = PostTable.ReadItalicAngle(reader);
 
-        return new FontDescription(nameTable, os2, head);
+        return new FontDescription(nameTable, os2, head, italicAngle);
     }
 
     /// <summary>
@@ -167,37 +181,5 @@ public class FontDescription
         }
 
         return result;
-    }
-
-    private static FontStyle ConvertStyle(OS2Table? os2, HeadTable? head)
-    {
-        FontStyle style = FontStyle.Regular;
-
-        if (os2 != null)
-        {
-            if (os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.BOLD))
-            {
-                style |= FontStyle.Bold;
-            }
-
-            if (os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.ITALIC))
-            {
-                style |= FontStyle.Italic;
-            }
-        }
-        else if (head != null)
-        {
-            if (head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Bold))
-            {
-                style |= FontStyle.Bold;
-            }
-
-            if (head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Italic))
-            {
-                style |= FontStyle.Italic;
-            }
-        }
-
-        return style;
     }
 }
