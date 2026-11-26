@@ -19,8 +19,8 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
 * each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and
   HarfBuzz gives it a dotted circle as its base.
 * each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next
-  to it in one cluster, and the library does not. They do not start with the sign that goes in front of the base:
-  the Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
+  to it in one cluster, and the library does not. When the first sign goes in front of the base, the sign after
+  it goes there too, before the dotted circle.
 * each Common character before a vowel sign that goes above or after the base, and before one that goes in front
   of it. The universal shaper takes most of these characters as the base of the sign.
 
@@ -117,7 +117,7 @@ def main():
         for sign in [*signs, virama]:
             texts += [[sign], [sign, letter], [letter, SPACE, sign]]
         for sign in signs:
-            texts += [[other, sign] for other in signs if other != front]
+            texts += [[other, sign] for other in signs]
         for character in COMMON:
             texts += [[character, after], [character, front]]
         for text in dict.fromkeys("".join(map(chr, text)) for text in texts):

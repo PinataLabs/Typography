@@ -322,8 +322,8 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
 - each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and HarfBuzz
   gives it a dotted circle as its base.
 - each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next to
-  it in one cluster, and the library does not. They do not start with the sign that goes in front of the base: the
-  Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
+  it in one cluster, and the library does not. When the first sign goes in front of the base, the sign after it
+  goes there too, before the dotted circle.
 - each Common character before a vowel sign that goes above or after the base, and before one that goes in front of
   it. The universal shaper takes most of these characters as the base of the sign.
 
