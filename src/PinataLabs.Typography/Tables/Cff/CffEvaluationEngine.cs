@@ -920,7 +920,7 @@ internal ref struct CffEvaluationEngine
     {
         int n = (int)this.Pop();
         int[] counts = this.blendRegionCounts!;
-        if ((uint)this.vsIndex >= (uint)counts.Length)
+        if ((uint)this.vsIndex >= (uint)counts.Length || counts[this.vsIndex] < 0)
         {
             this.failed = true;
             return;

@@ -51,14 +51,14 @@ internal static class FontProgramOracle
 
     private const long FixedRetainedBytes = 32 * 1024;
 
-    public static readonly string[] Targets = [Program, Type1Plain];
+    public static readonly string[] Targets = [Program, Type1Plain, ItemVariationStoreOracle.Target];
 
     public static bool IsKnown(string target) => Array.IndexOf(Targets, target) >= 0;
 
     /// <summary>
     /// Runs the input.
     /// </summary>
-    /// <param name="target">The target, <see cref="Program"/> or <see cref="Type1Plain"/>.</param>
+    /// <param name="target">The target, <see cref="Program"/>, <see cref="Type1Plain"/> or <see cref="ItemVariationStoreOracle.Target"/>.</param>
     /// <param name="data">The input.</param>
     /// <returns>What happened, for replay: a rejection or a summary of the loaded program.</returns>
     /// <exception cref="FuzzFindingException">The input broke the contract.</exception>
@@ -67,6 +67,7 @@ internal static class FontProgramOracle
         {
             Program => RunProgram(data.ToArray()),
             Type1Plain => RunProgram(EncryptType1PrivatePart(data)),
+            ItemVariationStoreOracle.Target => ItemVariationStoreOracle.Run(data),
             _ => throw new ArgumentException($"Unknown fuzz target '{target}'.", nameof(target)),
         };
 

@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The fuzz harness of the font program API (issue #74). It is a libFuzzer target through SharpFuzz, and it has
-    an in-process mutation runner for machines without libFuzzer. fuzz.ps1 publishes, instruments and runs it.
+    The fuzz harness of the font program API (issue #74) and of the Item Variation Store reader (issue #124).
+    It is a libFuzzer target through SharpFuzz, and it has an in-process mutation runner for machines without
+    libFuzzer. fuzz.ps1 publishes, instruments and runs it.
     CI builds it but does not run it: libFuzzer is a separate native binary. The test project compiles
-    FontProgramOracle.cs and Mutator.cs and replays the committed corpus, so CI checks the same contract.
+    the oracles and Mutator.cs and replays the committed corpus, so CI checks the same contract.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>

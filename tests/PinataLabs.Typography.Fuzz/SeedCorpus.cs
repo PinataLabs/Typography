@@ -14,10 +14,18 @@ namespace PinataLabs.Typography.Fuzz;
 /// <summary>
 /// Writes the seed corpus from the test fonts: small TrueType and OpenType CFF fonts, the CFF tables of some
 /// of them as bare CFF, and Type 1 fonts, for the <c>program</c> target as files and for the
-/// <c>type1-plain</c> target with the private part decrypted.
+/// <c>type1-plain</c> target with the private part decrypted. For the <c>item-variation-store</c> target it writes
+/// the stores and the advance width map of the two variable test fonts, and a few synthetic stores and maps
+/// that have what the fonts lack: long words, several axes, a null subtable and a map of 32-bit entries.
 /// </summary>
 internal static class SeedCorpus
 {
+    // The variable test fonts, and whether each has a CFF2 table.
+    private static readonly (string File, bool HasCff2)[] VariableFonts = [("Teko/Teko-Variable.ttf", false), ("SourceSans3/SourceSans3VF-Upright.otf", true)];
+
+    // The tables with a store, and where each table keeps the offset of its store: HVAR and GDEF 1.3 as 32 bits, MVAR as 16 bits.
+    private static readonly (string Tag, int Position, bool IsLong)[] StoreTables = [("HVAR", 4, true), ("MVAR", 10, false), ("GDEF", 14, true)];
+
     private static readonly string[] FontFiles =
     [
         "SixLaborsSampleAB.ttf",
@@ -77,9 +85,71 @@ internal static class SeedCorpus
         }
 
         File.WriteAllBytes(Path.Combine(program, "seed-bchr8a.pfb"), File.ReadAllBytes(Path.Combine(fonts, "Type1/bchr8a.pfb")));
-        Console.WriteLine($"Wrote seeds to {program} and {type1Plain}.");
+        string variationStore = Path.Combine(corpusRoot, ItemVariationStoreOracle.Target);
+        WriteVariationStores(fonts, variationStore);
+        Console.WriteLine($"Wrote seeds to {program}, {type1Plain} and {variationStore}.");
         return 0;
     }
+
+    // Each store runs from its offset in the table to the end of the table, so a seed also has what follows it.
+    private static void WriteVariationStores(string fonts, string directory)
+    {
+        Directory.CreateDirectory(directory);
+        foreach ((string file, bool hasCff2) in VariableFonts)
+        {
+            byte[] font = File.ReadAllBytes(Path.Combine(fonts, file));
+            string name = Path.GetFileName(Path.GetDirectoryName(file))!.ToLowerInvariant();
+            foreach ((string tag, int position, bool isLong) in StoreTables)
+            {
+                byte[] table = GetTable(font, tag);
+
+                // Only GDEF 1.3 and later has a store, and its offset is 0 when the table has none.
+                if (tag == "GDEF" && (table.Length < position + 4 || BinaryPrimitives.ReadUInt16BigEndian(table.AsSpan(2)) < 3))
+                {
+                    continue;
+                }
+
+                int storeOffset = isLong ? (int)BinaryPrimitives.ReadUInt32BigEndian(table.AsSpan(position)) : BinaryPrimitives.ReadUInt16BigEndian(table.AsSpan(position));
+                if (storeOffset != 0)
+                {
+                    WriteSeed(directory, $"{name}-{tag.ToLowerInvariant()}", table.AsSpan(storeOffset));
+                }
+            }
+
+            // HVAR holds the offset of the advance width map after the offset of its store. Teko has no map.
+            byte[] hvar = GetTable(font, "HVAR");
+            int mapOffset = (int)BinaryPrimitives.ReadUInt32BigEndian(hvar.AsSpan(8));
+            if (mapOffset != 0)
+            {
+                WriteSeed(directory, $"{name}-hvar-advance-width-map", hvar.AsSpan(mapOffset));
+            }
+
+            if (hasCff2)
+            {
+                byte[] cff2 = GetTable(font, "CFF2");
+                if (!Cff2TopDict.TryGetVariationStoreOffset(cff2, out int cff2Offset))
+                {
+                    throw new InvalidOperationException($"{file}: the CFF2 table has no variation store.");
+                }
+
+                int length = BinaryPrimitives.ReadUInt16BigEndian(cff2.AsSpan(cff2Offset));
+                WriteSeed(directory, $"{name}-cff2", cff2.AsSpan(cff2Offset, 2 + length));
+            }
+        }
+
+        short axis = VariationBytes.F2Dot14(1);
+        short half = VariationBytes.F2Dot14(0.5);
+        short[][] oneAxis = [[0, axis, axis], [0, half, axis]];
+        short[][] twoAxes = [[0, axis, axis, VariationBytes.F2Dot14(-1), VariationBytes.F2Dot14(-0.5), 0], [half, 0, axis, 0, 0, 0], [0, half, axis, 0, axis, axis]];
+        WriteSeed(directory, "synthetic-long-words", VariationBytes.Store(1, oneAxis, new VariationBytes.ItemData([0, 1], 1, [[100_000, -300], [-5, 7]], LongWords: true), null));
+        WriteSeed(directory, "synthetic-two-axes", VariationBytes.Store(2, twoAxes, new VariationBytes.ItemData([0, 1, 2], 2, [[1, 2, 3], [-4, 5, -6]])));
+        WriteSeed(directory, "synthetic-cff2", VariationBytes.Cff2Store(2, twoAxes, [0, 1], [2]));
+        WriteSeed(directory, "synthetic-map-format-0", VariationBytes.Map(0, 2, 4, (0, 1), (1, 2), (2, 3)));
+        WriteSeed(directory, "synthetic-map-format-1", VariationBytes.Map(1, 4, 16, (0, 0), (5, 65535), (300, 2)));
+    }
+
+    private static void WriteSeed(string directory, string name, ReadOnlySpan<byte> data)
+        => File.WriteAllBytes(Path.Combine(directory, $"seed-{name}.bin"), data.ToArray());
 
     private static byte[] GetTable(byte[] font, string tag)
     {

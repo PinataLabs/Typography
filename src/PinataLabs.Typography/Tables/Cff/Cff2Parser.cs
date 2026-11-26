@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -55,7 +56,24 @@ internal static class Cff2Parser
         int vstoreOffset = GetOffset(topDict, OpVstore);
 
         CffIndex charStrings = CffIndex.Read(data, charStringsOffset, 4, out _);
-        int[] regionCounts = vstoreOffset > 0 ? ReadRegionCounts(data, vstoreOffset) : [];
+
+        // A store that is missing or malformed is absent. A glyph with a blend operator then fails, as it does with no store.
+        // A subtable that is malformed has the count -1, and only a glyph that blends with it fails.
+        ItemVariationStore store = default;
+        if (vstoreOffset > 0)
+        {
+            ItemVariationStore.TryReadCff2(data, vstoreOffset, out store);
+        }
+
+        int[] regionCounts = new int[store.DataCount];
+        for (int i = 0; i < regionCounts.Length; i++)
+        {
+            if (!store.TryGetDataCounts(i, out _, out regionCounts[i]))
+            {
+                regionCounts[i] = -1;
+            }
+        }
+
         FontDictData[] fonts = ReadFontDicts(data, fdArrayOffset);
         ushort[] fdSelect = fdSelectOffset > 0
             ? ReadFdSelect(data, fdSelectOffset, charStrings.Count)
@@ -80,35 +98,6 @@ internal static class Cff2Parser
         }
 
         return glyphs;
-    }
-
-    private static int[] ReadRegionCounts(byte[] data, int vstoreOffset)
-    {
-        // uint16 length, then the ItemVariationStore:
-        // uint16 format, Offset32 variationRegionListOffset, uint16 itemVariationDataCount, Offset32 itemVariationDataOffsets[].
-        Cursor c = new(data, vstoreOffset);
-        c.ReadUInt16(); // length
-        int storeStart = c.Position;
-        c.ReadUInt16(); // format
-        c.ReadUInt32(); // variationRegionListOffset
-        int count = c.ReadUInt16();
-        int[] counts = new int[count];
-        for (int i = 0; i < count; i++)
-        {
-            int dataOffset = checked((int)c.ReadUInt32());
-            if (dataOffset == 0)
-            {
-                continue;
-            }
-
-            // ItemVariationData: uint16 itemCount, uint16 wordDeltaCount, uint16 regionIndexCount, ...
-            Cursor ivd = new(data, storeStart + dataOffset);
-            ivd.ReadUInt16();
-            ivd.ReadUInt16();
-            counts[i] = ivd.ReadUInt16();
-        }
-
-        return counts;
     }
 
     private static FontDictData[] ReadFontDicts(byte[] data, int fdArrayOffset)
