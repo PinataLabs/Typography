@@ -277,8 +277,28 @@ internal class GSubTable : Table
         foreach ((ushort lookupIndex, LookupFeatures features) in lookups)
         {
             LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-            iterator.Reset(index, lookupTable.LookupFlags);
+            if (lookupTable.IsReverse)
+            {
+                // A reverse chaining lookup runs from the last glyph to the first, so that the glyph it substitutes
+                // can be the lookahead of the glyph before it. It substitutes one glyph for one.
+                iterator.Reset(index + count, lookupTable.LookupFlags);
+                while (iterator.Increment(-1) >= index)
+                {
+                    if (currentOperations++ >= maxOperationsCount)
+                    {
+                        return;
+                    }
 
+                    if (features.AnyEnabledOn(collection[iterator.Index].Features))
+                    {
+                        lookupTable.TrySubstitution(fontMetrics, this, collection, features, iterator.Index, count - (iterator.Index - index));
+                    }
+                }
+
+                continue;
+            }
+
+            iterator.Reset(index, lookupTable.LookupFlags);
             while (iterator.Index < index + count)
             {
                 if (collection.Count >= maxCount || currentOperations++ >= maxOperationsCount)

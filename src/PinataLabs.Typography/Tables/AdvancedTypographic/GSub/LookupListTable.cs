@@ -84,6 +84,12 @@ internal sealed class LookupTable
 
     public LookupSubTable[] LookupSubTables { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether this is a reverse chaining lookup, which is applied from the end of the
+    /// glyphs to the start. An extension lookup has the type of its subtables.
+    /// </summary>
+    public bool IsReverse => this.LookupSubTables is [LookupType8Format1SubTable, ..];
+
     public static LookupTable Load(BigEndianBinaryReader reader, long offset)
     {
         // +----------+--------------------------------+-------------------------------------------------------------+
