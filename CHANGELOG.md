@@ -127,6 +127,10 @@ An additive or breaking public API change needs all of these:
   drawn with the glyph of U+0020 and no advance after shaping, or left out when the font has no U+0020, as in
   HarfBuzz. SOFT HYPHEN, COMBINING GRAPHEME JOINER and the selectors no longer take their own advance. A character
   that GSUB substituted keeps its glyph. Line breaking does not change. (#110)
+- The universal shaper finds syllables from the HarfBuzz 15.0.0 categories, as HarfBuzz does. A combining grapheme
+  joiner, a ZWJ, or a ZWNJ before a mark stays in the syllable around it. A vowel sign that goes before its base
+  moves in front of a space, a punctuation mark or a symbol before it, as in a HarfBuzz symbol cluster. A letter that
+  a reordering moves to the place of a ZWJ or ZWNJ keeps its advance. (#108)
 - In a font whose GSUB table has no `thai` script, Thai marks use the private use glyphs of Windows and Mac Thai fonts
   where they would clash with their base or another mark, as in HarfBuzz. (#111)
 - The universal shaper gives the syllables of every script `isol`, `init`, `medi` or `fina` by their place in a run
