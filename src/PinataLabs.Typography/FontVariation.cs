@@ -55,7 +55,9 @@ public readonly struct FontVariation : IEquatable<FontVariation>
     public override bool Equals(object? obj) => obj is FontVariation other && this.Equals(other);
 
     /// <inheritdoc/>
+#pragma warning disable S1244 // Value equality must be exact to agree with GetHashCode.
     public bool Equals(FontVariation other) => this.Axis.Equals(other.Axis) && this.Value.Equals(other.Value);
+#pragma warning restore S1244
 
     /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(this.Axis, this.Value);

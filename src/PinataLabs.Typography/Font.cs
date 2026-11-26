@@ -102,7 +102,8 @@ public sealed class Font
             FontsThrowHelper.ThrowDefaultInstance();
         }
 
-        if (this.FontMetrics.Face is FileFontMetrics fileMetrics)
+        // The path belongs to the face, so it is read without loading the font to make a variation instance.
+        if (this.Family.MatchFace(this.Style) is FileFontMetrics fileMetrics)
         {
             path = fileMetrics.Path;
             return true;

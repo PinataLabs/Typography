@@ -93,7 +93,9 @@ internal sealed class AvarTable : Table
                     return null;
                 }
 
+#pragma warning disable S1244 // A repeated from-value is an exact duplicate in the font data.
                 if (map.Count > 0 && from == map[^1].From)
+#pragma warning restore S1244
                 {
                     map[^1] = (from, to);
                 }
@@ -146,7 +148,9 @@ internal sealed class AvarTable : Table
         for (int i = 0; i < map.Length; i++)
         {
             (double From, double To) end = map[i];
+#pragma warning disable S1244 // An exact segment end maps to its exact target.
             if (value == end.From)
+#pragma warning restore S1244
             {
                 return end.To;
             }

@@ -87,7 +87,9 @@ public sealed class FontVariationAxis
     internal double Normalize(double value)
     {
         value = this.Clamp(value);
+#pragma warning disable S1244 // The specification maps the exact default value to 0.
         if (value == this.defaultValue || this.minimum == this.maximum)
+#pragma warning restore S1244
         {
             return 0;
         }
