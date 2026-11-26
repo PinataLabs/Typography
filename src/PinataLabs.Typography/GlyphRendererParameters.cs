@@ -23,7 +23,7 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
         float dpi,
         GlyphLayoutMode layoutMode)
     {
-        this.FontMetrics = metrics.FontMetrics;
+        this.FontMetrics = metrics.FontMetrics.Owner;
         this.GlyphId = metrics.GlyphId;
         this.PointSize = pointSize;
         this.Dpi = dpi;
@@ -35,7 +35,8 @@ public readonly struct GlyphRendererParameters : IEquatable<GlyphRendererParamet
     }
 
     /// <summary>
-    /// Gets the metrics that own this glyph. Two glyphs belong to the same font only when they have
+    /// Gets the metrics that own this glyph, as <see cref="Font.FontMetrics"/> and <see cref="FontFamily.Faces"/> give them.
+    /// Two glyphs belong to the same font only when they have
     /// the same <see cref="FontMetrics"/> object: the comparison is by reference, so two fonts that have
     /// the same name but come from different files differ.
     /// </summary>

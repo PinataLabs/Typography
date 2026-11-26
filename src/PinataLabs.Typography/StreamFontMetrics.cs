@@ -63,6 +63,7 @@ internal partial class StreamFontMetrics : FontMetrics
     private short underlinePosition;
     private short underlineThickness;
     private float italicAngle;
+    private FontMetrics? owner;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class.
@@ -104,6 +105,17 @@ internal partial class StreamFontMetrics : FontMetrics
         (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) metrics = this.Initialize(tables);
         this.horizontalMetrics = metrics.HorizontalMetrics;
         this.verticalMetrics = metrics.VerticalMetrics;
+    }
+
+    /// <summary>
+    /// Gets or sets the metrics that the caller sees in place of this object. A <see cref="FileFontMetrics"/>
+    /// loads this object on first use, and names itself here, so that <see cref="GlyphRendererParameters"/>
+    /// reports the face that <see cref="Font.FontMetrics"/> gives. It is this object when nothing wraps it.
+    /// </summary>
+    internal FontMetrics Owner
+    {
+        get => this.owner ?? this;
+        set => this.owner = value;
     }
 
     public HeadTable.HeadFlags HeadFlags { get; private set; }

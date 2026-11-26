@@ -80,6 +80,18 @@ public class GlyphRendererParametersTests
         await Assert.That(SingleGlyph(font).FontMetrics).IsSameReferenceAs(font.FontMetrics);
     }
 
+    [Test]
+    public async Task FileFontMetricsOwnTheGlyphOfAFontFromAPath()
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.MatchingSansFile("Regular"));
+        Font font = family.CreateFont(12);
+
+        // The face that Font.FontMetrics and FontFamily.Faces give is a FileFontMetrics, and the glyph must name that face.
+        await Assert.That(font.FontMetrics).IsTypeOf<FileFontMetrics>();
+        await Assert.That(SingleGlyph(font).FontMetrics).IsSameReferenceAs(font.FontMetrics);
+        await Assert.That(SingleGlyph(font).FontMetrics).IsSameReferenceAs(family.Faces[0]);
+    }
+
     private static GlyphRendererParameters SingleGlyph(Font font)
     {
         GlyphRenderer renderer = new();

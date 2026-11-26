@@ -132,8 +132,8 @@ An additive or breaking public API change needs all of these:
   object that owns the glyph, and two `GlyphRendererParameters` are equal only when they hold the same object.
   Before, `Font` (the full font name in upper case) and `FontStyle` identified the font, so two fonts that had the
   same name and came from different files gave equal parameters, and a renderer that cached outlines by the
-  parameters could draw the glyph of the wrong font. For a font that is added from a file path, `FontMetrics`
-  is the metrics that the file loaded. (#123)
+  parameters could draw the glyph of the wrong font. `FontMetrics` is the same object that `Font.FontMetrics` and
+  `FontFamily.Faces` give, also for a font that is added from a file path. (#123)
 - **Families are grouped by the typographic family name.** `FontDescription.FontFamily(culture)`,
   `FontDescription.FontFamilyInvariantCulture`, `FontFamily.Name` and the lookups of `FontCollection` and
   `SystemFonts` now use name ID 16, and fall back to name ID 1 for a font that has no ID 16. A family with more than
