@@ -365,3 +365,22 @@ python tests/tools/generate_default_ignorable_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Text run context reference
+
+`generate_text_run_context_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextRunContext.harfbuzz.json`.
+A caller of HarfBuzz that styles a word in two runs shapes each run in a buffer of its own and gives the buffer the
+text before and after the run as context. HarfBuzz then joins the letters at the boundary as in one run, and applies
+no GSUB lookup across it.
+
+For each word and each grapheme boundary, the reference holds the glyph IDs of both runs, left to right. The words
+are Arabic in Segoe UI, Dubai and me_quran, and Mongolian in `UniversalShaperJoining.ttf`. `Issues_109` checks that
+the library gives the same glyphs when a `TextRun` styles the second part of the word.
+
+To write the reference again, install uharfbuzz and run this from the repository root:
+
+```
+python tests/tools/generate_text_run_context_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
