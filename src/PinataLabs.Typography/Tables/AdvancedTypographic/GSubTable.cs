@@ -2,10 +2,12 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
@@ -19,11 +21,14 @@ internal class GSubTable : Table
 {
     internal const string TableName = "GSUB";
 
-    public GSubTable(ScriptList? scriptList, FeatureListTable featureList, LookupListTable lookupList)
+    private readonly FeatureVariationsTable? featureVariations;
+
+    public GSubTable(ScriptList? scriptList, FeatureListTable featureList, LookupListTable lookupList, FeatureVariationsTable? featureVariations = null)
     {
         this.ScriptList = scriptList;
         this.FeatureList = featureList;
         this.LookupList = lookupList;
+        this.featureVariations = featureVariations;
     }
 
     public ScriptList? ScriptList { get; }
@@ -46,13 +51,34 @@ internal class GSubTable : Table
             return null;
         }
 
+        GSubTable table;
+        uint featureVariationsOffset;
         using (binaryReader)
         {
-            return Load(binaryReader);
+            table = Load(binaryReader, out featureVariationsOffset);
         }
+
+        // The FeatureVariations table checks its own offsets, so it reads from the bytes of the table.
+        FeatureVariationsTable? featureVariations = FeatureVariationsTable.Load(fontReader, TableName, featureVariationsOffset, table.FeatureList.FeatureTables.Length);
+        return featureVariations is null ? table : new GSubTable(table.ScriptList, table.FeatureList, table.LookupList, featureVariations);
     }
 
-    internal static GSubTable Load(BigEndianBinaryReader reader)
+    /// <summary>
+    /// Gets the table as it substitutes glyphs for an instance of a variable font: the feature tables of the first
+    /// FeatureVariations record whose conditions hold for the coordinates stand in for those of the FeatureList.
+    /// </summary>
+    /// <param name="coordinates">The normalised coordinates of the instance as F2Dot14 values, in <c>fvar</c> order.</param>
+    /// <param name="scalars">The scalars of the GDEF Item Variation Store for the instance.</param>
+    /// <returns>This table when no record holds, or else a table that shares its scripts and lookups.</returns>
+    public GSubTable ForCoordinates(ReadOnlySpan<short> coordinates, in ItemVariationScalars scalars)
+    {
+        FeatureListTable? featureList = this.featureVariations?.Select(this.FeatureList, coordinates, scalars);
+        return featureList is null ? this : new GSubTable(this.ScriptList, featureList, this.LookupList);
+    }
+
+    internal static GSubTable Load(BigEndianBinaryReader reader) => Load(reader, out _);
+
+    private static GSubTable Load(BigEndianBinaryReader reader, out uint featureVariationsOffset)
     {
         // GSUB Header, Version 1.0
         // +----------+-------------------+-----------------------------------------------------------+
@@ -91,7 +117,7 @@ internal class GSubTable : Table
         ushort scriptListOffset = reader.ReadOffset16();
         ushort featureListOffset = reader.ReadOffset16();
         ushort lookupListOffset = reader.ReadOffset16();
-        uint featureVariationsOffset = (minorVersion == 1) ? reader.ReadOffset32() : 0;
+        featureVariationsOffset = (minorVersion == 1) ? reader.ReadOffset32() : 0;
 
         // TODO: Optimization. Allow only reading the scriptList.
         var scriptList = ScriptList.Load(reader, scriptListOffset);
@@ -100,7 +126,6 @@ internal class GSubTable : Table
 
         var lookupList = LookupListTable.Load(reader, lookupListOffset);
 
-        // TODO: Feature Variations.
         return new GSubTable(scriptList, featureList, lookupList);
     }
 

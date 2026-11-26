@@ -270,6 +270,38 @@ python tests/tools/generate_gpos_variations_reference.py
 
 The output is deterministic for one fontTools and HarfBuzz version. The file records the HarfBuzz version.
 
+## FeatureVariations font
+
+`generate_feature_variations_font.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/FeatureVariations.ttf` and
+its HarfBuzz reference `FeatureVariations.harfbuzz.json` (issue #131). Neither variable test font has a `FeatureVariations`
+table, so the script builds a font that has them on both GSUB and GPOS, with fontTools:
+
+- The axes are `wght` (100, 400, 900) and `wdth` (75, 100, 125). The glyphs are empty, so each position and advance comes from
+  the glyph ID and the lookups alone. The font has no `HVAR`, `gvar` or `avar`.
+- `rvrn` comes from `varLib.featureVars.addFeatureVariations`. wght 0.5 to 1 substitutes `C.rvrn` for `C`, and wdth 0.5 to 1
+  substitutes `B.rvrn` for `B`. The two regions overlap, which fontTools turns into three boxes.
+- The GPOS feature `kern` kerns `A V` by -100. The records come from `addFeatureVariationsRaw`, and the script edits them.
+  The first one that holds decides. wght 0.5 to 1 swaps in a lookup that kerns `A V` by -300. wght 0.2 to 1 and wdth 0.5 to 1
+  together keep the lookup of the feature and add one that kerns by -500. wght -1 to -0.5 swaps in one that kerns by -20.
+- Four more records, which hold for wght -0.25 to 0.125, use the condition formats of OpenType 1.9 and swap in lookups
+  that kern `A V` by -410 to -440: format 2, a value that a GDEF Item Variation Store varies, which the script adds, and
+  format 3, 4 and 5, which are AND, OR and NOT of format 1 conditions. Every boundary is a power of 2 fraction, because
+  HarfBuzz and fontTools round a value such as 0.1 to F2Dot14 differently in the last bit.
+
+The reference holds the glyph IDs, positions and advance that HarfBuzz gives 10 texts at 96 locations, and the two
+kerning texts at 105 locations that split the range of wdth. The locations are on both sides of the boundary of each
+condition and on it, because a range includes its ends. `FeatureVariationsTests` shapes each text with the library at the
+same location and compares them.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository
+root:
+
+```
+python tests/tools/generate_feature_variations_font.py
+```
+
+The output is deterministic for one fontTools and HarfBuzz version. The reference records the HarfBuzz version.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).

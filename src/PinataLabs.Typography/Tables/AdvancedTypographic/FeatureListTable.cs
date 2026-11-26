@@ -2,6 +2,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -27,6 +28,23 @@ internal class FeatureListTable
     /// </summary>
     /// <returns>The empty list.</returns>
     public static FeatureListTable CreateEmpty() => new([]);
+
+    /// <summary>
+    /// Gives a list in which some features have other lookups. A feature keeps its tag and its place in the list, so
+    /// the script list and the language systems still point to it.
+    /// </summary>
+    /// <param name="substitutions">The index of each feature to change, with its new lookup list indices.</param>
+    /// <returns>The new list. The list that it is made from does not change.</returns>
+    public FeatureListTable WithLookups(ReadOnlySpan<(ushort FeatureIndex, ushort[] LookupListIndices)> substitutions)
+    {
+        FeatureTable[] featureTables = (FeatureTable[])this.FeatureTables.Clone();
+        foreach ((ushort featureIndex, ushort[] lookupListIndices) in substitutions)
+        {
+            featureTables[featureIndex] = new FeatureTable(featureTables[featureIndex].FeatureTag, lookupListIndices);
+        }
+
+        return new FeatureListTable(featureTables);
+    }
 
     public static FeatureListTable Load(BigEndianBinaryReader reader, long offset)
     {
@@ -87,7 +105,7 @@ internal class FeatureListTable
 [DebuggerDisplay("Tag: {FeatureTag}")]
 internal sealed class FeatureTable
 {
-    private FeatureTable(Tag featureTag, ushort[] lookupListIndices)
+    public FeatureTable(Tag featureTag, ushort[] lookupListIndices)
     {
         this.FeatureTag = featureTag;
         this.LookupListIndices = lookupListIndices;
