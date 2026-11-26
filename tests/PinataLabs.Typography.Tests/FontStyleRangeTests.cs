@@ -13,7 +13,7 @@ public class FontStyleRangeTests
     private const OS2Table.FontStyleSelection None = 0;
 
     [Test]
-    [Arguments(1, 1F)]
+    [Arguments(10, 10F)]
     [Arguments(100, 100F)]
     [Arguments(400, 400F)]
     [Arguments(700, 700F)]
@@ -21,6 +21,21 @@ public class FontStyleRangeTests
     [Arguments(1000, 1000F)]
     public async Task WeightIsTheWeightClass(int weightClass, float expected)
     {
+        FontStyleRange range = FontStyleRange.FromTables(Os2((ushort)weightClass, 5, None), null, 0F);
+
+        await Assert.That(range.MinWeight.Value).IsEqualTo(expected);
+        await Assert.That(range.MaxWeight.Value).IsEqualTo(expected);
+    }
+
+    [Test]
+    [Arguments(1, 100F)]
+    [Arguments(3, 300F)]
+    [Arguments(4, 400F)]
+    [Arguments(7, 700F)]
+    [Arguments(9, 900F)]
+    public async Task WeightClassOneToNineIsTheLegacyHundreds(int weightClass, float expected)
+    {
+        // OS/2 version 0 documented 1 to 9, as in 1 for Thin and 9 for Black, which later versions replaced with 100 to 900.
         FontStyleRange range = FontStyleRange.FromTables(Os2((ushort)weightClass, 5, None), null, 0F);
 
         await Assert.That(range.MinWeight.Value).IsEqualTo(expected);

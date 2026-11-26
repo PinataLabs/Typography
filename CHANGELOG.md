@@ -41,8 +41,8 @@ An additive or breaking public API change needs all of these:
   the one that was added first wins. The library does not make a bold or oblique face when the family has none. (#123)
 - **`FontStyleRange`.** `FontDescription.StyleRange` gives the weights, widths and slopes that a face covers:
   `MinWeight`, `MaxWeight`, `MinWidth`, `MaxWidth`, `HasNormal`, `HasItalic`, `HasOblique`, `MinObliqueAngle` and
-  `MaxObliqueAngle`, with `Contains(style)`. A static face covers one point. The weight is `OS/2.usWeightClass`, or
-  700 or 400 from the `BOLD` bit when the class is 0. The width is `usWidthClass` as a percentage, with the table in the
+  `MaxObliqueAngle`, with `Contains(style)`. A static face covers one point. The weight is `OS/2.usWeightClass`, with
+  1 to 9 of the legacy scale read as hundreds, or 700 or 400 from the `BOLD` bit when the class is 0. The width is `usWidthClass` as a percentage, with the table in the
   OpenType `OS/2` chapter. The slope is italic when `fsSelection` has `ITALIC`, and oblique when it has `OBLIQUE`, at
   the negated `post.italicAngle` (14 degrees when that is 0). A font without `OS/2` takes bold and italic from
   `head.macStyle`. A renderer that makes a bold or oblique face compares `Font.Style` with `StyleRange`. (#123)

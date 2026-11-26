@@ -178,8 +178,13 @@ public sealed class FontStyleRange
 
         if (os2 != null)
         {
+            // A weight class of 1 to 9 is the legacy scale, where 4 is regular and 7 is bold, as in fontconfig and WPF.
             // A weight class of 0 is not a weight, so the BOLD bit says whether the face is bold.
-            if (os2.WeightClass != 0)
+            if (os2.WeightClass is >= 1 and <= 9)
+            {
+                weight = new FontWeight(os2.WeightClass * 100);
+            }
+            else if (os2.WeightClass != 0)
             {
                 weight = new FontWeight(os2.WeightClass);
             }
