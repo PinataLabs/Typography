@@ -320,7 +320,7 @@ internal class GPosTable : Table
 
     /// <summary>
     /// Adds the offset of the glyph that a glyph is cursively attached to, once that glyph has its own, as HarfBuzz
-    /// does, with the nesting limit of HarfBuzz.
+    /// does and with its nesting limit.
     /// </summary>
     private static void PropagateCursiveOffset(GlyphPositioningCollection collection, int i, int index, int count, int nesting)
     {
