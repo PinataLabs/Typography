@@ -339,3 +339,29 @@ python tests/tools/generate_cluster_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Default-ignorable reference
+
+`generate_default_ignorable_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/DefaultIgnorables.harfbuzz.json`.
+After shaping, HarfBuzz gives each default-ignorable character that GSUB did not substitute no advance and no
+offset. It draws the character with the glyph of U+0020 when the font has one, and takes it out of its output
+otherwise.
+
+The script builds `DefaultIgnorables.ttf`, which has U+0020, and `DefaultIgnorablesNoSpace.ttf`, which does not.
+Both have Latin, Arabic, Mongolian and Sinhala letters and the characters ZWJ, ZWNJ, the Mongolian free variation
+selectors, the Mongolian vowel separator, COMBINING GRAPHEME JOINER, SOFT HYPHEN and WORD JOINER, each 600 units
+wide. The `ccmp` feature of the first substitutes WORD JOINER, which HarfBuzz then keeps. The reference also has
+text with ZWJ and ZWNJ in Segoe UI, Noto Sans Devanagari, Noto Sans Bengali and Open Sans, which has no glyph for
+ZWJ. It holds the glyph IDs, where HarfBuzz draws each glyph, and the advance of each text.
+
+`DefaultIgnorableTests` checks that the library gives the same glyphs and advance, and that measurement and line
+breaking follow the glyphs.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_default_ignorable_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

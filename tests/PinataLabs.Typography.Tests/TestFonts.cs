@@ -62,6 +62,9 @@ public static class TestFonts
     // Written by tests/tools/generate_cluster_reference.py, with the Clusters fonts.
     public static string ClustersHarfBuzzReference => GetFullPath("Clusters.harfbuzz.json");
 
+    // Written by tests/tools/generate_default_ignorable_reference.py, with the DefaultIgnorables fonts.
+    public static string DefaultIgnorablesHarfBuzzReference => GetFullPath("DefaultIgnorables.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");
