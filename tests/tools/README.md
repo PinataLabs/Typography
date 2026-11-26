@@ -22,6 +22,31 @@ python tests/tools/generate_font_program_fixtures.py
 
 The output is deterministic. A run that changes a file means that the script, fontTools, or a shipped font changed.
 
+## Item Variation Store reference
+
+`generate_item_variation_store_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ItemVariationStore.fonttools.json`,
+the fontTools reference for the Item Variation Store reader (issue #124). It reads the two variable test fonts:
+
+- `Teko-Variable.ttf` has the stores of `HVAR`, `MVAR` and GDEF.
+- `SourceSans3VF-Upright.otf` has the CFF2 store and the stores of `HVAR`, `MVAR` and GDEF.
+
+For each font the script picks the locations that `CONFIG` lists: some named instances, which include the axis
+minimum and the axis maximum, and a user location between them. It normalises each one as the Font Variations Overview
+says, with the `avar` segment map and a round to F2Dot14, and records the F2Dot14 coordinates. The library does not
+read `fvar` or `avar` yet, so `ItemVariationStoreReferenceTests` gives the reader these coordinates as they are.
+
+For each store at each location the file holds the scalar of every region and the delta of every row, which fontTools
+computes with `VarStoreInstancer`. The `HVAR` entry also holds the VarIdx that the advance width map gives to every
+glyph, and the `MVAR` entry holds the VarIdx of each value record.
+
+To write the file again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_item_variation_store_reference.py
+```
+
+The output is deterministic for one fontTools version. The file records the version that wrote it.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).

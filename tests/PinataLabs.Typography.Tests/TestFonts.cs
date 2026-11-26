@@ -85,6 +85,9 @@ public static class TestFonts
     // Written by tests/tools/generate_khmer_reference.py.
     public static string KhmerHarfBuzzReference => GetFullPath("Khmer.harfbuzz.json");
 
+    // Written by tests/tools/generate_item_variation_store_reference.py, from the two variable test fonts.
+    public static string ItemVariationStoreFontToolsReference => GetFullPath("ItemVariationStore.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 
