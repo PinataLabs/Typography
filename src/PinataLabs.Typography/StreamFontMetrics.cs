@@ -40,8 +40,8 @@ internal partial class StreamFontMetrics : FontMetrics
 
     // https://docs.microsoft.com/en-us/typography/opentype/spec/otff#font-tables
     // The caches hold one entry for a glyph, its attributes and its orientation, so they cannot grow past the
-    // glyphs of the font. A cached entry reports the code point that first asked for the glyph. A caller that
-    // gives metrics out gives them the code point of its text: see GlyphMetrics.WithCodePoint and
+    // glyphs of the font. A cached entry reports the code point and the text decorations that first asked for the
+    // glyph. A caller that gives metrics out gives them those of its text: see GlyphMetrics.WithText and
     // GlyphMetrics.CloneForRendering.
     private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]> glyphCache;
     private readonly ConcurrentDictionary<(ushort Id, TextAttributes Attributes, bool IsVerticalLayout), GlyphMetrics[]>? colorGlyphCache;
@@ -210,7 +210,7 @@ internal partial class StreamFontMetrics : FontMetrics
         // We return metrics for the special glyph representing a missing character, commonly known as .notdef.
         this.TryGetGlyphId(codePoint, out ushort glyphId);
         GlyphMetrics[] cached = this.GetCachedGlyphMetrics(codePoint, glyphId, textAttributes, textDecorations, layoutMode, support, false);
-        metrics = WithCodePoint(cached, codePoint);
+        metrics = WithText(cached, codePoint, textDecorations);
         return cached.Length > 0;
     }
 
@@ -526,11 +526,11 @@ internal partial class StreamFontMetrics : FontMetrics
         bool hasVerticalForm)
         => (glyphId, textAttributes, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, hasVerticalForm));
 
-    // A glyph that several code points share, such as the space glyph of a no-break space or .notdef, has its
-    // cached metrics copied for every code point but the first that asked.
-    private static GlyphMetrics[] WithCodePoint(GlyphMetrics[] cached, CodePoint codePoint)
+    // A glyph that several code points share, such as the space glyph of a no-break space or .notdef, or that is
+    // asked for with other text decorations, has its cached metrics copied for every caller but the first.
+    private static GlyphMetrics[] WithText(GlyphMetrics[] cached, CodePoint codePoint, TextDecorations textDecorations)
     {
-        if (cached.Length == 0 || cached[0].CodePoint == codePoint)
+        if (cached.Length == 0 || (cached[0].CodePoint == codePoint && cached[0].TextDecorations == textDecorations))
         {
             return cached;
         }
@@ -538,7 +538,7 @@ internal partial class StreamFontMetrics : FontMetrics
         GlyphMetrics[] metrics = new GlyphMetrics[cached.Length];
         for (int i = 0; i < cached.Length; i++)
         {
-            metrics[i] = cached[i].WithCodePoint(codePoint);
+            metrics[i] = cached[i].WithText(codePoint, textDecorations);
         }
 
         return metrics;
