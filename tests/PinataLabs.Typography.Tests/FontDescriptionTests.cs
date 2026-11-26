@@ -32,6 +32,71 @@ public class FontDescriptionTests
     }
 
     [Test]
+    public async Task LoadFontDescription_FamilyIsTheTypographicName()
+    {
+        var writer = new BigEndianBinaryWriter();
+        writer.WriteTrueTypeFileHeader(1, 0, 0, 0);
+        writer.WriteTableHeader("name", 0, 28, 999);
+        writer.WriteNameTable(
+            new Dictionary<KnownNameIds, string>
+            {
+                { KnownNameIds.FullFontName, "name" },
+                { KnownNameIds.FontFamilyName, "fam light" },
+                { KnownNameIds.FontSubfamilyName, "Regular" },
+                { KnownNameIds.TypographicFamilyName, "fam" },
+            });
+
+        var description = FontDescription.LoadDescription(writer.GetStream());
+
+        await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("fam");
+        await Assert.That(description.FontFamily(CultureInfo.InvariantCulture)).IsEqualTo("fam");
+        await Assert.That(description.LegacyFontFamily(CultureInfo.InvariantCulture)).IsEqualTo("fam light");
+    }
+
+    [Test]
+    public async Task LoadFontDescription_FamilyFallsBackToTheLegacyName()
+    {
+        var writer = new BigEndianBinaryWriter();
+        writer.WriteTrueTypeFileHeader(1, 0, 0, 0);
+        writer.WriteTableHeader("name", 0, 28, 999);
+        writer.WriteNameTable(
+            new Dictionary<KnownNameIds, string>
+            {
+                { KnownNameIds.FullFontName, "name" },
+                { KnownNameIds.FontFamilyName, "fam" },
+            });
+
+        var description = FontDescription.LoadDescription(writer.GetStream());
+
+        await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("fam");
+        await Assert.That(description.FontFamily(CultureInfo.InvariantCulture)).IsEqualTo("fam");
+        await Assert.That(description.LegacyFontFamily(CultureInfo.InvariantCulture)).IsEqualTo("fam");
+    }
+
+    [Test]
+    public async Task LoadFontDescription_TypographicFamilyIsReadInTheCulture()
+    {
+        var c1 = new CultureInfo(1034); // spanish - international
+        var c2 = new CultureInfo(3082); // spanish - traditional
+
+        var writer = new BigEndianBinaryWriter();
+        writer.WriteTrueTypeFileHeader(1, 0, 0, 0);
+        writer.WriteTableHeader("name", 0, 28, 999);
+        writer.WriteNameTable(
+            (KnownNameIds.FontFamilyName, "legacy_c1", c1),
+            (KnownNameIds.TypographicFamilyName, "typographic_c1", c1),
+            (KnownNameIds.FontFamilyName, "legacy_c2", c2),
+            (KnownNameIds.TypographicFamilyName, "typographic_c2", c2));
+
+        var description = FontDescription.LoadDescription(writer.GetStream());
+
+        await Assert.That(description.FontFamily(c1)).IsEqualTo("typographic_c1");
+        await Assert.That(description.LegacyFontFamily(c1)).IsEqualTo("legacy_c1");
+        await Assert.That(description.FontFamily(c2)).IsEqualTo("typographic_c2");
+        await Assert.That(description.LegacyFontFamily(c2)).IsEqualTo("legacy_c2");
+    }
+
+    [Test]
     public async Task LoadFontDescription_CultureNamePriority_FirstWindows()
     {
         var usCulture = new CultureInfo(0x0409);

@@ -46,7 +46,7 @@ public class FontDescription
     public string FontNameInvariantCulture { get; }
 
     /// <summary>
-    /// Gets the name of the font family in the invariant culture.
+    /// Gets the name of the font family in the invariant culture, as <see cref="FontFamily(CultureInfo)"/> gives it.
     /// </summary>
     public string FontFamilyInvariantCulture { get; }
 
@@ -63,11 +63,22 @@ public class FontDescription
     public string FontName(CultureInfo culture) => this.nameTable.FontName(culture);
 
     /// <summary>
-    /// Gets the name of the font family.
+    /// Gets the name of the font family. This is the typographic family name, name ID 16, which groups
+    /// every face of a family however many weights, widths and slopes it has. A font without name ID 16
+    /// gives the legacy family name, name ID 1.
     /// </summary>
     /// <param name="culture">The culture to load metadata in.</param>
     /// <returns>The font family name.</returns>
-    public string FontFamily(CultureInfo culture) => this.nameTable.FontFamilyName(culture);
+    public string FontFamily(CultureInfo culture) => this.nameTable.TypographicFamilyName(culture);
+
+    /// <summary>
+    /// Gets the legacy name of the font family, name ID 1, which groups up to four faces:
+    /// regular, italic, bold and bold italic. For a font that has no name ID 16 it is the same as
+    /// <see cref="FontFamily(CultureInfo)"/>.
+    /// </summary>
+    /// <param name="culture">The culture to load metadata in.</param>
+    /// <returns>The legacy font family name.</returns>
+    public string LegacyFontFamily(CultureInfo culture) => this.nameTable.FontFamilyName(culture);
 
     /// <summary>
     /// Gets the font sub family.

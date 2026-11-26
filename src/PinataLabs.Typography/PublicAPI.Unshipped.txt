@@ -138,3 +138,4 @@ static PinataLabs.Typography.FontWidth.UltraCondensed.get -> PinataLabs.Typograp
 static PinataLabs.Typography.FontWidth.UltraExpanded.get -> PinataLabs.Typography.FontWidth
 static PinataLabs.Typography.FontWidth.operator !=(PinataLabs.Typography.FontWidth left, PinataLabs.Typography.FontWidth right) -> bool
 static PinataLabs.Typography.FontWidth.operator ==(PinataLabs.Typography.FontWidth left, PinataLabs.Typography.FontWidth right) -> bool
+PinataLabs.Typography.FontDescription.LegacyFontFamily(System.Globalization.CultureInfo! culture) -> string!

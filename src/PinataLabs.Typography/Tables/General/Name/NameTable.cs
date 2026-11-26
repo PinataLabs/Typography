@@ -48,6 +48,17 @@ internal class NameTable : Table
         => this.GetNameById(culture, KnownNameIds.FontFamilyName);
 
     /// <summary>
+    /// Gets the typographic family name, name ID 16, or the family name of name ID 1 when the font has no ID 16.
+    /// </summary>
+    /// <param name="culture">The culture to load the name in.</param>
+    /// <returns>The typographic family name.</returns>
+    public string TypographicFamilyName(CultureInfo culture)
+    {
+        string name = this.GetNameById(culture, KnownNameIds.TypographicFamilyName);
+        return name.Length > 0 ? name : this.FontFamilyName(culture);
+    }
+
+    /// <summary>
     /// Gets the name of the font.
     /// </summary>
     /// <value>
