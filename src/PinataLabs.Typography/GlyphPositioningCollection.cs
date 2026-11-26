@@ -109,7 +109,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             if (this.glyphs[i].Offset == offset)
             {
                 GlyphPositioningData glyph = this.glyphs[i];
-                isDecomposed = glyph.Data.IsDecomposed;
+
+                // A reordering can move a glyph that was not decomposed into the place of one that was, such as a
+                // sign before an inserted dotted circle. The glyphs at the offset still each take an advance.
+                isDecomposed |= glyph.Data.IsDecomposed;
                 hasVerticalForm |= glyph.Data.HasVerticalForm;
                 pointSize = glyph.PointSize;
                 match.AddRange(glyph.Metrics);
@@ -362,6 +365,44 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             {
                 m.ApplyOffset(dx, dy);
             }
+        }
+    }
+
+    /// <summary>
+    /// Hides the default-ignorable characters that the font drew and GSUB did not substitute, as HarfBuzz does once
+    /// they have done their work in shaping. Each takes the glyph of U+0020 with no advance and no offset, or is
+    /// left out when the font has no U+0020. The character stays, so line breaking does not change.
+    /// </summary>
+    /// <param name="fontMetrics">The font whose glyphs to hide.</param>
+    public void HideDefaultIgnorables(FontMetrics fontMetrics)
+    {
+        bool hasSpace = fontMetrics.TryGetGlyphId(new CodePoint(SpaceFallback.Space), out ushort space);
+        LayoutMode layoutMode = this.TextOptions.LayoutMode;
+        for (int i = this.glyphs.Count - 1; i >= 0; i--)
+        {
+            GlyphPositioningData glyph = this.glyphs[i];
+            GlyphShapingData data = glyph.Data;
+            if (!this.ShouldProcess(fontMetrics, i)
+                || data.IsSubstituted
+                || !UnicodeUtility.IsHiddenAfterShaping((uint)data.CodePoint.Value))
+            {
+                continue;
+            }
+
+            if (!hasSpace)
+            {
+                this.glyphs.RemoveAt(i);
+                continue;
+            }
+
+            GlyphMetrics metrics = fontMetrics
+                .GetGlyphMetrics(data.CodePoint, space, data.TextRun.TextAttributes, data.TextRun.TextDecorations, layoutMode, ColorFontSupport.None, data.HasVerticalForm)[0]
+                .CloneForRendering(data.TextRun, data.CodePoint);
+            metrics.SetAdvanceWidth(0);
+            metrics.SetAdvanceHeight(0);
+            data.GlyphId = space;
+            data.Bounds = new(0, 0, 0, 0);
+            glyph.Metrics = [metrics];
         }
     }
 

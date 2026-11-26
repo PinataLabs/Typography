@@ -8,9 +8,9 @@ using System.IO;
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
 
 /// <summary>
-/// An Alternate Substitution (AlternateSubst) subtable identifies any number of aesthetic alternatives
-/// from which a user can choose a glyph variant to replace the input glyph.
-/// <see href="https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-3-alternate-substitution-subtable"/>
+/// A Reverse Chaining Contextual Single Substitution subtable replaces one glyph in the context of the glyphs before
+/// and after it. Its lookup is applied from the end of the glyphs to the start.
+/// <see href="https://learn.microsoft.com/en-us/typography/opentype/spec/gsub#lookuptype-8-reverse-chaining-contextual-single-substitution-subtable"/>
 /// </summary>
 internal static class LookupType8SubTable
 {
@@ -31,6 +31,7 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
 {
     private readonly ushort[] substituteGlyphIds;
     private readonly CoverageTable coverageTable;
+    private readonly CoverageTable[] inputCoverageTables;
     private readonly CoverageTable[] backtrackCoverageTables;
     private readonly CoverageTable[] lookaheadCoverageTables;
 
@@ -44,6 +45,7 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
     {
         this.substituteGlyphIds = substituteGlyphIds;
         this.coverageTable = coverageTable;
+        this.inputCoverageTables = [coverageTable];
         this.backtrackCoverageTables = backtrackCoverageTables;
         this.lookaheadCoverageTables = lookaheadCoverageTables;
     }
@@ -114,38 +116,29 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
             return false;
         }
 
+        // As in HarfBuzz, a glyph of the coverage that has no substitute does not match.
         int offset = this.coverageTable.CoverageIndexOf(glyphId);
-        if (offset <= -1)
+        if (offset <= -1 || offset >= this.substituteGlyphIds.Length)
         {
             return false;
         }
 
-        for (int i = 0; i < this.backtrackCoverageTables.Length; ++i)
+        // The context glyphs skip the glyphs that the lookup flags ignore, and the lookahead starts after the glyph.
+        if (!AdvancedTypographicUtils.CheckAllCoverages(
+            fontMetrics,
+            this.LookupFlags,
+            collection,
+            index,
+            count,
+            this.inputCoverageTables,
+            this.backtrackCoverageTables,
+            this.lookaheadCoverageTables))
         {
-            ushort id = collection[index - 1 - i].GlyphId;
-            if (id == 0 || this.backtrackCoverageTables[i].CoverageIndexOf(id) < 0)
-            {
-                return false;
-            }
+            return false;
         }
 
-        for (int i = 0; i < this.lookaheadCoverageTables.Length; ++i)
-        {
-            ushort id = collection[index + i].GlyphId;
-            if (id == 0 || this.lookaheadCoverageTables[i].CoverageIndexOf(id) < 0)
-            {
-                return false;
-            }
-        }
-
-        // It's a match. Perform substitutions and return true if anything changed.
-        bool hasChanged = false;
-        for (int i = 0; i < this.substituteGlyphIds.Length; i++)
-        {
-            collection.Replace(index + i, this.substituteGlyphIds[i]);
-            hasChanged = true;
-        }
-
-        return hasChanged;
+        // The substitute of the glyph has the index of the glyph in the Coverage table.
+        collection.Replace(index, this.substituteGlyphIds[offset]);
+        return true;
     }
 }

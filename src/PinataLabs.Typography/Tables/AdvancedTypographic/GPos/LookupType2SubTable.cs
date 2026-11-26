@@ -32,6 +32,11 @@ internal static class LookupType2SubTable
         };
     }
 
+    // The second glyph of a pair is the next glyph that the lookup flags do not skip, so a lookup that ignores marks
+    // kerns the letters on both sides of a mark.
+    private static int GetSecondIndex(FontMetrics fontMetrics, GlyphPositioningCollection collection, LookupFlags lookupFlags, int index)
+        => new SkippingGlyphIterator(fontMetrics, collection, index, lookupFlags).Next();
+
     internal sealed class LookupType2Format1SubTable : LookupSubTable
     {
         private readonly CoverageTable coverageTable;
@@ -111,7 +116,13 @@ internal static class LookupType2SubTable
             if (coverage > -1 && coverage < this.pairSets.Length)
             {
                 PairSetTable pairSet = this.pairSets[coverage];
-                ushort glyphId2 = collection[index + 1].GlyphId;
+                int second = GetSecondIndex(fontMetrics, collection, this.LookupFlags, index);
+                if (second >= index + count)
+                {
+                    return false;
+                }
+
+                ushort glyphId2 = collection[second].GlyphId;
                 if (glyphId2 == 0)
                 {
                     return false;
@@ -123,7 +134,7 @@ internal static class LookupType2SubTable
                     AdvancedTypographicUtils.ApplyPosition(collection, index, record1);
 
                     ValueRecord record2 = pairValueRecord.ValueRecord2;
-                    AdvancedTypographicUtils.ApplyPosition(collection, index + 1, record2);
+                    AdvancedTypographicUtils.ApplyPosition(collection, second, record2);
 
                     return true;
                 }
@@ -276,7 +287,13 @@ internal static class LookupType2SubTable
             if (coverage > -1)
             {
                 int classDef1 = this.classDefinitionTable1.ClassIndexOf(glyphId);
-                ushort glyphId2 = collection[index + 1].GlyphId;
+                int second = GetSecondIndex(fontMetrics, collection, this.LookupFlags, index);
+                if (second >= index + count)
+                {
+                    return false;
+                }
+
+                ushort glyphId2 = collection[second].GlyphId;
                 if (glyphId2 == 0)
                 {
                     return false;
@@ -303,7 +320,7 @@ internal static class LookupType2SubTable
                 AdvancedTypographicUtils.ApplyPosition(collection, index, record1);
 
                 ValueRecord record2 = class2Record.ValueRecord2;
-                AdvancedTypographicUtils.ApplyPosition(collection, index + 1, record2);
+                AdvancedTypographicUtils.ApplyPosition(collection, second, record2);
 
                 return true;
             }

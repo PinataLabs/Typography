@@ -71,12 +71,10 @@ internal sealed class LookupTable
     private LookupTable(
         ushort lookupType,
         LookupFlags lookupFlags,
-        ushort markFilteringSet,
         LookupSubTable[] lookupSubTables)
     {
         this.LookupType = lookupType;
         this.LookupFlags = lookupFlags;
-        this.MarkFilteringSet = markFilteringSet;
         this.LookupSubTables = lookupSubTables;
     }
 
@@ -84,9 +82,13 @@ internal sealed class LookupTable
 
     public LookupFlags LookupFlags { get; }
 
-    public ushort MarkFilteringSet { get; }
-
     public LookupSubTable[] LookupSubTables { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether this is a reverse chaining lookup, which is applied from the end of the
+    /// glyphs to the start. An extension lookup has the type of its subtables.
+    /// </summary>
+    public bool IsReverse => this.LookupSubTables is [LookupType8Format1SubTable, ..];
 
     public static LookupTable Load(BigEndianBinaryReader reader, long offset)
     {
@@ -109,7 +111,7 @@ internal sealed class LookupTable
         reader.Seek(offset, SeekOrigin.Begin);
 
         ushort lookupType = reader.ReadUInt16();
-        LookupFlags lookupFlags = reader.ReadUInt16<LookupFlags>();
+        LookupFlags lookupFlags = (LookupFlags)reader.ReadUInt16();
         ushort subTableCount = reader.ReadUInt16();
 
         using Buffer<ushort> subTableOffsetsBuffer = new(subTableCount);
@@ -117,9 +119,11 @@ internal sealed class LookupTable
         reader.ReadUInt16Array(subTableOffsets);
 
         // The fifth bit indicates the presence of a MarkFilteringSet field in the Lookup table.
-        ushort markFilteringSet = ((lookupFlags & LookupFlags.UseMarkFilteringSet) != 0)
-            ? reader.ReadUInt16()
-            : (ushort)0;
+        // The subtables get it with the flags.
+        if ((lookupFlags & LookupFlags.UseMarkFilteringSet) != 0)
+        {
+            lookupFlags |= (LookupFlags)((uint)reader.ReadUInt16() << 16);
+        }
 
         var lookupSubTables = new LookupSubTable[subTableCount];
 
@@ -128,7 +132,7 @@ internal sealed class LookupTable
             lookupSubTables[i] = LoadLookupSubTable(lookupType, lookupFlags, reader, offset + subTableOffsets[i]);
         }
 
-        return new LookupTable(lookupType, lookupFlags, markFilteringSet, lookupSubTables);
+        return new LookupTable(lookupType, lookupFlags, lookupSubTables);
     }
 
     public bool TrySubstitution(

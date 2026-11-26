@@ -120,6 +120,10 @@ internal sealed class FileFontMetrics : FontMetrics
     internal override bool TryGetMarkAttachmentClass(ushort glyphId, [NotNullWhen(true)] out GlyphClassDef? markAttachmentClass)
         => this.fontMetrics.Value.TryGetMarkAttachmentClass(glyphId, out markAttachmentClass);
 
+    /// <inheritdoc/>
+    internal override bool IsInMarkGlyphSet(ushort markGlyphSet, ushort glyphId)
+        => this.fontMetrics.Value.IsInMarkGlyphSet(markGlyphSet, glyphId);
+
     /// <inheritdoc />
     public override bool TryGetGlyphMetrics(
         CodePoint codePoint,

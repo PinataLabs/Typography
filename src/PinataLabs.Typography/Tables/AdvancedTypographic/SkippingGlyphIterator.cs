@@ -13,6 +13,8 @@ internal struct SkippingGlyphIterator
     private bool ignoreBaseGlyphs;
     private bool ignoreLigatures;
     private ushort markAttachmentType;
+    private bool useMarkFilteringSet;
+    private ushort markFilteringSet;
 
     public SkippingGlyphIterator(
         FontMetrics fontMetrics,
@@ -22,11 +24,7 @@ internal struct SkippingGlyphIterator
     {
         this.fontMetrics = fontMetrics;
         this.Collection = collection;
-        this.Index = index;
-        this.ignoreMarks = (lookupFlags & LookupFlags.IgnoreMarks) != 0;
-        this.ignoreBaseGlyphs = (lookupFlags & LookupFlags.IgnoreBaseGlyphs) != 0;
-        this.ignoreLigatures = (lookupFlags & LookupFlags.IgnoreLigatures) != 0;
-        this.markAttachmentType = (ushort)((int)(lookupFlags & LookupFlags.MarkAttachmentTypeMask) >> 8);
+        this.Reset(index, lookupFlags);
     }
 
     public IGlyphShapingCollection Collection { get; }
@@ -57,7 +55,9 @@ internal struct SkippingGlyphIterator
         this.ignoreMarks = (lookupFlags & LookupFlags.IgnoreMarks) != 0;
         this.ignoreBaseGlyphs = (lookupFlags & LookupFlags.IgnoreBaseGlyphs) != 0;
         this.ignoreLigatures = (lookupFlags & LookupFlags.IgnoreLigatures) != 0;
-        this.markAttachmentType = (ushort)((int)(lookupFlags & LookupFlags.MarkAttachmentTypeMask) >> 8);
+        this.markAttachmentType = (ushort)((uint)(lookupFlags & LookupFlags.MarkAttachmentTypeMask) >> 8);
+        this.useMarkFilteringSet = (lookupFlags & LookupFlags.UseMarkFilteringSet) != 0;
+        this.markFilteringSet = (ushort)((uint)(lookupFlags & LookupFlags.MarkFilteringSetMask) >> 16);
     }
 
     private void Move(int direction)
@@ -78,9 +78,19 @@ internal struct SkippingGlyphIterator
     {
         GlyphShapingData data = this.Collection[index];
         GlyphShapingClass shapingClass = AdvancedTypographicUtils.GetGlyphShapingClass(this.fontMetrics, data.GlyphId, data);
-        return (this.ignoreMarks && shapingClass.IsMark) ||
+        if ((this.ignoreMarks && shapingClass.IsMark) ||
             (this.ignoreBaseGlyphs && shapingClass.IsBase) ||
-            (this.ignoreLigatures && shapingClass.IsLigature) ||
-            (this.markAttachmentType > 0 && shapingClass.IsMark && shapingClass.MarkAttachmentType != this.markAttachmentType);
+            (this.ignoreLigatures && shapingClass.IsLigature))
+        {
+            return true;
+        }
+
+        // A mark filtering set takes the place of the mark attachment type.
+        if (shapingClass.IsMark && this.useMarkFilteringSet)
+        {
+            return !this.fontMetrics.IsInMarkGlyphSet(this.markFilteringSet, data.GlyphId);
+        }
+
+        return this.markAttachmentType > 0 && shapingClass.IsMark && shapingClass.MarkAttachmentType != this.markAttachmentType;
     }
 }

@@ -56,6 +56,17 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     internal HashSet<int>? UnresolvedOffsets { get; set; }
 
     /// <summary>
+    /// Gets the characters of the text before the glyphs, nearest first. As the context of a HarfBuzz buffer, they
+    /// give the letters at the start of a text run their joining form.
+    /// </summary>
+    internal List<CodePoint> PreContext { get; } = [];
+
+    /// <summary>
+    /// Gets the characters of the text after the glyphs, nearest first.
+    /// </summary>
+    internal List<CodePoint> PostContext { get; } = [];
+
+    /// <summary>
     /// Gets or sets the running id of any ligature glyphs contained withing this collection are a member of.
     /// </summary>
     public int LigatureId { get; set; } = 1;
@@ -270,6 +281,32 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     {
         this.glyphs.Clear();
         this.LigatureId = 1;
+        this.PreContext.Clear();
+        this.PostContext.Clear();
+    }
+
+    /// <summary>
+    /// Sets the text around the glyphs, as HarfBuzz keeps up to five characters on each side of its buffer.
+    /// </summary>
+    /// <param name="before">The text before the glyphs.</param>
+    /// <param name="after">The text after the glyphs.</param>
+    public void SetContext(ReadOnlySpan<char> before, ReadOnlySpan<char> after)
+    {
+        const int contextLength = 5;
+        this.PreContext.Clear();
+        this.PostContext.Clear();
+        int index = before.Length;
+        while (index > 0 && this.PreContext.Count < contextLength)
+        {
+            index -= char.IsLowSurrogate(before[index - 1]) && index > 1 && char.IsHighSurrogate(before[index - 2]) ? 2 : 1;
+            this.PreContext.Add(CodePoint.DecodeFromUtf16At(before, index));
+        }
+
+        SpanCodePointEnumerator codePoints = new(after);
+        while (this.PostContext.Count < contextLength && codePoints.MoveNext())
+        {
+            this.PostContext.Add(codePoints.Current);
+        }
     }
 
     /// <summary>

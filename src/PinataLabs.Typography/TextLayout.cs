@@ -150,10 +150,15 @@ internal static class TextLayout
         int textRunIndex = 0;
         int codePointIndex = 0;
         int bidiRunIndex = 0;
+        int runCharStart = 0;
         foreach (TextRun textRun in textRuns)
         {
+            // The runs follow each other, so each starts where the one before it ends.
+            ReadOnlySpan<char> runText = textRun.Slice(text);
             if (!DoFontRun(
-                textRun.Slice(text),
+                runText,
+                text[..runCharStart],
+                text[(runCharStart + runText.Length)..],
                 textRun.Start,
                 textRuns,
                 ref textRunIndex,
@@ -168,6 +173,8 @@ internal static class TextLayout
             {
                 complete = false;
             }
+
+            runCharStart += runText.Length;
         }
 
         if (!complete)
@@ -181,6 +188,8 @@ internal static class TextLayout
                 bidiRunIndex = 0;
                 if (DoFontRun(
                     text,
+                    [],
+                    [],
                     0,
                     textRuns,
                     ref textRunIndex,
@@ -764,6 +773,8 @@ internal static class TextLayout
 
     private static bool DoFontRun(
         ReadOnlySpan<char> text,
+        ReadOnlySpan<char> textBefore,
+        ReadOnlySpan<char> textAfter,
         int start,
         IReadOnlyList<TextRun> textRuns,
         ref int textRunIndex,
@@ -779,6 +790,7 @@ internal static class TextLayout
         // For each run we start with a fresh substitution collection to avoid
         // overwriting the glyph ids.
         substitutions.Clear();
+        substitutions.SetContext(textBefore, textAfter);
         substitutions.UnresolvedOffsets = isFallbackRun ? positionings.GetUnresolvedOffsets() : null;
 
         // Enumerate through each grapheme in the text.
@@ -1057,15 +1069,6 @@ internal static class TextLayout
 
                         decomposedAdvances[0] = glyphAdvance;
                     }
-                }
-                else if (metrics.Count == 1 && (CodePoint.IsZeroWidthJoiner(codePoint) || CodePoint.IsZeroWidthNonJoiner(codePoint)))
-                {
-                    // The zero-width joiner characters should be ignored when determining word or
-                    // line break boundaries so are safe to skip here. Any existing instances are the result of font error
-                    // unless multiple metrics are associated with code point. In this case they are most likely the result
-                    // of a substitution and shouldn't be ignored.
-                    glyphAdvance = 0;
-                    decomposedAdvances[0] = 0;
                 }
                 else if (!CodePoint.IsNewLine(codePoint))
                 {

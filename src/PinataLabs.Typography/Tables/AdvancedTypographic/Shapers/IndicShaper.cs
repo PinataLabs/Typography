@@ -72,15 +72,15 @@ internal sealed class IndicShaper : DefaultShaper
         // The Khmer shaper of HarfBuzz applies fewer features than its Indic shaper.
         bool isKhmer = this.ScriptClass == ScriptClass.Khmer;
 
-        // Each basic shaping feature is a stage of its own: the lookups of one form
-        // must all have run before the next form is tried.
+        // In the Indic shaper each basic shaping feature is a stage of its own: the lookups of one form must all have
+        // run before the next form is tried. The Khmer shaper applies its basic features, cfar included, in one
+        // stage, so their lookups run in the order of the lookup list.
         if (isKhmer)
         {
             this.AddFeature(collection, index, count, PrefTag, false, preAction: this.InitialReorder);
-            this.EndStage();
-            this.AddBasicFeature(collection, index, count, BlwfTag, false);
-            this.AddBasicFeature(collection, index, count, AbvfTag, false);
-            this.AddBasicFeature(collection, index, count, PstfTag, false);
+            this.AddFeature(collection, index, count, BlwfTag, false);
+            this.AddFeature(collection, index, count, AbvfTag, false);
+            this.AddFeature(collection, index, count, PstfTag, false);
         }
         else
         {

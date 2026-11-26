@@ -95,19 +95,15 @@ internal static class LookupType8SubTable
                     continue;
                 }
 
-                bool hasChanged = false;
                 for (int j = 0; j < rule.SequenceLookupRecords.Length; j++)
                 {
                     SequenceLookupRecord sequenceLookupRecord = rule.SequenceLookupRecords[j];
                     LookupTable lookup = table.LookupList.LookupTables[sequenceLookupRecord.LookupListIndex];
                     ushort sequenceIndex = sequenceLookupRecord.SequenceIndex;
-                    if (lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1))
-                    {
-                        hasChanged = true;
-                    }
+                    lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1);
                 }
 
-                return hasChanged;
+                return true;
             }
 
             return false;
@@ -192,20 +188,15 @@ internal static class LookupType8SubTable
                     continue;
                 }
 
-                // It's a match. Perform position update and return true if anything changed.
-                bool hasChanged = false;
                 for (int j = 0; j < rule.SequenceLookupRecords.Length; j++)
                 {
                     SequenceLookupRecord sequenceLookupRecord = rule.SequenceLookupRecords[j];
                     LookupTable lookup = table.LookupList.LookupTables[sequenceLookupRecord.LookupListIndex];
                     ushort sequenceIndex = sequenceLookupRecord.SequenceIndex;
-                    if (lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1))
-                    {
-                        hasChanged = true;
-                    }
+                    lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1);
                 }
 
-                return hasChanged;
+                return true;
             }
 
             return false;
@@ -264,21 +255,17 @@ internal static class LookupType8SubTable
                 return false;
             }
 
-            // It's a match. Perform position update and return true if anything changed.
-            bool hasChanged = false;
+            // It's a match. Perform the position updates. The subtable has applied whether or not they move a glyph.
             foreach (SequenceLookupRecord lookupRecord in this.seqLookupRecords)
             {
                 ushort sequenceIndex = lookupRecord.SequenceIndex;
                 ushort lookupIndex = lookupRecord.LookupListIndex;
 
                 LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-                if (lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, count - sequenceIndex))
-                {
-                    hasChanged = true;
-                }
+                lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, count - sequenceIndex);
             }
 
-            return hasChanged;
+            return true;
         }
     }
 }

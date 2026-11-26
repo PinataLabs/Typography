@@ -206,7 +206,7 @@ public abstract class GlyphMetrics
     /// <summary>
     /// Gets the text decorations applied to the glyph.
     /// </summary>
-    public TextDecorations TextDecorations { get; }
+    public TextDecorations TextDecorations { get; private set; }
 
     /// <summary>
     /// Performs a semi-deep clone (FontMetrics are not cloned) for rendering
@@ -221,19 +221,21 @@ public abstract class GlyphMetrics
     internal abstract GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint);
 
     /// <summary>
-    /// Gets these metrics for another codepoint that the glyph stands for.
+    /// Gets these metrics for another codepoint that the glyph stands for, with the text decorations of its text.
     /// </summary>
     /// <param name="codePoint">The codepoint.</param>
-    /// <returns>These metrics when they report the codepoint, and a copy that reports it otherwise.</returns>
-    internal GlyphMetrics WithCodePoint(CodePoint codePoint)
+    /// <param name="textDecorations">The text decorations.</param>
+    /// <returns>These metrics when they report both, and a copy that reports them otherwise.</returns>
+    internal GlyphMetrics WithText(CodePoint codePoint, TextDecorations textDecorations)
     {
-        if (this.CodePoint == codePoint)
+        if (this.CodePoint == codePoint && this.TextDecorations == textDecorations)
         {
             return this;
         }
 
         GlyphMetrics metrics = (GlyphMetrics)this.MemberwiseClone();
         metrics.CodePoint = codePoint;
+        metrics.TextDecorations = textDecorations;
         return metrics;
     }
 

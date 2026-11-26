@@ -44,6 +44,11 @@ public static class TestFonts
 
     public static string GposLookupOrderHarfBuzzReference => GetFullPath("GposLookupOrder.harfbuzz.json");
 
+    // Built by tests/tools/generate_chain_backtrack_reference.py, which also writes the HarfBuzz reference.
+    public static string ChainBacktrackFile => GetFullPath("ChainBacktrack.ttf");
+
+    public static string ChainBacktrackHarfBuzzReference => GetFullPath("ChainBacktrack.harfbuzz.json");
+
     // Written by tests/tools/generate_default_langsys_reference.py.
     public static string DefaultLangSysHarfBuzzReference => GetFullPath("DefaultLangSys.harfbuzz.json");
 
@@ -61,6 +66,30 @@ public static class TestFonts
 
     // Written by tests/tools/generate_cluster_reference.py, with the Clusters fonts.
     public static string ClustersHarfBuzzReference => GetFullPath("Clusters.harfbuzz.json");
+
+    // Written by tests/tools/generate_default_ignorable_reference.py, with the DefaultIgnorables fonts.
+    public static string DefaultIgnorablesHarfBuzzReference => GetFullPath("DefaultIgnorables.harfbuzz.json");
+
+    // Written by tests/tools/generate_mongolian_lookups_reference.py, with MongolianLookups.ttf.
+    public static string MongolianLookupsHarfBuzzReference => GetFullPath("MongolianLookups.harfbuzz.json");
+
+    // Written by tests/tools/generate_text_run_context_reference.py.
+    public static string TextRunContextHarfBuzzReference => GetFullPath("TextRunContext.harfbuzz.json");
+
+    // Written by tests/tools/generate_thai_pua_reference.py, with the ThaiPua fonts.
+    public static string ThaiPuaHarfBuzzReference => GetFullPath("ThaiPua.harfbuzz.json");
+
+    // Written by tests/tools/generate_universal_forms_reference.py, with UniversalForms.ttf.
+    public static string UniversalFormsHarfBuzzReference => GetFullPath("UniversalForms.harfbuzz.json");
+
+    // Written by tests/tools/generate_khmer_reference.py.
+    public static string KhmerHarfBuzzReference => GetFullPath("Khmer.harfbuzz.json");
+
+    // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
+    public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
+
+    // Written by tests/tools/generate_use_syllable_reference.py, with the Syllables fonts.
+    public static string SyllablesHarfBuzzReference => GetFullPath("Syllables.harfbuzz.json");
 
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 

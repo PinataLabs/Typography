@@ -1,5 +1,12 @@
 # Test tools
 
+## Shared HarfBuzz helpers
+
+`harfbuzz_reference.py` holds what the `generate_*_reference.py` scripts share: `build_font` saves a font of empty glyphs,
+`load_font` and `shape_line` shape a line with HarfBuzz and give the glyph IDs, places and advance, and `write_reference`
+and `write_unique_rows` write the reference JSON. A script imports it from its own folder, so each one still runs as
+`python tests/tools/<name>.py` from the repository root.
+
 ## Font program fixtures
 
 `generate_font_program_fixtures.py` writes the reference data for the `FontProgram` tests into
@@ -269,6 +276,51 @@ python tests/tools/generate_universal_shaper_reference.py
 The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
 HarfBuzz version that wrote it.
 
+## Universal shaper categories
+
+`derive_harfbuzz_use_categories.py` writes `tests/UnicodeTestData/UniversalShapingCategory.harfbuzz.txt`, the
+universal shaper (USE) category of every code point in HarfBuzz 15.0.0.
+
+HarfBuzz builds its category table with `gen-use-table.py` and ships it as `src/hb-ot-shaper-use-table.hh`. HarfBuzz
+has no API that returns a category, so the script downloads that file at the HarfBuzz tag and runs its lookup for
+every code point. The output lists each range whose category is not `O`.
+
+`UniversalShapingCategoryTests` checks that the library gives every code point the same category.
+
+To write the reference again, run this from the repository root. It needs only Python and network access, or the
+path of a local copy of `hb-ot-shaper-use-table.hh`:
+
+```
+python tests/tools/derive_harfbuzz_use_categories.py
+```
+
+The output is deterministic for one HarfBuzz version.
+
+## Syllable reference
+
+`generate_use_syllable_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Syllables.harfbuzz.json`.
+
+It builds two fonts that have no GSUB table:
+
+- `SyllablesBalinese.ttf` has a Balinese letter, two vowel signs, the dotted circle, and the combining grapheme
+  joiner, ZWJ and ZWNJ. The universal shaper of HarfBuzz leaves these three out when it finds syllables, so a sign
+  after one of them stays in the syllable of the letter before it. The `joiners` rows hold such texts.
+- `SyllablesInvalid.ttf` has the characters of `IndicShapingInvalidCluster.txt`. The `invalid` rows hold each
+  sequence of that file, which HarfBuzz breaks with a dotted circle.
+
+HarfBuzz shapes with `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`, so it keeps the joiners in its output as the
+library does. `SyllableTests` checks that the library gives the same glyphs and positions.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_use_syllable_reference.py
+```
+
+The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
+HarfBuzz version that wrote it.
+
 ## Shaper choice reference
 
 `generate_shaper_choice_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ShaperChoice.harfbuzz.json`.
@@ -322,8 +374,8 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
 - each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and HarfBuzz
   gives it a dotted circle as its base.
 - each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next to
-  it in one cluster, and the library does not. They do not start with the sign that goes in front of the base: the
-  Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
+  it in one cluster, and the library does not. When the first sign goes in front of the base, the sign after it
+  goes there too, before the dotted circle.
 - each Common character before a vowel sign that goes above or after the base, and before one that goes in front of
   it. The universal shaper takes most of these characters as the base of the sign.
 
@@ -336,6 +388,186 @@ repository root:
 
 ```
 python tests/tools/generate_cluster_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Default-ignorable reference
+
+`generate_default_ignorable_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/DefaultIgnorables.harfbuzz.json`.
+After shaping, HarfBuzz gives each default-ignorable character that GSUB did not substitute no advance and no
+offset. It draws the character with the glyph of U+0020 when the font has one, and takes it out of its output
+otherwise.
+
+The script builds `DefaultIgnorables.ttf`, which has U+0020, and `DefaultIgnorablesNoSpace.ttf`, which does not.
+Both have Latin, Arabic, Mongolian and Sinhala letters and the characters ZWJ, ZWNJ, the Mongolian free variation
+selectors, the Mongolian vowel separator, COMBINING GRAPHEME JOINER, SOFT HYPHEN and WORD JOINER, each 600 units
+wide. They also have the Hangul fillers and SHORTHAND FORMAT LETTER OVERLAP, which Unicode makes default-ignorable
+and HarfBuzz draws with their own glyphs. The `ccmp` feature of the first substitutes WORD JOINER, which HarfBuzz then
+keeps. The reference also has
+text with ZWJ and ZWNJ in Segoe UI, Noto Sans Devanagari, Noto Sans Bengali and Open Sans, which has no glyph for
+ZWJ. It holds the glyph IDs, where HarfBuzz draws each glyph, and the advance of each text.
+
+`DefaultIgnorableTests` checks that the library gives the same glyphs and advance, and that measurement and line
+breaking follow the glyphs.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_default_ignorable_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Chain backtrack reference
+
+`generate_chain_backtrack_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ChainBacktrack.ttf` and writes
+`ChainBacktrack.harfbuzz.json` next to it. A chained context or reverse chaining subtable lists its backtrack glyphs
+from the glyph nearest to the input to the farthest one. The `calt` feature of the font has a chained context
+subtable of each format and a reverse chaining subtable, each with the backtrack "a b", so each replaces its input
+glyph after "a b" and not after "b a". A last reverse chaining subtable covers two glyphs and has a substitute for
+only the first, so HarfBuzz leaves the second as it is. The reference holds the glyph IDs that HarfBuzz gives.
+
+`ChainBacktrackTests` checks that the library gives the same glyphs.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_chain_backtrack_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Text run context reference
+
+`generate_text_run_context_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextRunContext.harfbuzz.json`.
+A caller of HarfBuzz that styles a word in two runs shapes each run in a buffer of its own and gives the buffer the
+text before and after the run as context. HarfBuzz then joins the letters at the boundary as in one run, and applies
+no GSUB lookup across it.
+
+For each word and each grapheme boundary, the reference holds the glyph IDs of both runs, left to right. The words
+are Arabic in Segoe UI, Dubai and me_quran, and Mongolian in `UniversalShaperJoining.ttf`. `Issues_109` checks that
+the library gives the same glyphs when a `TextRun` styles the second part of the word.
+
+To write the reference again, install uharfbuzz and run this from the repository root:
+
+```
+python tests/tools/generate_text_run_context_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Thai private use reference
+
+`generate_thai_pua_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ThaiPua.harfbuzz.json`. When the
+GSUB table of a font has no `thai` script, HarfBuzz draws a Thai mark that would clash with its base or with the mark
+before it with a glyph of the private use area: a tone mark lower or further left, a vowel below a consonant with a
+descender lower, and YO YING and THO THAN without their descender. It looks for the Windows code point first and
+then for the Mac one.
+
+The script builds `ThaiPua.ttf`, with the Windows and Mac private use glyphs and no GSUB table, `ThaiPuaMac.ttf`,
+with the Mac glyphs only, and `ThaiPuaGsub.ttf`, with both and a GSUB table that has the `thai` script. The reference
+holds the glyph IDs and where HarfBuzz draws each glyph for each kind of consonant, a digit and a space, followed by
+one or two marks, in these fonts and in `FDArrayTest257.otf`. `ThaiPuaTests` checks that the library gives the same.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_thai_pua_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Universal shaper forms reference
+
+`generate_universal_forms_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/UniversalForms.harfbuzz.json`.
+The universal shaper of HarfBuzz applies `isol`, `init`, `medi` and `fina` to every script. For a script whose
+letters do not join, it gives them by syllable: a run of syllables takes `init` on the first, `medi` on the middle
+ones and `fina` on the last, and a syllable alone takes `isol`. A character outside every syllable, such as WORD
+JOINER, ends the run.
+
+The script builds `UniversalForms.ttf`, with Balinese, Tibetan and Javanese letters and signs, the space, digits,
+ZWJ, ZWNJ, WORD JOINER and the dotted circle. Each of the four features gives every glyph a glyph of its own. The
+reference holds the glyph IDs and where HarfBuzz draws each glyph for texts of one to four syllables.
+`UniversalShaperTests` checks that the library gives the same.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_universal_forms_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Hebrew marks reference
+
+`generate_hebrew_marks_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/HebrewMarks.harfbuzz.json`. It
+holds where HarfBuzz draws Hebrew letters and the GPOS marks on them, in three cases:
+
+- `GposKernAcrossMark`: `Segoeui.ttf` kerns lamed and final mem in a GPOS lookup that ignores marks. HarfBuzz skips
+  the qamats between the two letters and kerns them.
+- `ThreeMarks`: `TimesNewRoman.ttf` and `Segoeui.ttf` attach qamats to an alef, meteg to the qamats and etnahta to
+  the meteg. HarfBuzz attaches a mark to the mark before it when the two marks belong to the same base.
+- `KernTableMovesBase`: the script builds `HebrewKernMark.ttf`. It has a `kern` table, and a GPOS table with a
+  `mark` feature and no `kern` feature. HarfBuzz kerns with the `kern` table after the GPOS lookups and then places
+  each mark from its base, so a mark moves with a base that the `kern` table moved. The font has Latin letters too,
+  for the same case in text that runs left to right.
+
+`HebrewMarkTests` checks that the library draws each glyph in the same place.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_hebrew_marks_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Khmer reference
+
+`generate_khmer_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Khmer.harfbuzz.json`, how the Khmer
+shaper of HarfBuzz shapes 1350 syllables in `NotoSansKhmer-Regular.ttf`: a consonant with a vowel, with one or two
+subscript consonants before the vowel, with a register shifter, with ROBAT and with a sign after the vowel. The
+reference holds the glyph IDs and where HarfBuzz draws each glyph. `KhmerTests` checks that the library gives the
+same, except for the syllables that #114 tracks.
+
+To write the reference again, install uharfbuzz and run this from the repository root:
+
+```
+python tests/tools/generate_khmer_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Mongolian lookups reference
+
+`generate_mongolian_lookups_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/MongolianLookups.ttf` and
+writes `MongolianLookups.harfbuzz.json` next to it (issue #111). Mongolian Baiti cannot ship in the repository, so
+the font copies the four things in it that the library shaped differently from HarfBuzz. Each row of the reference
+names one of them:
+
+- `joining`: the Mongolian vowel separator U+180E and the Arabic number sign U+0600 have joining type U, so the
+  letters next to them take their isolated forms.
+- `context-match`: a chaining subtable that matches with no substitution records, from an `ignore sub` rule, ends
+  its lookup.
+- `mark-filtering-set`: a lookup with the UseMarkFilteringSet flag skips the marks that are not in its GDEF mark
+  glyph set.
+- `reverse-chaining`: a reverse chaining lookup runs from the last glyph to the first, skips the glyphs that its
+  flags ignore, and substitutes the glyph at its Coverage index.
+
+The reference holds the glyph IDs, where HarfBuzz draws each glyph, and the advance of each text.
+`MongolianLookupsTests` checks that the library gives the same glyphs, one test case for each cause.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_mongolian_lookups_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

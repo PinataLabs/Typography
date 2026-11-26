@@ -6,7 +6,7 @@ Files sourced from:
   `Blocks.txt`, `CompositionExclusions.txt`, `DerivedCoreProperties.txt`, `EastAsianWidth.txt`,
   `IndicPositionalCategory.txt`, `IndicSyllabicCategory.txt`, `LineBreak.txt`, `PropertyValueAliases.txt`,
   `ScriptExtensions.txt`, `Scripts.txt`, `UnicodeData.txt` and `VerticalOrientation.txt`
-- https://www.unicode.org/Public/18.0.0/ucd/extracted/ : `DerivedGeneralCategory.txt`
+- https://www.unicode.org/Public/18.0.0/ucd/extracted/ : `DerivedBidiClass.txt` and `DerivedGeneralCategory.txt`
 - https://www.unicode.org/Public/18.0.0/ucd/auxiliary/ : `GraphemeBreakProperty.txt`
 - https://www.unicode.org/Public/18.0.0/ucd/emoji/ : `emoji-data.txt`
 - https://github.com/harfbuzz/harfbuzz/tree/15.0.0/src/ms-use : `IndicPositionalCategory-Additional.txt`,

@@ -46,13 +46,9 @@ internal sealed class UniversalShaper : DefaultShaper
 
     private const int DottedCircle = 0x25cc;
 
-    private static readonly int OtherCategory = Array.IndexOf(UniversalShapingData.Categories, "O");
+    private static readonly int CgjCategory = Array.IndexOf(UniversalShapingData.Categories, "CGJ");
 
-    private static readonly int IndependentCategory = Array.IndexOf(UniversalShapingData.Categories, "IND");
-
-    private static readonly int SymbolCategory = Array.IndexOf(UniversalShapingData.Categories, "S");
-
-    private static readonly int GenericBaseCategory = Array.IndexOf(UniversalShapingData.Categories, "GB");
+    private static readonly int ZwnjCategory = Array.IndexOf(UniversalShapingData.Categories, "ZWNJ");
 
     private static readonly int HalantCategory = Array.IndexOf(UniversalShapingData.Categories, "H");
 
@@ -74,7 +70,7 @@ internal sealed class UniversalShaper : DefaultShaper
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
     {
         // Default glyph pre-processing group
-        this.AddFeature(collection, index, count, LoclTag, preAction: SetupSyllables);
+        this.AddFeature(collection, index, count, LoclTag, preAction: this.SetupSyllables);
         this.AddFeature(collection, index, count, CcmpTag);
         this.AddFeature(collection, index, count, NuktTag);
         this.AddFeature(collection, index, count, AkhnTag);
@@ -93,14 +89,11 @@ internal sealed class UniversalShaper : DefaultShaper
         this.AddFeature(collection, index, count, CjctTag, postAction: Reorder);
 
         // As in HarfBuzz, the joining forms are a stage of their own, after the reordering.
-        if (this.joinsLetters)
-        {
-            this.AddFeature(collection, index, count, IsolTag, false);
-            this.AddFeature(collection, index, count, InitTag, false);
-            this.AddFeature(collection, index, count, MediTag, false);
-            this.AddFeature(collection, index, count, FinaTag, false);
-            this.EndStage();
-        }
+        this.AddFeature(collection, index, count, IsolTag, false);
+        this.AddFeature(collection, index, count, InitTag, false);
+        this.AddFeature(collection, index, count, MediTag, false);
+        this.AddFeature(collection, index, count, FinaTag, false);
+        this.EndStage();
 
         // Standard topographic presentation and positional feature application
         this.AddFeature(collection, index, count, AbvsTag);
@@ -162,69 +155,69 @@ internal sealed class UniversalShaper : DefaultShaper
         }
     }
 
-    private static void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
+    private void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
     {
         if (collection is not GlyphSubstitutionCollection substitutionCollection)
         {
             return;
         }
 
+        FindSyllables(substitutionCollection, index, count);
+        if (!this.joinsLetters)
+        {
+            AssignSyllableForms(substitutionCollection, index, count);
+        }
+    }
+
+    private static void FindSyllables(GlyphSubstitutionCollection substitutionCollection, int index, int count)
+    {
         Span<int> values = count <= 64 ? stackalloc int[count] : new int[count];
         for (int i = index; i < index + count; i++)
         {
-            values[i - index] = GetCategory(substitutionCollection[i].CodePoint);
+            values[i - index] = UnicodeData.GetUniversalShapingSymbolCount((uint)substitutionCollection[i].CodePoint.Value);
         }
 
-        // A symbol is a base too. It stays a symbol before a symbol modifier, which only the symbol cluster takes.
+        // As in HarfBuzz, the syllable machine does not see a CGJ, nor a ZWNJ before a mark. Each of them goes with
+        // the syllable before it.
+        Span<int> kept = count <= 64 ? stackalloc int[count] : new int[count];
+        Span<int> input = count <= 64 ? stackalloc int[count] : new int[count];
+        int keptCount = 0;
         for (int i = 0; i < count; i++)
         {
-            if (values[i] == SymbolCategory
-                && (i + 1 == count || UniversalShapingData.Categories[values[i + 1]] is not "SMAbv" and not "SMBlw"))
+            if (values[i] == CgjCategory || (values[i] == ZwnjCategory && IsBeforeMark(substitutionCollection, index, values, i)))
             {
-                values[i] = GenericBaseCategory;
+                continue;
             }
+
+            kept[keptCount] = i;
+            input[keptCount++] = values[i];
         }
 
         int syllable = 0;
-        int start = 0;
-        while (start < count)
+        foreach (StateMatch match in StateMachine.Match(input[..keptCount]))
         {
-            // As in HarfBuzz, a repha does not go with a character that is a base only because it is not of a
-            // script. The repha is a broken cluster, and the character starts the next cluster.
-            int end = start + 1;
-            while (end < count
-                && !(values[end - 1] == RephaCategory && IsBaseOutsideScripts(substitutionCollection[end + index].CodePoint)))
+            ++syllable;
+            int matchStart = kept[match.StartIndex];
+            int matchEnd = match.EndIndex + 1 < keptCount ? kept[match.EndIndex + 1] - 1 : count - 1;
+
+            // Create shaper info
+            for (int i = matchStart; i <= matchEnd; i++)
             {
-                end++;
+                GlyphShapingData data = substitutionCollection[i + index];
+                string category = UniversalShapingData.Categories[values[i]];
+
+                data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
             }
 
-            foreach (StateMatch match in StateMachine.Match(values[start..end]))
+            // Assign rphf feature
+            int limit = values[matchStart] == RephaCategory
+                ? 1
+                : Math.Min(3, matchEnd - matchStart);
+
+            for (int i = matchStart; i < matchStart + limit; i++)
             {
-                ++syllable;
-                int matchStart = match.StartIndex + start;
-                int matchEnd = match.EndIndex + start;
-
-                // Create shaper info
-                for (int i = matchStart; i <= matchEnd; i++)
-                {
-                    GlyphShapingData data = substitutionCollection[i + index];
-                    string category = UniversalShapingData.Categories[values[i]];
-
-                    data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
-                }
-
-                // Assign rphf feature
-                int limit = values[matchStart] == RephaCategory
-                    ? 1
-                    : Math.Min(3, matchEnd - matchStart);
-
-                for (int i = matchStart; i < matchStart + limit; i++)
-                {
-                    substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
-                }
+                substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
             }
-
-            start = end;
         }
 
         // The state machine has no cluster for a halant that no base comes before or after.
@@ -239,20 +232,74 @@ internal sealed class UniversalShaper : DefaultShaper
         }
     }
 
-    // As in HarfBuzz, a character that is not a letter or a sign of a script is a base, so a sign after a space,
-    // a digit or a full stop is not a broken cluster. HarfBuzz 15.0.0 leaves out the characters that it does not
-    // draw, and six right brackets.
-    private static int GetCategory(CodePoint codePoint)
-        => IsBaseOutsideScripts(codePoint)
-            ? GenericBaseCategory
-            : UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
-
-    private static bool IsBaseOutsideScripts(CodePoint codePoint)
+    /// <summary>
+    /// Enables isol, init, medi or fina on each syllable of a script whose letters do not join, as HarfBuzz does: a
+    /// run of syllables takes init on the first, medi on the middle ones and fina on the last, and a syllable alone
+    /// takes isol. A character outside every syllable ends the run.
+    /// </summary>
+    /// <param name="collection">The glyph shaping collection.</param>
+    /// <param name="index">The zero-based index of the first glyph.</param>
+    /// <param name="count">The number of glyphs.</param>
+    private static void AssignSyllableForms(GlyphSubstitutionCollection collection, int index, int count)
     {
-        int category = UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
-        return (category == OtherCategory || category == IndependentCategory)
-            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)codePoint.Value)
-            && codePoint.Value is not (0x005D or 0x007D or 0x27E7 or 0x27E9 or 0x2E23 or 0x2E25);
+        int end = index + count;
+        int lastStart = index;
+        Tag? lastForm = null;
+        for (int start = index; start < end;)
+        {
+            UniversalShapingEngineInfo? info = collection[start].UniversalShapingEngineInfo;
+            int syllableEnd = start + 1;
+            while (info is not null && syllableEnd < end && collection[syllableEnd].UniversalShapingEngineInfo?.Syllable == info.Syllable)
+            {
+                syllableEnd++;
+            }
+
+            if (info is null || info.SyllableType is "independent_cluster" or "hieroglyph_cluster" or "non_cluster")
+            {
+                lastForm = null;
+            }
+            else
+            {
+                bool joins = lastForm == FinaTag || lastForm == IsolTag;
+                if (joins)
+                {
+                    lastForm = lastForm == FinaTag ? MediTag : InitTag;
+                    SetForm(collection, lastStart, start, lastForm.Value);
+                }
+
+                lastForm = joins ? FinaTag : IsolTag;
+                SetForm(collection, start, syllableEnd, lastForm.Value);
+            }
+
+            lastStart = start;
+            start = syllableEnd;
+        }
+    }
+
+    private static void SetForm(GlyphSubstitutionCollection collection, int start, int end, Tag form)
+    {
+        for (int i = start; i < end; i++)
+        {
+            collection.DisableShapingFeature(i, IsolTag);
+            collection.DisableShapingFeature(i, InitTag);
+            collection.DisableShapingFeature(i, MediTag);
+            collection.DisableShapingFeature(i, FinaTag);
+            collection.EnableShapingFeature(i, form);
+        }
+    }
+
+    // A ZWNJ before a mark, past any CGJ, does not end a syllable.
+    private static bool IsBeforeMark(GlyphSubstitutionCollection collection, int index, ReadOnlySpan<int> values, int i)
+    {
+        for (int j = i + 1; j < values.Length; j++)
+        {
+            if (values[j] != CgjCategory)
+            {
+                return CodePoint.IsMark(collection[j + index].CodePoint);
+            }
+        }
+
+        return false;
     }
 
     private static void ClearSubstitutionFlags(IGlyphShapingCollection collection, int index, int count)
@@ -331,7 +378,8 @@ internal sealed class UniversalShaper : DefaultShaper
             string? type = info?.SyllableType;
 
             // Only a few syllable types need reordering.
-            if (type is not "virama_terminated_cluster" and not "standard_cluster" and not "broken_cluster")
+            if (type is not "virama_terminated_cluster" and not "sakot_terminated_cluster" and not "standard_cluster"
+                and not "symbol_cluster" and not "broken_cluster")
             {
                 goto Increment;
             }
@@ -350,7 +398,7 @@ internal sealed class UniversalShaper : DefaultShaper
                 // After a syllable of only repha, the glyph at the place of the circle is of the next syllable.
                 substitutionCollection.InsertGlyph(i, i < end ? i : end - 1, id, new(DottedCircle));
                 substitutionCollection[i].UniversalShapingEngineInfo = new(
-                    UniversalShapingData.Categories[GetCategory(new(DottedCircle))],
+                    "B",
                     type,
                     info!.Syllable);
 
@@ -385,7 +433,7 @@ internal sealed class UniversalShaper : DefaultShaper
             }
 
             // Move things back
-            for (int i = start, j = end; i < end; i++)
+            for (int i = start, j = start; i < end; i++)
             {
                 GlyphShapingData current = substitutionCollection[i];
                 info = current.UniversalShapingEngineInfo;

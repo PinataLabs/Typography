@@ -19,8 +19,8 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
 * each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and
   HarfBuzz gives it a dotted circle as its base.
 * each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next
-  to it in one cluster, and the library does not. They do not start with the sign that goes in front of the base:
-  the Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
+  to it in one cluster, and the library does not. When the first sign goes in front of the base, the sign after
+  it goes there too, before the dotted circle.
 * each Common character before a vowel sign that goes above or after the base, and before one that goes in front
   of it. The universal shaper takes most of these characters as the base of the sign.
 
@@ -35,17 +35,12 @@ ClusterTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
-import json
 import os
 
-os.environ["SOURCE_DATE_EPOCH"] = "0"
-
 import uharfbuzz as hb
-from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib.tables._g_l_y_f import Glyph
+from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
+
 REFERENCE = os.path.join(FONTS, "Clusters.harfbuzz.json")
 
 DOTTED_CIRCLE = 0x25CC
@@ -76,20 +71,7 @@ REPHA_SCRIPTS = [
 
 
 def build(file_name, code_points):
-    names = [".notdef"] + ["u%04X" % c for c in code_points]
-    builder = FontBuilder(1000, isTTF=True)
-    builder.setupGlyphOrder(names)
-    builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
-    builder.setupGlyf({name: Glyph() for name in names})
-    builder.setupHorizontalMetrics({name: (600, 0) for name in names})
-    builder.setupHorizontalHeader(ascent=800, descent=-200)
-    builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
-    builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
-    builder.setupPost(keepGlyphNames=False)
-    path = os.path.join(FONTS, file_name)
-    builder.font.save(path)
-    with open(path, "rb") as file:
-        return hb.Font(hb.Face(file.read()))
+    return load_font(build_font(file_name, code_points))
 
 
 def shape(font, script, text):
@@ -117,7 +99,7 @@ def main():
         for sign in [*signs, virama]:
             texts += [[sign], [sign, letter], [letter, SPACE, sign]]
         for sign in signs:
-            texts += [[other, sign] for other in signs if other != front]
+            texts += [[other, sign] for other in signs]
         for character in COMMON:
             texts += [[character, after], [character, front]]
         for text in dict.fromkeys("".join(map(chr, text)) for text in texts):
@@ -130,13 +112,7 @@ def main():
             text = "".join(map(chr, text))
             rows.append([file_name, script, text, shape(font, script, text)])
 
-    with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
-        file.write("{\n")
-        file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        file.write('  "rows": [\n')
-        file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-        file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(rows), "rows")
+    write_reference(REFERENCE, rows)
 
 
 if __name__ == "__main__":

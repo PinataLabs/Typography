@@ -86,7 +86,7 @@ internal static class LookupType7SubTable
                 }
 
                 // It's a match. Perform position update and return true if anything changed.
-                return AdvancedTypographicUtils.ApplyLookupList(
+                AdvancedTypographicUtils.ApplyLookupList(
                     fontMetrics,
                     table,
                     features,
@@ -95,6 +95,8 @@ internal static class LookupType7SubTable
                     collection,
                     index,
                     count);
+
+                return true;
             }
 
             return false;
@@ -168,7 +170,7 @@ internal static class LookupType7SubTable
                 }
 
                 // It's a match. Perform position update and return true if anything changed.
-                return AdvancedTypographicUtils.ApplyLookupList(
+                AdvancedTypographicUtils.ApplyLookupList(
                     fontMetrics,
                     table,
                     features,
@@ -177,6 +179,8 @@ internal static class LookupType7SubTable
                     collection,
                     index,
                     count);
+
+                return true;
             }
 
             return false;
@@ -222,7 +226,7 @@ internal static class LookupType7SubTable
                 return false;
             }
 
-            return AdvancedTypographicUtils.ApplyLookupList(
+            AdvancedTypographicUtils.ApplyLookupList(
                 fontMetrics,
                 table,
                 features,
@@ -231,6 +235,8 @@ internal static class LookupType7SubTable
                 collection,
                 index,
                 count);
+
+            return true;
         }
     }
 }
