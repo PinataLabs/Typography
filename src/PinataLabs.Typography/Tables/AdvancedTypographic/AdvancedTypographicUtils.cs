@@ -58,7 +58,7 @@ internal static class AdvancedTypographicUtils
     public static int GetMaxAllowableShapingOperationsCount(int length)
         => (int)Math.Clamp((long)length * MaxOperationsFactor, MaxOperationsMinimum, MaxShapingCharsLength);
 
-    public static bool ApplyLookupList(
+    public static void ApplyLookupList(
         FontMetrics fontMetrics,
         GSubTable table,
         LookupFeatures features,
@@ -68,7 +68,6 @@ internal static class AdvancedTypographicUtils
         int index,
         int count)
     {
-        bool hasChanged = false;
         SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
         int currentCount = collection.Count;
 
@@ -79,7 +78,7 @@ internal static class AdvancedTypographicUtils
             iterator.Index = index;
             iterator.Increment(sequenceIndex);
             GSub.LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-            hasChanged |= lookup.TrySubstitution(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
+            lookup.TrySubstitution(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
 
             // Account for substitutions changing the length of the collection.
             if (collection.Count != currentCount)
@@ -88,11 +87,9 @@ internal static class AdvancedTypographicUtils
                 currentCount = collection.Count;
             }
         }
-
-        return hasChanged;
     }
 
-    public static bool ApplyLookupList(
+    public static void ApplyLookupList(
         FontMetrics fontMetrics,
         GPosTable table,
         LookupFeatures features,
@@ -102,7 +99,6 @@ internal static class AdvancedTypographicUtils
         int index,
         int count)
     {
-        bool hasChanged = false;
         SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
         foreach (SequenceLookupRecord lookupRecord in records)
         {
@@ -111,10 +107,8 @@ internal static class AdvancedTypographicUtils
             iterator.Index = index;
             iterator.Increment(sequenceIndex);
             LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-            hasChanged |= lookup.TryUpdatePosition(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
+            lookup.TryUpdatePosition(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
         }
-
-        return hasChanged;
     }
 
     public static bool MatchInputSequence(SkippingGlyphIterator iterator, LookupFeatures features, ushort increment, ushort[] sequence, Span<int> matches)

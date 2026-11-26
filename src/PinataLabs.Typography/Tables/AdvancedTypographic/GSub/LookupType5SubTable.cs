@@ -85,8 +85,8 @@ internal sealed class LookupType5Format1SubTable : LookupSubTable
                 continue;
             }
 
-            // It's a match. Perform substitutions and return true if anything changed.
-            return AdvancedTypographicUtils.ApplyLookupList(
+            // It's a match. Perform the substitutions. The subtable has applied whether or not they change a glyph.
+            AdvancedTypographicUtils.ApplyLookupList(
                 fontMetrics,
                 table,
                 features,
@@ -95,6 +95,8 @@ internal sealed class LookupType5Format1SubTable : LookupSubTable
                 collection,
                 index,
                 count);
+
+            return true;
         }
 
         return false;
@@ -169,8 +171,8 @@ internal sealed class LookupType5Format2SubTable : LookupSubTable
                 continue;
             }
 
-            // It's a match. Perform substitutions and return true if anything changed.
-            return AdvancedTypographicUtils.ApplyLookupList(
+            // It's a match. Perform the substitutions. The subtable has applied whether or not they change a glyph.
+            AdvancedTypographicUtils.ApplyLookupList(
                 fontMetrics,
                 table,
                 features,
@@ -179,6 +181,8 @@ internal sealed class LookupType5Format2SubTable : LookupSubTable
                 collection,
                 index,
                 count);
+
+            return true;
         }
 
         return false;
@@ -225,8 +229,8 @@ internal sealed class LookupType5Format3SubTable : LookupSubTable
             return false;
         }
 
-        // It's a match. Perform substitutions and return true if anything changed.
-        return AdvancedTypographicUtils.ApplyLookupList(
+        // It's a match. Perform the substitutions. The subtable has applied whether or not they change a glyph.
+        AdvancedTypographicUtils.ApplyLookupList(
             fontMetrics,
             table,
             features,
@@ -235,5 +239,7 @@ internal sealed class LookupType5Format3SubTable : LookupSubTable
             collection,
             index,
             count);
+
+        return true;
     }
 }
