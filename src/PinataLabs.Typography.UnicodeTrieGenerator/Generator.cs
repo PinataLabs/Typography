@@ -548,7 +548,7 @@ public static partial class Generator
 
         // The @missing lines give the default class of each range, which unassigned code points take.
         // A later line overrides an earlier one. The data lines give every other class.
-        var missing = new Regex(@"^# @missing: ([0-9A-F]+)\.\.([0-9A-F]+); (\w+)");
+        var missing = new Regex(@"^# @missing: ([0-9A-F]+)\.\.([0-9A-F]+); (\w+)", RegexOptions.None, TimeSpan.FromSeconds(1));
         using (StreamReader sr = GetStreamReader("DerivedBidiClass.txt"))
         {
             string? line;

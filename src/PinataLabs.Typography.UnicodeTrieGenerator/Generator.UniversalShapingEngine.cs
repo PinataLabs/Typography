@@ -305,7 +305,7 @@ public static partial class Generator
         StateMachine stateMachine = Compile.Build(machine, symbols);
 
         // A state can end matches of several rules. As in HarfBuzz, the first tag is that of the earliest rule.
-        string[] order = Regex.Matches(machine, @"(\w+):").Select(m => m.Groups[1].Value).Distinct().ToArray();
+        string[] order = Regex.Matches(machine, @"(\w+):", RegexOptions.None, TimeSpan.FromSeconds(1)).Select(m => m.Groups[1].Value).Distinct().ToArray();
         string[][] tags = stateMachine.Tags
             .Select(t => t.OrderBy(x => Array.IndexOf(order, x)).ToArray())
             .ToArray();
