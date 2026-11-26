@@ -80,7 +80,7 @@ public readonly struct FontSlope : IEquatable<FontSlope>
 
     /// <inheritdoc/>
     public bool Equals(FontSlope other)
-        => this.Kind == other.Kind && this.ObliqueAngle == other.ObliqueAngle;
+        => this.Kind == other.Kind && this.ObliqueAngle.Equals(other.ObliqueAngle);
 
     /// <inheritdoc/>
     public override bool Equals(object? obj)

@@ -109,7 +109,7 @@ public class SystemFontCollectionTests
         FontFamily family = SysFontCollection.Families.First();
         IReadOnlyList<FontMetrics> metrics = collection.GetAllMetrics(family.Name, family.Culture);
 
-        await Assert.That(metrics.Any()).IsTrue();
+        await Assert.That(metrics.Count > 0).IsTrue();
         await Assert.That(family.Faces).IsEquivalentTo(metrics, CollectionOrdering.Matching);
         await Assert.That(metrics).Contains(family.MatchFace(FontStyle.Regular));
     }

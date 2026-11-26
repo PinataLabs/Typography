@@ -108,7 +108,7 @@ public readonly struct FontWidth : IEquatable<FontWidth>, IComparable<FontWidth>
 
     /// <inheritdoc/>
     public bool Equals(FontWidth other)
-        => this.offset == other.offset;
+        => this.offset.Equals(other.offset);
 
     /// <inheritdoc/>
     public override bool Equals(object? obj)
