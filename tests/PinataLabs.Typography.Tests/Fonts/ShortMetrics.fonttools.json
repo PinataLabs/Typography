@@ -1,0 +1,31 @@
+{
+  "fontTools": "4.69.1",
+  "numberOfHMetrics": 2,
+  "numOfLongVerMetrics": 2,
+  "glyphs": [
+    {
+      "char": "a",
+      "glyphId": 1,
+      "advanceWidth": 600,
+      "advanceHeight": 1000
+    },
+    {
+      "char": "b",
+      "glyphId": 2,
+      "advanceWidth": 600,
+      "advanceHeight": 1000
+    },
+    {
+      "char": "c",
+      "glyphId": 3,
+      "advanceWidth": 600,
+      "advanceHeight": 1000
+    },
+    {
+      "char": "d",
+      "glyphId": 4,
+      "advanceWidth": 600,
+      "advanceHeight": 1000
+    }
+  ]
+}
