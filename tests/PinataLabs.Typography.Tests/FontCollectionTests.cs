@@ -185,6 +185,25 @@ public class FontCollectionTests
     }
 
     [Test]
+    public async Task FamiliesWithNamesThatDifferOnlyInCaseAreOneFamilyInTheCulture()
+    {
+        var ja = new CultureInfo("ja-JP");
+        var collection = new FontCollection();
+        var metrics = (IFontMetricsCollection)collection;
+        metrics.AddMetrics(FakeFontInstance.CreateWithNames(
+            Name(KnownNameIds.FontFamilyName, "Alpha", 0x0409),
+            Name(KnownNameIds.FontFamilyName, "Same", 0x0411)));
+        metrics.AddMetrics(FakeFontInstance.CreateWithNames(
+            Name(KnownNameIds.FontFamilyName, "Beta", 0x0409),
+            Name(KnownNameIds.FontFamilyName, "SAME", 0x0411)));
+
+        FontFamily[] families = collection.GetByCulture(ja).ToArray();
+
+        await Assert.That(families.Length).IsEqualTo(1);
+        await Assert.That(collection.GetByCulture(CultureInfo.InvariantCulture).Count()).IsEqualTo(2);
+    }
+
+    [Test]
     public async Task ReadingWhileAddingFacesDoesNotThrow()
     {
         // MatchFace reads the collection on every Font, so a thread that creates fonts

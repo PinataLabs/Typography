@@ -270,12 +270,16 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     private IEnumerable<FontFamily> FamiliesByCultureImpl(CultureInfo culture)
     {
         HashSet<string> groups = new(GroupComparer);
+
+        // Two groups can have the same name in a culture, and FontFamily compares names with the comparer of its culture.
+        HashSet<string> names = new(StringComparerHelpers.GetCaseInsensitiveStringComparer(culture));
         List<FontFamily> families = [];
         foreach (FontMetrics metrics in this.Snapshot())
         {
-            if (groups.Add(metrics.Description.FontFamilyInvariantCulture))
+            string name = metrics.Description.FontFamily(culture);
+            if (groups.Add(metrics.Description.FontFamilyInvariantCulture) && names.Add(name))
             {
-                families.Add(new FontFamily(metrics.Description.FontFamily(culture), this, culture));
+                families.Add(new FontFamily(name, this, culture));
             }
         }
 
