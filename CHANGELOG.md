@@ -25,6 +25,20 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Variation axes and named instances.** The library reads the `fvar` and `avar` tables of a variable font.
+  `FontMetrics.VariationAxes` lists the axes as `FontVariationAxis`: `Tag`, `MinValue`, `DefaultValue`, `MaxValue`,
+  `IsHidden` and `Name(culture)`. `FontMetrics.NamedInstances` lists the instances that `fvar` names as
+  `FontNamedInstance`: `Name(culture)` and `Variations`, which has one `FontVariation` for each axis. `FontMetrics.Variations`
+  gives the axis values of a face or an instance. All three lists are empty for a static font. `FontVariation` is a tag
+  and a value in the user coordinates of the axis. A malformed `fvar` table makes the font load as a static font, and a
+  malformed `avar` table, or one for another number of axes, counts as absent. For an `avar` version 2 table the library
+  reads the version 1 segment maps. The library normalises a coordinate as the Font Variations Overview says, and
+  its F2Dot14 coordinates match fontTools `normalizeLocation` with `avar` for `Teko-Variable.ttf` and
+  `SourceSans3VF-Upright.otf` at the minimum, at each named instance and at the maximum. (#125)
+- **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
+  axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
+  italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face
+  covered the weight and width of its default instance. A part without an axis still comes from the `OS/2` table. (#125)
 - **Font weight, width and slope.** `FontWeight` (1 to 1000), `FontWidth` (50 to 200 percent) and `FontSlope`
   (`Normal`, `Italic` or `Oblique(degrees)`, with `FontSlopeKind`) hold the parts of a font style with the ranges of
   the CSS `font-weight`, `font-stretch` and `font-style` properties. `FontWeight` and `FontWidth` have the CSS

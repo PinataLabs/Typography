@@ -74,7 +74,7 @@ internal partial class StreamFontMetrics : FontMetrics
         this.trueTypeFontTables = tables;
         this.outlineType = OutlineType.TrueType;
         this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
-        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle);
+        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle, tables.Fvar);
         this.glyphCache = new();
         if (tables.Colr is not null)
         {
@@ -95,7 +95,7 @@ internal partial class StreamFontMetrics : FontMetrics
         this.compactFontTables = tables;
         this.outlineType = OutlineType.CFF;
         this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
-        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle);
+        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle, tables.Fvar);
         this.glyphCache = new();
         if (tables.Colr is not null)
         {
@@ -173,6 +173,15 @@ internal partial class StreamFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     public override float ItalicAngle => this.italicAngle;
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<FontVariationAxis> VariationAxes => this.description.Fvar?.Axes ?? [];
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<FontNamedInstance> NamedInstances => this.description.Fvar?.NamedInstances ?? [];
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<FontVariation> Variations => this.description.Fvar?.DefaultVariations ?? [];
 
     /// <inheritdoc/>
     internal override bool TryGetGlyphId(CodePoint codePoint, out ushort glyphId)

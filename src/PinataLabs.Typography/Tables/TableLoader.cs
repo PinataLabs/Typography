@@ -14,6 +14,7 @@ using PinataLabs.Typography.Tables.General.Post;
 using PinataLabs.Typography.Tables.TrueType;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Tables.TrueType.Hinting;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables;
 
@@ -48,6 +49,8 @@ internal class TableLoader
         this.Register(PostTable.TableName, PostTable.Load);
         this.Register(Cff1Table.TableName, Cff1Table.Load);
         this.Register(Cff2Table.TableName, Cff2Table.Load);
+        this.Register(FvarTable.TableName, FvarTable.Load);
+        this.Register(AvarTable.TableName, AvarTable.Load);
     }
 
     public static TableLoader Default { get; } = new();

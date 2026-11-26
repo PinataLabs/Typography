@@ -195,3 +195,27 @@ static PinataLabs.Typography.FontStyle.operator ==(PinataLabs.Typography.FontSty
 *REMOVED*PinataLabs.Typography.FontStyle.BoldItalic = PinataLabs.Typography.FontStyle.Bold | PinataLabs.Typography.FontStyle.Italic -> PinataLabs.Typography.FontStyle
 *REMOVED*PinataLabs.Typography.FontStyle.Italic = 2 -> PinataLabs.Typography.FontStyle
 *REMOVED*PinataLabs.Typography.FontStyle.Regular = 0 -> PinataLabs.Typography.FontStyle
+abstract PinataLabs.Typography.FontMetrics.NamedInstances.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontNamedInstance!>!
+abstract PinataLabs.Typography.FontMetrics.VariationAxes.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontVariationAxis!>!
+abstract PinataLabs.Typography.FontMetrics.Variations.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontVariation>!
+override PinataLabs.Typography.FontVariation.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontVariation.GetHashCode() -> int
+override PinataLabs.Typography.FontVariation.ToString() -> string!
+PinataLabs.Typography.FontNamedInstance
+PinataLabs.Typography.FontNamedInstance.Name(System.Globalization.CultureInfo! culture) -> string!
+PinataLabs.Typography.FontNamedInstance.Variations.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontVariation>!
+PinataLabs.Typography.FontVariation
+PinataLabs.Typography.FontVariation.Axis.get -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+PinataLabs.Typography.FontVariation.Equals(PinataLabs.Typography.FontVariation other) -> bool
+PinataLabs.Typography.FontVariation.FontVariation() -> void
+PinataLabs.Typography.FontVariation.FontVariation(PinataLabs.Typography.Tables.AdvancedTypographic.Tag axis, float value) -> void
+PinataLabs.Typography.FontVariation.Value.get -> float
+PinataLabs.Typography.FontVariationAxis
+PinataLabs.Typography.FontVariationAxis.DefaultValue.get -> float
+PinataLabs.Typography.FontVariationAxis.IsHidden.get -> bool
+PinataLabs.Typography.FontVariationAxis.MaxValue.get -> float
+PinataLabs.Typography.FontVariationAxis.MinValue.get -> float
+PinataLabs.Typography.FontVariationAxis.Name(System.Globalization.CultureInfo! culture) -> string!
+PinataLabs.Typography.FontVariationAxis.Tag.get -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+static PinataLabs.Typography.FontVariation.operator !=(PinataLabs.Typography.FontVariation left, PinataLabs.Typography.FontVariation right) -> bool
+static PinataLabs.Typography.FontVariation.operator ==(PinataLabs.Typography.FontVariation left, PinataLabs.Typography.FontVariation right) -> bool

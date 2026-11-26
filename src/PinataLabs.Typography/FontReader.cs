@@ -176,6 +176,35 @@ internal sealed class FontReader
             ? header
             : null;
 
+    /// <summary>
+    /// Reads a whole table into memory, for a table that checks its own bounds.
+    /// </summary>
+    /// <param name="tableName">The tag of the table.</param>
+    /// <returns>
+    /// The bytes of the table, which are fewer than its header says when the file ends first, or <see langword="null"/>
+    /// when the font has no such table or its compressed data cannot be read.
+    /// </returns>
+    public byte[]? TryReadTableBytes(string tableName)
+    {
+        try
+        {
+            if (!this.TryGetReaderAtTablePosition(tableName, out BigEndianBinaryReader? reader, out TableHeader? header))
+            {
+                return null;
+            }
+
+            using (reader)
+            {
+                long available = Math.Max(reader.BaseStream.Length - reader.BaseStream.Position, 0);
+                return reader.ReadBytes((int)Math.Min(header.Length, available));
+            }
+        }
+        catch (Exception ex) when (ex is InvalidFontFileException or IOException or InvalidDataException)
+        {
+            return null;
+        }
+    }
+
     public BigEndianBinaryReader GetReaderAtTablePosition(string tableName)
     {
         if (!this.TryGetReaderAtTablePosition(tableName, out BigEndianBinaryReader? reader))

@@ -9,6 +9,7 @@ using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.General;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.WellKnownIds;
 
 namespace PinataLabs.Typography;
@@ -27,10 +28,12 @@ public class FontDescription
     /// <param name="os2">The os2 table.</param>
     /// <param name="head">The head table.</param>
     /// <param name="italicAngle">The italic angle of the post table.</param>
-    internal FontDescription(NameTable nameTable, OS2Table? os2, HeadTable? head, float italicAngle)
+    /// <param name="fvar">The fvar table, if the font is a variable font.</param>
+    internal FontDescription(NameTable nameTable, OS2Table? os2, HeadTable? head, float italicAngle, FvarTable? fvar)
     {
         this.nameTable = nameTable;
-        this.StyleRange = FontStyleRange.FromTables(os2, head, italicAngle);
+        this.Fvar = fvar;
+        this.StyleRange = FontStyleRange.FromTables(os2, head, italicAngle, fvar);
 
         this.FontNameInvariantCulture = this.FontName(CultureInfo.InvariantCulture);
         this.FontFamilyInvariantCulture = this.FontFamily(CultureInfo.InvariantCulture);
@@ -39,8 +42,13 @@ public class FontDescription
 
     /// <summary>
     /// Gets the styles that the face covers. A static face covers one weight, one width and one slope.
+    /// A variable face covers the range of its <c>wght</c> and <c>wdth</c> axes, and the slopes that its <c>ital</c>
+    /// and <c>slnt</c> axes reach.
     /// </summary>
     public FontStyleRange StyleRange { get; }
+
+    // The axes and named instances of a variable face, or null for a static face.
+    internal FvarTable? Fvar { get; }
 
     /// <summary>
     /// Gets the name of the font in the invariant culture.
@@ -144,8 +152,9 @@ public class FontDescription
         OS2Table? os2 = reader.TryGetTable<OS2Table>();
         NameTable nameTable = reader.GetTable<NameTable>();
         float italicAngle = PostTable.ReadItalicAngle(reader);
+        FvarTable? fvar = reader.TryGetTable<FvarTable>();
 
-        return new FontDescription(nameTable, os2, head, italicAngle);
+        return new FontDescription(nameTable, os2, head, italicAngle, fvar);
     }
 
     /// <summary>

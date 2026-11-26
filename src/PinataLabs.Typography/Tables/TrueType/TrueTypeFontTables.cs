@@ -10,6 +10,7 @@ using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tables.General.Post;
 using PinataLabs.Typography.Tables.TrueType.Glyphs;
 using PinataLabs.Typography.Tables.TrueType.Hinting;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables.TrueType;
 
@@ -68,6 +69,8 @@ internal sealed class TrueTypeFontTables : IFontTables
     public VerticalHeadTable? Vhea { get; set; }
 
     public VerticalMetricsTable? Vmtx { get; set; }
+
+    public FvarTable? Fvar { get; set; }
 
     // Tables Related to TrueType Outlines
     // +------+-----------------------------------------------+

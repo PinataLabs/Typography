@@ -113,6 +113,25 @@ public abstract class FontMetrics
     public abstract float ItalicAngle { get; }
 
     /// <summary>
+    /// Gets the variation axes of the font, in the order of its <c>fvar</c> table. The list is empty for a static font,
+    /// and for a variable font whose <c>fvar</c> table is malformed, which loads as a static font.
+    /// </summary>
+    public abstract IReadOnlyList<FontVariationAxis> VariationAxes { get; }
+
+    /// <summary>
+    /// Gets the instances that the font names in its <c>fvar</c> table. The list is empty for a static font.
+    /// To draw a named instance, pass its <see cref="FontNamedInstance.Variations"/> to
+    /// <see cref="FontFamily.CreateFont"/>.
+    /// </summary>
+    public abstract IReadOnlyList<FontNamedInstance> NamedInstances { get; }
+
+    /// <summary>
+    /// Gets the user coordinates of this instance, one for each axis in the order of <see cref="VariationAxes"/>.
+    /// The list is empty for a static font, and the default of each axis for the face of a variable font.
+    /// </summary>
+    public abstract IReadOnlyList<FontVariation> Variations { get; }
+
+    /// <summary>
     /// Gets the specified glyph id matching the codepoint.
     /// </summary>
     /// <param name="codePoint">The codepoint.</param>

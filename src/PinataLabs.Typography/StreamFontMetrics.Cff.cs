@@ -9,6 +9,7 @@ using PinataLabs.Typography.Tables.General.Colr;
 using PinataLabs.Typography.Tables.General.Kern;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -54,6 +55,7 @@ internal partial class StreamFontMetrics
 
         ColrTable? colr = reader.TryGetTable<ColrTable>();
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
+        FvarTable? fvar = reader.TryGetTable<FvarTable>();
 
         CompactFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, cff)
         {
@@ -65,6 +67,7 @@ internal partial class StreamFontMetrics
             GPos = gPos,
             Colr = colr,
             Cpal = cpal,
+            Fvar = fvar,
         };
 
         return new StreamFontMetrics(tables);

@@ -92,6 +92,14 @@ public static class TestFonts
     // Written by tests/tools/generate_item_variation_store_reference.py, from the two variable test fonts.
     public static string ItemVariationStoreFontToolsReference => GetFullPath("ItemVariationStore.fonttools.json");
 
+    // Built by tests/tools/generate_font_variations_reference.py, which also writes the fontTools reference.
+    // VariationAxes has the axes wght, wdth, opsz, ital and a hidden GRAD, and VariationSlant has wght and slnt.
+    public static string VariationAxesFile => GetFullPath("Variations/VariationAxes.ttf");
+
+    public static string VariationSlantFile => GetFullPath("Variations/VariationSlant.ttf");
+
+    public static string FontVariationsFontToolsReference => GetFullPath("Variations/FontVariations.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 

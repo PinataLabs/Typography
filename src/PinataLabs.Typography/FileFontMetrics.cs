@@ -106,6 +106,15 @@ internal sealed class FileFontMetrics : FontMetrics
     public override float ItalicAngle => this.fontMetrics.Value.ItalicAngle;
 
     /// <inheritdoc/>
+    public override IReadOnlyList<FontVariationAxis> VariationAxes => this.Description.Fvar?.Axes ?? [];
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<FontNamedInstance> NamedInstances => this.Description.Fvar?.NamedInstances ?? [];
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<FontVariation> Variations => this.Description.Fvar?.DefaultVariations ?? [];
+
+    /// <inheritdoc/>
     internal override bool TryGetGlyphId(CodePoint codePoint, out ushort glyphId)
         => this.fontMetrics.Value.TryGetGlyphId(codePoint, out glyphId);
 
