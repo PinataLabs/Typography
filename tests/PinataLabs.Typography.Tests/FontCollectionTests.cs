@@ -2,10 +2,12 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tests.Fakes;
@@ -180,6 +182,70 @@ public class FontCollectionTests
         await Assert.That(byEnglish.Faces.Count).IsEqualTo(2);
         await Assert.That(byJapanese).IsEqualTo(byEnglish);
         await Assert.That(byJapanese).IsEqualTo(families[0]);
+    }
+
+    [Test]
+    public async Task ReadingWhileAddingFacesDoesNotThrow()
+    {
+        // MatchFace reads the collection on every Font, so a thread that creates fonts
+        // can overlap another thread that adds faces.
+        const int Count = 300;
+        FakeFontInstance[] faces = [.. Enumerable.Range(0, Count).Select(i => FakeFontInstance.CreateWithNames(Name(KnownNameIds.FontFamilyName, "Family " + (i % 7), 0x0409)))];
+        FontCollection current = new();
+        using CancellationTokenSource stop = new();
+        List<Exception> errors = [];
+
+        Task[] readers = [.. Enumerable.Range(0, 3).Select(reader => Task.Run(() =>
+        {
+            try
+            {
+                while (!stop.IsCancellationRequested)
+                {
+                    FontCollection collection = Volatile.Read(ref current);
+                    var metrics = (IFontMetricsCollection)collection;
+                    _ = metrics.GetAllMetrics("Family 0", CultureInfo.InvariantCulture);
+                    _ = collection.Families.Count();
+                    _ = collection.TryGet("Family 3", out _);
+                    using IEnumerator<FontMetrics> e = metrics.GetEnumerator();
+                    while (e.MoveNext())
+                    {
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lock (errors)
+                {
+                    errors.Add(ex);
+                }
+            }
+        }))];
+
+        // Without the lock a reader fails in the first rounds. The time limit is what a pass costs.
+        DateTime end = DateTime.UtcNow.AddSeconds(2);
+        while (DateTime.UtcNow < end)
+        {
+            var next = new FontCollection();
+            var metrics = (IFontMetricsCollection)next;
+            Volatile.Write(ref current, next);
+            foreach (FakeFontInstance face in faces)
+            {
+                metrics.AddMetrics(face);
+            }
+
+            lock (errors)
+            {
+                if (errors.Count > 0)
+                {
+                    break;
+                }
+            }
+        }
+
+        await stop.CancelAsync();
+        await Task.WhenAll(readers);
+
+        await Assert.That(errors).IsEmpty();
     }
 
     private static NameRecord Name(KnownNameIds id, string value, ushort languageId)
