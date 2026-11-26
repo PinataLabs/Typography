@@ -103,6 +103,15 @@ public static class TestFonts
     // Written by tests/tools/generate_cff2_outline_reference.py, from SourceSans3VF-Upright.otf.
     public static string Cff2OutlinesFontToolsReference => GetFullPath("Variations/Cff2Outlines.fonttools.json");
 
+    // Built by tests/tools/generate_metrics_variation_reference.py, which also writes the fontTools reference. Both fonts have
+    // the axes wght and wdth, HVAR with mappings of the side bearings, vhea, vmtx, VVAR, and an MVAR for every metric that the
+    // library reads. The hhea, typo and win metrics differ. VariationMetricsTypo has USE_TYPO_METRICS set, and the other does not.
+    public static string VariationMetricsFile => GetFullPath("Variations/VariationMetrics.ttf");
+
+    public static string VariationMetricsTypoFile => GetFullPath("Variations/VariationMetricsTypo.ttf");
+
+    public static string MetricsVariationsFontToolsReference => GetFullPath("Variations/MetricsVariations.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 

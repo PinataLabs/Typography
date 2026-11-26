@@ -114,6 +114,41 @@ python tests/tools/generate_cff2_outline_reference.py
 
 The output is deterministic for one fontTools version. The file records the version that wrote it.
 
+## Metrics variation reference
+
+`generate_metrics_variation_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/MetricsVariations.fonttools.json`,
+the fontTools reference for the advances, side bearings and global metrics of variation instances (issue #128).
+Neither variable test font has `HVAR` side bearing mappings or `VVAR`, and their `MVAR` varies only the strikeout position
+and the heights, so the script builds two small TrueType fonts that have all of them, next to the reference:
+
+- `VariationMetrics.ttf` has the axes `wght` and `wdth` and six glyphs. Its `HVAR` has an advance width map that shares one
+  row between glyphs, a left side bearing map that leaves a glyph out, and a right side bearing map. It has `vhea`, `vmtx`
+  and a `VVAR` with the matching maps, and an `MVAR` that varies every metric that the library reads: the ascender,
+  descender and line gap, the win ascent and descent, the `vhea` metrics, and the subscript, superscript, strikeout and
+  underline values. Its `hhea`, typo and win values differ, and its `USE_TYPO_METRICS` bit is clear.
+- `VariationMetricsTypo.ttf` is the same font with the `USE_TYPO_METRICS` bit set.
+
+The glyphs of both fonts have no `gvar` variation, so only their metrics change.
+
+For these two fonts and the two variable fonts of the test project, the file holds, at the axis minimum, a named instance, the
+axis maximum and some user locations, the advance width of each glyph that `hmtx` lists and the advance height of each glyph
+that `vmtx` lists (`TTFont.getGlyphSet(location=..., normalized=True)`, rounded as `otRound` does), the global metrics, which
+are the value of a table plus the rounded `MVAR` delta of its tag, and the `MVAR` delta of every tag. For the built fonts
+it also holds the left and top side bearings that the `HVAR` and `VVAR` maps give, which no fontTools function returns:
+the script adds the `VarStoreInstancer` delta to the `hmtx` or `vmtx` value.
+
+fontTools gets the F2Dot14 coordinates that the library normalises to, which the file holds. The script then checks the advances
+and global metrics against HarfBuzz at the same coordinates, and stops when they differ. It also stops when a value is
+within 0.0001 of a half but not on it, because the library's single precision could round that one the other way.
+
+To write the fonts and the file again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
+
+```
+python tests/tools/generate_metrics_variation_reference.py
+```
+
+The output is deterministic for one fontTools version. The file records the version that wrote it.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).
