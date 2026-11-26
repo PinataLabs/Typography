@@ -67,27 +67,12 @@ public struct FontFamily : IEquatable<FontFamily>
         => !(left == right);
 
     /// <summary>
-    /// Create a new instance of the <see cref="Font" /> for the named font family with regular styling.
-    /// </summary>
-    /// <param name="size">The size of the font in PT units.</param>
-    /// <returns>The new <see cref="Font" />.</returns>
-    public Font CreateFont(float size)
-    {
-        if (this == default)
-        {
-            FontsThrowHelper.ThrowDefaultInstance();
-        }
-
-        return new Font(this, size);
-    }
-
-    /// <summary>
     /// Create a new instance of the <see cref="Font" /> for the named font family.
     /// </summary>
     /// <param name="size">The size of the font in PT units.</param>
-    /// <param name="style">The font style.</param>
+    /// <param name="style">The font style. The default value is <see cref="FontStyle.Regular"/>.</param>
     /// <returns>The new <see cref="Font" />.</returns>
-    public Font CreateFont(float size, FontStyle style)
+    public Font CreateFont(float size, FontStyle style = default)
     {
         if (this == default)
         {

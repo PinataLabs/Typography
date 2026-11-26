@@ -39,7 +39,7 @@ public class TextRunTests
     {
         const int threads = 8;
         Font regular = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(20);
-        Font large = new(regular, 32);
+        Font large = regular.WithSize(32);
         const string text = "Hello parallel world";
         TextOptions shared = new(regular)
         {

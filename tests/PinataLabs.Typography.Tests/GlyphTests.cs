@@ -92,7 +92,7 @@ public class GlyphTests
     {
         var fc = (IFontMetricsCollection)new FontCollection();
         Font d = fc.AddMetrics(new FakeFontInstance(text), CultureInfo.InvariantCulture).CreateFont(12);
-        return new Font(d, pointSize);
+        return d.WithSize(pointSize);
     }
 
     [Test]

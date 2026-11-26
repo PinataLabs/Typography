@@ -46,8 +46,7 @@ public class FontMetricsTests
 
         await Assert.That(font.FontMetrics.ItalicAngle).IsEqualTo(0);
 
-        await Assert.That(font.IsBold).IsFalse();
-        await Assert.That(font.IsItalic).IsFalse();
+        await Assert.That(font.Style).IsEqualTo(FontStyle.Regular);
     }
 
     [Test]
@@ -93,8 +92,7 @@ public class FontMetricsTests
 
         await Assert.That(font.FontMetrics.ItalicAngle).IsEqualTo(0);
 
-        await Assert.That(font.IsBold).IsFalse();
-        await Assert.That(font.IsItalic).IsFalse();
+        await Assert.That(font.Style).IsEqualTo(FontStyle.Regular);
     }
 
     [Test]
@@ -140,8 +138,7 @@ public class FontMetricsTests
 
         await Assert.That(font.FontMetrics.ItalicAngle).IsEqualTo(0);
 
-        await Assert.That(font.IsBold).IsFalse();
-        await Assert.That(font.IsItalic).IsFalse();
+        await Assert.That(font.Style).IsEqualTo(FontStyle.Regular);
     }
 
     [Test]

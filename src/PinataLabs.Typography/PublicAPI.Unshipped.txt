@@ -142,3 +142,17 @@ PinataLabs.Typography.FontDescription.LegacyFontFamily(System.Globalization.Cult
 PinataLabs.Typography.GlyphRendererParameters.FontMetrics.get -> PinataLabs.Typography.FontMetrics!
 *REMOVED*PinataLabs.Typography.GlyphRendererParameters.Font.get -> string!
 *REMOVED*PinataLabs.Typography.GlyphRendererParameters.FontStyle.get -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size, PinataLabs.Typography.FontStyle style = PinataLabs.Typography.FontStyle.Regular) -> void
+PinataLabs.Typography.Font.Style.get -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.Font.WithSize(float size) -> PinataLabs.Typography.Font!
+PinataLabs.Typography.Font.WithStyle(PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!
+PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.FontStyle style = PinataLabs.Typography.FontStyle.Regular) -> PinataLabs.Typography.Font!
+*REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, PinataLabs.Typography.FontStyle style) -> void
+*REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, float size) -> void
+*REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, float size, PinataLabs.Typography.FontStyle style) -> void
+*REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size) -> void
+*REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size, PinataLabs.Typography.FontStyle style) -> void
+*REMOVED*PinataLabs.Typography.Font.IsBold.get -> bool
+*REMOVED*PinataLabs.Typography.Font.IsItalic.get -> bool
+*REMOVED*PinataLabs.Typography.FontFamily.CreateFont(float size) -> PinataLabs.Typography.Font!
+*REMOVED*PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!

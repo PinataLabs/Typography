@@ -16,7 +16,7 @@ public class Issues_23
 
         var r = new GlyphRenderer();
 
-        new TextRenderer(r).RenderText("o", new TextOptions(new Font(font, 30)));
+        new TextRenderer(r).RenderText("o", new TextOptions(font.WithSize(30)));
 
         await Assert.That(r.ControlPoints).DoesNotContain(System.Numerics.Vector2.Zero);
     }

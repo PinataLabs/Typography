@@ -30,6 +30,9 @@ An additive or breaking public API change needs all of these:
   the CSS `font-weight`, `font-stretch` and `font-style` properties. `FontWeight` and `FontWidth` have the CSS
   keywords as static properties, such as `FontWeight.Bold` and `FontWidth.Condensed`. The default value of each type
   is its normal value. A constructor clamps a value to the CSS range and rejects `NaN`. (#123)
+- **`Font.Style`, `WithSize` and `WithStyle`.** `Font.Style` is the style that the font was created with.
+  `font.WithSize(size)` and `font.WithStyle(style)` give a font of the same family with another size or style.
+  `Font`, `FontFamily.CreateFont` take the style as an optional parameter, so `CreateFont(12)` is regular. (#123)
 - **Legacy family name.** `FontDescription.LegacyFontFamily(culture)` gives name ID 1, the family name that groups
   at most four faces. `FontDescription.FontFamily(culture)` now gives the typographic family name (see Changed). (#123)
 - **Unicode 18.0.0 scripts and classes.** `ScriptClass` has members for the 16 scripts of Unicode 15.0 to 18.0, with
@@ -279,6 +282,16 @@ An additive or breaking public API change needs all of these:
 ### Removed
 
 These members are removed in #123. Each entry names its replacement.
+
+- `Font.IsBold` and `Font.IsItalic`: use `Font.Style` for the style that was asked for. Neither says what the face
+  has, because a weight of 600 needs a threshold to be bold and no standard sets one.
+- `Font(Font prototype, FontStyle style)`, `Font(Font prototype, float size)` and
+  `Font(Font prototype, float size, FontStyle style)`: use `prototype.WithStyle(style)`, `prototype.WithSize(size)`,
+  or `prototype.WithSize(size).WithStyle(style)`.
+- `Font(FontFamily family, float size)` and `Font(FontFamily family, float size, FontStyle style)`: use
+  `Font(FontFamily family, float size, FontStyle style = default)`. Code that calls either one still compiles.
+- `FontFamily.CreateFont(float size)` and `FontFamily.CreateFont(float size, FontStyle style)`: use
+  `FontFamily.CreateFont(float size, FontStyle style = default)`. Code that calls either one still compiles.
 
 - `GlyphRendererParameters.Font` (a `string`): use `GlyphRendererParameters.FontMetrics`. For the name, read
   `FontMetrics.Description.FontNameInvariantCulture`.

@@ -52,6 +52,6 @@ public class Issues_36
     {
         var fc = (IFontMetricsCollection)new FontCollection();
         Font d = fc.AddMetrics(new FakeFontInstance(text), CultureInfo.InvariantCulture).CreateFont(12);
-        return new Font(d, 1);
+        return d.WithSize(1);
     }
 }
