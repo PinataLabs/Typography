@@ -137,6 +137,17 @@ are the value of a table plus the rounded `MVAR` delta of its tag, and the `MVAR
 it also holds the left and top side bearings that the `HVAR` and `VVAR` maps give, which no fontTools function returns:
 the script adds the `VarStoreInstancer` delta to the `hmtx` or `vmtx` value.
 
+The script also builds two CFF2 fonts, `VariationCff2Vertical.otf` and `VariationCff2VerticalTsb.otf`, and writes
+`Cff2VerticalOrigins.fonttools.json` for them. Both have the axis `wght`, `vhea`, `vmtx` and a `VVAR` with advance heights, and
+the tops of their glyphs move with `wght`. The first maps no top side bearing, so the bearing of an instance is the vertical
+origin of the default outline (its top plus the `vmtx` bearing) minus the top of the varied outline. The second has a `VVAR`
+top side bearing map. The file holds the top and the advance height that fontTools gives, which the script checks against
+HarfBuzz, and the bearing that follows. HarfBuzz is no reference for the origin: for a glyph outside `glyf` it ignores the
+`vmtx` bearing and centres the glyph in its advance height.
+
+The script also checks that HarfBuzz varies a `vhea` descent stored as a positive number as the library does: it adds the
+`MVAR` delta to the stored value, and then negates a sum above zero.
+
 fontTools gets the F2Dot14 coordinates that the library normalises to, which the file holds. The script then checks the advances
 and global metrics against HarfBuzz at the same coordinates, and stops when they differ. It also stops when a value is
 within 0.0001 of a half but not on it, because the library's single precision could round that one the other way.

@@ -100,4 +100,28 @@ public class MvarFontTests
         await Assert.That(face.FontMetrics.VerticalMetrics.Descender).IsEqualTo((short)-500);
         await Assert.That(heavy.FontMetrics.VerticalMetrics.Descender).IsEqualTo((short)-488);
     }
+
+    [Test]
+    [Arguments(500, 100, -512)]
+    [Arguments(500, 400, -500)]
+    [Arguments(500, 900, -488)]
+    [Arguments(5, 100, -17)]
+    [Arguments(5, 900, -7)]
+    [Arguments(-5, 100, -7)]
+    [Arguments(-5, 900, -17)]
+    [Arguments(0, 100, -12)]
+    [Arguments(0, 900, -12)]
+    public async Task AVheaDescenderIsVariedAsStoredAndThenTakenAsNegativeAsHarfBuzzDoes(short stored, float weight, short expected)
+    {
+        // The expected values are those of HarfBuzz, which tools/generate_metrics_variation_reference.py checks for the stored
+        // values 500, 5, -5 and 0. MVAR adds 12 at wght 100 and -12 at wght 900. A sum above zero is negated, so 5 and 12 give
+        // -17 and 5 and -12 give -7, where changing the sign of 5 first would give -5 + 12 = 7.
+        byte[] bytes = VariationFontBytes.Read(FontFile);
+        BinaryPrimitives.WriteInt16BigEndian(VariationFontBytes.Table(bytes, "vhea").Slice(6), stored);
+        FontFamily family = VariationFontBytes.Load(bytes);
+
+        Font font = family.CreateFont(1000, default, [new(Tag.Parse("wght"), weight), new(Tag.Parse("wdth"), 100)]);
+
+        await Assert.That(font.FontMetrics.VerticalMetrics.Descender).IsEqualTo(expected);
+    }
 }
