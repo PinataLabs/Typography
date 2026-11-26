@@ -1070,15 +1070,6 @@ internal static class TextLayout
                         decomposedAdvances[0] = glyphAdvance;
                     }
                 }
-                else if (metrics.Count == 1 && (CodePoint.IsZeroWidthJoiner(codePoint) || CodePoint.IsZeroWidthNonJoiner(codePoint)))
-                {
-                    // The zero-width joiner characters should be ignored when determining word or
-                    // line break boundaries so are safe to skip here. Any existing instances are the result of font error
-                    // unless multiple metrics are associated with code point. In this case they are most likely the result
-                    // of a substitution and shouldn't be ignored.
-                    glyphAdvance = 0;
-                    decomposedAdvances[0] = 0;
-                }
                 else if (!CodePoint.IsNewLine(codePoint))
                 {
                     // Standard text.
