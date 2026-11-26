@@ -262,7 +262,7 @@ internal readonly struct ItemVariationStore
 
             int coordinate = axis < coordinates.Length ? coordinates[axis] : 0;
             float axisScalar = VariationScalar.Get(start, peak, end, coordinate);
-            if (axisScalar == 0)
+            if (axisScalar <= 0)
             {
                 return 0;
             }

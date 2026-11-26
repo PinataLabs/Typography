@@ -375,7 +375,7 @@ internal readonly struct TupleVariationStore
             }
 
             float axisScalar = VariationScalar.Get(start, peak, end, axis < coordinates.Length ? coordinates[axis] : 0);
-            if (axisScalar == 0)
+            if (axisScalar <= 0)
             {
                 scalar = 0;
                 return true;
@@ -460,7 +460,7 @@ internal readonly struct TupleVariationStore
                 this.index++;
                 this.headerPosition = headers.Position;
                 this.dataPosition = end;
-                if (scalar == 0)
+                if (scalar <= 0)
                 {
                     continue;
                 }

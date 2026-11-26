@@ -30,7 +30,7 @@ public class TupleVariationStoreTests
         bool read = GetVariations(store, [F2Dot14(coordinate)], 3, true, out TupleVariation[] variations);
 
         await Assert.That(read).IsTrue();
-        if (expected == 0)
+        if (expected <= 0)
         {
             await Assert.That(variations).IsEmpty();
             return;
@@ -53,7 +53,7 @@ public class TupleVariationStoreTests
 
         GetVariations(store, [F2Dot14(coordinate)], 1, false, out TupleVariation[] variations);
 
-        await Assert.That(variations.Select(variation => (double)variation.Scalar).ToArray()).IsEquivalentTo(expected == 0 ? [] : new[] { expected });
+        await Assert.That(variations.Select(variation => (double)variation.Scalar).ToArray()).IsEquivalentTo(expected <= 0 ? [] : new[] { expected });
     }
 
     [Test]
@@ -82,7 +82,7 @@ public class TupleVariationStoreTests
 
         GetVariations(store, [F2Dot14(coordinate)], 1, false, out TupleVariation[] variations);
 
-        await Assert.That(variations.Select(variation => (double)variation.Scalar).ToArray()).IsEquivalentTo(expected == 0 ? [] : new[] { expected });
+        await Assert.That(variations.Select(variation => (double)variation.Scalar).ToArray()).IsEquivalentTo(expected <= 0 ? [] : new[] { expected });
     }
 
     [Test]
