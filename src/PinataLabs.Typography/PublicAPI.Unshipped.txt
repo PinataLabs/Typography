@@ -139,3 +139,6 @@ static PinataLabs.Typography.FontWidth.UltraExpanded.get -> PinataLabs.Typograph
 static PinataLabs.Typography.FontWidth.operator !=(PinataLabs.Typography.FontWidth left, PinataLabs.Typography.FontWidth right) -> bool
 static PinataLabs.Typography.FontWidth.operator ==(PinataLabs.Typography.FontWidth left, PinataLabs.Typography.FontWidth right) -> bool
 PinataLabs.Typography.FontDescription.LegacyFontFamily(System.Globalization.CultureInfo! culture) -> string!
+PinataLabs.Typography.GlyphRendererParameters.FontMetrics.get -> PinataLabs.Typography.FontMetrics!
+*REMOVED*PinataLabs.Typography.GlyphRendererParameters.Font.get -> string!
+*REMOVED*PinataLabs.Typography.GlyphRendererParameters.FontStyle.get -> PinataLabs.Typography.FontStyle
