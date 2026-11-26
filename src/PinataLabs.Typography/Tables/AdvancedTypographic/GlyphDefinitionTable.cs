@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Diagnostics.CodeAnalysis;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
@@ -27,6 +28,15 @@ internal sealed class GlyphDefinitionTable : Table
 
     public MarkGlyphSetsTable? MarkGlyphSetsTable { get; private set; }
 
+    /// <summary>
+    /// Gets the Item Variation Store of a version 1.3 table, which holds the deltas of the <c>VariationIndex</c>
+    /// device tables of GPOS. A table that has none, or whose store is malformed, gives a <see langword="default"/> store,
+    /// which has no regions, so every delta from it is 0.
+    /// </summary>
+    public ItemVariationStore VariationStore { get; private set; }
+
+    private uint ItemVariationStoreOffset { get; init; }
+
     public static GlyphDefinitionTable? Load(FontReader reader)
     {
         if (!reader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader))
@@ -34,10 +44,22 @@ internal sealed class GlyphDefinitionTable : Table
             return null;
         }
 
+        GlyphDefinitionTable table;
         using (binaryReader)
         {
-            return Load(binaryReader);
+            table = Load(binaryReader);
         }
+
+        // The store reads its deltas from the bytes of the table, which the reader of the other subtables does not give.
+        if (table.ItemVariationStoreOffset != 0
+            && table.ItemVariationStoreOffset <= int.MaxValue
+            && reader.TryReadTableBytes(TableName) is { } bytes
+            && ItemVariationStore.TryRead(bytes, (int)table.ItemVariationStoreOffset, out ItemVariationStore store))
+        {
+            table.VariationStore = store;
+        }
+
+        return table;
     }
 
     public bool TryGetGlyphClass(ushort glyphId, [NotNullWhen(true)] out GlyphClassDef? glyphClass)
@@ -158,10 +180,10 @@ internal sealed class GlyphDefinitionTable : Table
             AttachmentListTable = attachmentListTable,
             LigatureCaretList = ligatureCaretList,
             MarkAttachmentClassDef = markAttachmentClassDef,
-            MarkGlyphSetsTable = markGlyphSetsTable
+            MarkGlyphSetsTable = markGlyphSetsTable,
+            ItemVariationStoreOffset = itemVarStoreOffset
         };
 
-        // TODO: read itemVarStore.
         return glyphDefinitionTable;
     }
 }
