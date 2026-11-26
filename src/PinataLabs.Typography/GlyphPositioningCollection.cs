@@ -366,6 +366,44 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
+    /// Hides the default-ignorable characters that the font drew and GSUB did not substitute, as HarfBuzz does once
+    /// they have done their work in shaping. Each takes the glyph of U+0020 with no advance and no offset, or is
+    /// left out when the font has no U+0020. The character stays, so line breaking does not change.
+    /// </summary>
+    /// <param name="fontMetrics">The font whose glyphs to hide.</param>
+    public void HideDefaultIgnorables(FontMetrics fontMetrics)
+    {
+        bool hasSpace = fontMetrics.TryGetGlyphId(new CodePoint(SpaceFallback.Space), out ushort space);
+        LayoutMode layoutMode = this.TextOptions.LayoutMode;
+        for (int i = this.glyphs.Count - 1; i >= 0; i--)
+        {
+            GlyphPositioningData glyph = this.glyphs[i];
+            GlyphShapingData data = glyph.Data;
+            if (!this.ShouldProcess(fontMetrics, i)
+                || data.IsSubstituted
+                || !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)data.CodePoint.Value))
+            {
+                continue;
+            }
+
+            if (!hasSpace)
+            {
+                this.glyphs.RemoveAt(i);
+                continue;
+            }
+
+            GlyphMetrics metrics = fontMetrics
+                .GetGlyphMetrics(data.CodePoint, space, data.TextRun.TextAttributes, data.TextRun.TextDecorations, layoutMode, ColorFontSupport.None, data.HasVerticalForm)[0]
+                .CloneForRendering(data.TextRun, data.CodePoint);
+            metrics.SetAdvanceWidth(0);
+            metrics.SetAdvanceHeight(0);
+            data.GlyphId = space;
+            data.Bounds = new(0, 0, 0, 0);
+            glyph.Metrics = [metrics];
+        }
+    }
+
+    /// <summary>
     /// Returns a value indicating whether the element at the given index should be processed.
     /// </summary>
     /// <param name="fontMetrics">The font face with metrics.</param>

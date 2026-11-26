@@ -40,6 +40,7 @@ internal class GlyphShapingData
         this.LigatureComponent = data.LigatureComponent;
         this.MarkAttachment = data.MarkAttachment;
         this.CursiveAttachment = data.CursiveAttachment;
+        this.IsSubstituted = data.IsSubstituted;
         this.IsDecomposed = data.IsDecomposed;
         this.HasVerticalForm = data.HasVerticalForm;
         this.SpaceFallback = data.SpaceFallback;
