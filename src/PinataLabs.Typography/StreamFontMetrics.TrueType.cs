@@ -58,7 +58,8 @@ internal partial class StreamFontMetrics
                         maxp.MaxStorage,
                         maxp.MaxFunctionDefs,
                         maxp.MaxInstructionDefs,
-                        maxp.MaxTwilightPoints);
+                        maxp.MaxTwilightPoints,
+                        this.coordinates.Values.ToArray());
 
                     FpgmTable? fpgm = tables.Fpgm;
                     if (fpgm is not null)
