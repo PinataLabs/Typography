@@ -2,6 +2,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using PinataLabs.Typography.Tables.Variations;
+
 namespace PinataLabs.Typography.Tables.Cff;
 
 internal sealed class Cff2Table : Table, ICffTable
@@ -9,8 +12,13 @@ internal sealed class Cff2Table : Table, ICffTable
     internal const string TableName = "CFF2";
 
     private readonly CffGlyphData[] glyphs;
+    private readonly ItemVariationStore store;
 
-    public Cff2Table(CffGlyphData[] glyphs) => this.glyphs = glyphs;
+    private Cff2Table(CffGlyphData[] glyphs, in ItemVariationStore store)
+    {
+        this.glyphs = glyphs;
+        this.store = store;
+    }
 
     public int GlyphCount => this.glyphs.Length;
 
@@ -26,20 +34,34 @@ internal sealed class Cff2Table : Table, ICffTable
 
         using (binaryReader)
         {
-            return new(Cff2Parser.Load(binaryReader.ReadBytes((int)header.Length)));
+            return Create(binaryReader.ReadBytes((int)header.Length));
         }
     }
 
     /// <summary>
     /// Loads a CFF2 table from a reader positioned at the start of the table, reading to the end of the stream.
-    /// CFF2 fonts are loaded at their default instance: <c>blend</c> operators use their default values and the
-    /// variation axes are ignored.
+    /// The glyphs are those of the default instance: the <c>blend</c> operators of a glyph scale their deltas by 0.
+    /// A variation instance draws a glyph with <see cref="CffGlyphData.WithBlendScalars"/>.
     /// </summary>
     /// <param name="reader">The reader.</param>
     /// <returns>The <see cref="Cff2Table"/>.</returns>
     public static Cff2Table Load(BigEndianBinaryReader reader)
     {
         long remaining = reader.BaseStream.Length - reader.BaseStream.Position;
-        return new(Cff2Parser.Load(reader.ReadBytes((int)remaining)));
+        return Create(reader.ReadBytes((int)remaining));
+    }
+
+    /// <summary>
+    /// Gets the scalars that the <c>blend</c> operators of a variation instance multiply their deltas with.
+    /// </summary>
+    /// <param name="coordinates">The normalised F2Dot14 coordinates of the instance, in <c>fvar</c> order.</param>
+    /// <returns>For each ItemVariationData of the variation store, the scalars of the regions that it names. A malformed one is <see langword="null"/>.</returns>
+    public float[]?[] CreateBlendScalars(ReadOnlySpan<short> coordinates)
+        => Cff2Parser.CreateBlendScalars(this.store, this.store.CreateScalars(coordinates));
+
+    private static Cff2Table Create(byte[] data)
+    {
+        CffGlyphData[] glyphs = Cff2Parser.Load(data, out ItemVariationStore store);
+        return new Cff2Table(glyphs, store);
     }
 }

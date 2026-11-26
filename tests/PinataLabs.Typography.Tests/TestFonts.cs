@@ -100,6 +100,9 @@ public static class TestFonts
 
     public static string FontVariationsFontToolsReference => GetFullPath("Variations/FontVariations.fonttools.json");
 
+    // Written by tests/tools/generate_cff2_outline_reference.py, from SourceSans3VF-Upright.otf.
+    public static string Cff2OutlinesFontToolsReference => GetFullPath("Variations/Cff2Outlines.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 

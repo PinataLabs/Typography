@@ -18,7 +18,7 @@ internal readonly struct CffGlyphData
     private readonly Matrix3x2? transform;
     private readonly Matrix3x2? glyphMatrix;
     private readonly CffFont? font;
-    private readonly int[]? blendRegionCounts;
+    private readonly float[]?[]? blendScalars;
     private readonly int vsIndex;
 
     public CffGlyphData(
@@ -27,10 +27,10 @@ internal readonly struct CffGlyphData
         CffIndex localSubrs,
         float nominalWidthX,
         ReadOnlyMemory<byte> charString,
-        int[]? blendRegionCounts = null,
+        float[]?[]? blendScalars = null,
         int vsIndex = 0)
     {
-        this.blendRegionCounts = blendRegionCounts;
+        this.blendScalars = blendScalars;
         this.vsIndex = vsIndex;
         this.GlyphIndex = glyphIndex;
         this.globalSubrs = globalSubrs;
@@ -58,7 +58,25 @@ internal readonly struct CffGlyphData
         this.transform = transform;
     }
 
+    private CffGlyphData(in CffGlyphData glyph, float[]?[] blendScalars)
+    {
+        this = glyph;
+        this.blendScalars = blendScalars;
+    }
+
     public ushort GlyphIndex { get; }
+
+    /// <summary>
+    /// Gets a copy of a CFF2 glyph that blends at the coordinates of a variation instance. The glyph that the table gives
+    /// blends with scalars of 0, which is the default instance.
+    /// </summary>
+    /// <param name="blendScalars">
+    /// For each ItemVariationData of the variation store, the scalars of the regions that it names, as
+    /// <see cref="Cff2Table.CreateBlendScalars"/> gives them. A subtable that the store lacks is <see langword="null"/>.
+    /// </param>
+    /// <returns>The <see cref="CffGlyphData"/>.</returns>
+    public CffGlyphData WithBlendScalars(float[]?[] blendScalars)
+        => new(in this, blendScalars);
 
     /// <summary>
     /// Gets a copy of the glyph that writes its outline in the units of the 'head' table, as text layout
@@ -170,6 +188,6 @@ internal readonly struct CffGlyphData
             stack,
             transient,
             this.font,
-            this.blendRegionCounts,
+            this.blendScalars,
             this.vsIndex);
 }

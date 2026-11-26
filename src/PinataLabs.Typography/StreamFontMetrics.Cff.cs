@@ -88,6 +88,11 @@ internal partial class StreamFontMetrics
         VerticalMetricsTable? vtmx = tables.Vmtx;
 
         CffGlyphData vector = cff.GetGlyph(glyphId);
+        if (this.blendScalars is not null)
+        {
+            vector = vector.WithBlendScalars(this.blendScalars);
+        }
+
         Bounds bounds = vector.GetBounds();
         ushort advanceWidth = htmx.GetAdvancedWidth(glyphId);
         short lsb = htmx.GetLeftSideBearing(glyphId);

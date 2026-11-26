@@ -9,7 +9,7 @@ using PinataLabs.Typography.Unicode;
 namespace PinataLabs.Typography.Tests;
 
 /// <summary>
-/// Tests for fonts with a 'CFF2' outline table, rendered at their default instance.
+/// Tests for fonts with a 'CFF2' outline table, rendered at their default instance. Cff2VariationOutlineTests covers the others.
 /// </summary>
 public class Cff2FontTests
 {
@@ -38,7 +38,7 @@ public class Cff2FontTests
     public async Task DefaultInstanceGlyphMetricsMatchReference(
         char c, int glyphId, int advance, int xMin, int yMin, int xMax, int yMax)
     {
-        Font font = new FontCollection().Add(TestFonts.SourceSans3VariableCff2File).CreateFont(12);
+        Font font = CreateDefaultInstanceFont(12);
         CodePoint codePoint = new(c);
 
         await Assert.That(font.FontMetrics.TryGetGlyphMetrics(
@@ -79,11 +79,18 @@ public class Cff2FontTests
     public async Task MeasuredAdvanceMatchesHmtx(string text, int hmtxAdvance)
     {
         // At 1000 upem and 72 dpi, pixels equal font units.
-        Font font = new FontCollection().Add(TestFonts.SourceSans3VariableCff2File).CreateFont(1000);
+        Font font = CreateDefaultInstanceFont(1000);
         TextOptions options = new(font) { Dpi = 72 };
 
         FontRectangle advance = TextMeasurer.MeasureAdvance(text, options);
 
         await Assert.That(advance.Width).IsEqualTo(hmtxAdvance).Within(0.01F);
+    }
+
+    // A regular request on this font is the instance wght 400, because the default is wght 200.
+    private static Font CreateDefaultInstanceFont(float size)
+    {
+        FontFamily family = new FontCollection().Add(TestFonts.SourceSans3VariableCff2File);
+        return family.CreateFont(size, default, [.. family.Faces[0].Variations]);
     }
 }

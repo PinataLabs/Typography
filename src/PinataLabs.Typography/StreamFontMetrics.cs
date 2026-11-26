@@ -168,6 +168,7 @@ internal partial class StreamFontMetrics : FontMetrics
         this.underlinePosition = face.underlinePosition;
         this.underlineThickness = face.underlineThickness;
         this.italicAngle = face.italicAngle;
+        this.blendScalars = (face.compactFontTables?.Cff as Cff2Table)?.CreateBlendScalars(coordinates.Values);
     }
 
     /// <summary>

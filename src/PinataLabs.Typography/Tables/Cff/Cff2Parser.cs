@@ -10,9 +10,8 @@ namespace PinataLabs.Typography.Tables.Cff;
 /// <summary>
 /// Parses a Compact Font Format version 2 (CFF2) table as described in the OpenType specification:
 /// https://learn.microsoft.com/typography/opentype/spec/cff2
-/// Only what is required to render the default instance is read. The Item Variation Store is parsed far enough
-/// to know the number of variation regions per ItemVariationData, so <c>blend</c> operators can be skipped
-/// correctly (the default values are kept and the deltas discarded).
+/// The glyphs it gives are those of the default instance: their <c>blend</c> operators scale each delta by 0. A variation
+/// instance blends with the region scalars of its own coordinates, which <see cref="CreateBlendScalars"/> gives.
 /// </summary>
 internal static class Cff2Parser
 {
@@ -29,7 +28,35 @@ internal static class Cff2Parser
     private const int OpSubrs = 19;
     private const int OpVsIndex = 22;
 
-    public static CffGlyphData[] Load(byte[] data)
+    /// <summary>
+    /// Gets, for each ItemVariationData of a variation store, the scalars of the regions that it names, which a <c>blend</c>
+    /// operator multiplies its deltas with.
+    /// </summary>
+    /// <param name="store">The variation store of the CFF2 table.</param>
+    /// <param name="scalars">The region scalars of the store for one set of coordinates.</param>
+    /// <returns>
+    /// One array for each subtable of the store, in the order of the store. A subtable that is malformed is
+    /// <see langword="null"/>, and a glyph that blends with it fails.
+    /// </returns>
+    public static float[]?[] CreateBlendScalars(in ItemVariationStore store, in ItemVariationScalars scalars)
+    {
+        float[]?[] subtables = new float[]?[store.DataCount];
+        for (int i = 0; i < subtables.Length; i++)
+        {
+            if (store.TryGetDataCounts(i, out _, out int regionCount))
+            {
+                float[] regions = new float[regionCount];
+                if (scalars.TryGetRegionScalars(i, regions, out _))
+                {
+                    subtables[i] = regions;
+                }
+            }
+        }
+
+        return subtables;
+    }
+
+    public static CffGlyphData[] Load(byte[] data, out ItemVariationStore store)
     {
         Cursor header = new(data, 0);
         byte major = header.ReadByte();
@@ -58,21 +85,16 @@ internal static class Cff2Parser
         CffIndex charStrings = CffIndex.Read(data, charStringsOffset, 4, out _);
 
         // A store that is missing or malformed is absent. A glyph with a blend operator then fails, as it does with no store.
-        // A subtable that is malformed has the count -1, and only a glyph that blends with it fails.
-        ItemVariationStore store = default;
+        // A subtable that is malformed has no scalars, and only a glyph that blends with it fails.
+        store = default;
         if (vstoreOffset > 0)
         {
             ItemVariationStore.TryReadCff2(data, vstoreOffset, out store);
         }
 
-        int[] regionCounts = new int[store.DataCount];
-        for (int i = 0; i < regionCounts.Length; i++)
-        {
-            if (!store.TryGetDataCounts(i, out _, out regionCounts[i]))
-            {
-                regionCounts[i] = -1;
-            }
-        }
+        // At the default instance every delta counts 0 times, so the scalars are not those of the region list, where a
+        // region that no axis constrains has the scalar 1.
+        float[]?[] blendScalars = CreateBlendScalars(store, new ItemVariationScalars(store, new float[store.RegionCount]));
 
         FontDictData[] fonts = ReadFontDicts(data, fdArrayOffset);
         ushort[] fdSelect = fdSelectOffset > 0
@@ -94,7 +116,7 @@ internal static class Cff2Parser
             }
 
             FontDictData font = fonts[fd];
-            glyphs[i] = new CffGlyphData((ushort)i, globalSubrs, font.LocalSubrs, 0, charString, regionCounts, font.VsIndex);
+            glyphs[i] = new CffGlyphData((ushort)i, globalSubrs, font.LocalSubrs, 0, charString, blendScalars, font.VsIndex);
         }
 
         return glyphs;
