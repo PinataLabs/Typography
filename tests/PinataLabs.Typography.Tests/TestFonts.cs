@@ -77,6 +77,9 @@ public static class TestFonts
     // Written by tests/tools/generate_khmer_reference.py.
     public static string KhmerHarfBuzzReference => GetFullPath("Khmer.harfbuzz.json");
 
+    // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
+    public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");

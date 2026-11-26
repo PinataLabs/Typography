@@ -429,6 +429,31 @@ python tests/tools/generate_universal_forms_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Hebrew marks reference
+
+`generate_hebrew_marks_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/HebrewMarks.harfbuzz.json`. It
+holds where HarfBuzz draws Hebrew letters and the GPOS marks on them, in three cases:
+
+- `GposKernAcrossMark`: `Segoeui.ttf` kerns lamed and final mem in a GPOS lookup that ignores marks. HarfBuzz skips
+  the qamats between the two letters and kerns them.
+- `ThreeMarks`: `TimesNewRoman.ttf` and `Segoeui.ttf` attach qamats to an alef, meteg to the qamats and etnahta to
+  the meteg. HarfBuzz attaches a mark to the mark before it when the two marks belong to the same base.
+- `KernTableMovesBase`: the script builds `HebrewKernMark.ttf`. It has a `kern` table, and a GPOS table with a
+  `mark` feature and no `kern` feature. HarfBuzz kerns with the `kern` table after the GPOS lookups and then places
+  each mark from its base, so a mark moves with a base that the `kern` table moved. The font has Latin letters too,
+  for the same case in text that runs left to right.
+
+`HebrewMarkTests` checks that the library draws each glyph in the same place.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_hebrew_marks_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Khmer reference
 
 `generate_khmer_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Khmer.harfbuzz.json`, how the Khmer
