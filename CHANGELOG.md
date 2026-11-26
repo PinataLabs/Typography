@@ -298,6 +298,10 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- A font with no `glyf`, `CFF ` or `CFF2` outline table is absent from `SystemFonts`. On macOS this is PingFang, which
+  keeps its outlines in Apple's `hvgl` table. Before, the font was listed and threw `MissingFontTableException` when it
+  was first used. `FontCollection.Add` and `FontCollection.AddCollection` throw `InvalidFontFileException` for such a
+  font when it is added, and not later when it is used. (#136)
 - A glyph at or past `hhea.numberOfHMetrics` takes the last advance width in `hmtx`, as the OpenType spec says.
   Before, it took the advance of glyph 0, so a font whose `.notdef` advance differs from the advance that its later
   glyphs share gave those glyphs the `.notdef` advance. `vmtx` and `vhea.numOfLongVerMetrics` had the same fault.
