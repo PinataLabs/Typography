@@ -21,8 +21,6 @@ internal static class ShaperFactory
         Hangul,
         Hebrew,
         Indic,
-
-        // HarfBuzz has a Khmer shaper. IndicShaper shapes Khmer here.
         Khmer,
         Myanmar,
         Thai,
@@ -45,7 +43,8 @@ internal static class ShaperFactory
         {
             ShaperKind.Arabic => new ArabicShaper(script, textOptions),
             ShaperKind.Hangul => new HangulShaper(script, textOptions),
-            ShaperKind.Indic or ShaperKind.Khmer => new IndicShaper(script, substitutionScript, textOptions),
+            ShaperKind.Indic => new IndicShaper(script, substitutionScript, textOptions),
+            ShaperKind.Khmer => new KhmerShaper(script, textOptions),
             ShaperKind.Myanmar => new MyanmarShaper(script, textOptions),
             ShaperKind.Universal => new UniversalShaper(script, false, textOptions),
             ShaperKind.UniversalJoining => new UniversalShaper(script, true, textOptions),

@@ -91,9 +91,16 @@ public static partial class Generator
         { 0x1CEF, Categories.Symbol },
         { 0x1CF0, Categories.Symbol },
         { 0x1CF1, Categories.Symbol },
-        { 0x17C6, Categories.N },
         { 0x2010, Categories.Placeholder },
         { 0x2011, Categories.Placeholder },
+
+        // HarfBuzz takes these as bases, as the dotted circle.
+        { 0x2015, Categories.Placeholder },
+        { 0x2022, Categories.Placeholder },
+        { 0x25FB, Categories.Placeholder },
+        { 0x25FC, Categories.Placeholder },
+        { 0x25FD, Categories.Placeholder },
+        { 0x25FE, Categories.Placeholder },
         { 0x25CC, Categories.Dotted_Circle },
         { 0x0930, Categories.Ra },
         { 0x09B0, Categories.Ra },
@@ -106,7 +113,33 @@ public static partial class Generator
         { 0x0CB0, Categories.Ra },
         { 0x0D30, Categories.Ra },
         { 0x0DBB, Categories.Ra },
-        { 0x179A, Categories.Ra }
+
+        // Khmer, as HarfBuzz gives them.
+        { 0x179A, Categories.Ra },
+        { 0x17C9, Categories.Robatic },
+        { 0x17CA, Categories.Robatic },
+        { 0x17CC, Categories.Robatic },
+        { 0x17C6, Categories.Xgroup },
+        { 0x17CB, Categories.Xgroup },
+        { 0x17CD, Categories.Xgroup },
+        { 0x17CE, Categories.Xgroup },
+        { 0x17CF, Categories.Xgroup },
+        { 0x17D0, Categories.Xgroup },
+        { 0x17D1, Categories.Xgroup },
+        { 0x17C7, Categories.Ygroup },
+        { 0x17C8, Categories.Ygroup },
+        { 0x17D3, Categories.Ygroup },
+        { 0x17DD, Categories.Ygroup },
+        { 0x17D9, Categories.Placeholder }
+    };
+
+    // The Khmer grammar has a category for each place of a vowel sign.
+    private static readonly Dictionary<Positions, Categories> KhmerVowelMap = new()
+    {
+        { Positions.Pre_C, Categories.VPre },
+        { Positions.Above_C, Categories.VAbv },
+        { Positions.Below_C, Categories.VBlw },
+        { Positions.Post_C, Categories.VPst }
     };
 
     private static readonly Dictionary<IPC, Positions> PositionMap = new()
@@ -215,6 +248,11 @@ public static partial class Generator
         {
             Codepoint codePoint = codePoints[i];
             Categories category = IndicShapingOverrides.GetValueOrDefault(codePoint.Code, CategoryMap.GetValueOrDefault(codePoint.IndicSyllabicCategory, Categories.X));
+            if (category == Categories.M && codePoint.Block == "Khmer")
+            {
+                category = KhmerVowelMap[PositionMap[codePoint.IndicPositionalCategory]];
+            }
+
             int position = GetPosition(codePoint, category);
 
             builder.Set(codePoint.Code, (uint)((symbols[category.ToString()] << 8) | position));
@@ -226,6 +264,9 @@ public static partial class Generator
         StateMachine machine = GetStateMachine("indic", symbols);
 
         GenerateDataClass("IndicShaping", null, null, machine, true);
+
+        // The Khmer shaper finds its syllables with the same categories and a grammar of its own.
+        GenerateDataClass("KhmerShaping", null, null, GetStateMachine("khmer", symbols));
     }
 
     private static void SetBlocks(Codepoint[] codePoints)

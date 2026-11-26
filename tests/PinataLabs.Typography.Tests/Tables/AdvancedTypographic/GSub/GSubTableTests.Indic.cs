@@ -605,7 +605,7 @@ public partial class GSubTableTests
     [Arguments("\u1798\u200c\u17c9\u17d2\u179b\u17c1\u17c7", new int[] { 107, 68, 115, 172, 113 })]
     [Arguments("\u1794\u17ca\u17d0", new int[] { 64, 116, 122 })]
     [Arguments("\u1793\u17c2\u17ce", new int[] { 108, 63, 120 })]
-    [Arguments("\u1780\u17c1\u17d2\u179a", new int[] { 107, 171, 44 })]
+    [Arguments("\u1780\u17c1\u17d2\u179a", new int[] { 171, 107, 44 })]
     [Arguments("\u1780\u17c0\u17d2\u179a", new int[] { 171, 107, 44, 106 })]
     [Arguments("\u1780\u17c4\u17d2\u179a", new int[] { 171, 107, 44, 110 })]
     [Arguments("\u1780\u17c5\u17d2\u179a", new int[] { 171, 107, 44, 111 })]

@@ -34,11 +34,6 @@ public class KhmerTests
         foreach (JsonElement[] row in HarfBuzz.Rows)
         {
             string text = row[0].GetString()!;
-            if (IsKnownDifference(text))
-            {
-                continue;
-            }
-
             (int Id, int X, int Y)[] expected = row[1].EnumerateArray().Select(g => (g[0].GetInt32(), g[1].GetInt32(), g[2].GetInt32())).ToArray();
             IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font));
             (int Id, int X, int Y)[] actual = layout
@@ -57,16 +52,6 @@ public class KhmerTests
 
         await Assert.That(different).IsEmpty();
     }
-
-    // The syllables that #114 tracks: ROBAT after a vowel, which HarfBuzz takes as a broken cluster, and five
-    // syllables whose last glyph takes another contextual form.
-    private static bool IsKnownDifference(string text)
-        => (text.Length >= 3 && text[^1] == '៌' && text[^2] is >= 'ា' and <= 'ំ')
-            || text is "រ្រ្តេ"
-                or "ញ្រឿ"
-                or "ញ្រៀ"
-                or "ញ៉ុ"
-                or "ញ៉ូ";
 
     private sealed class Reference
     {

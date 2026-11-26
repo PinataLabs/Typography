@@ -1,0 +1,20 @@
+# The syllable machine of the Khmer shaper in HarfBuzz 15.0.0 (hb-ot-shaper-khmer-machine.rl).
+# Coeng is the category that HarfBuzz calls H. ROBAT can follow a consonant only, so a ROBAT after a vowel sign
+# starts a broken cluster of its own.
+
+c = C | Ra | V;
+cn = c ((ZWJ | ZWNJ)? Robatic)?;
+joiner = ZWJ | ZWNJ;
+xgroup = (joiner* Xgroup)*;
+ygroup = Ygroup*;
+
+matra_group = VPre? xgroup VBlw? xgroup (joiner? VAbv)? xgroup VPst?;
+syllable_tail = xgroup matra_group xgroup (Coeng c)? ygroup;
+
+broken_cluster = Robatic? (Coeng cn)* (Coeng | syllable_tail);
+consonant_syllable = (cn | Placeholder | Dotted_Circle) broken_cluster;
+
+Main =
+    consonant_syllable:consonant_syllable
+  | broken_cluster:broken_cluster
+;
