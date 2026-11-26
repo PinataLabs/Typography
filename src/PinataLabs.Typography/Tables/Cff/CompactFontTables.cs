@@ -72,6 +72,8 @@ internal sealed class CompactFontTables : IFontTables
 
     public VvarTable? Vvar { get; set; }
 
+    public MvarTable? Mvar { get; set; }
+
     public FvarTable? Fvar { get; set; }
 
     // Tables Related to CFF Outlines

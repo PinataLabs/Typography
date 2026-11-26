@@ -122,6 +122,7 @@ internal partial class StreamFontMetrics
         // Only a variable font has instances to vary, so only it needs these.
         HvarTable? hvar = fvar is null ? null : reader.TryGetTable<HvarTable>();
         VvarTable? vvar = fvar is null ? null : reader.TryGetTable<VvarTable>();
+        MvarTable? mvar = fvar is null ? null : reader.TryGetTable<MvarTable>();
 
         TrueTypeFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf)
         {
@@ -138,6 +139,7 @@ internal partial class StreamFontMetrics
             Cpal = cpal,
             Hvar = hvar,
             Vvar = vvar,
+            Mvar = mvar,
             Fvar = fvar,
         };
 

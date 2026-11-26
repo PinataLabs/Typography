@@ -74,6 +74,8 @@ internal sealed class TrueTypeFontTables : IFontTables
 
     public VvarTable? Vvar { get; set; }
 
+    public MvarTable? Mvar { get; set; }
+
     public FvarTable? Fvar { get; set; }
 
     // Tables Related to TrueType Outlines

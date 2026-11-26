@@ -148,9 +148,13 @@ internal interface IFontTables
     // +------+---------------------------+
     // | VVAR | Vertical metrics          |
     // +------+---------------------------+
+    // | MVAR | Metrics variations        |
+    // +------+---------------------------+
     HvarTable? Hvar { get; set; }
 
     VvarTable? Vvar { get; set; }
+
+    MvarTable? Mvar { get; set; }
 }
 #pragma warning restore SA1600 // Elements should be documented
 

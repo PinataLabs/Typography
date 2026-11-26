@@ -53,6 +53,7 @@ internal class TableLoader
         this.Register(AvarTable.TableName, AvarTable.Load);
         this.Register(HvarTable.TableName, HvarTable.Load);
         this.Register(VvarTable.TableName, VvarTable.Load);
+        this.Register(MvarTable.TableName, MvarTable.Load);
     }
 
     public static TableLoader Default { get; } = new();

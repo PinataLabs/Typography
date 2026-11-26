@@ -129,7 +129,7 @@ internal partial class StreamFontMetrics : FontMetrics
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class as a variation instance of a face.
     /// The instance shares the parsed tables of the face, which do not change after they load, and owns what depends on
-    /// the coordinates: the glyph caches and the region scalars of its variation tables.
+    /// the coordinates: the glyph caches, the region scalars of its variation tables, and the global metrics that MVAR varies.
     /// </summary>
     /// <param name="face">The face to vary.</param>
     /// <param name="coordinates">The normalised coordinates of the instance. They are not all 0.</param>
@@ -150,29 +150,14 @@ internal partial class StreamFontMetrics : FontMetrics
             this.colorGlyphCache = new();
         }
 
-        this.horizontalMetrics = face.horizontalMetrics;
-        this.verticalMetrics = face.verticalMetrics;
-        this.HeadFlags = face.HeadFlags;
-        this.unitsPerEm = face.unitsPerEm;
-        this.scaleFactor = face.scaleFactor;
-        this.subscriptXSize = face.subscriptXSize;
-        this.subscriptYSize = face.subscriptYSize;
-        this.subscriptXOffset = face.subscriptXOffset;
-        this.subscriptYOffset = face.subscriptYOffset;
-        this.superscriptXSize = face.superscriptXSize;
-        this.superscriptYSize = face.superscriptYSize;
-        this.superscriptXOffset = face.superscriptXOffset;
-        this.superscriptYOffset = face.superscriptYOffset;
-        this.strikeoutSize = face.strikeoutSize;
-        this.strikeoutPosition = face.strikeoutPosition;
-        this.underlinePosition = face.underlinePosition;
-        this.underlineThickness = face.underlineThickness;
-        this.italicAngle = face.italicAngle;
-        this.blendScalars = (face.compactFontTables?.Cff as Cff2Table)?.CreateBlendScalars(coordinates.Values);
-
         IFontTables tables = (IFontTables?)face.trueTypeFontTables ?? face.compactFontTables!;
         this.hvar = tables.Hvar?.CreateVariation(coordinates.Values) ?? default;
         this.vvar = tables.Vvar?.CreateVariation(coordinates.Values) ?? default;
+        this.blendScalars = (face.compactFontTables?.Cff as Cff2Table)?.CreateBlendScalars(coordinates.Values);
+
+        // The global metrics are those of the tables, with the deltas of MVAR at these coordinates.
+        MvarVariation mvar = tables.Mvar?.CreateVariation(coordinates.Values) ?? default;
+        (this.horizontalMetrics, this.verticalMetrics) = this.Initialize(tables, mvar);
     }
 
     /// <summary>
@@ -491,7 +476,7 @@ internal partial class StreamFontMetrics : FontMetrics
         }
     }
 
-    private (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) Initialize<T>(T tables)
+    private (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) Initialize<T>(T tables, in MvarVariation mvar = default)
         where T : IFontTables
     {
         HeadTable head = tables.Head;
@@ -503,33 +488,33 @@ internal partial class StreamFontMetrics : FontMetrics
         this.HeadFlags = head.Flags;
         this.unitsPerEm = head.UnitsPerEm;
         this.scaleFactor = this.unitsPerEm * 72F; // 72 * UnitsPerEm means 1pt = 1px
-        this.subscriptXSize = os2.SubscriptXSize;
-        this.subscriptYSize = os2.SubscriptYSize;
-        this.subscriptXOffset = os2.SubscriptXOffset;
-        this.subscriptYOffset = os2.SubscriptYOffset;
-        this.superscriptXSize = os2.SuperscriptXSize;
-        this.superscriptYSize = os2.SuperscriptYSize;
-        this.superscriptXOffset = os2.SuperscriptXOffset;
-        this.superscriptYOffset = os2.SuperscriptYOffset;
-        this.strikeoutSize = os2.StrikeoutSize;
-        this.strikeoutPosition = os2.StrikeoutPosition;
-        this.underlinePosition = post.UnderlinePosition;
-        this.underlineThickness = post.UnderlineThickness;
+        this.subscriptXSize = mvar.Apply(MvarVariation.SubscriptXSize, os2.SubscriptXSize);
+        this.subscriptYSize = mvar.Apply(MvarVariation.SubscriptYSize, os2.SubscriptYSize);
+        this.subscriptXOffset = mvar.Apply(MvarVariation.SubscriptXOffset, os2.SubscriptXOffset);
+        this.subscriptYOffset = mvar.Apply(MvarVariation.SubscriptYOffset, os2.SubscriptYOffset);
+        this.superscriptXSize = mvar.Apply(MvarVariation.SuperscriptXSize, os2.SuperscriptXSize);
+        this.superscriptYSize = mvar.Apply(MvarVariation.SuperscriptYSize, os2.SuperscriptYSize);
+        this.superscriptXOffset = mvar.Apply(MvarVariation.SuperscriptXOffset, os2.SuperscriptXOffset);
+        this.superscriptYOffset = mvar.Apply(MvarVariation.SuperscriptYOffset, os2.SuperscriptYOffset);
+        this.strikeoutSize = mvar.Apply(MvarVariation.StrikeoutSize, os2.StrikeoutSize);
+        this.strikeoutPosition = mvar.Apply(MvarVariation.StrikeoutPosition, os2.StrikeoutPosition);
+        this.underlinePosition = mvar.Apply(MvarVariation.UnderlinePosition, post.UnderlinePosition);
+        this.underlineThickness = mvar.Apply(MvarVariation.UnderlineThickness, post.UnderlineThickness);
         this.italicAngle = post.ItalicAngle;
 
-        HorizontalMetrics horizontalMetrics = InitializeHorizontalMetrics(hhea, vhea, os2);
-        VerticalMetrics verticalMetrics = InitializeVerticalMetrics(horizontalMetrics, vhea);
+        HorizontalMetrics horizontalMetrics = InitializeHorizontalMetrics(hhea, vhea, os2, mvar);
+        VerticalMetrics verticalMetrics = InitializeVerticalMetrics(horizontalMetrics, vhea, mvar);
         return (horizontalMetrics, verticalMetrics);
     }
 
-    private static HorizontalMetrics InitializeHorizontalMetrics(HorizontalHeadTable hhea, VerticalHeadTable? vhea, OS2Table os2)
+    private static HorizontalMetrics InitializeHorizontalMetrics(HorizontalHeadTable hhea, VerticalHeadTable? vhea, OS2Table os2, in MvarVariation mvar)
     {
         short ascender;
         short descender;
         short lineGap;
-        short lineHeight;
         short advanceWidthMax;
         short advanceHeightMax;
+        bool useWinMetrics = false;
 
         // https://www.microsoft.com/typography/otspec/recom.htm#tad
         // We use the same approach as FreeType for calculating the the global  ascender, descender,  and
@@ -547,14 +532,12 @@ internal partial class StreamFontMetrics : FontMetrics
             ascender = os2.TypoAscender;
             descender = os2.TypoDescender;
             lineGap = os2.TypoLineGap;
-            lineHeight = (short)(ascender - descender + lineGap);
         }
         else
         {
             ascender = hhea.Ascender;
             descender = hhea.Descender;
             lineGap = hhea.LineGap;
-            lineHeight = (short)(ascender - descender + lineGap);
         }
 
         if (ascender == 0 || descender == 0)
@@ -564,14 +547,29 @@ internal partial class StreamFontMetrics : FontMetrics
                 ascender = os2.TypoAscender;
                 descender = os2.TypoDescender;
                 lineGap = os2.TypoLineGap;
-                lineHeight = (short)(ascender - descender + lineGap);
             }
             else
             {
+                useWinMetrics = true;
                 ascender = (short)os2.WinAscent;
                 descender = (short)-os2.WinDescent;
-                lineHeight = (short)(ascender - descender);
             }
+        }
+
+        // MVAR varies the metrics that the rules above chose. The rules look at the values of the font, not at the varied ones.
+        lineGap = mvar.Apply(MvarVariation.HorizontalLineGap, lineGap);
+        short lineHeight;
+        if (useWinMetrics)
+        {
+            ascender = mvar.Apply(MvarVariation.HorizontalClippingAscent, ascender);
+            descender = (short)-mvar.Apply(MvarVariation.HorizontalClippingDescent, (short)-descender);
+            lineHeight = (short)(ascender - descender);
+        }
+        else
+        {
+            ascender = mvar.Apply(MvarVariation.HorizontalAscender, ascender);
+            descender = mvar.Apply(MvarVariation.HorizontalDescender, descender);
+            lineHeight = (short)(ascender - descender + lineGap);
         }
 
         advanceWidthMax = (short)hhea.AdvanceWidthMax;
@@ -588,7 +586,7 @@ internal partial class StreamFontMetrics : FontMetrics
         };
     }
 
-    private static VerticalMetrics InitializeVerticalMetrics(HorizontalMetrics metrics, VerticalHeadTable? vhea)
+    private static VerticalMetrics InitializeVerticalMetrics(HorizontalMetrics metrics, VerticalHeadTable? vhea, in MvarVariation mvar)
     {
         VerticalMetrics verticalMetrics = new()
         {
@@ -606,11 +604,12 @@ internal partial class StreamFontMetrics : FontMetrics
             return verticalMetrics;
         }
 
-        short ascender = vhea.Ascender;
+        short ascender = mvar.Apply(MvarVariation.VerticalAscender, vhea.Ascender);
 
-        // Always negative due to the grid orientation.
-        short descender = (short)(vhea.Descender > 0 ? -vhea.Descender : vhea.Descender);
-        short lineGap = vhea.LineGap;
+        // Always negative due to the grid orientation. MVAR varies the value that the table holds, whatever its sign.
+        short storedDescender = mvar.Apply(MvarVariation.VerticalDescender, vhea.Descender);
+        short descender = (short)(storedDescender > 0 ? -storedDescender : storedDescender);
+        short lineGap = mvar.Apply(MvarVariation.VerticalLineGap, vhea.LineGap);
         short lineHeight = (short)(ascender - descender + lineGap);
 
         verticalMetrics.Ascender = ascender;
