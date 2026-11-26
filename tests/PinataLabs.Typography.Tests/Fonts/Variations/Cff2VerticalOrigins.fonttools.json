@@ -1,0 +1,75 @@
+{
+  "fontTools": "4.69.1",
+  "fonts": {
+    "VariationCff2Vertical.otf": {
+      "file": "Variations/VariationCff2Vertical.otf",
+      "locations": [
+        {"name": "User wght=100", "user": {"wght": 100.0}, "coordinates": [0]},
+        {"name": "User wght=300", "user": {"wght": 300.0}, "coordinates": [4096]},
+        {"name": "User wght=500", "user": {"wght": 500.0}, "coordinates": [8192]},
+        {"name": "User wght=900", "user": {"wght": 900.0}, "coordinates": [16384]}
+      ],
+      "glyphs": [
+        {
+          "name": "A",
+          "id": 1,
+          "origin": 800,
+          "tops": [700, 725, 750, 800],
+          "advanceHeights": [1000, 1025, 1050, 1100],
+          "topSideBearings": [100, 75, 50, 0]
+        },
+        {
+          "name": "B",
+          "id": 2,
+          "origin": 750,
+          "tops": [600, 575, 550, 500],
+          "advanceHeights": [1000, 990, 980, 960],
+          "topSideBearings": [150, 175, 200, 250]
+        },
+        {
+          "name": "C",
+          "id": 3,
+          "origin": 740,
+          "tops": [650, 650, 650, 650],
+          "advanceHeights": [1000, 1000, 1000, 1000],
+          "topSideBearings": [90, 90, 90, 90]
+        }
+      ]
+    },
+    "VariationCff2VerticalTsb.otf": {
+      "file": "Variations/VariationCff2VerticalTsb.otf",
+      "locations": [
+        {"name": "User wght=100", "user": {"wght": 100.0}, "coordinates": [0]},
+        {"name": "User wght=300", "user": {"wght": 300.0}, "coordinates": [4096]},
+        {"name": "User wght=500", "user": {"wght": 500.0}, "coordinates": [8192]},
+        {"name": "User wght=900", "user": {"wght": 900.0}, "coordinates": [16384]}
+      ],
+      "glyphs": [
+        {
+          "name": "A",
+          "id": 1,
+          "origin": 800,
+          "tops": [700, 725, 750, 800],
+          "advanceHeights": [1000, 1025, 1050, 1100],
+          "topSideBearings": [100, 95, 90, 80]
+        },
+        {
+          "name": "B",
+          "id": 2,
+          "origin": 750,
+          "tops": [600, 575, 550, 500],
+          "advanceHeights": [1000, 990, 980, 960],
+          "topSideBearings": [150, 158, 166, 182]
+        },
+        {
+          "name": "C",
+          "id": 3,
+          "origin": 740,
+          "tops": [650, 650, 650, 650],
+          "advanceHeights": [1000, 1000, 1000, 1000],
+          "topSideBearings": [90, 92, 94, 98]
+        }
+      ]
+    }
+  }
+}

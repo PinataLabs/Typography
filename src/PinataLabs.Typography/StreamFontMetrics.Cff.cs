@@ -96,9 +96,12 @@ internal partial class StreamFontMetrics
         VerticalMetricsTable? vtmx = tables.Vmtx;
 
         CffGlyphData vector = cff.GetGlyph(glyphId);
-        if (this.blendScalars is not null)
+        Bounds defaultBounds = default;
+        float[]?[]? blendScalars = this.blendScalars;
+        if (blendScalars is not null)
         {
-            vector = vector.WithBlendScalars(this.blendScalars);
+            defaultBounds = vector.GetBounds();
+            vector = vector.WithBlendScalars(blendScalars);
         }
 
         Bounds bounds = vector.GetBounds();
@@ -119,6 +122,14 @@ internal partial class StreamFontMetrics
         {
             advancedHeight = this.vvar.VaryAdvance(glyphId, vtmx.GetAdvancedHeight(glyphId));
             tsb = this.vvar.VaryLeadingBearing(glyphId, vtmx.GetTopSideBearing(glyphId));
+
+            // The vertical origin is where the default outline puts it: the top of that outline plus its top side bearing.
+            // When VVAR does not map the top side bearing, the bearing of a varied outline is the distance from that origin to
+            // the top of the varied outline, as the left side bearing is above.
+            if (blendScalars is not null && !this.vvar.HasLeadingBearings)
+            {
+                tsb = VariationRounding.ToInt16(defaultBounds.Max.Y + tsb - bounds.Max.Y);
+            }
         }
 
         GlyphColor? color = null;

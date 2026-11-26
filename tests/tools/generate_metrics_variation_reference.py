@@ -21,6 +21,19 @@ the heights, so the script builds two small TrueType fonts that have them all, n
 
 A glyph of either font has no gvar variation, so its outline does not change, and only its metrics do.
 
+A CFF2 outline does change, so the script also builds two CFF2 fonts for the vertical origin of a variation instance, and
+writes Cff2VerticalOrigins.fonttools.json for them (see build_cff2_vertical):
+
+* VariationCff2Vertical.otf has the axis wght, vhea, vmtx, and a VVAR that varies the advance heights and maps no top side
+  bearing. The top of its glyphs moves with wght. The vertical origin stays where the default outline puts it, the top of
+  that outline plus the top side bearing of vmtx, so the top side bearing of an instance is that origin minus the top of
+  the varied outline. The left side bearing of a varied CFF2 glyph has the same rule, with the origin at x 0.
+* VariationCff2VerticalTsb.otf is the same font with a VVAR top side bearing map, which then gives the top side bearing.
+
+fontTools gives the top of a varied outline, which the reference records, and the script derives the top side bearing. HarfBuzz
+is no reference for the origin of a CFF2 glyph: it ignores the vmtx bearing of a glyph that is not in glyf and centres the glyph
+in its advance height. The script checks the tops and the advance heights against it.
+
 For Teko-Variable.ttf, SourceSans3VF-Upright.otf and the two built fonts, the reference holds, at the default instance, the
 axis minimum, the axis maximum, named instances and user locations between them:
 
@@ -47,8 +60,12 @@ os.environ["SOURCE_DATE_EPOCH"] = "0"
 
 import fontTools
 import uharfbuzz as hb
+from fontTools import varLib
+from fontTools.designspaceLib import AxisDescriptor, DesignSpaceDocument, SourceDescriptor
 from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.pens.boundsPen import BoundsPen
+from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
@@ -58,6 +75,7 @@ from fontTools.varLib.varStore import VarStoreInstancer
 from variation_reference import FONTS, VARIATIONS, get_axis_location, get_locations, ot_round, write_reference
 
 REFERENCE = os.path.join(VARIATIONS, "MetricsVariations.fonttools.json")
+VERTICAL_REFERENCE = os.path.join(VARIATIONS, "Cff2VerticalOrigins.fonttools.json")
 
 NO_VARIATION_INDEX = 0xFFFFFFFF
 
@@ -480,6 +498,172 @@ def get_reference(path, names, extra, harfbuzz_metrics):
     }
 
 
+# The CFF2 fonts of the vertical origin. For each glyph: the top of its box at wght 100 and at wght 900, the advance height at
+# wght 100 and at wght 900, the top side bearing of vmtx, and the delta of the VVAR top side bearing map at wght 900.
+# A grows, B shrinks, C does not move. Every delta is a multiple of 4, so that 0.25 and 0.75 of it have no half.
+VERTICAL_GLYPHS = [".notdef", "A", "B", "C"]
+VERTICAL = {
+    "A": ((700, 800), (1000, 1100), 100, -20),
+    "B": ((600, 500), (1000, 960), 150, 32),
+    "C": ((650, 650), (1000, 1000), 90, 8),
+}
+VERTICAL_EXTRA = [{"wght": 100.0}, {"wght": 300.0}, {"wght": 500.0}, {"wght": 900.0}]
+
+
+def build_vertical_master(top, height):
+    """Builds a master of the CFF2 font: boxes of the given tops and advance heights."""
+    order = VERTICAL_GLYPHS
+    master = FontBuilder(1000, isTTF=False)
+    master.setupGlyphOrder(order)
+    master.setupCharacterMap({0x41: "A", 0x42: "B", 0x43: "C"})
+    strings = {}
+    for name in order:
+        pen = T2CharStringPen(600, None)
+        if name != ".notdef":
+            pen.moveTo((50, 0))
+            pen.lineTo((50, top[name]))
+            pen.lineTo((450, top[name]))
+            pen.lineTo((450, 0))
+            pen.closePath()
+        strings[name] = pen.getCharString()
+    master.setupCFF("VariationCff2Vertical-Regular", {"FullName": "VariationCff2Vertical Regular"}, strings, {})
+    master.setupHorizontalMetrics({name: (600, 0 if name == ".notdef" else 50) for name in order})
+    master.setupHorizontalHeader(ascent=800, descent=-200)
+    master.setupVerticalMetrics(
+        {name: (height.get(name, 1000), 0 if name == ".notdef" else VERTICAL[name][2]) for name in order}
+    )
+    master.setupVerticalHeader(ascent=500, descent=-500)
+    master.setupNameTable(
+        {"familyName": "VariationCff2Vertical", "styleName": "Regular", "psName": "VariationCff2Vertical-Regular"},
+        mac=False,
+    )
+    master.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=900, usWinDescent=300)
+    master.setupPost()
+    return master.font
+
+
+def build_cff2_vertical():
+    """Builds VariationCff2Vertical.otf, with no top side bearing map, and VariationCff2VerticalTsb.otf, with one."""
+    document = DesignSpaceDocument()
+    axis = AxisDescriptor()
+    axis.name = "Weight"
+    axis.tag = "wght"
+    axis.minimum, axis.default, axis.maximum = 100, 100, 900
+    document.addAxis(axis)
+    for index, (value, tops, heights) in enumerate(
+        [(100, {n: VERTICAL[n][0][0] for n in VERTICAL}, {n: VERTICAL[n][1][0] for n in VERTICAL}),
+         (900, {n: VERTICAL[n][0][1] for n in VERTICAL}, {n: VERTICAL[n][1][1] for n in VERTICAL})]
+    ):
+        source = SourceDescriptor()
+        source.name = "master%d" % index
+        source.styleName = source.name
+        source.location = {"Weight": value}
+        source.font = build_vertical_master(tops, heights)
+        document.addSource(source)
+    font, _, _ = varLib.build(document)
+    paths = []
+    for file_name, with_map in (("VariationCff2Vertical.otf", False), ("VariationCff2VerticalTsb.otf", True)):
+        if with_map:
+            add_top_side_bearing_map(font["VVAR"].table, font.getGlyphOrder())
+        path = os.path.join(VARIATIONS, file_name)
+        font.save(path)
+        print(os.path.relpath(path, os.path.join(FONTS, "..", "..", "..")))
+        paths.append(path)
+    return paths
+
+
+def add_top_side_bearing_map(vvar, glyph_order):
+    """Gives a VVAR the top side bearing map of VERTICAL: a store subtable with a row per glyph, and the map into it."""
+    store = vvar.VarStore
+    outer = len(store.VarData)
+    rows = [[VERTICAL[name][3] if name in VERTICAL else 0] for name in glyph_order]
+    store.VarData.append(builder.buildVarData([0], rows, optimize=False))
+    store.VarDataCount = len(store.VarData)
+    vvar.TsbMap = builder.buildVarIdxMap([(outer << 16) | inner for inner in range(len(glyph_order))], glyph_order)
+
+
+def get_vertical_reference(path, with_map):
+    """Gives, for each location, the top of every glyph at fontTools, the advance height, the vertical origin of the default
+    outline, and the top side bearing: the origin minus the top of the varied outline, or the vmtx value plus the map delta."""
+    font = TTFont(path)
+    locations = get_locations(font, [], VERTICAL_EXTRA)
+    glyphs = []
+    for name in VERTICAL_GLYPHS[1:]:
+        tops = []
+        heights = []
+        bearings = []
+        top_side_bearing = font["vmtx"].metrics[name][1]
+        default_top = VERTICAL[name][0][0]
+        origin = default_top + top_side_bearing
+        for location in locations:
+            normalized = get_axis_location(font, location["coordinates"])
+            glyph_set = font.getGlyphSet(location=normalized, normalized=True)
+            pen = BoundsPen(glyph_set)
+            glyph_set[name].draw(pen)
+            top = ot_round(pen.bounds[3])
+            tops.append(top)
+            check_not_a_tie(glyph_set[name].height, "height of " + name)
+            heights.append(ot_round(glyph_set[name].height))
+            if with_map:
+                instancer = VarStoreInstancer(font["VVAR"].table.VarStore, font["fvar"].axes, normalized)
+                delta = instancer[font["VVAR"].table.TsbMap.mapping[name]]
+                check_not_a_tie(top_side_bearing + delta, "top side bearing of " + name)
+                bearings.append(ot_round(top_side_bearing + delta))
+            else:
+                bearings.append(origin - top)
+        glyphs.append(
+            {
+                "name": name,
+                "id": font.getGlyphID(name),
+                "origin": origin,
+                "tops": tops,
+                "advanceHeights": heights,
+                "topSideBearings": bearings,
+            }
+        )
+    check_vertical_with_harfbuzz(path, locations, glyphs)
+    return {"file": "Variations/" + os.path.basename(path), "locations": locations, "glyphs": glyphs}
+
+
+def check_vertical_with_harfbuzz(path, locations, glyphs):
+    """Stops when HarfBuzz gives another top or advance height for the same F2Dot14 coordinates."""
+    with open(path, "rb") as file:
+        hb_font = hb.Font(hb.Face(file.read()))
+    mismatches = []
+    for index, location in enumerate(locations):
+        hb_font.set_var_coords_normalized([fixedToFloat(value, 14) for value in location["coordinates"]])
+        for glyph in glyphs:
+            top = hb_font.get_glyph_extents(glyph["id"]).y_bearing
+            height = -hb_font.get_glyph_v_advance(glyph["id"])
+            if top != glyph["tops"][index]:
+                mismatches.append("%s %s top %d, HarfBuzz %d" % (location["name"], glyph["name"], glyph["tops"][index], top))
+            if height != glyph["advanceHeights"][index]:
+                mismatches.append(
+                    "%s %s height %d, HarfBuzz %d" % (location["name"], glyph["name"], glyph["advanceHeights"][index], height)
+                )
+    if mismatches:
+        raise SystemExit("HarfBuzz differs from the reference:\n  " + "\n  ".join(mismatches[:20]))
+
+
+def check_vertical_descender_with_harfbuzz(path):
+    """Stops when HarfBuzz does not give the vertical descender that the library gives for a vhea descent stored as a positive
+    number: the stored value plus the MVAR delta, negated when that is positive. The sign is not changed before the delta."""
+    font = TTFont(path)
+    for stored in (500, 5, -5, 0):
+        font["vhea"].descent = stored
+        font.save(path + ".tmp")
+        with open(path + ".tmp", "rb") as file:
+            hb_font = hb.Font(hb.Face(file.read()))
+        os.remove(path + ".tmp")
+        for wght, delta in ((100, 12), (400, 0), (900, -12)):
+            hb_font.set_var_coords_normalized([(wght - 400) / (500 if wght > 400 else 300), 0])
+            expected = stored + delta
+            expected = -expected if expected > 0 else expected
+            actual = hb_font.get_metric_position(hb.OTMetricsTag.VERTICAL_DESCENDER)
+            if actual != expected:
+                raise SystemExit("vdsc of stored %d at wght %d is %d, HarfBuzz %d" % (stored, wght, expected, actual))
+
+
 def main():
     os.makedirs(VARIATIONS, exist_ok=True)
     reference = {"fontTools": fontTools.version, "fonts": {}}
@@ -495,6 +679,12 @@ def main():
             **get_reference(os.path.join(FONTS, path), names, extra, harfbuzz_metrics=True),
         )
     write_reference(REFERENCE, reference)
+
+    check_vertical_descender_with_harfbuzz(os.path.join(VARIATIONS, "VariationMetrics.ttf"))
+    vertical = {"fontTools": fontTools.version, "fonts": {}}
+    for path, with_map in zip(build_cff2_vertical(), (False, True)):
+        vertical["fonts"][os.path.basename(path)] = get_vertical_reference(path, with_map)
+    write_reference(VERTICAL_REFERENCE, vertical)
 
 
 if __name__ == "__main__":

@@ -112,6 +112,11 @@ public static class TestFonts
 
     public static string MetricsVariationsFontToolsReference => GetFullPath("Variations/MetricsVariations.fonttools.json");
 
+    // Built by tests/tools/generate_metrics_variation_reference.py, which also writes the fontTools reference. Both are CFF2 fonts
+    // with the axis wght, vhea, vmtx and a VVAR with advance heights. The tops of their glyphs move with wght. VariationCff2Vertical
+    // maps no top side bearing, and VariationCff2VerticalTsb has a map.
+    public static string Cff2VerticalOriginsFontToolsReference => GetFullPath("Variations/Cff2VerticalOrigins.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 
