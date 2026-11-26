@@ -528,5 +528,65 @@ public enum ArabicJoiningGroup
     /// <summary>
     /// Zhain
     /// </summary>
-    Zhain
+    Zhain,
+
+    /// <summary>
+    /// Crown_Ain
+    /// </summary>
+    CrownAin,
+
+    /// <summary>
+    /// Crown_Beh
+    /// </summary>
+    CrownBeh,
+
+    /// <summary>
+    /// Crown_Feh
+    /// </summary>
+    CrownFeh,
+
+    /// <summary>
+    /// Crown_Hah
+    /// </summary>
+    CrownHah,
+
+    /// <summary>
+    /// Crown_Heh
+    /// </summary>
+    CrownHeh,
+
+    /// <summary>
+    /// Crown_Kaf
+    /// </summary>
+    CrownKaf,
+
+    /// <summary>
+    /// Crown_Meem
+    /// </summary>
+    CrownMeem,
+
+    /// <summary>
+    /// Crown_Sad
+    /// </summary>
+    CrownSad,
+
+    /// <summary>
+    /// Crown_Seen
+    /// </summary>
+    CrownSeen,
+
+    /// <summary>
+    /// Crown_Tah
+    /// </summary>
+    CrownTah,
+
+    /// <summary>
+    /// Kashmiri_Yeh
+    /// </summary>
+    KashmiriYeh,
+
+    /// <summary>
+    /// Thin_Noon
+    /// </summary>
+    ThinNoon,
 }

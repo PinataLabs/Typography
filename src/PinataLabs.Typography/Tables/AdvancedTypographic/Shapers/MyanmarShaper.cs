@@ -35,9 +35,6 @@ internal sealed class MyanmarShaper : DefaultShaper
     private static readonly Tag AbvsTag = Tag.Parse("abvs");
     private static readonly Tag BlwsTag = Tag.Parse("blws");
     private static readonly Tag PstsTag = Tag.Parse("psts");
-    private static readonly Tag DistTag = Tag.Parse("dist");
-    private static readonly Tag AbvmTag = Tag.Parse("abvm");
-    private static readonly Tag BlwmTag = Tag.Parse("blwm");
 
     public MyanmarShaper(ScriptClass script, TextOptions textOptions)
        : base(script, MarkZeroingMode.PreGPos, textOptions)
@@ -162,7 +159,7 @@ internal sealed class MyanmarShaper : DefaultShaper
 
         // Positioning.
         this.AddFeature(collection, index, count, KernTag);
-        this.AddFeature(collection, index, count, DistTag);
+        this.AddHorizontalFeature(collection, index, count, DistTag);
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
         this.AddFeature(collection, index, count, MarkTag);
@@ -214,9 +211,10 @@ internal sealed class MyanmarShaper : DefaultShaper
                 FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(first);
                 if (fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
                 {
-                    // The dotted circle is the base, so it goes after any kinzi.
+                    // The dotted circle is the base, so it goes after any kinzi. It copies a glyph of its own
+                    // syllable: after a syllable of only kinzi, the glyph at its place is of the next syllable.
                     int at = index + start + (HasKinzi(categories.AsSpan(start, end - start)) ? KinziLength : 0);
-                    substitutionCollection.InsertGlyph(at, id, new(DottedCircle));
+                    substitutionCollection.InsertGlyph(at, Math.Min(at, index + end - 1), id, new(DottedCircle));
                     substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, s + 1);
                 }
             }

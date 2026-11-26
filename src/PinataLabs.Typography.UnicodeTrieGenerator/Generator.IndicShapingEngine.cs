@@ -50,6 +50,7 @@ public static partial class Generator
         { ISC.NumberJoiner, Categories.Placeholder },
         { ISC.PureKiller, Categories.M },
         { ISC.RegisterShifter, Categories.RS },
+        { ISC.ReorderingKiller, Categories.H },
         { ISC.SyllableModifier, Categories.M },
         { ISC.ToneLetter, Categories.X },
         { ISC.ToneMark, Categories.N },

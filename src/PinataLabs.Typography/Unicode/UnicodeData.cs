@@ -31,11 +31,25 @@ internal static class UnicodeData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetBidiMirror(uint codePoint) => LazyBidiMirrorTrie.Value.Get(codePoint);
 
+    /// <summary>
+    /// Gets the grapheme trie value, which <see cref="TrieValueLayout"/> takes apart.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GraphemeClusterClass GetGraphemeClusterClass(uint codePoint) => (GraphemeClusterClass)LazyGraphemeTrie.Value.Get(codePoint);
+    public static uint GetGraphemeValue(uint codePoint) => LazyGraphemeTrie.Value.Get(codePoint);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LineBreakClass GetLineBreakClass(uint codePoint) => (LineBreakClass)LazyLineBreakTrie.Value.Get(codePoint);
+    public static GraphemeClusterClass GetGraphemeClusterClass(uint codePoint)
+        => TrieValueLayout.GetGraphemeClusterClass(GetGraphemeValue(codePoint));
+
+    /// <summary>
+    /// Gets the line break trie value, which <see cref="TrieValueLayout"/> takes apart.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetLineBreakValue(uint codePoint) => LazyLineBreakTrie.Value.Get(codePoint);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LineBreakClass GetLineBreakClass(uint codePoint)
+        => TrieValueLayout.GetLineBreakClass(GetLineBreakValue(codePoint));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ScriptClass GetScriptClass(uint codePoint) => (ScriptClass)LazyScriptTrie.Value.Get(codePoint);

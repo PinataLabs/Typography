@@ -20,7 +20,7 @@ namespace UnicodeTrieGenerator;
 public static partial class Generator
 {
     // Aliases and enum derived from
-    // https://www.unicode.org/Public/14.0.0/ucd/PropertyValueAliases.txt
+    // https://www.unicode.org/Public/18.0.0/ucd/PropertyValueAliases.txt
     private static readonly Dictionary<string, UnicodeCategory> UnicodeCategoryMap
         = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -249,7 +249,23 @@ public static partial class Generator
             { "Cuneiform", ScriptClass.Cuneiform },
             { "Yezidi", ScriptClass.Yezidi },
             { "Yi", ScriptClass.Yi },
-            { "Zanabazar_Square", ScriptClass.ZanabazarSquare }
+            { "Zanabazar_Square", ScriptClass.ZanabazarSquare },
+            { "Beria_Erfe", ScriptClass.BeriaErfe },
+            { "Garay", ScriptClass.Garay },
+            { "Gurung_Khema", ScriptClass.GurungKhema },
+            { "Jurchen", ScriptClass.Jurchen },
+            { "Kawi", ScriptClass.Kawi },
+            { "Kirat_Rai", ScriptClass.KiratRai },
+            { "Nag_Mundari", ScriptClass.NagMundari },
+            { "Ol_Onal", ScriptClass.OlOnal },
+            { "Proto_Cuneiform", ScriptClass.ProtoCuneiform },
+            { "Seal", ScriptClass.Seal },
+            { "Sidetic", ScriptClass.Sidetic },
+            { "Sunuwar", ScriptClass.Sunuwar },
+            { "Tai_Yo", ScriptClass.TaiYo },
+            { "Todhri", ScriptClass.Todhri },
+            { "Tolong_Siki", ScriptClass.TolongSiki },
+            { "Tulu_Tigalari", ScriptClass.TuluTigalari }
         };
 
     private static readonly Dictionary<string, ArabicJoiningType> JoiningTypeMap
@@ -370,7 +386,19 @@ public static partial class Generator
             { "Yudh", ArabicJoiningGroup.Yudh },
             { "Yudh_He", ArabicJoiningGroup.YudhHe },
             { "Zain", ArabicJoiningGroup.Zain },
-            { "Zhain", ArabicJoiningGroup.Zhain }
+            { "Zhain", ArabicJoiningGroup.Zhain },
+            { "Crown_Ain", ArabicJoiningGroup.CrownAin },
+            { "Crown_Beh", ArabicJoiningGroup.CrownBeh },
+            { "Crown_Feh", ArabicJoiningGroup.CrownFeh },
+            { "Crown_Hah", ArabicJoiningGroup.CrownHah },
+            { "Crown_Heh", ArabicJoiningGroup.CrownHeh },
+            { "Crown_Kaf", ArabicJoiningGroup.CrownKaf },
+            { "Crown_Meem", ArabicJoiningGroup.CrownMeem },
+            { "Crown_Sad", ArabicJoiningGroup.CrownSad },
+            { "Crown_Seen", ArabicJoiningGroup.CrownSeen },
+            { "Crown_Tah", ArabicJoiningGroup.CrownTah },
+            { "Kashmiri_Yeh", ArabicJoiningGroup.KashmiriYeh },
+            { "Thin_Noon", ArabicJoiningGroup.ThinNoon }
         };
 
     private static readonly Dictionary<string, IndicSyllabicCategory> IndicSyllabicCategoryMap
@@ -404,6 +432,7 @@ public static partial class Generator
             { "Other", IndicSyllabicCategory.Other },
             { "Pure_Killer", IndicSyllabicCategory.PureKiller },
             { "Register_Shifter", IndicSyllabicCategory.RegisterShifter },
+            { "Reordering_Killer", IndicSyllabicCategory.ReorderingKiller },
             { "Syllable_Modifier", IndicSyllabicCategory.SyllableModifier },
             { "Tone_Letter", IndicSyllabicCategory.ToneLetter },
             { "Tone_Mark", IndicSyllabicCategory.ToneMark },
@@ -445,6 +474,8 @@ public static partial class Generator
         };
 
     private const string SolutionFileName = "PinataLabs.Typography.slnx";
+
+    private const int CodePointCount = 0x110000;
 
     private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new(GetSolutionDirectoryFullPathImpl);
     private static readonly Dictionary<int, int> Bidi = new();
@@ -497,61 +528,36 @@ public static partial class Generator
     /// </summary>
     public static void GenerateGraphemeBreakTrie()
     {
-        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(.*?)\s*#");
-        var builder = new UnicodeTrieBuilder((uint)GraphemeClusterClass.Any);
+        uint[] values = new uint[CodePointCount];
 
-        using (StreamReader sr = GetStreamReader("GraphemeBreakProperty.txt"))
+        ForEachRange("GraphemeBreakProperty.txt", (start, end, value) =>
         {
-            string? line;
-            while ((line = sr.ReadLine()) != null)
+            _ = GraphemeClusterClassMap.TryGetValue(value, out GraphemeClusterClass kind);
+            values.AsSpan(start, end - start + 1).Fill((uint)kind);
+        });
+
+        ForEachRange("emoji-data.txt", (start, end, value) =>
+        {
+            if (value == "Extended_Pictographic")
             {
-                Match match = regex.Match(line);
+                values.AsSpan(start, end - start + 1).Fill((uint)GraphemeClusterClass.ExtendedPictographic);
+            }
+        });
 
-                if (match.Success)
+        ForEachRange("DerivedCoreProperties.txt", (start, end, value) =>
+        {
+            string[] parts = value.Split(';', StringSplitOptions.TrimEntries);
+            if (parts[0] == "InCB")
+            {
+                uint incb = (uint)Enum.Parse<IndicConjunctBreak>(parts[1]) << TrieValueLayout.IndicConjunctBreakShift;
+                for (int i = start; i <= end; i++)
                 {
-                    string start = match.Groups[1].Value;
-                    string end = match.Groups[2].Value;
-                    string point = match.Groups[3].Value;
-
-                    if (string.IsNullOrEmpty(end))
-                    {
-                        end = start;
-                    }
-
-                    _ = GraphemeClusterClassMap.TryGetValue(point, out GraphemeClusterClass kind);
-                    builder.SetRange(ParseHexInt(start), ParseHexInt(end), (uint)kind, true);
+                    values[i] |= incb;
                 }
             }
-        }
+        });
 
-        using (StreamReader sr = GetStreamReader("emoji-data.txt"))
-        {
-            string? line;
-            while ((line = sr.ReadLine()) != null)
-            {
-                Match match = regex.Match(line);
-
-                if (match.Success)
-                {
-                    string start = match.Groups[1].Value;
-                    string end = match.Groups[2].Value;
-                    string prop = match.Groups[3].Value;
-
-                    if (string.IsNullOrEmpty(end))
-                    {
-                        end = start;
-                    }
-
-                    if (prop == "Extended_Pictographic")
-                    {
-                        builder.SetRange(ParseHexInt(start), ParseHexInt(end), (uint)GraphemeClusterClass.ExtendedPictographic, true);
-                    }
-                }
-            }
-        }
-
-        UnicodeTrie trie = builder.Freeze();
-        GenerateTrieClass("Grapheme", trie);
+        GenerateTrieClass("Grapheme", BuildTrie(values, (uint)GraphemeClusterClass.Any));
     }
 
     /// <summary>
@@ -624,34 +630,73 @@ public static partial class Generator
     /// </summary>
     private static void GenerateLineBreakTrie()
     {
-        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(.*?)\s*#");
-        var builder = new UnicodeTrieBuilder((uint)LineBreakClass.XX);
+        uint[] values = new uint[CodePointCount];
+        values.AsSpan().Fill((uint)LineBreakClass.XX);
 
-        using (StreamReader sr = GetStreamReader("LineBreak.txt"))
+        ForEachRange("LineBreak.txt", (start, end, value)
+            => values.AsSpan(start, end - start + 1).Fill((uint)Enum.Parse<LineBreakClass>(value)));
+
+        ForEachRange("EastAsianWidth.txt", (start, end, value) =>
         {
-            string? line;
-            while ((line = sr.ReadLine()) != null)
+            if (value is "F" or "W" or "H")
             {
-                Match match = regex.Match(line);
-
-                if (match.Success)
+                for (int i = start; i <= end; i++)
                 {
-                    string start = match.Groups[1].Value;
-                    string end = match.Groups[2].Value;
-                    string point = match.Groups[3].Value;
-
-                    if (string.IsNullOrEmpty(end))
-                    {
-                        end = start;
-                    }
-
-                    builder.SetRange(ParseHexInt(start), ParseHexInt(end), (uint)Enum.Parse<LineBreakClass>(point), true);
+                    values[i] |= TrieValueLayout.EastAsianWidthFlag;
                 }
+            }
+        });
+
+        GenerateTrieClass("LineBreak", BuildTrie(values, (uint)LineBreakClass.XX));
+    }
+
+    /// <summary>
+    /// Calls <paramref name="action"/> with the range and the value of each data line of a rule file.
+    /// </summary>
+    /// <param name="fileName">The name of the rule file.</param>
+    /// <param name="action">The action that takes the first and last code point and the value.</param>
+    private static void ForEachRange(string fileName, Action<int, int, string> action)
+    {
+        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(.*?)\s*#");
+
+        using StreamReader sr = GetStreamReader(fileName);
+        string? line;
+        while ((line = sr.ReadLine()) != null)
+        {
+            Match match = regex.Match(line);
+            if (match.Success)
+            {
+                int start = ParseHexInt(match.Groups[1].Value);
+                int end = match.Groups[2].Success ? ParseHexInt(match.Groups[2].Value) : start;
+                action(start, end, match.Groups[3].Value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Builds a trie that holds the value of every code point.
+    /// </summary>
+    /// <param name="values">The value of each code point.</param>
+    /// <param name="initialValue">The value of the trie for a code point it does not set.</param>
+    /// <returns>The trie.</returns>
+    private static UnicodeTrie BuildTrie(uint[] values, uint initialValue)
+    {
+        var builder = new UnicodeTrieBuilder(initialValue);
+        int start = 0;
+        for (int i = 1; i <= values.Length; i++)
+        {
+            if (i == values.Length || values[i] != values[start])
+            {
+                if (values[start] != initialValue)
+                {
+                    builder.SetRange(start, i - 1, values[start], true);
+                }
+
+                start = i;
             }
         }
 
-        UnicodeTrie trie = builder.Freeze();
-        GenerateTrieClass("LineBreak", trie);
+        return builder.Freeze();
     }
 
     /// <summary>
@@ -731,7 +776,8 @@ public static partial class Generator
     /// </summary>
     private static UnicodeTrie GenerateArabicShapingTrie()
     {
-        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;[\w\s]+;\s*([A-Z]+);\s*([\w\s]+)");
+        // A schematic name can have a hyphen, as in PHAGS-PA KA and SOGDIAN RESH-AYIN.
+        var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;[^;]+;\s*([A-Z]+);\s*([\w\s]+)", RegexOptions.None, TimeSpan.FromSeconds(1));
         const uint initial = ((int)ArabicJoiningType.NonJoining) | (((int)ArabicJoiningGroup.NoJoiningGroup) << 16);
         var builder = new UnicodeTrieBuilder(initial);
 
@@ -770,7 +816,7 @@ public static partial class Generator
     private static void GenerateVerticalOrientationTrie()
     {
         var regex = new Regex(@"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(.*?)\s*#");
-        var builder = new UnicodeTrieBuilder((uint)VerticalOrientationType.Upright);
+        var builder = new UnicodeTrieBuilder((uint)VerticalOrientationType.Rotate);
 
         using (StreamReader sr = GetStreamReader("VerticalOrientation.txt"))
         {

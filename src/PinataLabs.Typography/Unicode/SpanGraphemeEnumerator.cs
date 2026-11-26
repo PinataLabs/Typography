@@ -187,11 +187,21 @@ public ref struct SpanGraphemeEnumerator
                 break;
         }
 
-        // rules GB9, GB9a
-        while (processor.CurrentType is GraphemeClusterClass.Extend
-            or GraphemeClusterClass.ZeroWidthJoiner
-            or GraphemeClusterClass.SpacingMark)
+        // rules GB9, GB9a, GB9c
+        while (true)
         {
+            while (processor.CurrentType is GraphemeClusterClass.Extend
+                or GraphemeClusterClass.ZeroWidthJoiner
+                or GraphemeClusterClass.SpacingMark)
+            {
+                processor.MoveNext();
+            }
+
+            if (!processor.AfterConjunctLinker || processor.CurrentConjunctBreak != IndicConjunctBreak.Consonant)
+            {
+                break;
+            }
+
             processor.MoveNext();
         }
 
@@ -208,23 +218,41 @@ public ref struct SpanGraphemeEnumerator
         private readonly ReadOnlySpan<char> source;
         private int charsConsumed;
 
+        // The grapheme trie value of the current scalar, which holds its two properties.
+        private uint value;
+
         public Processor(ReadOnlySpan<char> source)
         {
             this.source = source;
-            this.CurrentType = GraphemeClusterClass.Any;
+            this.value = (uint)GraphemeClusterClass.Any;
             this.charsConsumed = 0;
             this.CharsConsumed = 0;
         }
 
-        public GraphemeClusterClass CurrentType { get; private set; }
+        public readonly GraphemeClusterClass CurrentType => TrieValueLayout.GetGraphemeClusterClass(this.value);
+
+        public readonly IndicConjunctBreak CurrentConjunctBreak => TrieValueLayout.GetIndicConjunctBreak(this.value);
+
+        /// <summary>
+        /// Gets a value indicating whether the scalars before the current one end with a linker and any number of
+        /// extenders, the context of rule GB9c.
+        /// </summary>
+        public bool AfterConjunctLinker { get; private set; }
 
         public int CharsConsumed { get; private set; }
 
         public void MoveNext()
         {
+            this.AfterConjunctLinker = this.CurrentConjunctBreak switch
+            {
+                IndicConjunctBreak.Linker => true,
+                IndicConjunctBreak.Extend => this.AfterConjunctLinker,
+                _ => false,
+            };
+
             this.CharsConsumed += this.charsConsumed;
             var codePoint = CodePoint.DecodeFromUtf16At(this.source, this.CharsConsumed, out this.charsConsumed);
-            this.CurrentType = CodePoint.GetGraphemeClusterClass(codePoint);
+            this.value = UnicodeData.GetGraphemeValue((uint)codePoint.Value);
         }
     }
 }

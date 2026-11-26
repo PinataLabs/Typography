@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -222,6 +223,12 @@ public abstract class FontMetrics
     /// </summary>
     /// <returns>The GSUB table.</returns>
     internal abstract GSubTable GetGSubTable();
+
+    /// <summary>
+    /// Gets what the Arabic fallback shaper needs from the font. The font builds it once.
+    /// </summary>
+    /// <returns>The plan.</returns>
+    internal abstract ArabicFallbackPlan GetArabicFallbackPlan();
 
     /// <summary>
     /// Gets a value indicating whether the GPOS language system that the font uses for the script lists a

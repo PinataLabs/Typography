@@ -9,6 +9,7 @@ using System.IO;
 using System.Numerics;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -147,6 +148,10 @@ internal sealed class FileFontMetrics : FontMetrics
     /// <inheritdoc/>
     internal override GSubTable GetGSubTable()
         => this.fontMetrics.Value.GetGSubTable();
+
+    /// <inheritdoc/>
+    internal override ArabicFallbackPlan GetArabicFallbackPlan()
+        => this.fontMetrics.Value.GetArabicFallbackPlan();
 
     /// <inheritdoc/>
     internal override bool HasMarkPositioning(ScriptClass script)

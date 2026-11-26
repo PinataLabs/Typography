@@ -192,7 +192,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                             break;
                         }
 
-                        metrics.Add(gm.CloneForRendering(shape.TextRun));
+                        metrics.Add(gm.CloneForRendering(shape.TextRun, codePoint));
                     }
 
                     if (metrics.Count > 0)
@@ -269,7 +269,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                     hasFallBacks = true;
                 }
 
-                metrics.Add(gm.CloneForRendering(data.TextRun));
+                metrics.Add(gm.CloneForRendering(data.TextRun, codePoint));
             }
 
             if (metrics.Count > 0)

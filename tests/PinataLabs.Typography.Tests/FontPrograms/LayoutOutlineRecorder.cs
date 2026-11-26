@@ -25,7 +25,8 @@ internal sealed class LayoutOutlineRecorder : IGlyphRenderer
     public static string Render(Font font, ushort glyphId)
     {
         TextOptions options = new(font) { Dpi = 72, HintingMode = HintingMode.None };
-        GlyphMetrics metrics = GetMetrics(font, glyphId).CloneForRendering(new TextRun { Font = font });
+        GlyphMetrics cached = GetMetrics(font, glyphId);
+        GlyphMetrics metrics = cached.CloneForRendering(new TextRun { Font = font }, cached.CodePoint);
         LayoutOutlineRecorder recorder = new();
         metrics.RenderTo(recorder, Vector2.Zero, Vector2.Zero, GlyphLayoutMode.Horizontal, options);
         return recorder.calls.ToString();

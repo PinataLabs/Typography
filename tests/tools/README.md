@@ -146,6 +146,10 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
 - `NormalizationHebrew.ttf`, `NormalizationHebrewMark.ttf` and `NormalizationHebrewKern.ttf` have the Hebrew
   letters, points and presentation forms. The first has no GPOS table, the second has a `mark` feature for `hebr`,
   and the third has a `mark` feature that only `latn` lists. A letter and a point compose in the first and third.
+- `NormalizationHebrewGposDflt.ttf`, `NormalizationHebrewGposLatn.ttf` and `NormalizationHebrewGposHebr.ttf` have
+  Hebrew and Latin letters, marks and a `kern` table. Their GPOS tables have the `DFLT` script, the `latn` script and
+  the `hebr` script. HarfBuzz positions Hebrew with GPOS only in the third, and kerns it with the `kern` table and
+  places its marks as without GPOS in the other two.
 - `NormalizationHangul.ttf`, `NormalizationHangulGsub.ttf` and `NormalizationHangulJamo.ttf` have Hangul jamo.
   The first two also have two syllables, and only the second has a GSUB table.
 - `NormalizationDevanagari.ttf` has Devanagari letters and signs and the dotted circle, and no GSUB table.
@@ -155,6 +159,17 @@ The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. 
   GPOS table that only kerns.
 - `NormalizationMarksLegacyKern.ttf` and `NormalizationMarksBothKern.ttf` have the same glyphs and a `kern` table.
   The second also has the GPOS table that only kerns.
+- `NormalizationThai.ttf` and `NormalizationThaiWithoutParts.ttf` have Thai and Lao letters, marks and SARA AM, with
+  and without its parts. HarfBuzz splits SARA AM in both.
+- `NormalizationLigature.ttf`, `NormalizationLigatureGdef.ttf` and `NormalizationLigatureGdefBase.ttf` ligate f and i,
+  f, f and i, and lam and alef across marks, and have no GPOS table. The second and third also have GDEF glyph
+  classes, and the third calls the ligatures bases. Without GPOS, HarfBuzz places a mark of a ligature on its own
+  component.
+- `NormalizationArabicForms.ttf` has every Arabic letter, mark and presentation form, and no GSUB table.
+  `NormalizationArabicFallback.ttf` has a few Arabic letters, marks, forms and ligatures.
+  `NormalizationArabicFallbackWithoutMedial.ttf` lacks the medial forms, `NormalizationArabicFallbackRlig.ttf` has a
+  GSUB table with only `rlig`, and `NormalizationArabicFallbackInit.ttf` has an `init` feature. HarfBuzz uses the
+  presentation forms in all but the last.
 - `NormalizationScripts.ttf` has the first letter of every script of `Scripts.txt` and U+0301.
   `NormalizationScriptsKern.ttf` also has a `kern` table with the pair of each letter and itself.
 
@@ -182,6 +197,24 @@ python tests/tools/generate_normalization_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Arabic fallback table
+
+`generate_arabic_fallback_table.py` writes `ArabicFallbackTable.Generated.cs` in
+`src/PinataLabs.Typography/Tables/AdvancedTypographic/Shapers`. When the GSUB table of a font has none of the joining
+form features for Arabic, HarfBuzz gives each letter the presentation form that the font has, and then ligates some
+of the forms. The table holds the four forms of each letter, from `UnicodeData.txt`, and the ligatures that HarfBuzz
+uses. The script finds those ligatures: it shapes each Arabic ligature of `UnicodeData.txt` in a probe font that has
+every Arabic letter, mark and presentation form, and keeps the ligatures that HarfBuzz gives.
+
+To write the table again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
+
+```
+python tests/tools/generate_arabic_fallback_table.py
+```
+
+The output is deterministic for one HarfBuzz version and one `UnicodeData.txt`. The file records the HarfBuzz version.
+The Arabic cases of the normalization reference check the table and its use against HarfBuzz.
+
 ## Script tags
 
 `derive_harfbuzz_script_tags.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ScriptTags.harfbuzz.json`. For each
@@ -203,6 +236,106 @@ repository root:
 
 ```
 python tests/tools/derive_harfbuzz_script_tags.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Universal shaper reference
+
+`generate_universal_shaper_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/UniversalShaper.harfbuzz.json`.
+
+It builds `UniversalShaperJoining.ttf`. The font has every character of the eleven scripts whose letters the
+universal shaper of HarfBuzz joins: Adlam, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N'Ko,
+Old Uyghur, Phags-pa, Psalter Pahlavi and Sogdian. Each character has a glyph for each of the `isol`, `init`, `medi`
+and `fina` features. The `joining` list of the reference holds the glyph IDs that HarfBuzz gives for:
+
+- each character alone, after a letter that joins on both sides, before that letter, and between two of them;
+- every text of two or three characters, from one character of each joining type and general category of the script;
+- a Mongolian letter and a free variation selector. Each feature has a ligature of the two, which HarfBuzz forms
+  only when the selector has the feature of the letter.
+
+The font has no other character that is Default_Ignorable_Code_Point. HarfBuzz takes the glyph of such a character
+out of its output, and the library keeps it and does not draw it.
+
+`UniversalShaperTests` checks that the library gives the same glyphs.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_universal_shaper_reference.py
+```
+
+The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
+HarfBuzz version that wrote it.
+
+## Shaper choice reference
+
+`generate_shaper_choice_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ShaperChoice.harfbuzz.json`.
+HarfBuzz chooses a shaper from the script of the text and from the script tag that it finds in the GSUB table of
+the font. The script builds seven fonts that differ only in the scripts of their GSUB table:
+
+- `ShaperChoiceTag1.ttf` has the first tag that HarfBuzz looks for, for each script of `ScriptTags.harfbuzz.json`,
+  such as `dev3`, `mym2` and `latn`. `ShaperChoiceTag2.ttf` has the second tag, such as `dev2` and `mymr`, and
+  `ShaperChoiceTag3.ttf` has the third, such as `deva`.
+- `ShaperChoiceDFLT.ttf`, `ShaperChoiceLowercaseDflt.ttf` and `ShaperChoiceLatn.ttf` have only `DFLT`, `dflt` or `latn`.
+- `ShaperChoiceNone.ttf` has only `zzzz`, which HarfBuzz looks for in no script.
+
+Each font has one glyph for the first letter of every script, a glyph for U+0301, and no GPOS table. Every script of
+the GSUB table has the features `nukt`, `pref`, `pres`, `haln` and `isol`, and each of them puts a glyph of its own
+after the letter. The features that HarfBuzz applies, and what it does with the mark, show its shaper. For example,
+only the universal shaper applies both `nukt` and `pref`, and only the default and Arabic shapers place the mark.
+
+The reference holds the glyph IDs and positions that HarfBuzz gives for the letter and the mark of each script, in
+each font that has a tag for the script.
+
+The script also builds `ShaperChoicePositioning.ttf`. Its GSUB and GPOS tables have only `DFLT`, and its GPOS
+features `abvm`, `blwm` and `dist` move the letter by 1, 2 and 4 units. Every shaper of HarfBuzz applies the three,
+so the reference has each letter 7 units from its place. It has no Hebrew letter for this font: HarfBuzz does not
+use the GPOS table of a font that has no `hebr` script for Hebrew text.
+
+`ShaperChoiceTests` checks that the library gives the same.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root. Run `derive_harfbuzz_script_tags.py` first when the script tags can have changed:
+
+```
+python tests/tools/generate_shaper_choice_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Cluster reference
+
+`generate_cluster_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Clusters.harfbuzz.json`. It holds how
+HarfBuzz shapes a sign that has no letter of its script before it.
+
+The script builds two fonts that have no GSUB table, so only the shaper changes the order and the number of the
+glyphs:
+
+- `ClustersBalinese.ttf` has Balinese letters and signs, the dotted circle, and the characters of the Basic Latin
+  block and some others that have the script Common. HarfBuzz shapes Balinese text with its universal shaper.
+- `ClustersDevanagari.ttf` has the same for Devanagari, which HarfBuzz shapes with its Indic shaper.
+
+The reference holds the glyph IDs that HarfBuzz gives, and where it draws each glyph, for:
+
+- each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and HarfBuzz
+  gives it a dotted circle as its base.
+- each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next to
+  it in one cluster, and the library does not. They do not start with the sign that goes in front of the base: the
+  Indic shaper of the library then draws the dotted circle in another place than HarfBuzz.
+- each Common character before a vowel sign that goes above or after the base, and before one that goes in front of
+  it. The universal shaper takes most of these characters as the base of the sign.
+
+The fonts have no U+2015, U+2022 or U+25FB. They are bases in the Indic shaper of HarfBuzz and not in the library.
+
+`ClusterTests` checks that the library gives the same glyphs in the same places.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_cluster_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

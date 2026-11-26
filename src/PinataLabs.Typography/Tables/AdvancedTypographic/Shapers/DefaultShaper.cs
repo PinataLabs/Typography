@@ -52,6 +52,12 @@ internal class DefaultShaper : BaseShaper
 
     protected static readonly Tag KernTag = Tag.Parse("kern");
 
+    protected static readonly Tag DistTag = Tag.Parse("dist");
+
+    protected static readonly Tag AbvmTag = Tag.Parse("abvm");
+
+    protected static readonly Tag BlwmTag = Tag.Parse("blwm");
+
     protected static readonly Tag VertTag = Tag.Parse("vert");
 
     protected static readonly Tag VKernTag = Tag.Parse("vkrn");
@@ -127,6 +133,11 @@ internal class DefaultShaper : BaseShaper
         this.AddFeature(collection, index, count, MarkTag);
         this.AddFeature(collection, index, count, MkmkTag);
 
+        // Every shaper of HarfBuzz applies these two, in horizontal and in vertical text, so a font whose only
+        // script is DFLT can place the marks of a script that has a shaper of its own.
+        this.AddFeature(collection, index, count, AbvmTag);
+        this.AddFeature(collection, index, count, BlwmTag);
+
         // Add horizontal or vertical features. The choice is made per glyph so that, in vertical mixed
         // layouts, rotated glyphs keep their horizontal features while upright glyphs get `vert`.
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
@@ -141,6 +152,9 @@ internal class DefaultShaper : BaseShaper
                 this.AddFeature(collection, i, 1, RcltTag);
                 this.AddFeature(collection, i, 1, CursTag);
                 this.AddFeature(collection, i, 1, KernTag);
+
+                // Every shaper of HarfBuzz applies dist too, to horizontal text only.
+                this.AddFeature(collection, i, 1, DistTag);
 
                 // Rotated glyphs in vertical mixed layout get `vrtr`. Its glyphs are designed to be
                 // rotated by the layout engine, so they are still rotated synthetically. See:
@@ -201,6 +215,29 @@ internal class DefaultShaper : BaseShaper
         if (this.HasFractions())
         {
             this.AssignFractionalFeatures(collection, index, count);
+        }
+    }
+
+    /// <summary>
+    /// Plans a feature in the open stage and assigns it to the glyphs that are not upright in vertical text, as
+    /// HarfBuzz applies <c>dist</c> to horizontal text only.
+    /// </summary>
+    /// <param name="collection">The glyph shaping collection.</param>
+    /// <param name="index">The zero-based index of the first glyph.</param>
+    /// <param name="count">The number of glyphs.</param>
+    /// <param name="feature">The feature to assign.</param>
+    protected void AddHorizontalFeature(IGlyphShapingCollection collection, int index, int count, Tag feature)
+    {
+        // A count of zero plans the feature in the open stage for a run that has only upright glyphs.
+        this.AddFeature(collection, index, 0, feature);
+
+        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
+        for (int i = index; i < index + count; i++)
+        {
+            if (!AdvancedTypographicUtils.IsVerticalGlyph(collection[i].CodePoint, layoutMode, collection[i].HasVerticalForm))
+            {
+                this.AddFeature(collection, i, 1, feature);
+            }
         }
     }
 

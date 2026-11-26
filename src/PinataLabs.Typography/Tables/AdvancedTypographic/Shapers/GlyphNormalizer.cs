@@ -92,8 +92,12 @@ internal ref struct GlyphNormalizer
         {
             this.runStart = index;
             this.runEnd = GetScriptRunEnd(this.collection, index, out ScriptClass script);
-            this.profile = ShaperFactory.GetNormalizationProfile(script);
+            this.profile = ShaperFactory.GetNormalizationProfile(script, this.fontMetrics.GetGSubTable().GetScriptTag(script));
             this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script);
+            if (this.profile.SplitsVowels)
+            {
+                this.SplitVowels();
+            }
 
             // HarfBuzz sorts and composes only in a buffer that has a mark after its first character.
             this.runHasMarks = false;
@@ -168,6 +172,51 @@ internal ref struct GlyphNormalizer
             }
         }
     }
+
+    /// <summary>
+    /// Splits each vowel of the run that the shaper splits, before the run is normalized. The mark of the vowel moves
+    /// before the marks right before the vowel that the shaper moves it past.
+    /// </summary>
+    private void SplitVowels()
+    {
+        Span<Item> items = stackalloc Item[StackItems];
+        for (int i = this.runStart; i < this.runEnd; i++)
+        {
+            if (!this.profile.TrySplitVowel((uint)this.collection[i].CodePoint.Value, out uint mark, out uint rest))
+            {
+                continue;
+            }
+
+            int start = i;
+            while (start > this.runStart
+                && i - start < StackItems - 2
+                && this.profile.MovesSplitMarkBefore((uint)this.collection[start - 1].CodePoint.Value))
+            {
+                start--;
+            }
+
+            if (!this.CanNormalize(start, i + 1))
+            {
+                continue;
+            }
+
+            int count = 0;
+            items[count++] = new Item(new CodePoint(mark), this.GetGlyphOrMissing(mark), i - start);
+            for (int j = start; j < i; j++)
+            {
+                GlyphShapingData data = this.collection[j];
+                items[count++] = new Item(data.CodePoint, data.GlyphId, j - start);
+            }
+
+            items[count++] = new Item(new CodePoint(rest), this.GetGlyphOrMissing(rest), i - start);
+            this.collection.ReplaceNormalized(start, i + 1 - start, items.Slice(0, count));
+            this.runEnd++;
+            i++;
+        }
+    }
+
+    private readonly ushort GetGlyphOrMissing(uint codePoint)
+        => this.TryGetGlyph(codePoint, out ushort glyphId) ? glyphId : (ushort)0;
 
     // A character with no mark after it changes only when the font lacks it, or when the shaper decomposes everything.
     private readonly bool CanChangeAlone(GlyphShapingData data)

@@ -13,11 +13,13 @@
     <Compile Include="..\PinataLabs.Typography\Unicode\GraphemeClusterClass.cs" Link="GraphemeClusterClass.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\ArabicJoiningGroup.cs" Link="ArabicJoiningGroup.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\ArabicJoiningType.cs" Link="ArabicJoiningType.cs" />
+    <Compile Include="..\PinataLabs.Typography\Unicode\IndicConjunctBreak.cs" Link="IndicConjunctBreak.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\IndicPositionalCategory.cs" Link="IndicPositionalCategory.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\IndicSyllabicCategory.cs" Link="IndicSyllabicCategory.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\LineBreakClass.cs" Link="LineBreakClass.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\Resources\IndicShapingData.cs" Link="IndicShapingData.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\ScriptClass.cs" Link="ScriptClass.cs" />
+    <Compile Include="..\PinataLabs.Typography\Unicode\TrieValueLayout.cs" Link="TrieValueLayout.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\UnicodeTrie.cs" Link="UnicodeTrie.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\UnicodeTrieBuilder.cs" Link="UnicodeTrieBuilder.cs" />
     <Compile Include="..\PinataLabs.Typography\Unicode\VerticalOrientationType.cs" Link="VerticalOrientationType.cs" />

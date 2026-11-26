@@ -150,8 +150,19 @@ internal class GPosTable : Table
                 }
             }
 
-            Tag unicodeScriptTag = this.GetUnicodeScriptTag(current);
-            BaseShaper shaper = ShaperFactory.Create(current, unicodeScriptTag, collection.TextOptions);
+            if (!this.PositionsScript(current))
+            {
+                if (i >= maxCount)
+                {
+                    return updated;
+                }
+
+                continue;
+            }
+
+            // As in HarfBuzz, the script of the GSUB table chooses the shaper for both tables.
+            Tag substitutionScript = fontMetrics.GetGSubTable().GetScriptTag(current);
+            BaseShaper shaper = ShaperFactory.Create(current, substitutionScript, collection.TextOptions);
 
             if (shaper.MarkZeroingMode == MarkZeroingMode.PreGPos)
             {
@@ -219,6 +230,15 @@ internal class GPosTable : Table
     }
 
     /// <summary>
+    /// Gets a value indicating whether the table positions text of the script. When it does not, the text is
+    /// positioned as in a font without GPOS. See <see cref="ShaperFactory.NeedsOwnGposScript"/>.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns><see langword="true"/> if the table positions the text.</returns>
+    public bool PositionsScript(ScriptClass script)
+        => !ShaperFactory.NeedsOwnGposScript(script) || this.HasScriptOf(script);
+
+    /// <summary>
     /// Gets a value indicating whether the language system that the table uses for the script lists the feature.
     /// </summary>
     /// <param name="script">The script of the text.</param>
@@ -244,23 +264,22 @@ internal class GPosTable : Table
         return false;
     }
 
-    private Tag GetUnicodeScriptTag(ScriptClass script)
+    private bool HasScriptOf(ScriptClass script)
     {
         if (this.ScriptList is null)
         {
-            return default;
+            return false;
         }
 
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
+        foreach (Tag tag in UnicodeScriptTagMap.Instance[script])
         {
-            if (this.ScriptList.TryGetValue(tags[i].Value, out ScriptListTable? _))
+            if (this.ScriptList.ContainsKey(tag))
             {
-                return tags[i];
+                return true;
             }
         }
 
-        return default;
+        return false;
     }
 
     private static void FixCursiveAttachment(GlyphPositioningCollection collection, int index, int count)

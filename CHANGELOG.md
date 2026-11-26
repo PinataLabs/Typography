@@ -25,6 +25,9 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Unicode 18.0.0 scripts and classes.** `ScriptClass` has members for the 16 scripts of Unicode 15.0 to 18.0, with
+  their OpenType tags, and they use the universal shaper. `LineBreakClass` gains `AK`, `AP`, `AS`, `HH`, `VF` and `VI`,
+  `IndicSyllabicCategory` gains `ReorderingKiller`, and `ArabicJoiningGroup` gains 12 members. (#103)
 - **Paint type of font programs.** `FontProgram.PaintType` (`GlyphPaintType.Filled` or `GlyphPaintType.Stroked`)
   and `FontProgram.StrokeWidth` report whether the outlines are filled or stroked, and the stroke width in glyph space
   units. They come from the Type 1 `/PaintType` and `/StrokeWidth` and the CFF Top DICT PaintType and StrokeWidth.
@@ -87,6 +90,16 @@ An additive or breaking public API change needs all of these:
 
 ### Changed
 
+- **Unicode 18.0.0.** All Unicode data moves from Unicode 14.0.0 to 18.0.0, the version that HarfBuzz 15.0.0 uses:
+  scripts, general category, line break, East Asian width, bidi, grapheme break, vertical orientation, Arabic joining,
+  Indic categories, emoji and canonical mappings. Line breaking follows the UAX #14 rules of Unicode 18.0.0, including
+  the quotation, hyphen, East Asian and Aksara rules added since Unicode 15.1, so lines can break in new places.
+  Grapheme clusters follow rule GB9c of UAX #29. A line can break after leading spaces, as UAX #14 allows, so an
+  indented first word that does not fit can move to the next line. (#103)
+- **The shaper depends on the script tag that the font provides.** A version 3 Indic tag such as `dev3` gives the
+  universal shaper. `DFLT` or `latn` gives the default shaper to Indic, Myanmar and universal scripts, as does `mymr`
+  for Myanmar and `DFLT` for Syriac, as in HarfBuzz 15.0.0. The normalization, the `kern` table, fallback mark
+  placement and GPOS follow the chosen shaper. (#101)
 - **Characters are composed and decomposed to the glyphs that a font has.** Before GSUB, text layout maps the
   characters of each run to the glyphs that the font has, as the normalization step of HarfBuzz does. A base and a mark
   give the precomposed glyph when the font has it, so `o` + U+0301 draws ó. A character that the font lacks is drawn
@@ -106,6 +119,23 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- Adlam, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N'Ko, Old Uyghur, Phags-pa, Psalter Pahlavi
+  and Sogdian use the universal shaper, which now joins their letters. Phags-pa letters had no joining type. (#102)
+- In the universal shaper, a sign after a space, a digit, a punctuation mark or a symbol takes that character as its
+  base. The dotted circle of a broken cluster goes before the sign in the Indic and universal shapers. Every shaper
+  applies `abvm` and `blwm`, and applies `dist` to horizontal text only, and the universal shaper applies `haln`.
+  Text such as U+1B34 U+1B44 no longer throws. The Myanmar shaper no longer draws the dotted circle of a lone vowel
+  sign E on top of the sign. (#102)
+- Hebrew is positioned with GPOS only when the GPOS table has the `hebr` script. Otherwise it is kerned with the `kern`
+  table and its marks are placed without GPOS, as in HarfBuzz. (#102)
+- In a font without GPOS, a mark of a ligature is placed on its own component. GSUB gives the marks of a ligature their
+  component as HarfBuzz does. (#102)
+- Thai SARA AM and Lao AM split into their mark and vowel, and the mark moves before the marks above the base. (#102)
+- Arabic in a font without the GSUB joining forms uses the presentation forms of the font and their ligatures, as
+  HarfBuzz does. (#102)
+- A glyph shared by several code points, such as U+00A0 and U+0020 on the space glyph or the .notdef glyph of missing
+  characters, reports the code point that the text holds. Before, it reported whichever code point the font met first,
+  which also changed line breaking at a no-break space and whether a missing character was drawn. (#105)
 - Text in N'Ko, Lao, Vai, Yi, Hiragana and Katakana or Hiragana uses the `nko `, `lao `, `vai `, `yi  ` and `kana`
   scripts of the font. Before, shaping looked for `nkoo`, `laoo`, `vaii`, `yiii`, `hira` and `hrkt`, which fonts do not
   use, and fell back to `DFLT`. Indic scripts try the version 3 tags such as `dev3` and `knd3` before the version 2 and

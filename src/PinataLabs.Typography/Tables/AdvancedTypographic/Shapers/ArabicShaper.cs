@@ -99,7 +99,8 @@ internal sealed class ArabicShaper : DefaultShaper
         this.AddFeature(collection, index, count, MsetTag);
         this.EndStage();
 
-        this.AddFeature(collection, index, count, RligTag);
+        // In a font without the joining forms of Arabic, the presentation forms stand in for them after `rlig`.
+        this.AddFeature(collection, index, count, RligTag, postAction: this.ScriptClass == ScriptClass.Arabic ? ArabicFallbackShaper.Apply : null);
         this.EndStage();
 
         // A count of zero places these features in a stage of their own without assigning them
@@ -113,7 +114,18 @@ internal sealed class ArabicShaper : DefaultShaper
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
     {
         base.AssignFeatures(collection, index, count);
+        AssignJoiningForms(collection, index, count);
+    }
 
+    /// <summary>
+    /// Enables on each glyph the feature of the joining form that its letter takes between its neighbours.
+    /// The glyphs must already have the features of the forms that the shaper applies.
+    /// </summary>
+    /// <param name="collection">The glyph shaping collection.</param>
+    /// <param name="index">The zero-based index of the first glyph.</param>
+    /// <param name="count">The number of glyphs.</param>
+    internal static void AssignJoiningForms(IGlyphShapingCollection collection, int index, int count)
+    {
         int prev = -1;
         int state = 0;
         byte[] actions = new byte[count];
@@ -143,6 +155,16 @@ internal sealed class ArabicShaper : DefaultShaper
 
             actions[i] = curAction;
             prev = i;
+        }
+
+        // As in HarfBuzz, a Mongolian free variation selector takes the form of the glyph before it.
+        // A lookup of that form can then match the letter and its selector.
+        for (int i = 1; i < count; i++)
+        {
+            if (collection[i + index].CodePoint.Value is (>= 0x180B and <= 0x180D) or 0x180F)
+            {
+                actions[i] = actions[i - 1];
+            }
         }
 
         // Apply the chosen features to their respective glyphs.

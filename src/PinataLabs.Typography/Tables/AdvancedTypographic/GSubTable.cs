@@ -149,8 +149,7 @@ internal class GSubTable : Table
                 }
             }
 
-            Tag unicodeScriptTag = this.GetUnicodeScriptTag(current);
-            BaseShaper shaper = ShaperFactory.Create(current, unicodeScriptTag, collection.TextOptions);
+            BaseShaper shaper = ShaperFactory.Create(current, this.GetScriptTag(current), collection.TextOptions);
 
             // Plan substitution features for each glyph.
             // Shapers can adjust the count during initialization and feature processing so we must capture
@@ -317,22 +316,14 @@ internal class GSubTable : Table
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
         => LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, stageFeatures, script, false, out value);
 
-    private Tag GetUnicodeScriptTag(ScriptClass script)
-    {
-        if (this.ScriptList is null)
-        {
-            return default;
-        }
-
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
-        for (int i = 0; i < tags.Length; i++)
-        {
-            if (this.ScriptList.TryGetValue(tags[i].Value, out ScriptListTable? _))
-            {
-                return tags[i];
-            }
-        }
-
-        return default;
-    }
+    /// <summary>
+    /// Gets the tag of the script that the table has for text of a Unicode script. The shaper of the text
+    /// depends on it: see <see cref="ShaperFactory"/>.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns>
+    /// The tag, which can be <c>DFLT</c>, <c>dflt</c> or <c>latn</c>, or the default tag when no script applies.
+    /// </returns>
+    public Tag GetScriptTag(ScriptClass script)
+        => this.ScriptList?.ChooseScript(script)?.ScriptTag ?? default;
 }

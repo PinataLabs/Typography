@@ -53,13 +53,15 @@ internal class StateMachine
         int? startRun = null;
         int? lastAccepting = null;
 
+        // A match ends at the last accepting state, which can be before the state that failed.
+        string[] lastAcceptingTags = [];
+
         List<StateMatch> matches = new(input.Length);
 
         for (int i = 0; i < input.Length; i++)
         {
             int c = input[i];
 
-            int lastState = state;
             state = this.StateTable[state][c];
 
             if (state == FailState)
@@ -71,7 +73,7 @@ internal class StateMachine
                     {
                         StartIndex = startRun.Value,
                         EndIndex = lastAccepting.Value,
-                        Tags = this.Tags[lastState]
+                        Tags = lastAcceptingTags
                     });
                 }
 
@@ -90,6 +92,7 @@ internal class StateMachine
             if (this.Accepting[state])
             {
                 lastAccepting = i;
+                lastAcceptingTags = this.Tags[state];
             }
 
             // reset the state to the initial state if we get into the failure state
@@ -106,7 +109,7 @@ internal class StateMachine
             {
                 StartIndex = startRun.Value,
                 EndIndex = lastAccepting.Value,
-                Tags = this.Tags[state]
+                Tags = lastAcceptingTags
             });
         }
 

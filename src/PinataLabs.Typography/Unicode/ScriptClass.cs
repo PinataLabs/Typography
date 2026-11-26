@@ -823,4 +823,84 @@ public enum ScriptClass
     /// Shortcode: Zanb
     /// </summary>
     ZanabazarSquare,
+
+    /// <summary>
+    /// Shortcode: Berf
+    /// </summary>
+    BeriaErfe,
+
+    /// <summary>
+    /// Shortcode: Gara
+    /// </summary>
+    Garay,
+
+    /// <summary>
+    /// Shortcode: Gukh
+    /// </summary>
+    GurungKhema,
+
+    /// <summary>
+    /// Shortcode: Jurc
+    /// </summary>
+    Jurchen,
+
+    /// <summary>
+    /// Shortcode: Kawi
+    /// </summary>
+    Kawi,
+
+    /// <summary>
+    /// Shortcode: Krai
+    /// </summary>
+    KiratRai,
+
+    /// <summary>
+    /// Shortcode: Nagm
+    /// </summary>
+    NagMundari,
+
+    /// <summary>
+    /// Shortcode: Onao
+    /// </summary>
+    OlOnal,
+
+    /// <summary>
+    /// Shortcode: Pcun
+    /// </summary>
+    ProtoCuneiform,
+
+    /// <summary>
+    /// Shortcode: Seal
+    /// </summary>
+    Seal,
+
+    /// <summary>
+    /// Shortcode: Sidt
+    /// </summary>
+    Sidetic,
+
+    /// <summary>
+    /// Shortcode: Sunu
+    /// </summary>
+    Sunuwar,
+
+    /// <summary>
+    /// Shortcode: Tayo
+    /// </summary>
+    TaiYo,
+
+    /// <summary>
+    /// Shortcode: Todr
+    /// </summary>
+    Todhri,
+
+    /// <summary>
+    /// Shortcode: Tols
+    /// </summary>
+    TolongSiki,
+
+    /// <summary>
+    /// Shortcode: Tutg
+    /// </summary>
+    TuluTigalari,
 }

@@ -65,12 +65,12 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
     }
 
     /// <summary>
-    /// Gets the language system that applies to text of a script when no language is requested. As in HarfBuzz,
-    /// a font without the script gives the <c>DFLT</c> script, else the <c>dflt</c> script, else <c>latn</c>.
+    /// Gets the script of the table that applies to text of a Unicode script. As in HarfBuzz, a font without
+    /// a script for the text gives the <c>DFLT</c> script, else the <c>dflt</c> script, else <c>latn</c>.
     /// </summary>
     /// <param name="script">The script of the text.</param>
-    /// <returns>The language system, or <see langword="null"/> when no script or language system applies.</returns>
-    public LangSysTable? GetDefaultLangSys(ScriptClass script)
+    /// <returns>The script, or <see langword="null"/> when none applies.</returns>
+    public ScriptListTable? ChooseScript(ScriptClass script)
     {
         ScriptListTable? table;
         Tag[] tags = UnicodeScriptTagMap.Instance[script];
@@ -78,7 +78,7 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
         {
             if (this.TryGetValue(tags[i], out table))
             {
-                return table.GetDefaultLangSys();
+                return table;
             }
         }
 
@@ -86,11 +86,19 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
             || this.TryGetValue(LowercaseDfltScriptTag, out table)
             || this.TryGetValue(LatnScriptTag, out table))
         {
-            return table.GetDefaultLangSys();
+            return table;
         }
 
         return null;
     }
+
+    /// <summary>
+    /// Gets the language system that applies to text of a script when no language is requested.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <returns>The language system, or <see langword="null"/> when no script or language system applies.</returns>
+    public LangSysTable? GetDefaultLangSys(ScriptClass script)
+        => this.ChooseScript(script)?.GetDefaultLangSys();
 }
 
 internal sealed class ScriptListTable
