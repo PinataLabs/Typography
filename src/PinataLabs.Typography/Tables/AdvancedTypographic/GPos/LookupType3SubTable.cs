@@ -179,11 +179,12 @@ internal static class LookupType3SubTable
                 }
             }
 
+            // As in HarfBuzz, the first glyph of a chain is its root, or the last one with the RightToLeft flag.
             int child = index;
             int parent = nextIndex;
             int xOffset = AdvancedTypographicUtils.Round(entryAnchor.XCoordinate - exitAnchor.XCoordinate);
             int yOffset = AdvancedTypographicUtils.Round(entryAnchor.YCoordinate - exitAnchor.YCoordinate);
-            if (this.LookupFlags.HasFlag(LookupFlags.RightToLeft))
+            if (!this.LookupFlags.HasFlag(LookupFlags.RightToLeft))
             {
                 (parent, child) = (child, parent);
 
@@ -214,6 +215,14 @@ internal static class LookupType3SubTable
             if (p.CursiveAttachment == -c.CursiveAttachment)
             {
                 p.CursiveAttachment = 0;
+                if (horizontal)
+                {
+                    p.Bounds.Y = 0;
+                }
+                else
+                {
+                    p.Bounds.X = 0;
+                }
             }
 
             return true;
@@ -228,7 +237,7 @@ internal static class LookupType3SubTable
         {
             GlyphShapingData c = collection[i];
             int chain = c.CursiveAttachment;
-            if (chain <= 0)
+            if (chain == 0)
             {
                 return;
             }

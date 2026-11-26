@@ -209,7 +209,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             LigatureId = 0,
             LigatureComponent = -1,
             MarkAttachment = -1,
-            CursiveAttachment = -1,
+            CursiveAttachment = 0,
         };
 
         this.glyphs.Insert(index, new(pair.Offset, data));
@@ -354,7 +354,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.LigatureId = 0;
         current.LigatureComponent = -1;
         current.MarkAttachment = -1;
-        current.CursiveAttachment = -1;
+        current.CursiveAttachment = 0;
         current.IsSubstituted = true;
     }
 
@@ -384,7 +384,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.IsLigated = true;
         current.LigatureComponent = -1;
         current.MarkAttachment = -1;
-        current.CursiveAttachment = -1;
+        current.CursiveAttachment = 0;
         current.IsSubstituted = true;
     }
 
@@ -412,7 +412,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.LigatureId = 0;
         current.LigatureComponent = -1;
         current.MarkAttachment = -1;
-        current.CursiveAttachment = -1;
+        current.CursiveAttachment = 0;
         current.IsSubstituted = true;
     }
 
@@ -430,7 +430,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             current.GlyphId = glyphIds[0];
             current.LigatureComponent = 0;
             current.MarkAttachment = -1;
-            current.CursiveAttachment = -1;
+            current.CursiveAttachment = 0;
             current.IsSubstituted = true;
             current.IsDecomposed = true;
 

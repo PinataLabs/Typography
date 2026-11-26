@@ -127,10 +127,12 @@ public class GPosTableTests
         var renderer = new ColorGlyphRenderer();
         string testStr = "\u0012\u0012"; // "\u0012\u0012" characters should overlap.
         int[] expectedGlyphIndices = { 20, 20 };
+
+        // HarfBuzz 15.0.0 keeps the first glyph on the baseline and raises the second by 100 units.
         FontRectangle[] expectedFontRectangles =
         {
-            new(475, 1185.9999F, 825, 719),
-            new(575, 1085.9999F, 825, 719),
+            new(475, 1085.9999F, 825, 719),
+            new(575, 985.9999F, 825, 719),
         };
 
         // act
