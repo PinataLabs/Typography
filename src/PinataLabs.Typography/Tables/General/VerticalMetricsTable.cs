@@ -20,7 +20,7 @@ internal sealed class VerticalMetricsTable : Table
     {
         if (glyphIndex >= this.advancedHeights.Length)
         {
-            return this.advancedHeights[0];
+            return this.advancedHeights[^1];
         }
 
         return this.advancedHeights[glyphIndex];
