@@ -116,8 +116,9 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
             return false;
         }
 
+        // As in HarfBuzz, a glyph of the coverage that has no substitute does not match.
         int offset = this.coverageTable.CoverageIndexOf(glyphId);
-        if (offset <= -1)
+        if (offset <= -1 || offset >= this.substituteGlyphIds.Length)
         {
             return false;
         }
