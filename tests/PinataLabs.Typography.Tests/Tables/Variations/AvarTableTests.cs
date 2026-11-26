@@ -4,6 +4,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tests.Tables.Variations;
@@ -31,38 +32,54 @@ public class AvarTableTests
     }
 
     [Test]
-    public async Task AValueBetweenTwoEntriesIsInterpolatedAndAValueBeyondTheEndsKeepsItsDistance()
+    public async Task AValueBetweenTwoEntriesIsInterpolated()
     {
-        // The maps of avar are normally -1, 0 and 1 with entries between them. This map does not start at -1, so
-        // that a value below it, and one above the last entry, keep their distance from the nearest entry.
-        AvarTable avar = AvarTable.Parse(Build(1, [(-0.5D, -0.25D), (0D, 0D), (0.5D, 0.75D)]))!;
+        AvarTable avar = AvarTable.Parse(Build(1, [(-1D, -1D), (-0.5D, -0.25D), (0D, 0D), (0.5D, 0.75D), (1D, 1D)]))!;
 
         await Assert.That(avar.Map(0, 0.25D)).IsEqualTo(0.375D);
         await Assert.That(avar.Map(0, -0.25D)).IsEqualTo(-0.125D);
-        await Assert.That(avar.Map(0, -1D)).IsEqualTo(-0.75D);
-        await Assert.That(avar.Map(0, 1D)).IsEqualTo(1.25D);
         await Assert.That(avar.Map(0, 0.5D)).IsEqualTo(0.75D);
     }
 
     [Test]
-    public async Task AMapWithNoEntryOrOneEntryMapsEveryValue()
+    public async Task AMapWithNoEntryMapsEveryValue()
     {
         AvarTable none = AvarTable.Parse(Build(1, []))!;
-        AvarTable one = AvarTable.Parse(Build(1, [(0D, 0.25D)]))!;
 
         await Assert.That(none.Map(0, 0.3D)).IsEqualTo(0.3D);
-        await Assert.That(one.Map(0, 0D)).IsEqualTo(0.25D);
-        await Assert.That(one.Map(0, 0.5D)).IsEqualTo(0.75D);
-        await Assert.That(one.Map(0, -1D)).IsEqualTo(-0.75D);
+    }
+
+    [Test]
+    public async Task AMapThatDoesNotPinTheEndsAndTheDefaultIsMalformed()
+    {
+        await Assert.That(AvarTable.Parse(Build(1, [(-1D, -1D), (0D, 0.1D), (1D, 1D)]))).IsNull();
+        await Assert.That(AvarTable.Parse(Build(1, [(-1D, -1D), (1D, 1D)]))).IsNull();
+        await Assert.That(AvarTable.Parse(Build(1, [(0D, 0D), (1D, 1D)]))).IsNull();
+        await Assert.That(AvarTable.Parse(Build(1, [(-1D, -1D), (0D, 0D)]))).IsNull();
+    }
+
+    [Test]
+    public async Task AnAvarThatDoesNotPinTheDefaultGivesTheFaceItselfAtTheDefaults()
+    {
+        // The map -1 to -1, 0 to 0.1, 1 to 1 is malformed, so the avar is absent and the default coordinates stay 0.
+        byte[] font = VariationFontBytes.Read("Teko/Teko-Variable.ttf");
+        Span<byte> table = VariationFontBytes.Table(font, "avar");
+        byte[] replacement = Build(1, [(-1D, -1D), (0D, 0.1D), (1D, 1D)]);
+        replacement.CopyTo(table);
+
+        FontFamily family = VariationFontBytes.Load(font);
+        Font atDefault = family.CreateFont(12, FontStyle.Regular, new FontVariation(Tag.Parse("wght"), 300F));
+
+        await Assert.That(atDefault.FontMetrics).IsSameReferenceAs(family.Faces[0]);
     }
 
     [Test]
     public async Task WhenTwoEntriesStartAtTheSameValueTheLastOneCounts()
     {
-        AvarTable avar = AvarTable.Parse(Build(1, [(-1D, -1D), (0D, 0D), (0D, 0.25D), (1D, 1D)]))!;
+        AvarTable avar = AvarTable.Parse(Build(1, [(-1D, -1D), (0D, 0D), (0.5D, 0.5D), (0.5D, 0.75D), (1D, 1D)]))!;
 
-        await Assert.That(avar.Map(0, 0D)).IsEqualTo(0.25D);
-        await Assert.That(avar.Map(0, 0.5D)).IsEqualTo(0.625D);
+        await Assert.That(avar.Map(0, 0.5D)).IsEqualTo(0.75D);
+        await Assert.That(avar.Map(0, 0.25D)).IsEqualTo(0.375D);
     }
 
     [Test]
@@ -87,7 +104,7 @@ public class AvarTableTests
     [Arguments(3)]
     public async Task AnUnknownMajorVersionIsMalformed(int majorVersion)
     {
-        await Assert.That(AvarTable.Parse(Build(majorVersion, [(-1D, -1D), (1D, 1D)]))).IsNull();
+        await Assert.That(AvarTable.Parse(Build(majorVersion, [(-1D, -1D), (0D, 0D), (1D, 1D)]))).IsNull();
     }
 
     [Test]

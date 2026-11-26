@@ -117,6 +117,23 @@ public class FvarTableTests
     }
 
     [Test]
+    public async Task ANamedInstanceBeyondTheRangeOfItsAxisIsClamped()
+    {
+        // Teko has wght 300 to 700. The last record, 700, is patched to 900 as a 16.16 number.
+        byte[] font = VariationFontBytes.Read("Teko/Teko-Variable.ttf");
+        byte[] fvar = VariationFontBytes.Table(font, "fvar").ToArray();
+        int instances = BinaryPrimitives.ReadUInt16BigEndian(fvar.AsSpan(InstanceCount));
+        int instanceSize = BinaryPrimitives.ReadUInt16BigEndian(fvar.AsSpan(InstanceSize));
+        int last = FirstAxis + 20 + ((instances - 1) * instanceSize);
+        BinaryPrimitives.WriteInt32BigEndian(fvar.AsSpan(last + 4), 900 << 16);
+
+        FvarTable? table = FvarTable.Parse(fvar, ReadName(font), null);
+
+        await Assert.That(table!.NamedInstances[^1].Variations[0].Value).IsEqualTo(700F);
+        await Assert.That((int)table.NamedInstances[^1].Coordinates.Values[0]).IsEqualTo(16384);
+    }
+
+    [Test]
     [Arguments("Teko/Teko-Variable.ttf", "fvar")]
     [Arguments("Teko/Teko-Variable.ttf", "avar")]
     [Arguments("SourceSans3/SourceSans3VF-Upright.otf", "fvar")]

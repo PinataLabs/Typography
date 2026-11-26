@@ -66,6 +66,11 @@ internal sealed class FvarTable : Table
         this.namedInstances = new FontNamedInstance[nameIds.Length];
         for (int i = 0; i < nameIds.Length; i++)
         {
+            for (int a = 0; a < axes.Length; a++)
+            {
+                instanceCoordinates[i][a] = axes[a].Clamp(instanceCoordinates[i][a]);
+            }
+
             this.namedInstances[i] = new FontNamedInstance(
                 nameIds[i],
                 nameTable,

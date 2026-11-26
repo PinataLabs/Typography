@@ -103,6 +103,12 @@ internal sealed class AvarTable : Table
                 }
             }
 
+            // A map that has entries must pin the ends and the default of the axis, or the table is malformed.
+            if (map.Count > 0 && (!map.Contains((-1D, -1D)) || !map.Contains((0D, 0D)) || !map.Contains((1D, 1D))))
+            {
+                return null;
+            }
+
             maps[axis] = map.ToArray();
         }
 

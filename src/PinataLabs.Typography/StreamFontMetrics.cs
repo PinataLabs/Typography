@@ -70,6 +70,8 @@ internal partial class StreamFontMetrics : FontMetrics
     // for the same coordinates share one instance and its glyph caches, and an instance that no font uses is collected.
     // A static font and an instance have none.
     private readonly ConcurrentDictionary<NormalizedCoordinates, WeakReference<StreamFontMetrics>>? instances;
+    private const int MinimumSweepThreshold = 2;
+    private int sweepThreshold = MinimumSweepThreshold;
 
     // The face that an instance varies, which is null for a face. An instance shares the tables of its face.
     private readonly StreamFontMetrics? face;
@@ -675,12 +677,18 @@ internal partial class StreamFontMetrics : FontMetrics
             }
         }
 
-        foreach (KeyValuePair<NormalizedCoordinates, WeakReference<StreamFontMetrics>> entry in table)
+        // Sweep only when the table has doubled since the last sweep, so that a sweep costs O(1) for each add.
+        if (table.Count >= Volatile.Read(ref this.sweepThreshold))
         {
-            if (!entry.Value.TryGetTarget(out _))
+            foreach (KeyValuePair<NormalizedCoordinates, WeakReference<StreamFontMetrics>> entry in table)
             {
-                ((ICollection<KeyValuePair<NormalizedCoordinates, WeakReference<StreamFontMetrics>>>)table).Remove(entry);
+                if (!entry.Value.TryGetTarget(out _))
+                {
+                    ((ICollection<KeyValuePair<NormalizedCoordinates, WeakReference<StreamFontMetrics>>>)table).Remove(entry);
+                }
             }
+
+            Volatile.Write(ref this.sweepThreshold, Math.Max(MinimumSweepThreshold, table.Count * 2));
         }
 
         return created;
