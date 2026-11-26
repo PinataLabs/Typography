@@ -97,6 +97,27 @@ public class DeviceTableTests
     }
 
     [Test]
+    [Arguments(10L, true)]
+    [Arguments(9L, false)]
+    [Arguments(4L, false)]
+    [Arguments(-1L, true)]
+    public async Task ADeviceTableMustFitInTheGposTableAndNotOnlyInTheFont(long tableLength, bool hasIndex)
+    {
+        // The record is 2 bytes and its device starts at 4 and ends at 10. The stream goes on after the table, as a font
+        // goes on with the next table, and a table of -1 bytes runs to the end of the stream.
+        BigEndianBinaryWriter writer = new();
+        writer.WriteOffset16(4);
+        writer.WriteUInt16(0);
+        WriteDevice(writer, 9, 10, VariationIndexFormat);
+        writer.WriteUInt32(0);
+        BigEndianBinaryReader reader = new(writer.GetStream(), true, tableLength);
+
+        ValueRecord record = new(reader, ValueFormat.XAdvanceDevice, 0);
+
+        await Assert.That(record.XAdvanceVariation.IsNone).IsNotEqualTo(hasIndex);
+    }
+
+    [Test]
     public async Task AnAnchorKeepsTheDeltaOfEachCoordinate()
     {
         // Teko moves at least one of its first rows of the GDEF store at wght 700. A row that does not move would pass anyway.

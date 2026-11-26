@@ -34,6 +34,6 @@ internal class TableHeader
     {
         stream.Seek(this.Offset, SeekOrigin.Begin);
 
-        return new BigEndianBinaryReader(stream, true);
+        return new BigEndianBinaryReader(stream, true, this.Length);
     }
 }
