@@ -82,17 +82,6 @@ internal sealed class TrueTypeFontTables : IFontTables
 
     public CvarTable? Cvar { get; set; }
 
-    /// <summary>
-    /// Gets or sets a value indicating whether the font has an 'HVAR' table, which then varies the advances. Without one the
-    /// advances come from the phantom points of the 'gvar' table.
-    /// </summary>
-    public bool HasHvar { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the font has a 'VVAR' table, which then varies the vertical advances.
-    /// </summary>
-    public bool HasVvar { get; set; }
-
     // Tables Related to TrueType Outlines
     // +------+-----------------------------------------------+
     // | Tag  | Name                                          |

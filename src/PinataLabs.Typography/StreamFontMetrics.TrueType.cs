@@ -166,8 +166,6 @@ internal partial class StreamFontMetrics
             Fvar = fvar,
             Gvar = gvar,
             Cvar = cvar,
-            HasHvar = reader.GetHeader("HVAR") is not null,
-            HasVvar = reader.GetHeader("VVAR") is not null,
         };
 
         return new StreamFontMetrics(tables);
@@ -205,7 +203,7 @@ internal partial class StreamFontMetrics
             && tables.Gvar is GvarTable gvar
             && glyf.TryReadVariedPoints(glyphId, gvar, this.coordinates.Values, out varied, out PhantomDeltas phantoms))
         {
-            VaryMetrics(tables, ref varied, phantoms, metrics, ref bounds, ref advanceWidth, out lsb, ref advancedHeight, out tsb);
+            this.VaryMetrics(tables, ref varied, phantoms, metrics, ref bounds, ref advanceWidth, ref lsb, ref advancedHeight, ref tsb);
         }
 
         GlyphColor? color = null;
@@ -242,18 +240,22 @@ internal partial class StreamFontMetrics
     // that the deltas belong to is not always the glyph itself. FreeType and HarfBuzz move the outline left by the x of the first
     // phantom point so that the origin is at 0, and so does this method, in place. The bounds of a varied glyph are those of
     // its varied points. A side bearing is the distance from a phantom point to the bounds, and an advance is the distance
-    // between two phantom points, unless an 'HVAR' or 'VVAR' table gives it. Each value rounds once, after the deltas are summed.
-    // A glyph that has no points keeps its bounds, which are those of glyph 0 if the font gives it none.
-    private static void VaryMetrics(
+    // between two phantom points. Each value rounds once, after the deltas are summed. A glyph that has no points keeps its
+    // bounds, which are those of glyph 0 if the font gives it none.
+    //
+    // 'HVAR' and 'VVAR' win over the phantom points, as they do in HarfBuzz. The caller has already varied the advances and
+    // bearings through them, and this method keeps what a table gives: an advance when the table is there, and a leading
+    // bearing when the table maps it. A table that is malformed is absent.
+    private void VaryMetrics(
         TrueTypeFontTables tables,
         ref GlyphVector varied,
         PhantomDeltas deltas,
         IMetricsHeader metrics,
         ref Bounds bounds,
         ref ushort advanceWidth,
-        out short lsb,
+        ref short lsb,
         ref ushort advanceHeight,
-        out short tsb)
+        ref short tsb)
     {
         int source = deltas.GlyphId;
         Bounds header = tables.Glyf.GetBounds(source);
@@ -294,16 +296,24 @@ internal partial class StreamFontMetrics
             yMax = max.Y;
         }
 
-        lsb = (short)Math.Clamp(Math.Floor(xMin + 0.5), short.MinValue, short.MaxValue);
-        tsb = (short)Math.Clamp(Math.Floor(top - yMax + 0.5), short.MinValue, short.MaxValue);
-        if (!tables.HasHvar)
+        if (!this.hvar.HasLeadingBearings)
         {
-            advanceWidth = (ushort)Math.Clamp(Math.Floor(right - left + 0.5), 0, ushort.MaxValue);
+            lsb = VariationRounding.ToInt16(xMin);
         }
 
-        if (!tables.HasVvar)
+        if (!this.vvar.HasLeadingBearings)
         {
-            advanceHeight = (ushort)Math.Clamp(Math.Floor(top - bottom + 0.5), 0, ushort.MaxValue);
+            tsb = VariationRounding.ToInt16(top - yMax);
+        }
+
+        if (this.hvar.IsEmpty)
+        {
+            advanceWidth = VariationRounding.ToUInt16(right - left);
+        }
+
+        if (this.vvar.IsEmpty)
+        {
+            advanceHeight = VariationRounding.ToUInt16(top - bottom);
         }
     }
 }
