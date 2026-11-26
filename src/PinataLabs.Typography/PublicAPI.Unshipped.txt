@@ -142,11 +142,9 @@ PinataLabs.Typography.FontDescription.LegacyFontFamily(System.Globalization.Cult
 PinataLabs.Typography.GlyphRendererParameters.FontMetrics.get -> PinataLabs.Typography.FontMetrics!
 *REMOVED*PinataLabs.Typography.GlyphRendererParameters.Font.get -> string!
 *REMOVED*PinataLabs.Typography.GlyphRendererParameters.FontStyle.get -> PinataLabs.Typography.FontStyle
-PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size, PinataLabs.Typography.FontStyle style = PinataLabs.Typography.FontStyle.Regular) -> void
 PinataLabs.Typography.Font.Style.get -> PinataLabs.Typography.FontStyle
 PinataLabs.Typography.Font.WithSize(float size) -> PinataLabs.Typography.Font!
 PinataLabs.Typography.Font.WithStyle(PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!
-PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.FontStyle style = PinataLabs.Typography.FontStyle.Regular) -> PinataLabs.Typography.Font!
 *REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, PinataLabs.Typography.FontStyle style) -> void
 *REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, float size) -> void
 *REMOVED*PinataLabs.Typography.Font.Font(PinataLabs.Typography.Font! prototype, float size, PinataLabs.Typography.FontStyle style) -> void
@@ -156,3 +154,44 @@ PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.Fo
 *REMOVED*PinataLabs.Typography.Font.IsItalic.get -> bool
 *REMOVED*PinataLabs.Typography.FontFamily.CreateFont(float size) -> PinataLabs.Typography.Font!
 *REMOVED*PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.Font!
+PinataLabs.Typography.Font.Font(PinataLabs.Typography.FontFamily family, float size, PinataLabs.Typography.FontStyle style = default(PinataLabs.Typography.FontStyle)) -> void
+PinataLabs.Typography.FontDescription.StyleRange.get -> PinataLabs.Typography.FontStyleRange!
+PinataLabs.Typography.FontFamily.CreateFont(float size, PinataLabs.Typography.FontStyle style = default(PinataLabs.Typography.FontStyle)) -> PinataLabs.Typography.Font!
+PinataLabs.Typography.FontFamily.Faces.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontMetrics!>!
+PinataLabs.Typography.FontFamily.MatchFace(PinataLabs.Typography.FontStyle style) -> PinataLabs.Typography.FontMetrics!
+PinataLabs.Typography.FontStyle.Equals(PinataLabs.Typography.FontStyle other) -> bool
+PinataLabs.Typography.FontStyle.FontStyle() -> void
+PinataLabs.Typography.FontStyle.FontStyle(PinataLabs.Typography.FontWeight weight, PinataLabs.Typography.FontWidth width, PinataLabs.Typography.FontSlope slope) -> void
+PinataLabs.Typography.FontStyle.Slope.get -> PinataLabs.Typography.FontSlope
+PinataLabs.Typography.FontStyle.Weight.get -> PinataLabs.Typography.FontWeight
+PinataLabs.Typography.FontStyle.Width.get -> PinataLabs.Typography.FontWidth
+PinataLabs.Typography.FontStyle.WithSlope(PinataLabs.Typography.FontSlope slope) -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyle.WithWeight(PinataLabs.Typography.FontWeight weight) -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyle.WithWidth(PinataLabs.Typography.FontWidth width) -> PinataLabs.Typography.FontStyle
+PinataLabs.Typography.FontStyleRange
+PinataLabs.Typography.FontStyleRange.Contains(PinataLabs.Typography.FontStyle style) -> bool
+PinataLabs.Typography.FontStyleRange.HasItalic.get -> bool
+PinataLabs.Typography.FontStyleRange.HasNormal.get -> bool
+PinataLabs.Typography.FontStyleRange.HasOblique.get -> bool
+PinataLabs.Typography.FontStyleRange.MaxObliqueAngle.get -> float
+PinataLabs.Typography.FontStyleRange.MaxWeight.get -> PinataLabs.Typography.FontWeight
+PinataLabs.Typography.FontStyleRange.MaxWidth.get -> PinataLabs.Typography.FontWidth
+PinataLabs.Typography.FontStyleRange.MinObliqueAngle.get -> float
+PinataLabs.Typography.FontStyleRange.MinWeight.get -> PinataLabs.Typography.FontWeight
+PinataLabs.Typography.FontStyleRange.MinWidth.get -> PinataLabs.Typography.FontWidth
+override PinataLabs.Typography.FontStyle.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontStyle.GetHashCode() -> int
+override PinataLabs.Typography.FontStyle.ToString() -> string!
+static PinataLabs.Typography.FontStyle.Bold.get -> PinataLabs.Typography.FontStyle
+static PinataLabs.Typography.FontStyle.BoldItalic.get -> PinataLabs.Typography.FontStyle
+static PinataLabs.Typography.FontStyle.Italic.get -> PinataLabs.Typography.FontStyle
+static PinataLabs.Typography.FontStyle.Regular.get -> PinataLabs.Typography.FontStyle
+static PinataLabs.Typography.FontStyle.operator !=(PinataLabs.Typography.FontStyle left, PinataLabs.Typography.FontStyle right) -> bool
+static PinataLabs.Typography.FontStyle.operator ==(PinataLabs.Typography.FontStyle left, PinataLabs.Typography.FontStyle right) -> bool
+*REMOVED*PinataLabs.Typography.FontDescription.Style.get -> PinataLabs.Typography.FontStyle
+*REMOVED*PinataLabs.Typography.FontFamily.GetAvailableStyles() -> System.Collections.Generic.IEnumerable<PinataLabs.Typography.FontStyle>!
+*REMOVED*PinataLabs.Typography.FontFamily.TryGetMetrics(PinataLabs.Typography.FontStyle style, out PinataLabs.Typography.FontMetrics? metrics) -> bool
+*REMOVED*PinataLabs.Typography.FontStyle.Bold = 1 -> PinataLabs.Typography.FontStyle
+*REMOVED*PinataLabs.Typography.FontStyle.BoldItalic = PinataLabs.Typography.FontStyle.Bold | PinataLabs.Typography.FontStyle.Italic -> PinataLabs.Typography.FontStyle
+*REMOVED*PinataLabs.Typography.FontStyle.Italic = 2 -> PinataLabs.Typography.FontStyle
+*REMOVED*PinataLabs.Typography.FontStyle.Regular = 0 -> PinataLabs.Typography.FontStyle

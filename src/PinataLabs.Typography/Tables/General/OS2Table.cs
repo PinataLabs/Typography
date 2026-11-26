@@ -194,6 +194,10 @@ internal sealed class OS2Table : Table
 
     public FontStyleSelection FontStyle { get; }
 
+    public ushort WeightClass => this.weightClass;
+
+    public ushort WidthClass => this.widthClass;
+
     public short TypoAscender { get; }
 
     public short TypoDescender { get; }

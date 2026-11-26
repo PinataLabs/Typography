@@ -73,7 +73,7 @@ internal partial class StreamFontMetrics : FontMetrics
         this.trueTypeFontTables = tables;
         this.outlineType = OutlineType.TrueType;
         this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
-        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head);
+        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle);
         this.glyphCache = new();
         if (tables.Colr is not null)
         {
@@ -94,7 +94,7 @@ internal partial class StreamFontMetrics : FontMetrics
         this.compactFontTables = tables;
         this.outlineType = OutlineType.CFF;
         this.substitution = tables.GSub ?? GSubTable.CreateEmpty();
-        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head);
+        this.description = new FontDescription(tables.Name, tables.Os2, tables.Head, tables.Post.ItalicAngle);
         this.glyphCache = new();
         if (tables.Colr is not null)
         {

@@ -19,10 +19,15 @@ public static class Program
         IOrderedEnumerable<FontFamily> ordered = SystemFonts.Families.OrderBy(x => x.Name);
         foreach (FontFamily family in ordered)
         {
-            IOrderedEnumerable<FontStyle> styles = family.GetAvailableStyles().OrderBy(x => x);
-            foreach (FontStyle style in styles)
+            foreach (FontMetrics face in family.Faces)
             {
-                Font font = family.CreateFont(0F, style);
+                // The style at the lightest and narrowest end of the face matches the face.
+                FontStyleRange range = face.Description.StyleRange;
+                FontSlope slope = range.HasItalic ? FontSlope.Italic
+                    : range.HasOblique ? FontSlope.Oblique(range.MinObliqueAngle)
+                    : FontSlope.Normal;
+
+                Font font = family.CreateFont(0F, new FontStyle(range.MinWeight, range.MinWidth, slope));
                 font.TryGetPath(out string? path);
                 pairings.Add(new Pairing(font.Name, path));
             }

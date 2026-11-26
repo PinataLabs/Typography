@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -163,16 +162,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     }
 
     /// <inheritdoc/>
-    bool IReadOnlyFontMetricsCollection.TryGetMetrics(string name, CultureInfo culture, FontStyle style, [NotNullWhen(true)] out FontMetrics? metrics)
-    {
-        metrics = ((IReadOnlyFontMetricsCollection)this).GetAllMetrics(name, culture)
-            .FirstOrDefault(x => x.Description.Style == style);
-
-        return metrics != null;
-    }
-
-    /// <inheritdoc/>
-    IEnumerable<FontMetrics> IReadOnlyFontMetricsCollection.GetAllMetrics(string name, CultureInfo culture)
+    IReadOnlyList<FontMetrics> IReadOnlyFontMetricsCollection.GetAllMetrics(string name, CultureInfo culture)
     {
         ArgumentNullException.ThrowIfNull(name);
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
@@ -181,10 +171,6 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
             .Where(x => comparer.Equals(x.Description.FontFamily(culture), name))
             .ToArray();
     }
-
-    /// <inheritdoc/>
-    IEnumerable<FontStyle> IReadOnlyFontMetricsCollection.GetAllStyles(string name, CultureInfo culture)
-        => ((IReadOnlyFontMetricsCollection)this).GetAllMetrics(name, culture).Select(x => x.Description.Style).ToArray();
 
     /// <inheritdoc/>
     IEnumerator<FontMetrics> IReadOnlyFontMetricsCollection.GetEnumerator()

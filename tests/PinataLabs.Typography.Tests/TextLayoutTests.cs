@@ -1218,9 +1218,9 @@ public class TextLayoutTests
     public async Task CanMeasureTextAdvance()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
         {
             LineSpacing = 1F
         };
@@ -1240,9 +1240,9 @@ public class TextLayoutTests
     public async Task CanMeasureCharacterLayouts()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
         {
             LineSpacing = 1.5F
         };
@@ -1283,9 +1283,9 @@ public class TextLayoutTests
     public async Task CanMeasureMultilineCharacterLayouts()
     {
         FontFamily family = new FontCollection().Add(TestFonts.OpenSansFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        TextOptions options = new(family.CreateFont(metrics!.UnitsPerEm))
+        TextOptions options = new(family.CreateFont(metrics.UnitsPerEm))
         {
             LineSpacing = 1.5F
         };

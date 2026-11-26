@@ -73,6 +73,32 @@ internal class PostTable : Table
         }
     }
 
+    /// <summary>
+    /// Reads the italic angle from the start of the table, and not the glyph names that follow it.
+    /// </summary>
+    /// <param name="fontReader">The font reader.</param>
+    /// <returns>The italic angle in degrees, or 0 when the font has no table or the table is too short.</returns>
+    public static float ReadItalicAngle(FontReader fontReader)
+    {
+        // The header starts with the version (two uint16) and the italic angle (Fixed).
+        if (!fontReader.TryGetReaderAtTablePosition(TableName, out BigEndianBinaryReader? binaryReader, out TableHeader? header))
+        {
+            return 0F;
+        }
+
+        using (binaryReader)
+        {
+            if (header.Length < 8)
+            {
+                return 0F;
+            }
+
+            binaryReader.ReadUInt16();
+            binaryReader.ReadUInt16();
+            return binaryReader.ReadFixed();
+        }
+    }
+
     public static PostTable Load(BigEndianBinaryReader reader)
     {
         // HEADER

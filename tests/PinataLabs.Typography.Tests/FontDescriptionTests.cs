@@ -191,13 +191,13 @@ public class FontDescriptionTests
         await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("SixLaborsSampleAB");
         await Assert.That(description.FontNameInvariantCulture).IsEqualTo("SixLaborsSampleAB regular");
         await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
-        await Assert.That(description.Style).IsEqualTo(FontStyle.Regular);
+        await Assert.That(description.StyleRange.Contains(FontStyle.Regular)).IsTrue();
 
         description = descriptions[1];
         await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("Open Sans");
         await Assert.That(description.FontNameInvariantCulture).IsEqualTo("Open Sans");
         await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
-        await Assert.That(description.Style).IsEqualTo(FontStyle.Regular);
+        await Assert.That(description.StyleRange.Contains(FontStyle.Regular)).IsTrue();
     }
 
     [Test]

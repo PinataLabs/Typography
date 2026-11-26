@@ -22,7 +22,7 @@ public class FontCollectionTests
         await Assert.That(description).IsNotNull();
         await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("Carter One");
         await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
-        await Assert.That(description.Style).IsEqualTo(FontStyle.Regular);
+        await Assert.That(description.StyleRange.Contains(FontStyle.Regular)).IsTrue();
     }
 
     [Test]
@@ -48,7 +48,7 @@ public class FontCollectionTests
         await Assert.That(description).IsNotNull();
         await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("Carter One");
         await Assert.That(description.FontSubFamilyNameInvariantCulture).IsEqualTo("Regular");
-        await Assert.That(description.Style).IsEqualTo(FontStyle.Regular);
+        await Assert.That(description.StyleRange.Contains(FontStyle.Regular)).IsTrue();
     }
 
     [Test]

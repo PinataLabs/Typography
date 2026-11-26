@@ -12,9 +12,9 @@ public class Issues_334
     public async Task DoesNotSkewCompositeGlyph()
     {
         FontFamily family = new FontCollection().Add(TestFonts.SumanaRegularFile);
-        family.TryGetMetrics(FontStyle.Regular, out FontMetrics? metrics);
+        FontMetrics metrics = family.MatchFace(FontStyle.Regular);
 
-        Font font = family.CreateFont(metrics!.UnitsPerEm);
+        Font font = family.CreateFont(metrics.UnitsPerEm);
         ColorGlyphRenderer renderer = new();
         TextRenderer.RenderTextTo(renderer, "(", new TextOptions(font));
 
