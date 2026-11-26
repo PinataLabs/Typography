@@ -8,6 +8,7 @@ using PinataLabs.Typography.Tables.General.Colr;
 using PinataLabs.Typography.Tables.General.Kern;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables.Cff;
 
@@ -66,6 +67,8 @@ internal sealed class CompactFontTables : IFontTables
     public VerticalHeadTable? Vhea { get; set; }
 
     public VerticalMetricsTable? Vmtx { get; set; }
+
+    public FvarTable? Fvar { get; set; }
 
     // Tables Related to CFF Outlines
     // +------+----------------------------------+

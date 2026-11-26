@@ -25,6 +25,34 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Variation axes and named instances.** The library reads the `fvar` and `avar` tables of a variable font.
+  `FontMetrics.VariationAxes` lists the axes as `FontVariationAxis`: `Tag`, `MinValue`, `DefaultValue`, `MaxValue`,
+  `IsHidden` and `Name(culture)`. `FontMetrics.NamedInstances` lists the instances that `fvar` names as
+  `FontNamedInstance`: `Name(culture)` and `Variations`, which has one `FontVariation` for each axis. `FontMetrics.Variations`
+  gives the axis values of a face or an instance. All three lists are empty for a static font. `FontVariation` is a tag
+  and a value in the user coordinates of the axis. A malformed `fvar` table makes the font load as a static font, and a
+  malformed `avar` table, or one for another number of axes, counts as absent. For an `avar` version 2 table the library
+  reads the version 1 segment maps. The library normalises a coordinate as the Font Variations Overview says, and
+  its F2Dot14 coordinates match fontTools `normalizeLocation` with `avar` for `Teko-Variable.ttf` and
+  `SourceSans3VF-Upright.otf` at the minimum, at each named instance and at the maximum. (#125)
+- **Variation instances.** The `Font` constructor and `FontFamily.CreateFont` take `params ReadOnlySpan<FontVariation>`
+  after the style, and `Font.WithVariations(...)` gives a font of the same family, size and style with other
+  variations. `Font.Variations` lists what was asked for. A font ignores a variation whose axis its face lacks, clamps a
+  value to the range of the axis, and uses the last value of an axis that repeats. When the face is a variable font,
+  the style sets `wght` and `wdth`, an italic or oblique request sets `ital` and `slnt` (an italic request on a font
+  with `slnt` and no `ital` axis uses -14), and the size in points sets `opsz`. The explicit variations then win.
+  `Font.FontMetrics` is the variation instance, which shares the tables of the face and has its own glyph caches.
+  Two fonts whose coordinates normalise to the same F2Dot14 values share one `FontMetrics` while one of them is alive,
+  and the instance is collected when both are gone. The face keeps a weak reference to each instance, so a caller that
+  creates a font for every draw does not rebuild glyphs, and one that changes the weight every frame does not
+  accumulate instances. `FontMetrics.Variations` of an instance gives the values of the request that made it.
+  `CreateFont(12)` on Teko is the instance `wght` 400, and `FontStyle.Bold` is `wght` 700. An instance draws the
+  outlines, the advances and the positions of the default instance until the CFF2, `gvar`, `HVAR`, `MVAR` and GPOS
+  variation data are read. (#125)
+- **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
+  axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
+  italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face
+  covered the weight and width of its default instance. A part without an axis still comes from the `OS/2` table. (#125)
 - **Font weight, width and slope.** `FontWeight` (1 to 1000), `FontWidth` (50 to 200 percent) and `FontSlope`
   (`Normal`, `Italic` or `Oblique(degrees)`, with `FontSlopeKind`) hold the parts of a font style with the ranges of
   the CSS `font-weight`, `font-stretch` and `font-style` properties. `FontWeight` and `FontWidth` have the CSS
@@ -123,6 +151,15 @@ An additive or breaking public API change needs all of these:
   names and meanings, so `CreateFont(12, FontStyle.Bold)` still compiles, and `default(FontStyle)` is
   `FontStyle.Regular`. Code that combines styles with `|` or calls `HasFlag` stops compiling, so each place shows up
   for review: use `WithWeight`, `WithWidth` and `WithSlope`. (#123)
+- **Variable fonts draw as variation instances.** On a variable face, `Font.FontMetrics` is a variation instance, so
+  `FontFamily.CreateFont(12)` on Teko or Source Sans 3 draws their `wght` 400 and no longer their default instance at
+  the lightest weight. Ask for `FontWeight.Light` on Teko, or `FontWeight.ExtraLight` on Source Sans 3, to get the
+  default instance, which is the face itself. Two instances of one face give different `GlyphRendererParameters`, and
+  `GlyphRendererParameters.FontMetrics` is the instance. `Font.Name` is the family name and the subfamily name of the
+  named instance that the font draws, such as "Teko SemiBold", and for any other coordinates it is the full name of the
+  face. A variation instance draws unhinted, so `HintingMode.Standard` acts as `HintingMode.None` for it. The default
+  instance keeps its hinting. A text layout creates each fallback font with the size, the style and the variations of
+  the font of the text. (#125)
 - **A font takes the best face by weight, width and slope.** `Font.FontMetrics` is the face that
   `FontFamily.MatchFace(font.Style)` gives. A family with static Regular and Bold faces renders as before. A
   request that no face has now goes to the nearest weight, width or slope in the CSS order, where before it fell back

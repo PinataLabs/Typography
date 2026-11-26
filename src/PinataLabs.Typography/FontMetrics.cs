@@ -2,11 +2,13 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -113,6 +115,38 @@ public abstract class FontMetrics
     public abstract float ItalicAngle { get; }
 
     /// <summary>
+    /// Gets the variation axes of the font, in the order of its <c>fvar</c> table. The list is empty for a static font,
+    /// and for a variable font whose <c>fvar</c> table is malformed, which loads as a static font.
+    /// </summary>
+    public abstract IReadOnlyList<FontVariationAxis> VariationAxes { get; }
+
+    /// <summary>
+    /// Gets the instances that the font names in its <c>fvar</c> table. The list is empty for a static font.
+    /// To draw a named instance, pass its <see cref="FontNamedInstance.Variations"/> to
+    /// <see cref="FontFamily.CreateFont"/>.
+    /// </summary>
+    public abstract IReadOnlyList<FontNamedInstance> NamedInstances { get; }
+
+    /// <summary>
+    /// Gets the user coordinates of this instance, one for each axis in the order of <see cref="VariationAxes"/>.
+    /// The list is empty for a static font, and the default of each axis for the face of a variable font.
+    /// Requests whose values normalise to the same coordinates share one instance, which gives the values of the request
+    /// that made it, each clamped to the range of its axis.
+    /// </summary>
+    public abstract IReadOnlyList<FontVariation> Variations { get; }
+
+    /// <summary>
+    /// Gets the normalised coordinates of this instance. A face is at the coordinates 0 on every axis.
+    /// </summary>
+    internal virtual NormalizedCoordinates Coordinates => this.Description.Fvar?.DefaultCoordinates ?? default;
+
+    /// <summary>
+    /// Gets the face that this instance varies, as <see cref="FontFamily.Faces"/> lists it. A face is its own face.
+    /// A face that a file holds is the <see cref="FileFontMetrics"/> that knows the path.
+    /// </summary>
+    internal virtual FontMetrics Face => this;
+
+    /// <summary>
     /// Gets the specified glyph id matching the codepoint.
     /// </summary>
     /// <param name="codePoint">The codepoint.</param>
@@ -125,6 +159,19 @@ public abstract class FontMetrics
     /// <see langword="true"/> if the face contains a glyph for the specified codepoint; otherwise, <see langword="false"/>.
     /// </returns>
     internal abstract bool TryGetGlyphId(CodePoint codePoint, out ushort glyphId);
+
+    /// <summary>
+    /// Gets the variation instance of the face at some coordinates. Two requests for the same coordinates give the same
+    /// object while one of them is alive. The coordinates 0 on every axis give the face itself.
+    /// </summary>
+    /// <param name="coordinates">The normalised coordinates of the instance.</param>
+    /// <param name="userCoordinates">
+    /// The user coordinates that the request normalised to <paramref name="coordinates"/>, one for each axis. They
+    /// are the values that <see cref="Variations"/> reports when the call makes the instance. When another request
+    /// that gives the same coordinates made the instance first, they are that request's values.
+    /// </param>
+    /// <returns>The instance.</returns>
+    internal abstract FontMetrics GetInstance(NormalizedCoordinates coordinates, ReadOnlySpan<double> userCoordinates);
 
     /// <summary>
     /// Gets the specified glyph id matching the codepoint pair.

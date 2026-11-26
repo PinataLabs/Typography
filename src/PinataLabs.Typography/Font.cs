@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Numerics;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -18,6 +20,7 @@ public sealed class Font
 {
     private readonly Lazy<FontMetrics> metrics;
     private readonly Lazy<string> fontName;
+    private readonly FontVariation[] variations;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Font"/> class.
@@ -25,7 +28,12 @@ public sealed class Font
     /// <param name="family">The font family.</param>
     /// <param name="size">The size of the font in PT units.</param>
     /// <param name="style">The font style. The default value is <see cref="FontStyle.Regular"/>.</param>
-    public Font(FontFamily family, float size, FontStyle style = default)
+    /// <param name="variations">
+    /// The values for the axes of a variable font, which win over the values that the style and the size give.
+    /// A font ignores a variation for an axis that it lacks, clamps a value to the range of its axis, and takes the
+    /// last value for an axis that appears more than once. A static font ignores them all.
+    /// </param>
+    public Font(FontFamily family, float size, FontStyle style = default, params ReadOnlySpan<FontVariation> variations)
     {
         if (family == default)
         {
@@ -35,7 +43,9 @@ public sealed class Font
         this.Family = family;
         this.Style = style;
         this.Size = size;
-        this.metrics = new Lazy<FontMetrics>(() => family.MatchFace(style));
+        this.variations = RemoveRepeatedAxes(variations);
+        this.Variations = this.variations.Length == 0 ? this.variations : Array.AsReadOnly(this.variations);
+        this.metrics = new Lazy<FontMetrics>(this.LoadMetrics);
         this.fontName = new Lazy<string>(this.LoadFontName);
     }
 
@@ -55,7 +65,10 @@ public sealed class Font
     public float Size { get; }
 
     /// <summary>
-    /// Gets the metrics of the face that matches <see cref="Style"/>, as <see cref="FontFamily.MatchFace(FontStyle)"/> picks it.
+    /// Gets the metrics that the font draws with. It is the face that matches <see cref="Style"/>, as
+    /// <see cref="FontFamily.MatchFace(FontStyle)"/> picks it, or for a variable face the variation instance that the
+    /// style, the size and <see cref="Variations"/> ask for. Fonts that ask for the same coordinates share one instance.
+    /// <see cref="FontMetrics.Variations"/> gives the axis values of the instance.
     /// </summary>
     public FontMetrics FontMetrics => this.metrics.Value;
 
@@ -64,6 +77,12 @@ public sealed class Font
     /// <see cref="FontMetrics"/> is the face that matches the style best.
     /// </summary>
     public FontStyle Style { get; }
+
+    /// <summary>
+    /// Gets the variations that were asked for, in the order of their first appearance. An axis that was given more than
+    /// once appears once, with its last value. A variation for an axis that the face lacks stays in the list.
+    /// </summary>
+    public IReadOnlyList<FontVariation> Variations { get; }
 
     /// <summary>
     /// Gets the filesystem path to the font family source.
@@ -83,7 +102,8 @@ public sealed class Font
             FontsThrowHelper.ThrowDefaultInstance();
         }
 
-        if (this.FontMetrics is FileFontMetrics fileMetrics)
+        // The path belongs to the face, so it is read without loading the font to make a variation instance.
+        if (this.Family.MatchFace(this.Style) is FileFontMetrics fileMetrics)
         {
             path = fileMetrics.Path;
             return true;
@@ -99,7 +119,7 @@ public sealed class Font
     /// <param name="size">The size of the new font in PT units.</param>
     /// <returns>The new <see cref="Font"/>.</returns>
     public Font WithSize(float size)
-        => new(this.Family, size, this.Style);
+        => new(this.Family, size, this.Style, this.variations);
 
     /// <summary>
     /// Creates a font of the same family and size in another style.
@@ -107,7 +127,15 @@ public sealed class Font
     /// <param name="style">The style of the new font.</param>
     /// <returns>The new <see cref="Font"/>.</returns>
     public Font WithStyle(FontStyle style)
-        => new(this.Family, this.Size, style);
+        => new(this.Family, this.Size, style, this.variations);
+
+    /// <summary>
+    /// Creates a font of the same family, size and style with other variations. They replace the variations of this font.
+    /// </summary>
+    /// <param name="variations">The variations of the new font.</param>
+    /// <returns>The new <see cref="Font"/>.</returns>
+    public Font WithVariations(params ReadOnlySpan<FontVariation> variations)
+        => new(this.Family, this.Size, this.Style, variations);
 
     /// <summary>
     /// Gets the glyphs for the given codepoint.
@@ -248,6 +276,68 @@ public sealed class Font
         return false;
     }
 
+    /// <summary>
+    /// Creates a font of another family with the size, the style and the variations of this font.
+    /// </summary>
+    /// <param name="family">The family of the new font.</param>
+    /// <returns>The new <see cref="Font"/>.</returns>
+    internal Font WithFamily(FontFamily family)
+        => new(family, this.Size, this.Style, this.variations);
+
+    // A variation that repeats an axis replaces the earlier one in its place.
+    private static FontVariation[] RemoveRepeatedAxes(ReadOnlySpan<FontVariation> variations)
+    {
+        if (variations.IsEmpty)
+        {
+            return [];
+        }
+
+        FontVariation[] distinct = new FontVariation[variations.Length];
+        int count = 0;
+        foreach (FontVariation variation in variations)
+        {
+            int index = 0;
+            while (index < count && distinct[index].Axis != variation.Axis)
+            {
+                index++;
+            }
+
+            distinct[index] = variation;
+            count = Math.Max(count, index + 1);
+        }
+
+        return count == distinct.Length ? distinct : distinct[..count];
+    }
+
+    // The face that matches the style, or for a variable face the instance that the style, the size and the variations give.
+    private FontMetrics LoadMetrics()
+    {
+        FontMetrics face = this.Family.MatchFace(this.Style);
+        FvarTable? fvar = face.Description.Fvar;
+        if (fvar is null)
+        {
+            return face;
+        }
+
+        double[] userCoordinates = fvar.CreateUserCoordinates(this.Style, this.Size, this.variations);
+        return face.GetInstance(fvar.Normalize(userCoordinates), userCoordinates);
+    }
+
+    // A face has the name that its name table gives it. An instance that the font names is the family and that name,
+    // as in "Teko SemiBold".
     private string LoadFontName()
-        => this.metrics.Value.Description.FontName(this.Family.Culture);
+    {
+        FontMetrics metrics = this.metrics.Value;
+        CultureInfo culture = this.Family.Culture;
+        if (metrics.Description.Fvar is FvarTable fvar && fvar.TryFindNamedInstance(metrics.Coordinates, out FontNamedInstance? named))
+        {
+            string subfamily = named.Name(culture);
+            if (subfamily.Length > 0)
+            {
+                return this.Family.Name + " " + subfamily;
+            }
+        }
+
+        return metrics.Description.FontName(culture);
+    }
 }

@@ -3,13 +3,15 @@
 
 using System;
 using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography;
 
 /// <summary>
 /// The styles that a font face covers: a range of weights, a range of widths and the slopes that it has.
-/// A static face covers one weight, one width and one slope. <see cref="FontFamily.MatchFace(FontStyle)"/>
-/// matches a requested <see cref="FontStyle"/> against these ranges.
+/// A static face covers one weight, one width and one slope. A variable face covers the range of its <c>wght</c>
+/// and <c>wdth</c> axes, and the slopes that its <c>ital</c> and <c>slnt</c> axes reach.
+/// <see cref="FontFamily.MatchFace(FontStyle)"/> matches a requested <see cref="FontStyle"/> against these ranges.
 /// </summary>
 public sealed class FontStyleRange
 {
@@ -169,8 +171,9 @@ public sealed class FontStyleRange
     /// <param name="os2">The OS/2 table, if the font has one.</param>
     /// <param name="head">The head table, if the font has one.</param>
     /// <param name="italicAngle">The italic angle of the post table, in degrees counter-clockwise from the vertical.</param>
+    /// <param name="fvar">The fvar table, if the font is a variable font. Its axes widen the range of the default instance.</param>
     /// <returns>The <see cref="FontStyleRange"/> of the face.</returns>
-    internal static FontStyleRange FromTables(OS2Table? os2, HeadTable? head, float italicAngle)
+    internal static FontStyleRange FromTables(OS2Table? os2, HeadTable? head, float italicAngle, FvarTable? fvar = null)
     {
         FontWeight weight = FontWeight.Normal;
         FontWidth width = FontWidth.Normal;
@@ -218,7 +221,58 @@ public sealed class FontStyleRange
             }
         }
 
-        return FromStyle(new FontStyle(weight, width, slope));
+        FontStyleRange range = FromStyle(new FontStyle(weight, width, slope));
+        return fvar is null ? range : range.WithAxes(fvar);
+    }
+
+    // The range of a variable face. The wght and wdth axes give the weights and the widths. The ital axis adds upright
+    // faces where it reaches 0 and italic faces where it reaches 1. The slnt axis is an angle in degrees
+    // counter-clockwise from the vertical, and the oblique angle of CSS is clockwise, so the oblique angles run from the
+    // negated maximum to the negated minimum. Where a part has no axis, the part of the default instance stays, as for
+    // a static face.
+    private FontStyleRange WithAxes(FvarTable fvar)
+    {
+        FontWeight minWeight = this.MinWeight;
+        FontWeight maxWeight = this.MaxWeight;
+        if (fvar.TryGetAxis(FvarTable.WeightTag, out FontVariationAxis? weightAxis))
+        {
+            minWeight = new FontWeight(weightAxis.MinValue);
+            maxWeight = new FontWeight(weightAxis.MaxValue);
+        }
+
+        FontWidth minWidth = this.MinWidth;
+        FontWidth maxWidth = this.MaxWidth;
+        if (fvar.TryGetAxis(FvarTable.WidthTag, out FontVariationAxis? widthAxis))
+        {
+            minWidth = new FontWidth(widthAxis.MinValue);
+            maxWidth = new FontWidth(widthAxis.MaxValue);
+        }
+
+        bool hasNormal = this.HasNormal;
+        bool hasItalic = this.HasItalic;
+        bool hasOblique = this.HasOblique;
+        float minAngle = this.MinObliqueAngle;
+        float maxAngle = this.MaxObliqueAngle;
+        if (fvar.TryGetAxis(FvarTable.ItalicTag, out FontVariationAxis? italicAxis))
+        {
+            hasNormal |= italicAxis.MinValue <= 0F && italicAxis.MaxValue >= 0F;
+            hasItalic |= italicAxis.MinValue <= 1F && italicAxis.MaxValue >= 1F;
+        }
+
+        if (fvar.TryGetAxis(FvarTable.SlantTag, out FontVariationAxis? slantAxis))
+        {
+            float low = -slantAxis.MaxValue;
+            float high = -slantAxis.MinValue;
+            hasNormal |= low <= 0F && high >= 0F;
+            if (low != 0F || high != 0F)
+            {
+                minAngle = hasOblique ? Math.Min(minAngle, low) : low;
+                maxAngle = hasOblique ? Math.Max(maxAngle, high) : high;
+                hasOblique = true;
+            }
+        }
+
+        return new FontStyleRange(minWeight, maxWeight, minWidth, maxWidth, hasNormal, hasItalic, hasOblique, minAngle, maxAngle);
     }
 
     // usWidthClass as a percentage, from the table in the OS/2 chapter of the OpenType specification.

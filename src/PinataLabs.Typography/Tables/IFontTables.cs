@@ -8,6 +8,7 @@ using PinataLabs.Typography.Tables.General.Colr;
 using PinataLabs.Typography.Tables.General.Kern;
 using PinataLabs.Typography.Tables.General.Name;
 using PinataLabs.Typography.Tables.General.Post;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables;
 
@@ -126,6 +127,18 @@ internal interface IFontTables
     VerticalHeadTable? Vhea { get; set; }
 
     VerticalMetricsTable? Vmtx { get; set; }
+
+    // Tables Related to Font Variations
+    // +------+--------------------------+
+    // | Tag  | Name                     |
+    // +======+==========================+
+    // | fvar | Font variations          |
+    // +------+--------------------------+
+    // | avar | Axis variations          |
+    // +------+--------------------------+
+    // The 'fvar' table holds the 'avar' table that belongs to it. A font that has no 'fvar' table, or whose table
+    // is malformed, is a static font.
+    FvarTable? Fvar { get; set; }
 }
 #pragma warning restore SA1600 // Elements should be documented
 
