@@ -18,9 +18,9 @@ The reference holds the glyph IDs that HarfBuzz gives, and where it draws each g
 
 * each sign alone, before a letter, and after a letter and a space. Such a sign starts a broken cluster, and
   HarfBuzz gives it a dotted circle as its base.
-* each sign after each other sign. These pairs have no virama: HarfBuzz joins a virama and some of the signs next
-  to it in one cluster, and the library does not. When the first sign goes in front of the base, the sign after
-  it goes there too, before the dotted circle.
+* each sign after each other sign, and each sign before and after the virama. When the first sign goes in front of
+  the base, the sign after it goes there too, before the dotted circle. HarfBuzz joins a virama and some of the
+  signs next to it in one cluster with one dotted circle.
 * each Common character before a vowel sign that goes above or after the base, and before one that goes in front
   of it. The universal shaper takes most of these characters as the base of the sign.
 
@@ -29,7 +29,8 @@ the dotted circle and the space. The reference holds the same for a repha alone 
 a second repha. A repha with no letter after it is a broken cluster of its own, and HarfBuzz puts the dotted
 circle after it and leaves the cluster that follows as it is.
 
-The fonts have no U+2015, U+2022 or U+25FB. They are bases in the Indic shaper of HarfBuzz and not in the library.
+* in ClustersDevanagari.ttf, each sign after U+2015, U+2022 and U+25FB to U+25FE. The Indic shaper takes these
+  characters as bases, as it does the dotted circle.
 
 ClusterTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -51,13 +52,16 @@ SPACE = 0x20
 # a right square or curly bracket as a base.
 COMMON = [c for c in range(0x20, 0x7F) if not chr(c).isalpha()] + [0xA0, 0xD7, 0x2010, 0x2013, 0x2014, 0x27E7, 0x3000]
 
-# (font, ISO 15924 code, letter, sign above or after the base, sign in front of the base, other signs, virama)
+# (font, ISO 15924 code, letter, sign above or after the base, sign in front of the base, other signs, virama,
+#  characters that only the shaper of the script takes as bases)
 SCRIPTS = [
     # KA, the vowel signs ULU and TALING, the signs SURANG, BISAH, REREKAN and SUKU, and ADEG ADEG.
-    ("ClustersBalinese.ttf", "Bali", 0x1B13, 0x1B36, 0x1B3E, [0x1B03, 0x1B04, 0x1B34, 0x1B38], 0x1B44),
+    ("ClustersBalinese.ttf", "Bali", 0x1B13, 0x1B36, 0x1B3E, [0x1B03, 0x1B04, 0x1B34, 0x1B38], 0x1B44, []),
 
-    # KA, the vowel signs AA and I, the signs ANUSVARA, NUKTA, II and U, and VIRAMA.
-    ("ClustersDevanagari.ttf", "Deva", 0x0915, 0x093E, 0x093F, [0x0902, 0x093C, 0x0940, 0x0941], 0x094D),
+    # KA, the vowel signs AA and I, the signs ANUSVARA, NUKTA, II and U, and VIRAMA. HORIZONTAL BAR, BULLET and
+    # the four medium squares.
+    ("ClustersDevanagari.ttf", "Deva", 0x0915, 0x093E, 0x093F, [0x0902, 0x093C, 0x0940, 0x0941], 0x094D,
+     [0x2015, 0x2022, 0x25FB, 0x25FC, 0x25FD, 0x25FE]),
 ]
 
 # (font, ISO 15924 code, letter, repha that the text has before the letter)
@@ -92,16 +96,18 @@ def shape(font, script, text):
 
 def main():
     rows = []
-    for file_name, script, letter, after, front, others, virama in SCRIPTS:
+    for file_name, script, letter, after, front, others, virama, bases in SCRIPTS:
         signs = sorted([after, front, *others])
-        font = build(file_name, sorted({*COMMON, DOTTED_CIRCLE, letter, *signs, virama}))
+        font = build(file_name, sorted({*COMMON, *bases, DOTTED_CIRCLE, letter, *signs, virama}))
         texts = []
         for sign in [*signs, virama]:
             texts += [[sign], [sign, letter], [letter, SPACE, sign]]
-        for sign in signs:
-            texts += [[other, sign] for other in signs]
+        for sign in [*signs, virama]:
+            texts += [[other, sign] for other in [*signs, virama]]
         for character in COMMON:
             texts += [[character, after], [character, front]]
+        for character in bases:
+            texts += [[character, sign] for sign in [*signs, virama]]
         for text in dict.fromkeys("".join(map(chr, text)) for text in texts):
             rows.append([file_name, script, text, shape(font, script, text)])
 
