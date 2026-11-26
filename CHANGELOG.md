@@ -41,8 +41,9 @@ An additive or breaking public API change needs all of these:
   lookups of any other feature. The library reads the condition formats 1 to 5 of OpenType 1.9: an axis range, a
   value that the GDEF store varies, and AND, OR and NOT of conditions. A condition of another format never holds, and
   an axis that the font does not have is at its default. The face selects with its default coordinates, as HarfBuzz
-  does. A malformed FeatureVariations table counts as absent, and the font keeps the feature tables of its feature
-  list. A table that shares or overlaps its subtables is read with a fixed amount of work. A variable font built with
+  does. A FeatureVariations table whose header does not fit counts as absent, and the font keeps the feature tables of its
+  feature list. A record whose condition set or feature tables do not fit never matches, and the other records stay.
+  A table that shares or overlaps its subtables is read with a fixed amount of work. A variable font built with
   fontTools `addFeatureVariations`, with records on both sides of each boundary, shapes as HarfBuzz shapes it. (#131)
 - **Variation axes and named instances.** The library reads the `fvar` and `avar` tables of a variable font.
   `FontMetrics.VariationAxes` lists the axes as `FontVariationAxis`: `Tag`, `MinValue`, `DefaultValue`, `MaxValue`,

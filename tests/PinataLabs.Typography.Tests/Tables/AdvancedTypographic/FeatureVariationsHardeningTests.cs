@@ -102,7 +102,7 @@ public class FeatureVariationsHardeningTests
     }
 
     [Test]
-    public async Task ConditionsThatPointToThemselvesAreRejected()
+    public async Task ConditionsThatPointToThemselvesLeaveOutTheirRecord()
     {
         // A NOT condition whose offset is 0 is its own child.
         byte[] table = new byte[8 + 8 + 2 + 4 + 5];
@@ -113,7 +113,62 @@ public class FeatureVariationsHardeningTests
         BinaryPrimitives.WriteUInt32BigEndian(table.AsSpan(18), 6);
         BinaryPrimitives.WriteUInt16BigEndian(table.AsSpan(22), 5);
 
-        await Assert.That(FeatureVariationsTable.TryRead(table, 0, 1)).IsNull();
+        FeatureVariationsTable? read = FeatureVariationsTable.TryRead(table, 0, 1);
+
+        await Assert.That(read).IsNotNull();
+        await Assert.That(read!.Select(Features, [0, 0], default)).IsNull();
+    }
+
+    // The first record of FeatureVariations.ttf holds from wght 0.5, and the second from wght 0.2 and wdth 0.5. At wght 0.75
+    // and wdth 0.75 both hold, and the first decides. Each test below breaks one offset of the first record, so that only the
+    // second can decide, as it does at wght 0.25 and wdth 0.75, where the first does not hold.
+    private const short Light = 4096;
+    private const short Heavy = 12288;
+    private const uint OutOfRange = 0x00FFFF00;
+
+    [Test]
+    public async Task ABadConditionSetOffsetLeavesOutOnlyItsRecord()
+        => await AssertSecondRecordDecides((gpos, featureVariations) => BinaryPrimitives.WriteUInt32BigEndian(gpos.AsSpan(RecordPosition(featureVariations, 0)), OutOfRange));
+
+    [Test]
+    public async Task ABadConditionOffsetLeavesOutOnlyItsRecord()
+        => await AssertSecondRecordDecides((gpos, featureVariations) =>
+        {
+            // The condition set is a count and the offsets of its conditions.
+            int conditionSet = (int)(featureVariations + BinaryPrimitives.ReadUInt32BigEndian(gpos.AsSpan(RecordPosition(featureVariations, 0))));
+            BinaryPrimitives.WriteUInt32BigEndian(gpos.AsSpan(conditionSet + 2), OutOfRange);
+        });
+
+    [Test]
+    public async Task ABadSubstitutionOffsetLeavesOutOnlyItsRecord()
+        => await AssertSecondRecordDecides((gpos, featureVariations) => BinaryPrimitives.WriteUInt32BigEndian(gpos.AsSpan(RecordPosition(featureVariations, 0) + 4), OutOfRange));
+
+    [Test]
+    public async Task ABadFeatureOffsetLeavesOutOnlyItsRecord()
+        => await AssertSecondRecordDecides((gpos, featureVariations) =>
+        {
+            // The substitution is a version, a count, and records of a feature index and the offset of a feature table.
+            int substitution = (int)(featureVariations + BinaryPrimitives.ReadUInt32BigEndian(gpos.AsSpan(RecordPosition(featureVariations, 0) + 4)));
+            BinaryPrimitives.WriteUInt32BigEndian(gpos.AsSpan(substitution + 6 + 2), OutOfRange);
+        });
+
+    [Test]
+    public async Task EveryRecordBeingBadLeavesATableThatMatchesNothing()
+    {
+        byte[] gpos = ReadGpos(out uint featureVariations);
+        uint records = BinaryPrimitives.ReadUInt32BigEndian(gpos.AsSpan((int)featureVariations + 4));
+        for (int i = 0; i < records; i++)
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(gpos.AsSpan(RecordPosition(featureVariations, i)), OutOfRange);
+        }
+
+        FeatureVariationsTable? read = FeatureVariationsTable.TryRead(gpos, featureVariations, 1);
+
+        await Assert.That(read).IsNotNull();
+        foreach (short[] coordinates in Coordinates)
+        {
+            await Assert.That(read!.Select(Features, coordinates, default)).IsNull();
+        }
     }
 
     [Test]
@@ -131,6 +186,25 @@ public class FeatureVariationsHardeningTests
 
         await Assert.That(layout[0].Glyph.GlyphMetrics.GlyphId).IsEqualTo((ushort)4);
     }
+
+    private static async Task AssertSecondRecordDecides(Action<byte[], uint> breakFirstRecord)
+    {
+        byte[] gpos = ReadGpos(out uint featureVariations);
+        FeatureVariationsTable intact = FeatureVariationsTable.TryRead(gpos, featureVariations, 1)!;
+        ushort[] first = intact.Select(Features, [Heavy, Heavy], default)!.FeatureTables[0].LookupListIndices;
+        ushort[] second = intact.Select(Features, [Light, Heavy], default)!.FeatureTables[0].LookupListIndices;
+
+        breakFirstRecord(gpos, featureVariations);
+        FeatureVariationsTable? read = FeatureVariationsTable.TryRead(gpos, featureVariations, 1);
+
+        await Assert.That(first).IsNotEquivalentTo(second);
+        await Assert.That(read).IsNotNull();
+        await Assert.That(read!.Select(Features, [Heavy, Heavy], default)!.FeatureTables[0].LookupListIndices).IsEquivalentTo(second);
+        await Assert.That(read.Select(Features, [Light, Heavy], default)!.FeatureTables[0].LookupListIndices).IsEquivalentTo(second);
+    }
+
+    // The position of a record of the FeatureVariations table, which starts with its condition set offset.
+    private static int RecordPosition(uint featureVariations, int record) => (int)featureVariations + 8 + (8 * record);
 
     private static byte[] ReadGpos(out uint featureVariationsOffset)
     {

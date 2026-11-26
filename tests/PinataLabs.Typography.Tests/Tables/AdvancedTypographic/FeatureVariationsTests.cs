@@ -186,16 +186,10 @@ public class FeatureVariationsTests
     [Arguments("the offset of the table is not in the table")]
     [Arguments("the table has another major version")]
     [Arguments("the record count is more than the table holds")]
-    [Arguments("the offset of a condition set is not in the table")]
-    [Arguments("the offset of a condition is not in the table")]
-    [Arguments("the offset of a substitution table is not in the table")]
-    [Arguments("the offset of an alternate feature is not in the table")]
-    [Arguments("the substitution table has another major version")]
-    [Arguments("an alternate feature has more lookups than the table holds")]
     public async Task AMalformedTableCountsAsAbsent(string malformation)
     {
-        // The records of the GPOS table are all gone, including the ones that the malformation did not touch: the light
-        // record would kern A V by -20 at wght 100, and the heavy record by -300 at wght 900.
+        // The records of the GPOS table are all gone: the light record would kern A V by -20 at wght 100, and the heavy
+        // record by -300 at wght 900.
         byte[] font = VariationFontBytes.Read(FontPath);
         Malform(font, malformation);
         FontFamily family = VariationFontBytes.Load(font);
@@ -203,6 +197,26 @@ public class FeatureVariationsTests
         await Assert.That(Kerning(family, 100, 75)).IsEqualTo(-100);
         await Assert.That(Kerning(family, 900, 125)).IsEqualTo(-100);
         await Assert.That(Kerning(family, 400, 100)).IsEqualTo(-100);
+    }
+
+    [Test]
+    [Arguments("the offset of a condition set is not in the table")]
+    [Arguments("the offset of a condition is not in the table")]
+    [Arguments("the offset of a substitution table is not in the table")]
+    [Arguments("the offset of an alternate feature is not in the table")]
+    [Arguments("the substitution table has another major version")]
+    [Arguments("an alternate feature has more lookups than the table holds")]
+    public async Task AMalformedRecordIsLeftOutAndTheOthersStay(string malformation)
+    {
+        // The malformation is in the first record, which kerns A V by -300 from wght 650. That record never matches, so
+        // the second record decides at wght 900 and wdth 125, where it kerns by -600, and the others decide as they did.
+        byte[] font = VariationFontBytes.Read(FontPath);
+        Malform(font, malformation);
+        FontFamily family = VariationFontBytes.Load(font);
+
+        await Assert.That(Kerning(family, 100, 75)).IsEqualTo(-20);
+        await Assert.That(Kerning(family, 900, 125)).IsEqualTo(-600);
+        await Assert.That(Kerning(family, 400, 100)).IsEqualTo(-430);
     }
 
     [Test]

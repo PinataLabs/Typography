@@ -16,8 +16,11 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// </summary>
 /// <remarks>
 /// The reader checks every offset against the table, and it spends at most <see cref="MaxWork"/> reads on records,
-/// conditions and lookup indices, so a table that shares or overlaps its subtables cannot make it do more. A table that
-/// fails any check is malformed, and <see cref="TryRead"/> gives <see langword="null"/> for it, as if the font had none.
+/// conditions and lookup indices, so a table that shares or overlaps its subtables cannot make it do more. A table whose
+/// header or record array does not fit, or that goes over that limit, is malformed, and <see cref="TryRead"/> gives
+/// <see langword="null"/> for it, as if the font had none. A record whose condition set or feature tables do not fit is
+/// malformed on its own: the reader leaves that record out and keeps the others, so one bad offset does not disable the
+/// table. The record never matches.
 /// A condition of a format that the library does not know never holds, and it is no failure.
 /// </remarks>
 internal sealed class FeatureVariationsTable
@@ -115,20 +118,26 @@ internal sealed class FeatureVariationsTable
                 return false;
             }
 
-            records = new Record[count];
-            for (int i = 0; i < records.Length; i++)
+            List<Record> valid = new((int)count);
+            for (int i = 0; i < count; i++)
             {
-                long position = offset + HeaderSize + ((long)i * RecordSize);
+                long position = offset + HeaderSize + (i * (long)RecordSize);
                 Condition[]? conditions = this.ReadConditionSet(offset, this.U32(position));
                 (ushort, ushort[])[]? substitutions = this.ReadSubstitutions(offset, this.U32(position + 4));
-                if (conditions is null || substitutions is null)
+
+                // A record that cannot be read is left out, unless it ran over the limit, which no later record can undo.
+                if (this.work > MaxWork)
                 {
                     return false;
                 }
 
-                records[i] = new Record(conditions, substitutions);
+                if (conditions is not null && substitutions is not null)
+                {
+                    valid.Add(new Record(conditions, substitutions));
+                }
             }
 
+            records = valid.ToArray();
             return true;
         }
 
@@ -287,7 +296,7 @@ internal sealed class FeatureVariationsTable
 
         private bool Spend(long amount)
         {
-            this.work += (int)amount;
+            this.work += amount;
             return this.work <= MaxWork;
         }
 
