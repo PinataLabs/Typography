@@ -126,7 +126,7 @@ internal static class LookupType6SubTable
             GlyphShapingData curGlyph = collection[index];
             if (curGlyph.LigatureId == prevGlyph.LigatureId)
             {
-                if (curGlyph.LigatureId > 0)
+                if (curGlyph.LigatureId == 0)
                 {
                     // Marks belonging to the same base.
                     good = true;
