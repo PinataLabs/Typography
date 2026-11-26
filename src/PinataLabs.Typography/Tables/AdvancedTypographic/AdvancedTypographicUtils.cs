@@ -278,11 +278,12 @@ internal static class AdvancedTypographicUtils
     }
 
     /// <summary>
-    /// Rounds a value in font units to the whole unit that positioning adds, as HarfBuzz does: halves round away from zero.
+    /// Rounds a value in font units to the whole unit that positioning adds, as HarfBuzz does: halves round up, so that
+    /// 2.5 is 3 and -2.5 is -2. Measured against HarfBuzz 15.0.0 with deltas of half a unit.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The rounded value.</returns>
-    public static int Round(float value) => (int)MathF.Round(value, MidpointRounding.AwayFromZero);
+    public static int Round(float value) => (int)MathF.Floor(value + 0.5F);
 
     public static bool IsMarkGlyph(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
     {

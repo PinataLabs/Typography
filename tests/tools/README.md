@@ -244,19 +244,35 @@ The output is deterministic for one fontTools and FreeType version. The referenc
 `generate_gpos_variations_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/GposVariations.harfbuzz.json`,
 the HarfBuzz reference for the GPOS `VariationIndex` deltas of the two variable test fonts (issue #129). `Teko-Variable.ttf`
 has 2,385 of these device tables, all in mark anchors, and `SourceSans3VF-Upright.otf` has 6,815, in kerning and in mark
-anchors. Teko has no kerning.
+anchors. Teko has no kerning. Neither font has a delta in mark-to-ligature or cursive attachment, so
+`generate_gpos_anchor_variations_font.py` builds `GposAnchorVariations.ttf` with a delta of a known size in every kind
+of anchor and in value records, and the reference script runs it first.
 
-The script finds the glyph sequences that the device tables position, and keeps an even stride of them, in four kinds of row:
+The script finds the glyph sequences that the device tables of the two fonts position, and keeps an even stride of them,
+in four kinds of row:
 
 - `pair`: two glyphs that a PairPos value record with a device moves, from lookups of format 1 and format 2.
 - `mark`: a base and a mark that a MarkBasePos anchor with a device attaches.
 - `chain`: a base and two marks, where the second attaches to the first. It only moves because the first mark does.
 - `static`: a pair that a value record with no device moves, which does not change with the weight.
 
-A text is in the file when HarfBuzz shapes it to the glyphs that its rules name, so that substitution does not hide the
-positioning, and when its positions differ between the default instance and wght 400 or 700, or for `static` rows when they do not.
-HarfBuzz shapes each text at the default instance, at wght 400 and at wght 700. A glyph holds its ID, the x of its origin from the
-start of the line, its y offset, its final advance, its advance before positioning, and whether it is a mark.
+`GposAnchorVariations.ttf` has the kinds `single`, `mark`, `markmark`, `ligature`, `ligature0` and `cursive`, and the file
+holds every text of it. The font has the axis wght from 100 to 900 with the default 400, and one region from 400 to 900,
+so that the scalar of a delta is 0.5 at wght 650 and a delta of 1, 3 or 5 is half a unit, one and a half or two and a half.
+Each glyph pair meets every pair of deltas, in the sizes 0, 1, -1, 3, -3, 5 and -5.
+
+A text of the two real fonts is in the file when HarfBuzz shapes it to the glyphs that its rules name, so that substitution
+does not hide the positioning, and when its positions differ between the default instance and another weight, or for
+`static` rows when they do not. HarfBuzz shapes each text at the default instance, at masters and at weights between them,
+where a delta is fractional. A glyph holds its ID, the x of its origin from the start of the line, its y offset, its final
+advance, its advance before positioning, and whether it is a mark.
+
+What the file says about rounding, which the tests check against HarfBuzz 15.0.0:
+
+- A delta of a value record rounds on its own, and the value record adds it to the whole units of the table.
+- A mark attaches at the base anchor minus the mark anchor, each with its fractional delta, rounded once.
+- A cursive chain rounds the anchor of each glyph for the advance, and the difference of the anchors once for the offset.
+- A half rounds up, so 2.5 is 3 and -2.5 is -2.
 
 The advance before positioning is what HarfBuzz gives for the glyph at that weight, with HVAR. `GposVariationTests` takes the
 same number from the library, and compares what GPOS adds to it. Outlines and advances of a variation instance
@@ -267,6 +283,8 @@ To write the file again, install fontTools 4.68 or later and uharfbuzz, and run 
 ```
 python tests/tools/generate_gpos_variations_reference.py
 ```
+
+That run also writes `GposAnchorVariations.ttf`.
 
 The output is deterministic for one fontTools and HarfBuzz version. The file records the HarfBuzz version.
 

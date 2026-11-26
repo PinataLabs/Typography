@@ -28,12 +28,14 @@ An additive or breaking public API change needs all of these:
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
-  The sums round as HarfBuzz rounds them: the delta of a value record rounds on its own, with halves away from zero,
-  and an anchor keeps its fractional coordinates until the mark anchor is taken from the base anchor. The face of a
+  The sums round as HarfBuzz rounds them, with halves up: the delta of a value record rounds on its own, an anchor
+  keeps its fractional coordinates until the mark anchor is taken from the base anchor, and a cursive chain rounds
+  the anchor of each glyph for its advance and the difference of the anchors once for its offset. The face of a
   variable font and a font that does not vary have no delta, and the `Device` tables that hold deltas for sizes
   stay ignored. A GDEF store that is missing or malformed counts as absent. The mark anchors of `Teko-Variable.ttf` and
-  the kerning and the mark anchors of `SourceSans3VF-Upright.otf` match HarfBuzz at the default instance and at `wght`
-  400 and 700. Teko has no kerning. (#129)
+  the kerning and the mark anchors of `SourceSans3VF-Upright.otf` match HarfBuzz at the default instance, at masters
+  and at weights between them, and so do the mark-to-mark, mark-to-ligature and cursive anchors and the value records of
+  a test font that has a delta in each of them. Teko has no kerning. (#129)
 - **GSUB and GPOS FeatureVariations.** An instance uses the feature tables of the first FeatureVariations record whose
   conditions hold for its coordinates, in place of those of the feature list. This covers `rvrn`, and the swap of the
   lookups of any other feature. The library reads the condition formats 1 to 5 of OpenType 1.9: an axis range, a

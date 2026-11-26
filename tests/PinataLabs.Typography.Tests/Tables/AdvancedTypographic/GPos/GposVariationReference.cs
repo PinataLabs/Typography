@@ -30,7 +30,7 @@ internal static class GposVariationReference
     /// Gets the reference of a font, with the rows of one kind.
     /// </summary>
     /// <param name="path">The path of the font under the Fonts folder.</param>
-    /// <param name="kind">The kind of the rows: <c>pair</c>, <c>static</c>, <c>mark</c> or <c>chain</c>.</param>
+    /// <param name="kind">The kind of the rows, as the generator names it, such as <c>pair</c>, <c>mark</c> or <c>cursive</c>.</param>
     /// <returns>The weights of the locations, and the rows.</returns>
     public static (int[] Weights, List<Row> Rows) Get(string path, string kind)
     {

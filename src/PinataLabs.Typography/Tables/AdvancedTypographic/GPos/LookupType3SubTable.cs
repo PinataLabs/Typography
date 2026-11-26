@@ -130,9 +130,12 @@ internal static class LookupType3SubTable
             GlyphShapingData current = collection[index];
             GlyphShapingData next = collection[nextIndex];
 
-            // As in HarfBuzz, the delta of a variation instance makes an anchor fractional, and each coordinate rounds on its own.
-            (int XCoordinate, int YCoordinate) exitXY = exit.GetAnchor(fontMetrics, current, collection).Round();
-            (int XCoordinate, int YCoordinate) entryXY = entry.GetAnchor(fontMetrics, next, collection).Round();
+            // The delta of a variation instance makes an anchor fractional. As in HarfBuzz, the advance of each glyph takes
+            // its anchor rounded on its own, and the offset between the glyphs is the difference of the anchors rounded once.
+            AnchorXY exitAnchor = exit.GetAnchor(fontMetrics, current, collection);
+            AnchorXY entryAnchor = entry.GetAnchor(fontMetrics, next, collection);
+            (int XCoordinate, int YCoordinate) exitXY = exitAnchor.Round();
+            (int XCoordinate, int YCoordinate) entryXY = entryAnchor.Round();
 
             bool isVerticalLayout = AdvancedTypographicUtils.IsVerticalGlyph(current.CodePoint, collection.TextOptions.LayoutMode, current.HasVerticalForm);
             if (!isVerticalLayout)
@@ -178,8 +181,8 @@ internal static class LookupType3SubTable
 
             int child = index;
             int parent = nextIndex;
-            int xOffset = entryXY.XCoordinate - exitXY.XCoordinate;
-            int yOffset = entryXY.YCoordinate - exitXY.YCoordinate;
+            int xOffset = AdvancedTypographicUtils.Round(entryAnchor.XCoordinate - exitAnchor.XCoordinate);
+            int yOffset = AdvancedTypographicUtils.Round(entryAnchor.YCoordinate - exitAnchor.YCoordinate);
             if (this.LookupFlags.HasFlag(LookupFlags.RightToLeft))
             {
                 (parent, child) = (child, parent);

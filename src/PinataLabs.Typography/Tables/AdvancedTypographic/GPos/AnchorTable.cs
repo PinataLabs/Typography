@@ -186,6 +186,8 @@ internal abstract class AnchorTable
                 DeviceTable.LoadVariationIndex(reader, anchorOffset, yDeviceOffset));
         }
 
+        // The delta stays fractional, because HarfBuzz sums the unrounded anchors and rounds the result once. Rounding the delta
+        // of each anchor first gives other positions, which GposVariationTests shows against HarfBuzz at weights between masters.
         public override AnchorXY GetAnchor(FontMetrics fontMetrics, GlyphShapingData data, GlyphPositioningCollection collection)
             => new(this.XCoordinate + fontMetrics.GetDeviceDelta(this.xVariation), this.YCoordinate + fontMetrics.GetDeviceDelta(this.yVariation));
     }

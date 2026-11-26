@@ -2,7 +2,7 @@
 # Copyright (c) PinataLabs.
 # Licensed under the Apache License, Version 2.0.
 """Writes GposVariations.harfbuzz.json, the HarfBuzz reference for the GPOS VariationIndex deltas of the two variable
-test fonts (issue #129).
+test fonts and of GposAnchorVariations.ttf (issue #129).
 
 Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
 
@@ -17,8 +17,13 @@ point to VariationIndex device tables. The script finds the glyph sequences that
   VariationIndex device attaches to the base. The second mark only moves because the first one does.
 * `static`: a glyph pair that a PairPos value record with no device moves. It does not change with the weight.
 
-HarfBuzz shapes each text at the default instance and at wght 400 and 700. The script keeps the texts whose positions
-differ between the default instance and one of the other two, and for the static rows the texts whose positions do not.
+GposAnchorVariations.ttf, which generate_gpos_anchor_variations_font.py builds first, has the kinds that those fonts lack
+and holds each of its texts: `single`, `mark`, `markmark`, `ligature`, `ligature0` and `cursive`. Its docstring says what
+each one is.
+
+HarfBuzz shapes each text at the default instance and at the other weights of WEIGHTS, which are masters of the fonts and
+weights between them, where a delta is fractional. The script keeps the texts whose positions differ between the default
+instance and one of the others, and for the static rows the texts whose positions do not.
 Every glyph holds [glyph ID, x of its origin from the start of the line, y offset, final advance, advance before
 positioning, mark]. HarfBuzz gives the advance before positioning as the advance of the glyph at the location, which
 includes HVAR. The mark flag is the GDEF glyph class. `GposVariationTests` subtracts the advance before positioning of the
@@ -31,26 +36,28 @@ and HarfBuzz version. The file records the HarfBuzz version.
 import json
 import os
 
+import generate_gpos_anchor_variations_font as anchors
 import harfbuzz_reference as ref
 import uharfbuzz as hb
 from fontTools.ttLib import TTFont
 
-FONT_PATHS = [
-    os.path.join(ref.FONTS, "Teko", "Teko-Variable.ttf"),
-    os.path.join(ref.FONTS, "SourceSans3", "SourceSans3VF-Upright.otf"),
+# The default instance first, which is None. Teko runs from 300 to 700 and Source Sans 3 from 200 to 900. A delta at a weight
+# between two masters is fractional, and so is one at 650 in the synthetic font, where the scalar of a region is 0.5.
+FONTS = [
+    (os.path.join(ref.FONTS, "Teko", "Teko-Variable.ttf"), [None, 350, 400, 550, 625, 700]),
+    (os.path.join(ref.FONTS, "SourceSans3", "SourceSans3VF-Upright.otf"), [None, 300, 400, 550, 650, 700, 850]),
+    (anchors.PATH, [None, 500, 600, 650, 700, 800]),
 ]
 REFERENCE = os.path.join(ref.FONTS, "Variations", "GposVariations.harfbuzz.json")
 
-# The default instance first, which is None.
-WEIGHTS = [None, 400, 700]
 MARK_CLASS = 3
 
-# How many rows of each kind a font gets, at most.
-ROW_LIMITS = {"pair": 90, "static": 24, "mark": 90, "chain": 24}
+# How many rows of each kind a real font gets, at most.
+ROW_LIMITS = {"pair": 60, "static": 12, "mark": 60, "chain": 24}
 
 
 class FontData:
-    def __init__(self, path):
+    def __init__(self, path, weights):
         self.path = path
         self.font = TTFont(path)
         self.glyph_id = {name: i for i, name in enumerate(self.font.getGlyphOrder())}
@@ -62,7 +69,7 @@ class FontData:
         class_defs = self.font["GDEF"].table.GlyphClassDef.classDefs
         self.marks = {glyph for glyph, glyph_class in class_defs.items() if glyph_class == MARK_CLASS}
         self.hb_fonts = []
-        for weight in WEIGHTS:
+        for weight in weights:
             hb_font = ref.load_font(path)
             if weight is not None:
                 hb_font.set_variations({"wght": weight})
@@ -216,6 +223,17 @@ def take(data, kind, glyph_lists, must_vary):
     return pick(passing, ROW_LIMITS[kind])
 
 
+def synthetic_rows(data):
+    """Gives a row for each text of the synthetic font, which are all about positioning."""
+    rows = []
+    for kind, kind_texts in anchors.texts().items():
+        for text in kind_texts:
+            locations = data.shape(text)
+            assert locations is not None, text
+            rows.append([kind, text, locations])
+    return rows
+
+
 def build_rows(data):
     marks = data.mark_candidates()
     chains = []
@@ -251,15 +269,16 @@ def write_reference(fonts):
 
 
 def main():
+    anchors.main()
     fonts = []
-    for path in FONT_PATHS:
-        data = FontData(path)
-        rows = build_rows(data)
-        print(os.path.basename(path), {kind: sum(1 for row in rows if row[0] == kind) for kind in ROW_LIMITS})
+    for path, weights in FONTS:
+        data = FontData(path, weights)
+        rows = synthetic_rows(data) if path == anchors.PATH else build_rows(data)
+        print(os.path.basename(path), {kind: sum(1 for row in rows if row[0] == kind) for kind in dict.fromkeys(row[0] for row in rows)})
         fonts.append(
             {
                 "font": os.path.relpath(path, ref.FONTS).replace(os.sep, "/"),
-                "weights": [data.default_weight if weight is None else weight for weight in WEIGHTS],
+                "weights": [data.default_weight if weight is None else weight for weight in weights],
                 "rows": rows,
             }
         )
