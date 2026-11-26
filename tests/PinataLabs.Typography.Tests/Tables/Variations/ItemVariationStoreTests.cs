@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.Variations;
-using static PinataLabs.Typography.Tests.Tables.Variations.VariationBytes;
+using static PinataLabs.Typography.Fuzz.VariationBytes;
 
 namespace PinataLabs.Typography.Tests.Tables.Variations;
 

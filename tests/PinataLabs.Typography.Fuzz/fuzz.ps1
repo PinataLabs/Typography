@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Fuzzes the font program API (issue #74) with libFuzzer through SharpFuzz, or in process without it.
+    Fuzzes the font program API (issue #74) and the Item Variation Store reader (issue #124) with libFuzzer through SharpFuzz, or in process without it.
 
 .DESCRIPTION
     Publishes the harness to artifacts/fuzz/publish, instruments PinataLabs.Typography.dll, copies the committed
@@ -20,7 +20,7 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('program', 'type1-plain')]
+    [ValidateSet('program', 'type1-plain', 'item-variation-store')]
     [string] $Target = 'program',
     [string] $LibFuzzer = (Join-Path $PSScriptRoot 'tools/libfuzzer-dotnet-windows.exe'),
     [string] $Replay,

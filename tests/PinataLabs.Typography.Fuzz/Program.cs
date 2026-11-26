@@ -24,7 +24,7 @@ internal static class Program
                                               in-process mutation fuzzing without libFuzzer
           seeds <test fonts directory> <corpus root>
                                               write the seed corpus from the test fonts
-        Targets: program, type1-plain
+        Targets: program, type1-plain, item-variation-store
         """;
 
     public static int Main(string[] args)

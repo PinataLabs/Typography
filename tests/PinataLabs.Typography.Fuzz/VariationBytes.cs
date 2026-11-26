@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PinataLabs.Typography.Tests.Tables.Variations;
+namespace PinataLabs.Typography.Fuzz;
 
 /// <summary>
 /// Writes the binary layouts of the common variation formats, so a test can build exactly the data it needs.
@@ -108,13 +108,13 @@ internal static class VariationBytes
         return [.. bytes];
     }
 
-    public static void UInt16(List<byte> bytes, ushort value)
+    private static void UInt16(List<byte> bytes, ushort value)
     {
         bytes.Add((byte)(value >> 8));
         bytes.Add((byte)value);
     }
 
-    public static void UInt32(List<byte> bytes, uint value)
+    private static void UInt32(List<byte> bytes, uint value)
     {
         UInt16(bytes, (ushort)(value >> 16));
         UInt16(bytes, (ushort)value);
