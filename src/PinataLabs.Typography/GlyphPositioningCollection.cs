@@ -384,7 +384,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             GlyphShapingData data = glyph.Data;
             if (!this.ShouldProcess(fontMetrics, i)
                 || data.IsSubstituted
-                || !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)data.CodePoint.Value))
+                || !UnicodeUtility.IsHiddenAfterShaping((uint)data.CodePoint.Value))
             {
                 continue;
             }

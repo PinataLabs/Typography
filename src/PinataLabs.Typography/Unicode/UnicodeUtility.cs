@@ -232,6 +232,17 @@ internal static class UnicodeUtility
     }
 
     /// <summary>
+    /// Returns <see langword="true"/> if HarfBuzz hides <paramref name="value"/> after shaping. These are the Default
+    /// Ignorable Code Points without the Hangul fillers and the shorthand format controls, which HarfBuzz draws.
+    /// </summary>
+    /// <param name="value">The code point.</param>
+    /// <returns><see langword="true"/> if the code point takes no room after shaping.</returns>
+    public static bool IsHiddenAfterShaping(uint value)
+        => IsDefaultIgnorableCodePoint(value)
+        && value is not (0x115F or 0x1160 or 0x3164 or 0xFFA0)
+        && !IsInRangeInclusive(value, 0x1BCA0, 0x1BCA3);
+
+    /// <summary>
     /// Returns <see langword="true"/> if <paramref name="value"/> is a Default Ignorable Code Point.
     /// </summary>
     /// <remarks>
