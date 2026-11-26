@@ -50,13 +50,6 @@ public class UniversalShaperTests
         {
             string text = row[0].GetString()!;
 
-            // HarfBuzz 15.0.0 puts a ZWNJ or a ZWJ after a syllable in that syllable, so it takes the form of the
-            // syllable. The syllables of the library come from an older USE syllable grammar, which #108 replaces.
-            if (text.Contains('‌') || text.Contains('‍'))
-            {
-                continue;
-            }
-
             (int Id, int X, int Y)[] expected = row[1].EnumerateArray().Select(g => (g[0].GetInt32(), g[1].GetInt32(), g[2].GetInt32())).ToArray();
             IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font));
             (int Id, int X, int Y)[] actual = layout
