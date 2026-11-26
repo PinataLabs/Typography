@@ -151,7 +151,9 @@ internal static class MetricsVariationOracle
         {
             foreach (ushort advance in Advances)
             {
-                if (variation.VaryAdvance(glyph, advance) != variation.VaryAdvance(glyph, advance))
+                int first = variation.VaryAdvance(glyph, advance);
+                int second = variation.VaryAdvance(glyph, advance);
+                if (first != second)
                 {
                     throw new FuzzFindingException($"The advance {advance} of glyph {glyph} varies to two values.");
                 }
@@ -207,7 +209,9 @@ internal static class MetricsVariationOracle
         {
             foreach (short value in Bearings)
             {
-                if (variation.Apply(tag, value) != variation.Apply(tag, value))
+                int first = variation.Apply(tag, value);
+                int second = variation.Apply(tag, value);
+                if (first != second)
                 {
                     throw new FuzzFindingException($"The value {value} of tag {tag.Value:X8} varies to two values.");
                 }
