@@ -109,7 +109,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             if (this.glyphs[i].Offset == offset)
             {
                 GlyphPositioningData glyph = this.glyphs[i];
-                isDecomposed = glyph.Data.IsDecomposed;
+
+                // A reordering can move a glyph that was not decomposed into the place of one that was, such as a
+                // sign before an inserted dotted circle. The glyphs at the offset still each take an advance.
+                isDecomposed |= glyph.Data.IsDecomposed;
                 hasVerticalForm |= glyph.Data.HasVerticalForm;
                 pointSize = glyph.PointSize;
                 match.AddRange(glyph.Metrics);
