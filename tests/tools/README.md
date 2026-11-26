@@ -1,5 +1,12 @@
 # Test tools
 
+## Shared HarfBuzz helpers
+
+`harfbuzz_reference.py` holds what the `generate_*_reference.py` scripts share: `build_font` saves a font of empty glyphs,
+`load_font` and `shape_line` shape a line with HarfBuzz and give the glyph IDs, places and advance, and `write_reference`
+and `write_unique_rows` write the reference JSON. A script imports it from its own folder, so each one still runs as
+`python tests/tools/<name>.py` from the repository root.
+
 ## Font program fixtures
 
 `generate_font_program_fixtures.py` writes the reference data for the `FontProgram` tests into

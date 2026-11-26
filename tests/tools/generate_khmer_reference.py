@@ -14,13 +14,10 @@ before the vowel, with a register shifter, with ROBAT and with a sign after the 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
-import json
 import os
 
-import uharfbuzz as hb
+from harfbuzz_reference import FONTS, load_font, write_unique_rows
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 FONT = "NotoSansKhmer-Regular.ttf"
 REFERENCE = os.path.join(FONTS, "Khmer.harfbuzz.json")
 
@@ -39,23 +36,8 @@ VOWELS = [0x17B6, 0x17B7, 0x17B8, 0x17BB, 0x17BC, 0x17BE, 0x17BF, 0x17C0, 0x17C4
 SIGNS = [0x17C9, 0x17CA, 0x17CC, 0x17CD, 0x17CB]
 
 
-def shape(font, text):
-    """Gives the glyph ID and the place of each glyph, in font units from the start of the line."""
-    buffer = hb.Buffer()
-    buffer.add_str(text)
-    buffer.guess_segment_properties()
-    hb.shape(font, buffer)
-    glyphs = []
-    x = 0
-    for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
-        glyphs.append([info.codepoint, x + position.x_offset, position.y_offset])
-        x += position.x_advance
-    return glyphs
-
-
 def main():
-    with open(os.path.join(FONTS, FONT), "rb") as file:
-        font = hb.Font(hb.Face(file.read()))
+    font = load_font(os.path.join(FONTS, FONT))
 
     texts = []
     for consonant in CONSONANTS:
@@ -69,18 +51,7 @@ def main():
             texts += [[consonant, sign, vowel] for vowel in VOWELS]
             texts += [[consonant, vowel, sign] for vowel in VOWELS]
 
-    rows = []
-    for text in dict.fromkeys("".join(map(chr, text)) for text in texts):
-        rows.append([text, shape(font, text)])
-
-    with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
-        file.write("{\n")
-        file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        file.write('  "font": %s,\n' % json.dumps(FONT))
-        file.write('  "rows": [\n')
-        file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-        file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(rows), "rows")
+    write_unique_rows(REFERENCE, texts, font, font=FONT)
 
 
 if __name__ == "__main__":

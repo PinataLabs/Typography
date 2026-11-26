@@ -27,18 +27,10 @@ the line, and the advance of the whole text. DefaultIgnorableTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
-import json
 import os
 
-os.environ["SOURCE_DATE_EPOCH"] = "0"
+from harfbuzz_reference import FONTS, build_font, load_font, shape_line, write_reference
 
-import uharfbuzz as hb
-from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib.tables._g_l_y_f import Glyph
-
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 REFERENCE = os.path.join(FONTS, "DefaultIgnorables.harfbuzz.json")
 
 ZWNJ, ZWJ, WJ = 0x200C, 0x200D, 0x2060
@@ -89,66 +81,24 @@ FONT_TEXTS = [
 ]
 
 
-def build(file_name, code_points, features=None):
-    names = [".notdef"] + ["u%04X" % c for c in code_points]
-    if features:
-        names.append("wj.alt")
-    builder = FontBuilder(1000, isTTF=True)
-    builder.setupGlyphOrder(names)
-    builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
-    builder.setupGlyf({name: Glyph() for name in names})
-    builder.setupHorizontalMetrics({name: (600, 0) for name in names})
-    builder.setupHorizontalHeader(ascent=800, descent=-200)
-    builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
-    builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
-    builder.setupPost(keepGlyphNames=False)
-    if features:
-        addOpenTypeFeaturesFromString(builder.font, features)
-    path = os.path.join(FONTS, file_name)
-    builder.font.save(path)
-    return path
-
-
-def shape(path, text):
-    """Gives the glyph ID and place of each glyph, in font units from the start of the line, and the advance."""
-    with open(path, "rb") as file:
-        font = hb.Font(hb.Face(file.read()))
-    buffer = hb.Buffer()
-    buffer.add_str(text)
-    buffer.guess_segment_properties()
-    hb.shape(font, buffer)
-    glyphs = []
-    x = 0
-    for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
-        glyphs.append([info.codepoint, x + position.x_offset, position.y_offset])
-        x += position.x_advance
-    return glyphs, x
-
-
 def main():
     characters = sorted(LETTERS + IGNORABLES + DRAWN_IGNORABLES)
     features = "languagesystem DFLT dflt;\nfeature ccmp { sub u%04X by wj.alt; } ccmp;\n" % WJ
     built = [
-        build("DefaultIgnorables.ttf", sorted([0x20] + characters), features),
-        build("DefaultIgnorablesNoSpace.ttf", characters),
+        build_font("DefaultIgnorables.ttf", sorted([0x20] + characters), features, ["wj.alt"]),
+        build_font("DefaultIgnorablesNoSpace.ttf", characters),
     ]
 
     rows = []
     for path in built:
         for text in BUILT_TEXTS:
             text = "".join(map(chr, text))
-            rows.append([os.path.basename(path), text, *shape(path, text)])
+            rows.append([os.path.basename(path), text, *shape_line(load_font(path), text)])
     for file_name, text in FONT_TEXTS:
         text = "".join(map(chr, text))
-        rows.append([file_name, text, *shape(os.path.join(FONTS, file_name), text)])
+        rows.append([file_name, text, *shape_line(load_font(os.path.join(FONTS, file_name)), text)])
 
-    with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
-        file.write("{\n")
-        file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        file.write('  "rows": [\n')
-        file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-        file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(rows), "rows")
+    write_reference(REFERENCE, rows)
 
 
 if __name__ == "__main__":

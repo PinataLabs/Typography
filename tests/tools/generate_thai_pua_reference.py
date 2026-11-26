@@ -23,18 +23,10 @@ space, followed by one or two marks, and the same texts in FDArrayTest257.otf. T
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
-import json
 import os
 
-os.environ["SOURCE_DATE_EPOCH"] = "0"
+from harfbuzz_reference import FONTS, build_font, load_font, shape_line, write_reference
 
-import uharfbuzz as hb
-from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib.tables._g_l_y_f import Glyph
-
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 REFERENCE = os.path.join(FONTS, "ThaiPua.harfbuzz.json")
 
 # KO KAI, PO PLA, FO FA, YO YING, THO THAN, DO CHADA, TO PATAK, a digit and the space: consonants with no
@@ -52,40 +44,10 @@ MAC_PUA = list(range(0xF884, 0xF89F))
 FDARRAY = "FDArrayTest257.otf"
 
 
-def build(file_name, code_points, features=None):
-    names = [".notdef"] + ["u%04X" % c for c in code_points]
-    builder = FontBuilder(1000, isTTF=True)
-    builder.setupGlyphOrder(names)
-    builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
-    builder.setupGlyf({name: Glyph() for name in names})
-    builder.setupHorizontalMetrics({name: (600, 0) for name in names})
-    builder.setupHorizontalHeader(ascent=800, descent=-200)
-    builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
-    builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
-    builder.setupPost(keepGlyphNames=False)
-    if features:
-        addOpenTypeFeaturesFromString(builder.font, features)
-    builder.font.save(os.path.join(FONTS, file_name))
-
-
-def shape(font, text):
-    """Gives the glyph ID and the place of each glyph, in font units from the start of the line."""
-    buffer = hb.Buffer()
-    buffer.add_str(text)
-    buffer.guess_segment_properties()
-    hb.shape(font, buffer)
-    glyphs = []
-    x = 0
-    for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
-        glyphs.append([info.codepoint, x + position.x_offset, position.y_offset])
-        x += position.x_advance
-    return glyphs
-
-
 def main():
-    build("ThaiPua.ttf", THAI + WINDOWS_PUA + MAC_PUA)
-    build("ThaiPuaMac.ttf", THAI + MAC_PUA)
-    build("ThaiPuaGsub.ttf", THAI + WINDOWS_PUA + MAC_PUA, "languagesystem thai dflt;\nfeature ccmp { sub u0E01 by u0E01; } ccmp;\n")
+    build_font("ThaiPua.ttf", THAI + WINDOWS_PUA + MAC_PUA)
+    build_font("ThaiPuaMac.ttf", THAI + MAC_PUA)
+    build_font("ThaiPuaGsub.ttf", THAI + WINDOWS_PUA + MAC_PUA, "languagesystem thai dflt;\nfeature ccmp { sub u0E01 by u0E01; } ccmp;\n")
 
     texts = []
     for base in BASES:
@@ -95,19 +57,12 @@ def main():
 
     rows = []
     for file_name in ("ThaiPua.ttf", "ThaiPuaMac.ttf", "ThaiPuaGsub.ttf", FDARRAY):
-        with open(os.path.join(FONTS, file_name), "rb") as file:
-            font = hb.Font(hb.Face(file.read()))
+        font = load_font(os.path.join(FONTS, file_name))
         for text in texts:
             text = "".join(map(chr, text))
-            rows.append([file_name, text, shape(font, text)])
+            rows.append([file_name, text, shape_line(font, text)[0]])
 
-    with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
-        file.write("{\n")
-        file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        file.write('  "rows": [\n')
-        file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-        file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(rows), "rows")
+    write_reference(REFERENCE, rows)
 
 
 if __name__ == "__main__":

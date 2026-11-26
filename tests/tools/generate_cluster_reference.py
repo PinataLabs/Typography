@@ -35,17 +35,12 @@ ClusterTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
-import json
 import os
 
-os.environ["SOURCE_DATE_EPOCH"] = "0"
-
 import uharfbuzz as hb
-from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib.tables._g_l_y_f import Glyph
+from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
+
 REFERENCE = os.path.join(FONTS, "Clusters.harfbuzz.json")
 
 DOTTED_CIRCLE = 0x25CC
@@ -76,20 +71,7 @@ REPHA_SCRIPTS = [
 
 
 def build(file_name, code_points):
-    names = [".notdef"] + ["u%04X" % c for c in code_points]
-    builder = FontBuilder(1000, isTTF=True)
-    builder.setupGlyphOrder(names)
-    builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
-    builder.setupGlyf({name: Glyph() for name in names})
-    builder.setupHorizontalMetrics({name: (600, 0) for name in names})
-    builder.setupHorizontalHeader(ascent=800, descent=-200)
-    builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
-    builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
-    builder.setupPost(keepGlyphNames=False)
-    path = os.path.join(FONTS, file_name)
-    builder.font.save(path)
-    with open(path, "rb") as file:
-        return hb.Font(hb.Face(file.read()))
+    return load_font(build_font(file_name, code_points))
 
 
 def shape(font, script, text):
@@ -130,13 +112,7 @@ def main():
             text = "".join(map(chr, text))
             rows.append([file_name, script, text, shape(font, script, text)])
 
-    with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
-        file.write("{\n")
-        file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        file.write('  "rows": [\n')
-        file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-        file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(rows), "rows")
+    write_reference(REFERENCE, rows)
 
 
 if __name__ == "__main__":

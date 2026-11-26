@@ -26,18 +26,13 @@ line, and the advance of the text. MongolianLookupsTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
-import json
 import os
 
-os.environ["SOURCE_DATE_EPOCH"] = "0"
-
-import uharfbuzz as hb
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib.tables._g_l_y_f import Glyph
+from harfbuzz_reference import FONTS, load_font, shape_line, write_reference
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 FONT = os.path.join(FONTS, "MongolianLookups.ttf")
 REFERENCE = os.path.join(FONTS, "MongolianLookups.harfbuzz.json")
 
@@ -130,36 +125,15 @@ def build():
     builder.font.save(FONT)
 
 
-def shape(text):
-    """Gives the glyph ID and place of each glyph, in font units from the start of the line, and the advance."""
-    with open(FONT, "rb") as file:
-        font = hb.Font(hb.Face(file.read()))
-    buffer = hb.Buffer()
-    buffer.add_str(text)
-    buffer.guess_segment_properties()
-    hb.shape(font, buffer)
-    glyphs = []
-    x = 0
-    for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
-        glyphs.append([info.codepoint, x + position.x_offset, position.y_offset])
-        x += position.x_advance
-    return glyphs, x
-
-
 def main():
     build()
+    font = load_font(FONT)
     rows = []
     for cause, text in TEXTS:
         text = "".join(map(chr, text))
-        rows.append([cause, text, *shape(text)])
+        rows.append([cause, text, *shape_line(font, text)])
 
-    with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
-        file.write("{\n")
-        file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        file.write('  "rows": [\n')
-        file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-        file.write("\n  ]\n}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(rows), "rows")
+    write_reference(REFERENCE, rows)
 
 
 if __name__ == "__main__":
