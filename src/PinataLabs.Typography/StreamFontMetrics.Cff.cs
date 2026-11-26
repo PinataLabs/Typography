@@ -57,6 +57,11 @@ internal partial class StreamFontMetrics
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
         FvarTable? fvar = reader.TryGetTable<FvarTable>();
 
+        // Only a variable font has instances to vary, so only it needs these.
+        HvarTable? hvar = fvar is null ? null : reader.TryGetTable<HvarTable>();
+        VvarTable? vvar = fvar is null ? null : reader.TryGetTable<VvarTable>();
+        MvarTable? mvar = fvar is null ? null : reader.TryGetTable<MvarTable>();
+
         CompactFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, cff)
         {
             Kern = kern,
@@ -67,6 +72,9 @@ internal partial class StreamFontMetrics
             GPos = gPos,
             Colr = colr,
             Cpal = cpal,
+            Hvar = hvar,
+            Vvar = vvar,
+            Mvar = mvar,
             Fvar = fvar,
         };
 
@@ -88,17 +96,40 @@ internal partial class StreamFontMetrics
         VerticalMetricsTable? vtmx = tables.Vmtx;
 
         CffGlyphData vector = cff.GetGlyph(glyphId);
+        Bounds defaultBounds = default;
+        float[]?[]? blendScalars = this.blendScalars;
+        if (blendScalars is not null)
+        {
+            defaultBounds = vector.GetBounds();
+            vector = vector.WithBlendScalars(blendScalars);
+        }
+
         Bounds bounds = vector.GetBounds();
-        ushort advanceWidth = htmx.GetAdvancedWidth(glyphId);
-        short lsb = htmx.GetLeftSideBearing(glyphId);
+        ushort advanceWidth = this.hvar.VaryAdvance(glyphId, htmx.GetAdvancedWidth(glyphId));
+        short lsb = this.hvar.VaryLeadingBearing(glyphId, htmx.GetLeftSideBearing(glyphId));
+
+        // A CFF glyph has no phantom points, and its origin is where its outline puts it. When HVAR does not map the left
+        // side bearing, the bearing of a varied outline is where the outline starts, as it is in hmtx at the default instance.
+        if (!this.IsDefaultInstance && !this.hvar.HasLeadingBearings)
+        {
+            lsb = (short)bounds.Min.X;
+        }
 
         IMetricsHeader metrics = isVerticalLayout ? this.VerticalMetrics : this.HorizontalMetrics;
         ushort advancedHeight = (ushort)(metrics.Ascender - metrics.Descender);
         short tsb = (short)(metrics.Ascender - bounds.Max.Y);
         if (vtmx != null)
         {
-            advancedHeight = vtmx.GetAdvancedHeight(glyphId);
-            tsb = vtmx.GetTopSideBearing(glyphId);
+            advancedHeight = this.vvar.VaryAdvance(glyphId, vtmx.GetAdvancedHeight(glyphId));
+            tsb = this.vvar.VaryLeadingBearing(glyphId, vtmx.GetTopSideBearing(glyphId));
+
+            // The vertical origin is where the default outline puts it: the top of that outline plus its top side bearing.
+            // When VVAR does not map the top side bearing, the bearing of a varied outline is the distance from that origin to
+            // the top of the varied outline, as the left side bearing is above.
+            if (blendScalars is not null && !this.vvar.HasLeadingBearings)
+            {
+                tsb = VariationRounding.ToInt16(defaultBounds.Max.Y + tsb - bounds.Max.Y);
+            }
         }
 
         GlyphColor? color = null;

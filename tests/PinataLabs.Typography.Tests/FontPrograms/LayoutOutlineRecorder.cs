@@ -92,10 +92,15 @@ internal sealed class LayoutOutlineRecorder : IGlyphRenderer
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Loads a font at one unit to the font unit. A variable font is at its default instance, which a regular request is
+    /// not when the default weight is not 400.
+    /// </summary>
     public static Font LoadAtUnitScale(string path)
     {
         FontFamily family = new FontCollection().Add(path);
-        return family.CreateFont(family.CreateFont(12).FontMetrics.UnitsPerEm);
+        FontMetrics face = family.Faces[0];
+        return family.CreateFont(face.UnitsPerEm, default, [.. face.Variations]);
     }
 
     public static int ReadGlyphCount(string path)

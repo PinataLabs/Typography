@@ -22,6 +22,7 @@ public class LayoutOutlineCharacterizationTests
     [Arguments("OpenSans-Regular.ttf")]
     [Arguments("FontPrograms/cff-type2.otf")]
     [Arguments("FontPrograms/cff-seac.otf")]
+    [Arguments("SourceSans3/SourceSans3VF-Upright.otf")]
     public async Task EveryGlyphMatchesTheRecordedBaseline(string fontFile)
     {
         string[] actual = LayoutOutlineRecorder.Describe(TestFonts.GetPath(fontFile));

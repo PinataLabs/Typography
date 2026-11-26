@@ -97,9 +97,9 @@ public class FontVariationInstanceTests
     }
 
     [Test]
-    public async Task AnInstanceKeepsTheMetricsOfTheFace()
+    public async Task AnInstanceVariesTheAdvancesAndKeepsWhatNoTableVaries()
     {
-        // The outline and metric deltas are not read yet, so an instance gives the glyphs of the default instance.
+        // Teko has HVAR, so the advance of a glyph changes. Its MVAR has no ascender, so the ascender does not.
         FontFamily family = new FontCollection().Add(TestFonts.TekoVariableFile);
         Font light = family.CreateFont(12, FontStyle.Regular.WithWeight(FontWeight.Light));
         Font bold = family.CreateFont(12, FontStyle.Bold);
@@ -109,7 +109,7 @@ public class FontVariationInstanceTests
 
         await Assert.That(bold.FontMetrics.UnitsPerEm).IsEqualTo(light.FontMetrics.UnitsPerEm);
         await Assert.That(bold.FontMetrics.HorizontalMetrics.Ascender).IsEqualTo(light.FontMetrics.HorizontalMetrics.Ascender);
-        await Assert.That(actual![0].AdvanceWidth).IsEqualTo(expected![0].AdvanceWidth);
+        await Assert.That(actual![0].AdvanceWidth).IsNotEqualTo(expected![0].AdvanceWidth);
         await Assert.That(actual[0].FontMetrics).IsSameReferenceAs(bold.FontMetrics);
         await Assert.That(expected[0].FontMetrics.Owner).IsSameReferenceAs(family.Faces[0]);
     }

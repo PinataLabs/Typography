@@ -42,7 +42,7 @@ public class Cff2VariationStoreTests
     [Test]
     public async Task GlyphsWithBlendOperatorsDrawWhenTheStoreIsIntact()
     {
-        CffGlyphData[] glyphs = Cff2Parser.Load(ReadCff2Table());
+        CffGlyphData[] glyphs = Cff2Parser.Load(ReadCff2Table(), out _);
 
         await Assert.That(Draws(glyphs[GlyphWithBlend])).IsTrue();
         await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();
@@ -56,7 +56,7 @@ public class Cff2VariationStoreTests
 
         // The format of the store is the first field after the length.
         table[offset + 3] = 2;
-        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+        CffGlyphData[] glyphs = Cff2Parser.Load(table, out _);
 
         await Assert.That(glyphs.Length).IsGreaterThan(GlyphWithoutBlend);
         await Assert.That(Draws(glyphs[GlyphWithBlend])).IsFalse();
@@ -76,7 +76,7 @@ public class Cff2VariationStoreTests
         table[offset] = (byte)(wrong >> 8);
         table[offset + 1] = (byte)wrong;
 
-        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+        CffGlyphData[] glyphs = Cff2Parser.Load(table, out _);
 
         await Assert.That(Draws(glyphs[GlyphWithBlend])).IsTrue();
         await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();
@@ -95,7 +95,7 @@ public class Cff2VariationStoreTests
         table[store + 3] = (byte)high;
         table[store + 4] = (byte)low;
         table[store + 5] = (byte)low;
-        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+        CffGlyphData[] glyphs = Cff2Parser.Load(table, out _);
 
         bool found = ItemVariationStore.TryReadCff2(table, store - 2, out ItemVariationStore read);
 
@@ -116,7 +116,7 @@ public class Cff2VariationStoreTests
         // More words than regions in the first subtable, which the glyph with blend operators uses.
         table[first + 2] = 0;
         table[first + 3] = 9;
-        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+        CffGlyphData[] glyphs = Cff2Parser.Load(table, out _);
 
         await Assert.That(Draws(glyphs[GlyphWithBlend])).IsFalse();
         await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();

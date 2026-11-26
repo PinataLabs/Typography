@@ -119,6 +119,11 @@ internal partial class StreamFontMetrics
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
         FvarTable? fvar = reader.TryGetTable<FvarTable>();
 
+        // Only a variable font has instances to vary, so only it needs these.
+        HvarTable? hvar = fvar is null ? null : reader.TryGetTable<HvarTable>();
+        VvarTable? vvar = fvar is null ? null : reader.TryGetTable<VvarTable>();
+        MvarTable? mvar = fvar is null ? null : reader.TryGetTable<MvarTable>();
+
         TrueTypeFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, glyf)
         {
             Fpgm = fpgm,
@@ -132,6 +137,9 @@ internal partial class StreamFontMetrics
             GPos = gPos,
             Colr = colr,
             Cpal = cpal,
+            Hvar = hvar,
+            Vvar = vvar,
+            Mvar = mvar,
             Fvar = fvar,
         };
 
@@ -153,16 +161,16 @@ internal partial class StreamFontMetrics
         VerticalMetricsTable? vtmx = tables.Vmtx;
 
         Bounds bounds = glyf.GetBounds(glyphId);
-        ushort advanceWidth = htmx.GetAdvancedWidth(glyphId);
-        short lsb = htmx.GetLeftSideBearing(glyphId);
+        ushort advanceWidth = this.hvar.VaryAdvance(glyphId, htmx.GetAdvancedWidth(glyphId));
+        short lsb = this.hvar.VaryLeadingBearing(glyphId, htmx.GetLeftSideBearing(glyphId));
 
         IMetricsHeader metrics = isVerticalLayout ? this.VerticalMetrics : this.HorizontalMetrics;
         ushort advancedHeight = (ushort)(metrics.Ascender - metrics.Descender);
         short tsb = (short)(metrics.Ascender - bounds.Max.Y);
         if (vtmx != null)
         {
-            advancedHeight = vtmx.GetAdvancedHeight(glyphId);
-            tsb = vtmx.GetTopSideBearing(glyphId);
+            advancedHeight = this.vvar.VaryAdvance(glyphId, vtmx.GetAdvancedHeight(glyphId));
+            tsb = this.vvar.VaryLeadingBearing(glyphId, vtmx.GetTopSideBearing(glyphId));
         }
 
         GlyphColor? color = null;

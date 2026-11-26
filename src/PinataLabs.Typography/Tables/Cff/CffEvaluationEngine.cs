@@ -48,7 +48,7 @@ internal ref struct CffEvaluationEngine
     private readonly CffIndex localSubrs;
     private readonly float nominalWidthX;
     private readonly float defaultWidthX;
-    private readonly int[]? blendRegionCounts;
+    private readonly float[]?[]? blendScalars;
     private readonly int initialVsIndex;
     private readonly int globalBias;
     private readonly int localBias;
@@ -82,7 +82,7 @@ internal ref struct CffEvaluationEngine
         Span<float> stack,
         Span<float> transient,
         CffFont? font = null,
-        int[]? blendRegionCounts = null,
+        float[]?[]? blendScalars = null,
         int vsIndex = 0)
     {
         this = default;
@@ -92,9 +92,9 @@ internal ref struct CffEvaluationEngine
         this.localSubrs = localSubrs;
         this.nominalWidthX = nominalWidthX;
         this.defaultWidthX = defaultWidthX;
-        this.stack = blendRegionCounts is null ? stack.Slice(0, Math.Min(stack.Length, Type2StackSize)) : stack;
+        this.stack = blendScalars is null ? stack.Slice(0, Math.Min(stack.Length, Type2StackSize)) : stack;
         this.transient = transient;
-        this.blendRegionCounts = blendRegionCounts;
+        this.blendScalars = blendScalars;
         this.initialVsIndex = vsIndex;
         this.globalBias = CalculateBias(globalSubrs.Count);
         this.localBias = CalculateBias(localSubrs.Count);
@@ -428,7 +428,7 @@ internal ref struct CffEvaluationEngine
                 case Type2Operator1.Reserved15_:
 
                     // CFF2 vsindex: selects the ItemVariationData used by subsequent blend operators.
-                    if (this.blendRegionCounts is not null)
+                    if (this.blendScalars is not null)
                     {
                         this.vsIndex = (int)this.Pop();
                     }
@@ -437,9 +437,8 @@ internal ref struct CffEvaluationEngine
 
                 case Type2Operator1.Reserved16_:
 
-                    // CFF2 blend: n default values followed by n * k deltas. We render the default instance,
-                    // so the deltas are discarded and the n default values stay on the stack.
-                    if (this.blendRegionCounts is not null)
+                    // CFF2 blend: n default values followed by n * k deltas.
+                    if (this.blendScalars is not null)
                     {
                         this.Blend();
                     }
@@ -916,24 +915,40 @@ internal ref struct CffEvaluationEngine
         }
     }
 
+    // n default values, then the k deltas of each value, one for each region of the ItemVariationData that the vsindex
+    // names, then n. Each value leaves with the sum of its deltas, each scaled by the scalar of its region.
+    // A subtable that the store lacks has no scalars, and a glyph that blends with it fails.
     private void Blend()
     {
         int n = (int)this.Pop();
-        int[] counts = this.blendRegionCounts!;
-        if ((uint)this.vsIndex >= (uint)counts.Length || counts[this.vsIndex] < 0)
+        float[]?[] subtables = this.blendScalars!;
+        if ((uint)this.vsIndex >= (uint)subtables.Length || subtables[this.vsIndex] is not float[] scalars)
         {
             this.failed = true;
             return;
         }
 
-        long deltas = (long)n * counts[this.vsIndex];
+        long deltas = (long)n * scalars.Length;
         if (n < 0 || deltas + n > this.Count)
         {
             this.failed = true;
             return;
         }
 
-        this.top -= (int)deltas;
+        int firstDelta = this.top - (int)deltas;
+        int firstValue = firstDelta - n;
+        for (int i = 0; i < n; i++)
+        {
+            double sum = 0;
+            for (int j = 0; j < scalars.Length; j++)
+            {
+                sum += (double)scalars[j] * this.stack[firstDelta + (i * scalars.Length) + j];
+            }
+
+            this.stack[firstValue + i] += (float)sum;
+        }
+
+        this.top = firstDelta;
     }
 
     // numX ... num0 i index: pushes a copy of numi. A negative i copies the top element.
