@@ -195,8 +195,7 @@ An additive or breaking public API change needs all of these:
   default instance, which is the face itself. Two instances of one face give different `GlyphRendererParameters`, and
   `GlyphRendererParameters.FontMetrics` is the instance. `Font.Name` is the family name and the subfamily name of the
   named instance that the font draws, such as "Teko SemiBold", and for any other coordinates it is the full name of the
-  face. A variation instance draws unhinted, so `HintingMode.Standard` acts as `HintingMode.None` for it. The default
-  instance keeps its hinting. A text layout creates each fallback font with the size, the style and the variations of
+  face. A text layout creates each fallback font with the size, the style and the variations of
   the font of the text. (#125)
 - **A font takes the best face by weight, width and slope.** `Font.FontMetrics` is the face that
   `FontFamily.MatchFace(font.Style)` gives. A family with static Regular and Bold faces renders as before. A

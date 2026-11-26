@@ -80,6 +80,8 @@ internal sealed class TrueTypeFontTables : IFontTables
 
     public GvarTable? Gvar { get; set; }
 
+    public CvarTable? Cvar { get; set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether the font has an 'HVAR' table, which then varies the advances. Without one the
     /// advances come from the phantom points of the 'gvar' table.

@@ -26,6 +26,9 @@ internal partial class StreamFontMetrics
     private readonly object interpreterLock = new();
     private TrueTypeInterpreter? interpreter;
 
+    // The control values that the interpreter of an instance runs with, which 'cvar' varies. The interpreter lock guards it.
+    private short[]? instanceControlValues;
+
     internal void ApplyTrueTypeHinting(HintingMode hintingMode, GlyphMetrics metrics, ref GlyphVector glyphVector, Vector2 scaleXY, float pixelSize)
     {
         if (hintingMode == HintingMode.None || this.outlineType != OutlineType.TrueType)
@@ -66,10 +69,9 @@ internal partial class StreamFontMetrics
                     this.interpreter = created;
                 }
 
-                CvtTable? cvt = tables.Cvt;
                 PrepTable? prep = tables.Prep;
                 float scaleFactor = pixelSize / this.UnitsPerEm;
-                this.interpreter.SetControlValueTable(cvt?.ControlValues, scaleFactor, pixelSize, prep?.Instructions);
+                this.interpreter.SetControlValueTable(this.GetControlValues(), scaleFactor, pixelSize, prep?.Instructions);
 
                 GlyphVector.Hint(ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
             }
@@ -83,6 +85,20 @@ internal partial class StreamFontMetrics
                 this.interpreter = null;
             }
         }
+    }
+
+    // A face runs its hinting programs with the values of the 'cvt ' table. An instance adds the 'cvar' deltas for its coordinates,
+    // and uses the plain values when the font has no 'cvar' table or its data is malformed.
+    internal short[]? GetControlValues()
+    {
+        TrueTypeFontTables tables = this.trueTypeFontTables!;
+        short[]? controlValues = tables.Cvt?.ControlValues;
+        if (this.face is null || controlValues is null || tables.Cvar is null)
+        {
+            return controlValues;
+        }
+
+        return this.instanceControlValues ??= tables.Cvar.CreateControlValues(controlValues, this.coordinates.Values) ?? controlValues;
     }
 
     private static StreamFontMetrics LoadTrueTypeFont(FontReader reader)
@@ -119,6 +135,7 @@ internal partial class StreamFontMetrics
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
         FvarTable? fvar = reader.TryGetTable<FvarTable>();
         GvarTable? gvar = fvar is null ? null : reader.TryGetTable<GvarTable>();
+        CvarTable? cvar = fvar is null ? null : reader.TryGetTable<CvarTable>();
 
         // Only a variable font has instances to vary, so only it needs these.
         HvarTable? hvar = fvar is null ? null : reader.TryGetTable<HvarTable>();
@@ -143,6 +160,7 @@ internal partial class StreamFontMetrics
             Mvar = mvar,
             Fvar = fvar,
             Gvar = gvar,
+            Cvar = cvar,
             HasHvar = reader.GetHeader("HVAR") is not null,
             HasVvar = reader.GetHeader("VVAR") is not null,
         };

@@ -59,9 +59,9 @@ It also builds the two small variable fonts that the variation tests need, next 
 - `VariationSlant.ttf` has the axes `wght` and `slnt` and no `ital` axis, so an italic request has to use `slnt`.
 
 Both fonts have `fvar` and `avar` and no outline variation data, because instances draw the default outlines
-until the CFF2 `blend` and `gvar` issues land. Each glyph has a short glyph program that rounds the top of its box to
-the pixel grid, so that hinting changes the outline. The tests use it to check that the default instance draws hinted
-and that a variation instance draws unhinted.
+until the CFF2 `blend` issue lands. Each glyph has a short glyph program that rounds the top of its box to
+the pixel grid, so that hinting changes the outline. The tests use it to check that the default instance and a variation
+instance of a font with no `cvar` table both draw hinted.
 
 For these two fonts and the two variable fonts of the test project, the reference holds the axes, the named
 instances, the `avar` segment maps, and a list of locations. A location is the user coordinates of every axis and the

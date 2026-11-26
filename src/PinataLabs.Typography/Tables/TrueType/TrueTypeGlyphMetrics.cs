@@ -198,9 +198,7 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 
     private bool TryGetHintedVector(float scaledPPEM, Vector2 scale, Matrix3x2 rotation, HintingMode hintingMode, out GlyphVector hinted)
     {
-        // The control values of the font are those of the default instance, so hinting a varied outline with them snaps
-        // its stems to the wrong widths. A variation instance draws unhinted, whatever mode the text asks for.
-        if (hintingMode == HintingMode.None || !this.FontMetrics.IsDefaultInstance)
+        if (hintingMode == HintingMode.None)
         {
             hinted = default;
             return false;
@@ -208,7 +206,7 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 
         hinted = this.hintedVectorCache.GetOrAdd(scaledPPEM, _ =>
         {
-            if (!this.glyphs.TryReadPoints(this.GlyphId, out GlyphVector vector))
+            if (!this.TryGetPoints(out GlyphVector vector))
             {
                 return default;
             }
@@ -227,5 +225,17 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         });
 
         return hinted.ControlPoints is not null;
+    }
+
+    // The interpreter changes the points in place, so a glyph of an instance hints a copy of its varied points.
+    private bool TryGetPoints(out GlyphVector vector)
+    {
+        if (this.varied.ControlPoints is null)
+        {
+            return this.glyphs.TryReadPoints(this.GlyphId, out vector);
+        }
+
+        vector = new GlyphVector((ControlPoint[])this.varied.ControlPoints.Clone(), this.varied.EndPoints, default, this.varied.Instructions, this.varied.IsComposite);
+        return true;
     }
 }
