@@ -384,3 +384,25 @@ python tests/tools/generate_text_run_context_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Thai private use reference
+
+`generate_thai_pua_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ThaiPua.harfbuzz.json`. When the
+GSUB table of a font has no `thai` script, HarfBuzz draws a Thai mark that would clash with its base or with the mark
+before it with a glyph of the private use area: a tone mark lower or further left, a vowel below a consonant with a
+descender lower, and YO YING and THO THAN without their descender. It looks for the Windows code point first and
+then for the Mac one.
+
+The script builds `ThaiPua.ttf`, with the Windows and Mac private use glyphs and no GSUB table, `ThaiPuaMac.ttf`,
+with the Mac glyphs only, and `ThaiPuaGsub.ttf`, with both and a GSUB table that has the `thai` script. The reference
+holds the glyph IDs and where HarfBuzz draws each glyph for each kind of consonant, a digit and a space, followed by
+one or two marks, in these fonts and in `FDArrayTest257.otf`. `ThaiPuaTests` checks that the library gives the same.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_thai_pua_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

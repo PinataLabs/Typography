@@ -68,6 +68,9 @@ public static class TestFonts
     // Written by tests/tools/generate_text_run_context_reference.py.
     public static string TextRunContextHarfBuzzReference => GetFullPath("TextRunContext.harfbuzz.json");
 
+    // Written by tests/tools/generate_thai_pua_reference.py, with the ThaiPua fonts.
+    public static string ThaiPuaHarfBuzzReference => GetFullPath("ThaiPua.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");
