@@ -260,26 +260,14 @@ internal readonly struct ItemVariationStore
             int peak = BinaryPrimitives.ReadInt16BigEndian(axisCoordinates.Slice(2));
             int end = BinaryPrimitives.ReadInt16BigEndian(axisCoordinates.Slice(4));
 
-            // An axis with no peak, a peak outside its range, or a range that spans 0 does not take part.
-            if (peak == 0 || start > peak || peak > end || (start < 0 && end > 0))
-            {
-                continue;
-            }
-
             int coordinate = axis < coordinates.Length ? coordinates[axis] : 0;
-            if (coordinate == peak)
-            {
-                continue;
-            }
-
-            if (coordinate <= start || end <= coordinate)
+            float axisScalar = VariationScalar.Get(start, peak, end, coordinate);
+            if (axisScalar == 0)
             {
                 return 0;
             }
 
-            scalar *= coordinate < peak
-                ? (float)(coordinate - start) / (peak - start)
-                : (float)(end - coordinate) / (end - peak);
+            scalar *= axisScalar;
         }
 
         return scalar;

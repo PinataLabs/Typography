@@ -22,6 +22,7 @@
     <Compile Include="..\PinataLabs.Typography.Fuzz\MetricsVariationOracle.cs" Link="FontPrograms\Fuzz\MetricsVariationOracle.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\Cff2TopDict.cs" Link="FontPrograms\Fuzz\Cff2TopDict.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\VariationBytes.cs" Link="FontPrograms\Fuzz\VariationBytes.cs" />
+    <Compile Include="..\PinataLabs.Typography.Fuzz\TupleVariationBytes.cs" Link="FontPrograms\Fuzz\TupleVariationBytes.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\Mutator.cs" Link="FontPrograms\Fuzz\Mutator.cs" />
     <None Include="..\PinataLabs.Typography.Fuzz\corpus\**\*" Link="FuzzCorpus\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
