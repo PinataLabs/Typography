@@ -199,6 +199,16 @@ internal partial class StreamFontMetrics : FontMetrics
     }
 
     /// <inheritdoc/>
+    internal override bool IsInMarkGlyphSet(ushort markGlyphSet, ushort glyphId)
+    {
+        GlyphDefinitionTable? gdef = this.outlineType == OutlineType.TrueType
+            ? this.trueTypeFontTables!.Gdef
+            : this.compactFontTables!.Gdef;
+
+        return gdef?.MarkGlyphSetsTable?.Covers(markGlyphSet, glyphId) ?? false;
+    }
+
+    /// <inheritdoc/>
     public override bool TryGetGlyphMetrics(
         CodePoint codePoint,
         TextAttributes textAttributes,

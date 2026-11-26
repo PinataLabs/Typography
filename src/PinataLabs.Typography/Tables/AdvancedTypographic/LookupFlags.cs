@@ -10,7 +10,7 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// LookupFlag bit enumeration, see: https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#lookup-table
 /// </summary>
 [Flags]
-internal enum LookupFlags : ushort
+internal enum LookupFlags : uint
 {
     /// <summary>
     /// This bit relates only to the correct processing of the cursive attachment lookup type (GPOS lookup type 3).
@@ -47,5 +47,11 @@ internal enum LookupFlags : ushort
     /// <summary>
     /// If not zero, skips over all marks of attachment type different from specified.
     /// </summary>
-    MarkAttachmentTypeMask = 0xFF00
+    MarkAttachmentTypeMask = 0xFF00,
+
+    /// <summary>
+    /// Not part of the lookupFlag field. As in HarfBuzz, the library keeps here the markFilteringSet field of a
+    /// lookup with <see cref="UseMarkFilteringSet"/>, so that every subtable of the lookup has it with its flags.
+    /// </summary>
+    MarkFilteringSetMask = 0xFFFF0000
 }
