@@ -117,6 +117,9 @@ public static class TestFonts
     // maps no top side bearing, and VariationCff2VerticalTsb has a map.
     public static string Cff2VerticalOriginsFontToolsReference => GetFullPath("Variations/Cff2VerticalOrigins.fonttools.json");
 
+    // Written by tests/tools/generate_gvar_reference.py, from Teko-Variable.ttf.
+    public static string GvarFontToolsReference => GetFullPath("Variations/Gvar.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 

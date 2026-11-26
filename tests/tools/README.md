@@ -160,6 +160,30 @@ python tests/tools/generate_metrics_variation_reference.py
 
 The output is deterministic for one fontTools version. The file records the version that wrote it.
 
+## TrueType variation reference
+
+`generate_gvar_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/Gvar.fonttools.json`, the fontTools
+reference for the outlines, bounds and advances of a TrueType variation instance (issue #127). `Teko-Variable.ttf` is the one
+variable test font with TrueType outlines. The script draws it with fontTools `getGlyphSet(location=..., normalized=True)` at the
+default instance, the "SemiBold" named instance, the maximum and a user location. Each location is the F2Dot14 coordinates that
+the font variations reference gives, as normalised coordinates. fontTools applies the `gvar` deltas with interpolation of
+untouched points, the deltas of the component offsets of composite glyphs, and the deltas of the phantom points.
+
+For every glyph the reference holds the control bounds of the varied outline, the advance width that the phantom points give, and
+the left side bearing. Teko has an `HVAR` table, which fontTools then uses for the advance, so the script reads the advances from a
+copy of the font that has none. fontTools takes the bounds of a composite glyph from its unvaried components, so the script
+measures the drawn outline instead. For a sample of the glyphs, which has the Basic Latin glyphs, every fourth composite and the
+empty glyphs, it also holds the outline as the path commands that the font program fixtures use. The script checks that the first
+phantom point of every glyph is the origin, which the left side bearing relies on.
+
+To write the file again, install fontTools 4.68 or later, and run this from the repository root:
+
+```
+python tests/tools/generate_gvar_reference.py
+```
+
+The output is deterministic for one fontTools version. The reference records the version that wrote it.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).

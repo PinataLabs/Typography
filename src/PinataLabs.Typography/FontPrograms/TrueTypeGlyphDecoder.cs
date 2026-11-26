@@ -15,7 +15,7 @@ namespace PinataLabs.Typography.FontPrograms;
 /// points of a glyph before they become an outline, so for it the decoder reads the points into arrays
 /// and writes the outline of the hinted points.
 /// </summary>
-internal static class TrueTypeGlyphDecoder
+internal static partial class TrueTypeGlyphDecoder
 {
     private const int HeaderSize = 10;
 

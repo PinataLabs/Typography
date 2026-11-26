@@ -118,6 +118,7 @@ internal partial class StreamFontMetrics
         ColrTable? colr = reader.TryGetTable<ColrTable>();
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
         FvarTable? fvar = reader.TryGetTable<FvarTable>();
+        GvarTable? gvar = fvar is null ? null : reader.TryGetTable<GvarTable>();
 
         // Only a variable font has instances to vary, so only it needs these.
         HvarTable? hvar = fvar is null ? null : reader.TryGetTable<HvarTable>();
@@ -141,6 +142,9 @@ internal partial class StreamFontMetrics
             Vvar = vvar,
             Mvar = mvar,
             Fvar = fvar,
+            Gvar = gvar,
+            HasHvar = reader.GetHeader("HVAR") is not null,
+            HasVvar = reader.GetHeader("VVAR") is not null,
         };
 
         return new StreamFontMetrics(tables);
@@ -173,6 +177,14 @@ internal partial class StreamFontMetrics
             tsb = this.vvar.VaryLeadingBearing(glyphId, vtmx.GetTopSideBearing(glyphId));
         }
 
+        GlyphVector varied = default;
+        if (this.face is not null
+            && tables.Gvar is GvarTable gvar
+            && glyf.TryReadVariedPoints(glyphId, gvar, this.coordinates.Values, out varied, out PhantomDeltas phantoms))
+        {
+            this.VaryMetrics(tables, glyphId, varied, phantoms, metrics, ref bounds, ref advanceWidth, ref lsb, ref advancedHeight, ref tsb);
+        }
+
         GlyphColor? color = null;
         if (glyphType == GlyphType.ColrLayer)
         {
@@ -198,6 +210,65 @@ internal partial class StreamFontMetrics
             textAttributes,
             textDecorations,
             glyphType,
-            color);
+            color,
+            varied);
+    }
+
+    // The phantom points of a glyph are the origin and the end of its advance on the x axis, and the top and the bottom of
+    // its vertical advance on the y axis. The bounds of a varied glyph are those of its varied points. A side bearing is the
+    // distance from a phantom point to the bounds, and an advance is the distance between two phantom points, unless an
+    // 'HVAR' or 'VVAR' table gives it. Each value rounds once, after the deltas are summed.
+    private void VaryMetrics(
+        TrueTypeFontTables tables,
+        ushort glyphId,
+        in GlyphVector varied,
+        PhantomDeltas deltas,
+        IMetricsHeader metrics,
+        ref Bounds bounds,
+        ref ushort advanceWidth,
+        ref short lsb,
+        ref ushort advanceHeight,
+        ref short tsb)
+    {
+        Bounds header = tables.Glyf.GetHeaderBounds(glyphId);
+        float left = header.Min.X - lsb;
+        float right = left + advanceWidth;
+        float top = tables.Vmtx is null ? metrics.Ascender : header.Max.Y + tsb;
+        float bottom = top - advanceHeight;
+
+        left += deltas.Left;
+        right += deltas.Right;
+        top += deltas.Top;
+        bottom += deltas.Bottom;
+
+        // An empty glyph keeps the bounds that it had.
+        float xMin = 0;
+        float yMax = 0;
+        if (varied.ControlPoints.Length > 0)
+        {
+            Vector2 min = new(float.MaxValue);
+            Vector2 max = new(float.MinValue);
+            foreach (ControlPoint point in varied.ControlPoints)
+            {
+                min = Vector2.Min(min, point.Point);
+                max = Vector2.Max(max, point.Point);
+            }
+
+            bounds = new Bounds(min, max);
+            xMin = min.X;
+            yMax = max.Y;
+        }
+
+        lsb = (short)Math.Clamp(Math.Floor(xMin - left + 0.5), short.MinValue, short.MaxValue);
+        tsb = (short)Math.Clamp(Math.Floor(top - yMax + 0.5), short.MinValue, short.MaxValue);
+        if (!tables.HasHvar)
+        {
+            advanceWidth = (ushort)Math.Clamp(Math.Floor(right - left + 0.5), 0, ushort.MaxValue);
+        }
+
+        if (!tables.HasVvar)
+        {
+            advanceHeight = (ushort)Math.Clamp(Math.Floor(top - bottom + 0.5), 0, ushort.MaxValue);
+        }
     }
 }

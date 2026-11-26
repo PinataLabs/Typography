@@ -18,6 +18,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 {
     private readonly GlyphTable glyphs;
 
+    // The points of the glyph at the variation instance of its font, in glyph space, which replace the points of the font data.
+    // A glyph of the default instance has none, and its ControlPoints are null.
+    private readonly GlyphVector varied;
+
     // The hinted points of the glyph for each size. An unhinted glyph is drawn from the font data and keeps nothing.
     private readonly ConcurrentDictionary<float, GlyphVector> hintedVectorCache = new();
 
@@ -35,7 +39,8 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null)
+        GlyphColor? glyphColor = null,
+        GlyphVector varied = default)
         : base(
               font,
               glyphId,
@@ -50,7 +55,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
               textDecorations,
               glyphType,
               glyphColor)
-        => this.glyphs = glyphs;
+    {
+        this.glyphs = glyphs;
+        this.varied = varied;
+    }
 
     internal TrueTypeGlyphMetrics(
         StreamFontMetrics font,
@@ -67,7 +75,8 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         Vector2 scaleFactor,
         TextRun textRun,
         GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null)
+        GlyphColor? glyphColor = null,
+        GlyphVector varied = default)
         : base(
               font,
               glyphId,
@@ -83,7 +92,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
               textRun,
               glyphType,
               glyphColor)
-        => this.glyphs = glyphs;
+    {
+        this.glyphs = glyphs;
+        this.varied = varied;
+    }
 
     /// <inheritdoc/>
     internal override GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint)
@@ -102,16 +114,26 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
             this.ScaleFactor,
             textRun,
             this.GlyphType,
-            this.GlyphColor);
+            this.GlyphColor,
+            this.varied);
 
     /// <summary>
-    /// Gets one point of the unhinted glyph in glyph space.
+    /// Gets one point of the unhinted glyph in glyph space, at the variation instance of its font.
     /// </summary>
     /// <param name="index">The number of the point.</param>
     /// <param name="point">The point.</param>
     /// <returns><see langword="false"/> if the glyph has no such point.</returns>
     internal bool TryGetPoint(int index, out Vector2 point)
-        => this.glyphs.TryGetPoint(this.GlyphId, index, out point);
+    {
+        if (this.varied.ControlPoints is null)
+        {
+            return this.glyphs.TryGetPoint(this.GlyphId, index, out point);
+        }
+
+        bool found = (uint)index < (uint)this.varied.ControlPoints.Length;
+        point = found ? this.varied.ControlPoints[index].Point : default;
+        return found;
+    }
 
     /// <inheritdoc/>
     internal override void RenderTo(IGlyphRenderer renderer, Vector2 location, Vector2 offset, GlyphLayoutMode mode, TextOptions options)
@@ -155,9 +177,16 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
                 }
                 else
                 {
-                    // A malformed glyph draws the part of its outline that comes before the fault.
                     TransformingGlyphRenderer sink = new(renderer, renderLocation, scale, this.Offset * scale, rotation);
-                    this.glyphs.TryWriteOutline(this.GlyphId, ref sink);
+                    if (this.varied.ControlPoints is not null)
+                    {
+                        TrueTypeGlyphDecoder.WriteOutline(this.varied.ControlPoints, this.varied.EndPoints, ref sink);
+                    }
+                    else
+                    {
+                        // A malformed glyph draws the part of its outline that comes before the fault.
+                        this.glyphs.TryWriteOutline(this.GlyphId, ref sink);
+                    }
                 }
             }
 

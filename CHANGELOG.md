@@ -47,7 +47,7 @@ An additive or breaking public API change needs all of these:
   creates a font for every draw does not rebuild glyphs, and one that changes the weight every frame does not
   accumulate instances. `FontMetrics.Variations` of an instance gives the values of the request that made it.
   `CreateFont(12)` on Teko is the instance `wght` 400, and `FontStyle.Bold` is `wght` 700. An instance draws the
-  TrueType outlines and the positions of the default instance until the `gvar` and GPOS variation data are read. (#125)
+  positions of the default instance until the GPOS variation data are read. (#125)
 - **CFF2 variation instances.** A variation instance of a CFF2 font draws the outlines of its coordinates. A `blend`
   operator adds each delta, scaled by the scalar of its region, to its value, for the regions that the `vsindex` of the
   glyph names, and the bounds of a glyph come from the varied outline. The scalars of an instance are made once, when
@@ -70,12 +70,23 @@ An additive or breaking public API change needs all of these:
   bearing and the size of the glyph. A CFF2 glyph keeps its origin where the default outline puts it, so without a left
   side bearing mapping its bearing is the left edge of its varied outline, and without a top side bearing mapping its
   bearing is the distance from the vertical origin of the default outline, which is its top plus the `vmtx` bearing, to
-  the top of the varied outline. A TrueType glyph keeps the bearing of `hmtx` until its `gvar` variation is read. The win
+  the top of the varied outline. A TrueType glyph that `gvar` varies has its bearing from the phantom points. The win
   ascent and descent are added to their `MVAR` deltas as integers and clamped once, so a value above 32767 does not
   wrap. Advance widths of every glyph that `hmtx` lists match fontTools and HarfBuzz for `Teko-Variable.ttf` and
   `SourceSans3VF-Upright.otf` at the axis minimum, named instances, the axis maximum and between them. The global
   metrics, advance heights and bearings match them for two built fonts that have every mapping and an `MVAR` record for
   every metric. (#128)
+- **TrueType variation outlines.** A variation instance of a TrueType font that has a `gvar` table draws the varied
+  outline. The new tuple variation store reader decodes the shared and private point numbers, the packed deltas and the
+  intermediate regions of the tuples of a glyph. The deltas move the points of a simple glyph, with interpolation of the points
+  that a tuple leaves out, and the offsets of the components of a composite glyph, and they move its four phantom points. A
+  component that a composite places by points is placed by the varied points. The bounds of a glyph are those of its varied
+  points. When the font has no `HVAR` table, the advance width comes from the first two phantom points, and the advance height
+  from the other two when the font has no `VVAR` table. The left side bearing and the top side bearing are the distance from a phantom
+  point to the varied bounds, and each value rounds once, after the deltas are summed. For `Teko-Variable.ttf` at the default
+  instance, the "SemiBold" named instance, the maximum and a user location, the outlines, the bounds and the advances match
+  fontTools. A glyph whose `gvar` data is malformed draws at the default instance, and so does a glyph that has such a
+  component. A `gvar` table that is malformed, or has another number of axes than `fvar`, counts as absent. (#127)
 - **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
   axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
   italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face
