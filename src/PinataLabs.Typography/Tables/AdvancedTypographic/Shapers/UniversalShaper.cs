@@ -46,13 +46,9 @@ internal sealed class UniversalShaper : DefaultShaper
 
     private const int DottedCircle = 0x25cc;
 
-    private static readonly int OtherCategory = Array.IndexOf(UniversalShapingData.Categories, "O");
+    private static readonly int CgjCategory = Array.IndexOf(UniversalShapingData.Categories, "CGJ");
 
-    private static readonly int IndependentCategory = Array.IndexOf(UniversalShapingData.Categories, "IND");
-
-    private static readonly int SymbolCategory = Array.IndexOf(UniversalShapingData.Categories, "S");
-
-    private static readonly int GenericBaseCategory = Array.IndexOf(UniversalShapingData.Categories, "GB");
+    private static readonly int ZwnjCategory = Array.IndexOf(UniversalShapingData.Categories, "ZWNJ");
 
     private static readonly int HalantCategory = Array.IndexOf(UniversalShapingData.Categories, "H");
 
@@ -178,59 +174,50 @@ internal sealed class UniversalShaper : DefaultShaper
         Span<int> values = count <= 64 ? stackalloc int[count] : new int[count];
         for (int i = index; i < index + count; i++)
         {
-            values[i - index] = GetCategory(substitutionCollection[i].CodePoint);
+            values[i - index] = UnicodeData.GetUniversalShapingSymbolCount((uint)substitutionCollection[i].CodePoint.Value);
         }
 
-        // A symbol is a base too. It stays a symbol before a symbol modifier, which only the symbol cluster takes.
+        // As in HarfBuzz, the syllable machine does not see a CGJ, nor a ZWNJ before a mark. Each of them goes with
+        // the syllable before it.
+        Span<int> kept = count <= 64 ? stackalloc int[count] : new int[count];
+        Span<int> input = count <= 64 ? stackalloc int[count] : new int[count];
+        int keptCount = 0;
         for (int i = 0; i < count; i++)
         {
-            if (values[i] == SymbolCategory
-                && (i + 1 == count || UniversalShapingData.Categories[values[i + 1]] is not "SMAbv" and not "SMBlw"))
+            if (values[i] == CgjCategory || (values[i] == ZwnjCategory && IsBeforeMark(substitutionCollection, index, values, i)))
             {
-                values[i] = GenericBaseCategory;
+                continue;
             }
+
+            kept[keptCount] = i;
+            input[keptCount++] = values[i];
         }
 
         int syllable = 0;
-        int start = 0;
-        while (start < count)
+        foreach (StateMatch match in StateMachine.Match(input[..keptCount]))
         {
-            // As in HarfBuzz, a repha does not go with a character that is a base only because it is not of a
-            // script. The repha is a broken cluster, and the character starts the next cluster.
-            int end = start + 1;
-            while (end < count
-                && !(values[end - 1] == RephaCategory && IsBaseOutsideScripts(substitutionCollection[end + index].CodePoint)))
+            ++syllable;
+            int matchStart = kept[match.StartIndex];
+            int matchEnd = match.EndIndex + 1 < keptCount ? kept[match.EndIndex + 1] - 1 : count - 1;
+
+            // Create shaper info
+            for (int i = matchStart; i <= matchEnd; i++)
             {
-                end++;
+                GlyphShapingData data = substitutionCollection[i + index];
+                string category = UniversalShapingData.Categories[values[i]];
+
+                data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
             }
 
-            foreach (StateMatch match in StateMachine.Match(values[start..end]))
+            // Assign rphf feature
+            int limit = values[matchStart] == RephaCategory
+                ? 1
+                : Math.Min(3, matchEnd - matchStart);
+
+            for (int i = matchStart; i < matchStart + limit; i++)
             {
-                ++syllable;
-                int matchStart = match.StartIndex + start;
-                int matchEnd = match.EndIndex + start;
-
-                // Create shaper info
-                for (int i = matchStart; i <= matchEnd; i++)
-                {
-                    GlyphShapingData data = substitutionCollection[i + index];
-                    string category = UniversalShapingData.Categories[values[i]];
-
-                    data.UniversalShapingEngineInfo = new(category, match.Tags[0], syllable);
-                }
-
-                // Assign rphf feature
-                int limit = values[matchStart] == RephaCategory
-                    ? 1
-                    : Math.Min(3, matchEnd - matchStart);
-
-                for (int i = matchStart; i < matchStart + limit; i++)
-                {
-                    substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
-                }
+                substitutionCollection.AddShapingFeature(i + index, new TagEntry(RcltTag, true));
             }
-
-            start = end;
         }
 
         // The state machine has no cluster for a halant that no base comes before or after.
@@ -301,20 +288,18 @@ internal sealed class UniversalShaper : DefaultShaper
         }
     }
 
-    // As in HarfBuzz, a character that is not a letter or a sign of a script is a base, so a sign after a space,
-    // a digit or a full stop is not a broken cluster. HarfBuzz 15.0.0 leaves out the characters that it does not
-    // draw, and six right brackets.
-    private static int GetCategory(CodePoint codePoint)
-        => IsBaseOutsideScripts(codePoint)
-            ? GenericBaseCategory
-            : UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
-
-    private static bool IsBaseOutsideScripts(CodePoint codePoint)
+    // A ZWNJ before a mark, past any CGJ, does not end a syllable.
+    private static bool IsBeforeMark(GlyphSubstitutionCollection collection, int index, ReadOnlySpan<int> values, int i)
     {
-        int category = UnicodeData.GetUniversalShapingSymbolCount((uint)codePoint.Value);
-        return (category == OtherCategory || category == IndependentCategory)
-            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)codePoint.Value)
-            && codePoint.Value is not (0x005D or 0x007D or 0x27E7 or 0x27E9 or 0x2E23 or 0x2E25);
+        for (int j = i + 1; j < values.Length; j++)
+        {
+            if (values[j] != CgjCategory)
+            {
+                return CodePoint.IsMark(collection[j + index].CodePoint);
+            }
+        }
+
+        return false;
     }
 
     private static void ClearSubstitutionFlags(IGlyphShapingCollection collection, int index, int count)
@@ -393,7 +378,8 @@ internal sealed class UniversalShaper : DefaultShaper
             string? type = info?.SyllableType;
 
             // Only a few syllable types need reordering.
-            if (type is not "virama_terminated_cluster" and not "standard_cluster" and not "broken_cluster")
+            if (type is not "virama_terminated_cluster" and not "sakot_terminated_cluster" and not "standard_cluster"
+                and not "symbol_cluster" and not "broken_cluster")
             {
                 goto Increment;
             }
@@ -412,7 +398,7 @@ internal sealed class UniversalShaper : DefaultShaper
                 // After a syllable of only repha, the glyph at the place of the circle is of the next syllable.
                 substitutionCollection.InsertGlyph(i, i < end ? i : end - 1, id, new(DottedCircle));
                 substitutionCollection[i].UniversalShapingEngineInfo = new(
-                    UniversalShapingData.Categories[GetCategory(new(DottedCircle))],
+                    "B",
                     type,
                     info!.Syllable);
 
@@ -447,7 +433,7 @@ internal sealed class UniversalShaper : DefaultShaper
             }
 
             // Move things back
-            for (int i = start, j = end; i < end; i++)
+            for (int i = start, j = start; i < end; i++)
             {
                 GlyphShapingData current = substitutionCollection[i];
                 info = current.UniversalShapingEngineInfo;
