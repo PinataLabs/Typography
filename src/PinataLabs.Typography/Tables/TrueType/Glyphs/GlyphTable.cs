@@ -100,13 +100,6 @@ internal sealed class GlyphTable : Table
         => TrueTypeGlyphDecoder.TryReadVariedPoints(this.data, gvar, coordinates, this.Resolve(glyphId), out vector, out phantoms);
 
     /// <summary>
-    /// Gets the bounding box in the header of a glyph, which an empty glyph does not have.
-    /// </summary>
-    /// <returns>The bounding box, or <see cref="Bounds.Empty"/> for an empty or malformed glyph.</returns>
-    public Bounds GetHeaderBounds(int glyphId)
-        => this.TryReadBounds(this.Resolve(glyphId), out Bounds bounds) ? bounds : Bounds.Empty;
-
-    /// <summary>
     /// Gets one point of a glyph in glyph space.
     /// </summary>
     /// <returns><see langword="false"/> if the glyph has no such point or is malformed.</returns>

@@ -29,18 +29,21 @@ internal partial class StreamFontMetrics
     // The control values that the interpreter of an instance runs with, which 'cvar' varies. The interpreter lock guards it.
     private short[]? instanceControlValues;
 
-    internal void ApplyTrueTypeHinting(HintingMode hintingMode, GlyphMetrics metrics, ref GlyphVector glyphVector, Vector2 scaleXY, float pixelSize)
+    // Hints the points of a glyph in place. It returns the x of the first phantom point, which is that of the unrounded phantom
+    // point if the glyph is not hinted. A glyph of a variation instance moves left by it after hinting, as FreeType does.
+    internal float ApplyTrueTypeHinting(HintingMode hintingMode, GlyphMetrics metrics, ref GlyphVector glyphVector, Vector2 scaleXY, float pixelSize, float originX)
     {
+        float origin = (originX + metrics.Offset.X) * scaleXY.X;
         if (hintingMode == HintingMode.None || this.outlineType != OutlineType.TrueType)
         {
-            return;
+            return origin;
         }
 
         TrueTypeFontTables tables = this.trueTypeFontTables!;
         Bounds bounds = glyphVector.Bounds;
 
-        Vector2 pp1 = new(MathF.Round(bounds.Min.X - (metrics.LeftSideBearing * scaleXY.X)), 0);
-        Vector2 pp2 = new(MathF.Round(pp1.X + (metrics.AdvanceWidth * scaleXY.X)), 0);
+        Vector2 pp1 = new(MathF.Round(origin), 0);
+        Vector2 pp2 = new(MathF.Round(origin + (metrics.AdvanceWidth * scaleXY.X)), 0);
         Vector2 pp3 = new(0, MathF.Round(bounds.Max.Y + (metrics.TopSideBearing * scaleXY.Y)));
         Vector2 pp4 = new(0, MathF.Round(pp3.Y - (metrics.AdvanceHeight * scaleXY.Y)));
 
@@ -74,7 +77,7 @@ internal partial class StreamFontMetrics
                 float scaleFactor = pixelSize / this.UnitsPerEm;
                 this.interpreter.SetControlValueTable(this.GetControlValues(), scaleFactor, pixelSize, prep?.Instructions);
 
-                GlyphVector.Hint(ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
+                return GlyphVector.Hint(ref glyphVector, this.interpreter, pp1, pp2, pp3, pp4);
             }
             catch (Exception)
             {
@@ -84,6 +87,7 @@ internal partial class StreamFontMetrics
                 // glyph has been hinted successfully so it is left untouched here.
                 // The interpreter state is undefined after a failure so discard it.
                 this.interpreter = null;
+                return origin;
             }
         }
     }
@@ -201,7 +205,7 @@ internal partial class StreamFontMetrics
             && tables.Gvar is GvarTable gvar
             && glyf.TryReadVariedPoints(glyphId, gvar, this.coordinates.Values, out varied, out PhantomDeltas phantoms))
         {
-            this.VaryMetrics(tables, glyphId, varied, phantoms, metrics, ref bounds, ref advanceWidth, ref lsb, ref advancedHeight, ref tsb);
+            VaryMetrics(tables, ref varied, phantoms, metrics, ref bounds, ref advanceWidth, out lsb, ref advancedHeight, out tsb);
         }
 
         GlyphColor? color = null;
@@ -234,51 +238,63 @@ internal partial class StreamFontMetrics
     }
 
     // The phantom points of a glyph are the origin and the end of its advance on the x axis, and the top and the bottom of
-    // its vertical advance on the y axis. The bounds of a varied glyph are those of its varied points. A side bearing is the
-    // distance from a phantom point to the bounds, and an advance is the distance between two phantom points, unless an
-    // 'HVAR' or 'VVAR' table gives it. Each value rounds once, after the deltas are summed.
-    private void VaryMetrics(
+    // its vertical advance on the y axis. A composite takes those of a component that asks for its metrics, so the glyph
+    // that the deltas belong to is not always the glyph itself. FreeType and HarfBuzz move the outline left by the x of the first
+    // phantom point so that the origin is at 0, and so does this method, in place. The bounds of a varied glyph are those of
+    // its varied points. A side bearing is the distance from a phantom point to the bounds, and an advance is the distance
+    // between two phantom points, unless an 'HVAR' or 'VVAR' table gives it. Each value rounds once, after the deltas are summed.
+    // A glyph that has no points keeps its bounds, which are those of glyph 0 if the font gives it none.
+    private static void VaryMetrics(
         TrueTypeFontTables tables,
-        ushort glyphId,
-        in GlyphVector varied,
+        ref GlyphVector varied,
         PhantomDeltas deltas,
         IMetricsHeader metrics,
         ref Bounds bounds,
         ref ushort advanceWidth,
-        ref short lsb,
+        out short lsb,
         ref ushort advanceHeight,
-        ref short tsb)
+        out short tsb)
     {
-        Bounds header = tables.Glyf.GetHeaderBounds(glyphId);
-        float left = header.Min.X - lsb;
-        float right = left + advanceWidth;
-        float top = tables.Vmtx is null ? metrics.Ascender : header.Max.Y + tsb;
-        float bottom = top - advanceHeight;
+        int source = deltas.GlyphId;
+        Bounds header = tables.Glyf.GetBounds(source);
+        float left = header.Min.X - tables.Htmx.GetLeftSideBearing(source);
+        float right = left + tables.Htmx.GetAdvancedWidth(source);
+        float top = metrics.Ascender;
+        float bottom = top - (metrics.Ascender - metrics.Descender);
+        if (tables.Vmtx is VerticalMetricsTable vmtx)
+        {
+            top = header.Max.Y + vmtx.GetTopSideBearing(source);
+            bottom = top - vmtx.GetAdvancedHeight(source);
+        }
 
         left += deltas.Left;
         right += deltas.Right;
         top += deltas.Top;
         bottom += deltas.Bottom;
 
-        // An empty glyph keeps the bounds that it had.
-        float xMin = 0;
-        float yMax = 0;
-        if (varied.ControlPoints.Length > 0)
+        float xMin = bounds.Min.X - left;
+        float yMax = bounds.Max.Y;
+        ControlPoint[] points = varied.ControlPoints;
+        if (points.Length > 0)
         {
+            Vector2 shift = new(left, 0);
             Vector2 min = new(float.MaxValue);
             Vector2 max = new(float.MinValue);
-            foreach (ControlPoint point in varied.ControlPoints)
+            for (int i = 0; i < points.Length; i++)
             {
-                min = Vector2.Min(min, point.Point);
-                max = Vector2.Max(max, point.Point);
+                Vector2 point = points[i].Point - shift;
+                points[i] = new ControlPoint(point, points[i].OnCurve);
+                min = Vector2.Min(min, point);
+                max = Vector2.Max(max, point);
             }
 
+            varied.OriginX = left;
             bounds = new Bounds(min, max);
             xMin = min.X;
             yMax = max.Y;
         }
 
-        lsb = (short)Math.Clamp(Math.Floor(xMin - left + 0.5), short.MinValue, short.MaxValue);
+        lsb = (short)Math.Clamp(Math.Floor(xMin + 0.5), short.MinValue, short.MaxValue);
         tsb = (short)Math.Clamp(Math.Floor(top - yMax + 0.5), short.MinValue, short.MaxValue);
         if (!tables.HasHvar)
         {

@@ -28,7 +28,7 @@ internal static partial class TrueTypeGlyphDecoder
     /// <param name="coordinates">The F2Dot14 coordinates of the instance, in <c>fvar</c> order.</param>
     /// <param name="glyphId">The glyph ID.</param>
     /// <param name="vector">The points of the glyph. An empty glyph has none.</param>
-    /// <param name="phantoms">The deltas that the table gives the phantom points of the glyph itself.</param>
+    /// <param name="phantoms">The deltas that the table gives the phantom points of the glyph, or of the component whose metrics it uses.</param>
     /// <returns><see langword="false"/> if the glyph ID is out of range, or the glyph or its variation data is malformed.</returns>
     public static bool TryReadVariedPoints(TrueTypeGlyphData glyphs, GvarTable gvar, ReadOnlySpan<short> coordinates, ushort glyphId, out GlyphVector vector, out PhantomDeltas phantoms)
     {
@@ -75,7 +75,7 @@ internal static partial class TrueTypeGlyphDecoder
                 return false;
             }
 
-            phantoms = GetPhantomDeltas(deltas, 0);
+            phantoms = GetPhantomDeltas(glyphId, deltas, 0);
             return true;
         }
 
@@ -152,7 +152,7 @@ internal static partial class TrueTypeGlyphDecoder
             points.Add(new ControlPoint(original[i] + deltas[i], onCurve[i]));
         }
 
-        phantoms = GetPhantomDeltas(deltas, reader.Count);
+        phantoms = GetPhantomDeltas(glyphId, deltas, reader.Count);
         return true;
     }
 
@@ -209,14 +209,23 @@ internal static partial class TrueTypeGlyphDecoder
             return false;
         }
 
+        // The phantom points of a composite are its own, until a component that has the USE_MY_METRICS flag gives its own.
+        // HarfBuzz and FreeType take those of the last such component, as they are in the space of that component, with the deltas
+        // of its table and of the components it takes them from, and drop the deltas of the composite.
+        phantoms = GetPhantomDeltas(glyphId, deltas, components.Count);
         for (int i = 0; i < components.Count; i++)
         {
             Component component = components[i];
             List<ControlPoint> componentPoints = [];
             List<ushort> componentEnds = [];
-            if (!TryAppendVariedPoints(glyphs, gvar, coordinates, component.GlyphId, depth + 1, ref budget, componentPoints, componentEnds, out _))
+            if (!TryAppendVariedPoints(glyphs, gvar, coordinates, component.GlyphId, depth + 1, ref budget, componentPoints, componentEnds, out PhantomDeltas componentPhantoms))
             {
                 return false;
+            }
+
+            if ((component.Flags & UseMyMetrics) != 0)
+            {
+                phantoms = componentPhantoms;
             }
 
             for (int j = 0; j < componentPoints.Count; j++)
@@ -260,10 +269,9 @@ internal static partial class TrueTypeGlyphDecoder
             }
         }
 
-        phantoms = GetPhantomDeltas(deltas, components.Count);
         return true;
     }
 
-    private static PhantomDeltas GetPhantomDeltas(Vector2[] deltas, int pointCount)
-        => new(deltas[pointCount].X, deltas[pointCount + 1].X, deltas[pointCount + 2].Y, deltas[pointCount + 3].Y);
+    private static PhantomDeltas GetPhantomDeltas(int glyphId, Vector2[] deltas, int pointCount)
+        => new(glyphId, deltas[pointCount].X, deltas[pointCount + 1].X, deltas[pointCount + 2].Y, deltas[pointCount + 3].Y);
 }

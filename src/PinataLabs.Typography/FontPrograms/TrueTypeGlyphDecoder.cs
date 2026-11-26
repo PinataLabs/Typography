@@ -40,6 +40,7 @@ internal static partial class TrueTypeGlyphDecoder
     private const int HasXYScale = 0x0040;
     private const int HasTwoByTwo = 0x0080;
     private const int HasInstructions = 0x0100;
+    private const int UseMyMetrics = 0x0200;
     private const int ScaledComponentOffset = 0x0800;
 
     /// <summary>

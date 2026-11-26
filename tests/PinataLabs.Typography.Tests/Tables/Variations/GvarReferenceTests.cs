@@ -16,7 +16,8 @@ namespace PinataLabs.Typography.Tests.Tables.Variations;
 
 /// <summary>
 /// The glyphs of Teko-Variable.ttf at a variation instance have the outlines, the bounds, the left side bearings and the
-/// advances that fontTools gives. fontTools applies the 'gvar' deltas with interpolation of untouched points, the deltas of
+/// advances that fontTools gives, except for the advances, which HarfBuzz gives because it takes the phantom points of a composite
+/// from the component that has the USE_MY_METRICS flag, as FreeType does, where fontTools does not. fontTools applies the 'gvar' deltas with interpolation of untouched points, the deltas of
 /// the component offsets of composite glyphs, and the deltas of the phantom points. The reference has every glyph of the font
 /// at the default instance, the SemiBold named instance, the maximum and a user location, and the outline of a sample of
 /// the glyphs that has the Basic Latin glyphs, composites and empty glyphs. tests/tools/generate_gvar_reference.py writes it.
@@ -113,7 +114,7 @@ public class GvarReferenceTests
     [MethodDataSource(nameof(Instances))]
     public async Task AdvancesComeFromThePhantomPointsWhenTheFontHasNoHvar(int instance)
     {
-        // Teko has an HVAR table, so fontTools reads the reference advances from a copy that lacks it, and so does this test.
+        // Teko has an HVAR table, so HarfBuzz reads the reference advances from a copy that lacks it, and so does this test.
         InstanceReference expected = Teko.Instances[instance];
         byte[] withoutHvar = SfntRewriter.Remove(File.ReadAllBytes(TestFonts.TekoVariableFile), "HVAR");
         Font font = CreateFont(VariationFontBytes.Load(withoutHvar), expected);

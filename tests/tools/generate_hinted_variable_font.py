@@ -4,7 +4,7 @@
 """Builds HintedVariable.ttf, a small hinted variable TrueType font, and writes HintedVariable.fonttools.json, the reference for
 what a variation instance of it draws (issues #127 and #130).
 
-Usage (from the repository root, fontTools 4.68 or later, and freetype-py for the hinted outlines):
+Usage (from the repository root, fontTools 4.68 or later, freetype-py for the hinted outlines, and uharfbuzz):
 
     python tests/tools/generate_hinted_variable_font.py
 
@@ -25,6 +25,14 @@ The glyphs:
 * H is a box whose top points go to control value 0 with MIAP, so its hinted height depends on the 'cvar' deltas for control value 0.
 * P is a box that calls a function of the 'fpgm' table and goes to control value 3, which the 'prep' program sets from control value 0.
 * V is a box whose points go to the coordinates that GETVARIATION gives for each axis, and to a position that GETINFO gives.
+* L is a box whose first phantom point and second phantom point move right together, so that the outline stays where it is and
+  the origin moves: FreeType and HarfBuzz shift the outline left by the delta of the first phantom point. FreeType hints the
+  outline before that shift and moves it by the rounded phantom point after, and a program that rounds the first point on the x axis
+  shows whether the library does the same.
+* M is a composite of A and L, whose component L has the USE_MY_METRICS flag. The composite and L have different deltas for the
+  phantom points, so the advance of M at an instance shows which of the two sets of deltas a font program uses.
+* N is a composite of L alone, with the USE_MY_METRICS flag, whose advance in the 'hmtx' table is not the advance of L. At an
+  instance a font program takes the advance of L, with its deltas, and not the advance of N.
 
 The 'cvar' table has tuples on the weight, on the width, and on an intermediate region of the weight, and it moves control values 0, 1
 and 2. The font has a 'vmtx' table, so a glyph with phantom point deltas on y changes its vertical advance.
@@ -35,9 +43,12 @@ The reference holds, for the locations that LOCATIONS lists:
 * the varied outline, the bounds, the advance width, the left side bearing, the advance height and the top side bearing of every glyph
   that fontTools can draw with `getGlyphSet(location=..., normalized=True)`: all but C, whose components are placed by points, and D,
   whose component has a scaled offset.
+* the advances and the extents that HarfBuzz gives every glyph, which are those of the phantom points: the advances and the left
+  side bearing (the x of the extents) of a glyph are measured from the first phantom point, which moves the outline, and a composite
+  takes the phantom points of its component that has the USE_MY_METRICS flag. fontTools does neither.
 * the outline of every glyph, drawn by FreeType without hinting at 16384 pixels to the em, which keeps the outline to 1/1024 of a font
   unit. It is the reference for C and D.
-* the hinted outline of H, P and V at 16 and 32 pixels to the em, which FreeType gives with its version 35 interpreter in monochrome
+* the hinted outline of H, P, V and L at 16 and 32 pixels to the em, which FreeType gives with its version 35 interpreter in monochrome
   rendering. The library hints with an interpreter that follows the version 35 one.
 
 The output is deterministic for one fontTools and FreeType version. The reference records the versions that wrote it.
@@ -52,6 +63,7 @@ os.environ["SOURCE_DATE_EPOCH"] = "0"
 
 import fontTools
 import freetype
+import uharfbuzz
 from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import BasePen
@@ -87,7 +99,7 @@ LOCATIONS = [
 
 # The pixels to the em at which FreeType hints the glyphs.
 HINTED_SIZES = [16, 32]
-HINTED_GLYPHS = ["H", "P", "V"]
+HINTED_GLYPHS = ["H", "P", "V", "L"]
 
 # The scale at which FreeType draws the outlines that it does not hint: 16 pixels to a font unit.
 UNHINTED_PPEM = UNITS_PER_EM * 16
@@ -158,6 +170,7 @@ A_POINTS = [
 ]
 A_ENDS = [6, 10]
 SCALED_COMPONENT_OFFSET = 0x0800
+USE_MY_METRICS = 0x0200
 HALF = [[0.5, 0], [0, 0.5]]
 
 
@@ -190,6 +203,9 @@ def glyphs():
                 "IUP[0]",
             ]
         ),
+        "L": box(["SVTCA[1]", "PUSHB[ ] 0", "MDAP[1]", "IUP[1]"]),
+        "M": composite([component("A"), component("L", 320, 64, flags=USE_MY_METRICS)]),
+        "N": composite([component("L", flags=USE_MY_METRICS)]),
         "V": box(
             [
                 "SVTCA[0]",
@@ -204,8 +220,8 @@ def glyphs():
 
 
 # No two glyphs at the end share an advance, so the font has a horizontal metric for every glyph.
-ADVANCES = {".notdef": 512, "space": 256, "A": 512, "B": 832, "C": 928, "D": 640, "H": 640, "P": 640, "V": 656}
-CMAP = {0x20: "space", 0x41: "A", 0x42: "B", 0x43: "C", 0x44: "D", 0x48: "H", 0x50: "P", 0x56: "V"}
+ADVANCES = {".notdef": 512, "space": 256, "A": 512, "B": 832, "C": 928, "D": 640, "H": 640, "P": 640, "V": 656, "L": 720, "M": 720, "N": 800}
+CMAP = {0x20: "space", 0x41: "A", 0x42: "B", 0x43: "C", 0x44: "D", 0x48: "H", 0x4C: "L", 0x4D: "M", 0x4E: "N", 0x50: "P", 0x56: "V"}
 
 
 def variation(axes, coordinates):
@@ -262,6 +278,15 @@ def gvar_variations():
             variation({"wght": (0, 1, 1)}, [none, (32, 16)] + a_phantoms(48)),
             variation({"wdth": (-1, -1, 0)}, [(-8, 0), (-16, 8)] + a_phantoms(-16)),
         ],
+        "L": [
+            variation({"wght": (0, 1, 1)}, [(0, 0)] * 4 + [(20, 0), (20, 0), (0, 0), (0, 0)]),
+            variation({"wdth": (0, 1, 1)}, [(0, 0)] * 4 + [(16, 0), (0, 0), (0, 0), (0, 0)]),
+        ],
+        "M": [
+            variation({"wght": (0, 1, 1)}, [(0, 0), (8, 0)] + [(0, 0), (100, 0), (0, 12), (0, -12)]),
+            variation({"wdth": (0, 1, 1)}, [none, none] + [(-24, 0), (40, 0), (0, 0), (0, 0)]),
+        ],
+        "N": [variation({"wght": (0, 1, 1)}, [(0, 0), (0, 0), (64, 0), (0, 0), (0, 0)])],
         "H": [variation({"wght": (0, 1, 1)}, box_weight), variation({"wdth": (0, 1, 1)}, box_width)],
         "P": [variation({"wght": (0, 1, 1)}, box_weight)],
         "V": [variation({"wght": (0, 1, 1)}, box_weight)],
@@ -471,15 +496,26 @@ def get_phantom(font, name, location, index_from_end):
     return total
 
 
-def get_glyph_reference(font, glyph_set, face, glyph_id, name, location):
+def get_glyph_reference(font, glyph_set, face, hb_font, glyph_id, name, location):
     glyph = {"unhinted": outline_text(freetype_outline(face, glyph_id, 64 * UNHINTED_PPEM / UNITS_PER_EM, freetype.FT_LOAD_NO_HINTING | freetype.FT_LOAD_NO_BITMAP), 3)}
     is_composite = font["glyf"][name].isComposite()
     # fontTools places the components of C by points as if they had no offsets, and it does not scale the offset of a component
-    # of D that the glyph asks to be scaled, so FreeType is the only reference for the two.
+    # of D that the glyph asks to be scaled, so FreeType is the only reference for the two. It does not move the outline of L by the
+    # first phantom point, and M and N take the phantom points of L, so FreeType and HarfBuzz are the only reference for those two.
     # A glyph object computes the metrics of the instance when it is asked for its advance width, so the metrics come from one object.
     drawn = glyph_set[name]
     glyph["advanceWidth"] = drawn.width
-    if name not in ("C", "D"):
+    extents = hb_font.get_glyph_extents(glyph_id)
+    glyph["harfbuzz"] = {
+        "advanceWidth": hb_font.get_glyph_h_advance(glyph_id),
+        "advanceHeight": -hb_font.get_glyph_v_advance(glyph_id),
+        "leftSideBearing": extents.x_bearing,
+        "yMax": extents.y_bearing,
+        "width": extents.width,
+        "height": -extents.height,
+        "topSideBearing": hb_font.get_glyph_v_origin(glyph_id)[1] - extents.y_bearing,
+    }
+    if name not in ("C", "D", "L", "M", "N"):
         pen = OutlinePen(glyph_set)
         drawn.draw(pen)
         bounds = ControlBoundsPen(glyph_set)
@@ -501,6 +537,7 @@ def main():
     reference = {
         "fontTools": fontTools.version,
         "freetype": ".".join(str(v) for v in freetype.version()),
+        "harfbuzz": uharfbuzz.version_string(),
         "controlValues": CVT,
         "hintedSizes": HINTED_SIZES,
         "locations": [],
@@ -514,6 +551,8 @@ def main():
             raise SystemExit("%s is not an exact F2Dot14 coordinate" % name)
         instance = instancer.instantiateVariableFont(TTFont(FONT), user)
         glyph_set = font.getGlyphSet(location=location, normalized=True)
+        hb_font = uharfbuzz.Font(uharfbuzz.Face(open(FONT, "rb").read()))
+        hb_font.set_variations(user)
         face.set_var_blend_coords([location[a.axisTag] for a in font["fvar"].axes])
         entry = {
             "name": name,
@@ -525,7 +564,7 @@ def main():
         }
         face.set_pixel_sizes(0, UNHINTED_PPEM)
         for glyph_id, glyph_name in enumerate(order):
-            entry["glyphs"][glyph_name] = get_glyph_reference(font, glyph_set, face, glyph_id, glyph_name, location)
+            entry["glyphs"][glyph_name] = get_glyph_reference(font, glyph_set, face, hb_font, glyph_id, glyph_name, location)
         for size in HINTED_SIZES:
             face.set_pixel_sizes(0, size)
             flags = freetype.FT_LOAD_TARGET_MONO | freetype.FT_LOAD_NO_AUTOHINT | freetype.FT_LOAD_NO_BITMAP

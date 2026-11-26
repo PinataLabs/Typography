@@ -30,10 +30,13 @@ public class HintedVariableFontTests
     private const double OutlineTolerance = 0.01;
     private const double HintedTolerance = 0.02;
 
+    // HarfBuzz rounds an extent to a unit of the font.
+    private const double HarfBuzzTolerance = 0.51;
+
     private static readonly Tag Weight = Tag.Parse("wght");
     private static readonly Tag Width = Tag.Parse("wdth");
 
-    private static readonly string[] GlyphNames = [".notdef", "space", "A", "B", "C", "D", "H", "P", "V"];
+    private static readonly string[] GlyphNames = [".notdef", "space", "A", "B", "C", "D", "H", "P", "V", "L", "M", "N"];
 
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
@@ -100,6 +103,14 @@ public class HintedVariableFontTests
             GlyphReference reference = expected.Glyphs[GlyphNames[id]];
             GlyphMetrics metrics = GetMetrics(font, id);
             Bounds bounds = metrics.Bounds;
+
+            // fontTools keeps the phantom points of a composite glyph that has a component with USE_MY_METRICS, where HarfBuzz and
+            // FreeType take those of the component. The HarfBuzz test covers M and N.
+            if (GlyphNames[id] is "M" or "N")
+            {
+                continue;
+            }
+
             if (reference.AdvanceWidth != metrics.AdvanceWidth || reference.AdvanceHeight != metrics.AdvanceHeight)
             {
                 differences.Add($"{GlyphNames[id]}: advance {metrics.AdvanceWidth} x {metrics.AdvanceHeight}, expected {reference.AdvanceWidth} x {reference.AdvanceHeight}");
@@ -119,6 +130,102 @@ public class HintedVariableFontTests
         }
 
         await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task AdvancesBearingsAndBoundsMatchHarfBuzz(int location)
+    {
+        // HarfBuzz moves the outline by the first phantom point (L), and gives a composite the phantom points of the component whose
+        // metrics it uses (M and N). At the default instance it applies no variation and reads the advance of N from the 'hmtx' table,
+        // where FreeType and this library take that of the component.
+        LocationReference expected = FontTools.Locations[location];
+        Font font = CreateFont(new FontCollection().Add(TestFonts.HintedVariableFile), expected, 12);
+        List<string> differences = [];
+
+        for (int id = 0; id < GlyphNames.Length; id++)
+        {
+            string name = GlyphNames[id];
+            HarfBuzzReference reference = expected.Glyphs[name].HarfBuzz;
+            GlyphMetrics metrics = GetMetrics(font, id);
+            if (name == "N" && location == 0)
+            {
+                continue;
+            }
+
+            if (reference.AdvanceWidth != metrics.AdvanceWidth || reference.AdvanceHeight != metrics.AdvanceHeight
+                || reference.LeftSideBearing != metrics.LeftSideBearing || reference.TopSideBearing != metrics.TopSideBearing)
+            {
+                differences.Add($"{name}: advance {metrics.AdvanceWidth} x {metrics.AdvanceHeight}, bearings {metrics.LeftSideBearing} and {metrics.TopSideBearing}, expected {reference.AdvanceWidth} x {reference.AdvanceHeight}, {reference.LeftSideBearing} and {reference.TopSideBearing}");
+            }
+
+            // HarfBuzz rounds each edge to a unit, and an empty glyph has no extents.
+            Bounds bounds = metrics.Bounds;
+            if (reference.Width > 0
+                && (Math.Abs(bounds.Min.X - reference.LeftSideBearing) > HarfBuzzTolerance
+                    || Math.Abs(bounds.Max.X - (reference.LeftSideBearing + reference.Width)) > HarfBuzzTolerance
+                    || Math.Abs(bounds.Max.Y - reference.YMax) > HarfBuzzTolerance
+                    || Math.Abs(bounds.Min.Y - (reference.YMax - reference.Height)) > HarfBuzzTolerance))
+            {
+                differences.Add($"{name}: bounds {bounds.Min} {bounds.Max}, expected x {reference.LeftSideBearing} to {reference.LeftSideBearing + reference.Width}, y {reference.YMax - reference.Height} to {reference.YMax}");
+            }
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
+    public async Task ACompositeTakesThePhantomPointsOfTheComponentThatUsesItsMetrics()
+    {
+        // At the maximum, L has the deltas 20 + 16 and 20 on its first two phantom points, and M has -24 and 140 on its own.
+        // N has the advance 800 in the 'hmtx' table and L has 720.
+        LocationReference maximum = FontTools.Locations[2];
+        Font font = CreateFont(new FontCollection().Add(TestFonts.HintedVariableFile), maximum, 12);
+
+        GlyphMetrics l = GetMetrics(font, Array.IndexOf(GlyphNames, "L"));
+        GlyphMetrics m = GetMetrics(font, Array.IndexOf(GlyphNames, "M"));
+        GlyphMetrics n = GetMetrics(font, Array.IndexOf(GlyphNames, "N"));
+
+        await Assert.That(l.AdvanceWidth).IsEqualTo((ushort)704);
+        await Assert.That(m.AdvanceWidth).IsEqualTo(l.AdvanceWidth);
+        await Assert.That(n.AdvanceWidth).IsEqualTo(l.AdvanceWidth);
+        await Assert.That(m.AdvanceHeight).IsEqualTo(l.AdvanceHeight);
+    }
+
+    [Test]
+    public async Task TheOutlineMovesBackByTheFirstPhantomPoint()
+    {
+        // L is a box from 64 to 576 units, and a delta of 36 on the first phantom point puts its left edge at 28.
+        LocationReference maximum = FontTools.Locations[2];
+        Font font = CreateFont(new FontCollection().Add(TestFonts.HintedVariableFile), maximum, 1024);
+
+        GlyphMetrics metrics = GetMetrics(font, Array.IndexOf(GlyphNames, "L"));
+        string outline = LayoutOutlineRecorder.ToGlyphSpaceOutline(LayoutOutlineRecorder.Render(font, (ushort)Array.IndexOf(GlyphNames, "L"), HintingMode.None));
+
+        await Assert.That(metrics.Bounds.Min.X).IsEqualTo(28F);
+        await Assert.That(metrics.Bounds.Max.X).IsEqualTo(540F);
+        await Assert.That(metrics.LeftSideBearing).IsEqualTo((short)28);
+        await Assert.That(outline).StartsWith("M 28 ");
+    }
+
+    [Test]
+    public async Task AnEmptyGlyphWithoutDeltasKeepsTheBearingsOfTheDefaultInstance()
+    {
+        // Without a 'vmtx' table the top side bearing is measured against the bounds that the default instance uses, which for an
+        // empty glyph are those of glyph 0. The space has a delta for the advance on the width axis and none for its bearings.
+        FontFamily family = VariationFontBytes.Load(SfntRewriter.Remove(File.ReadAllBytes(TestFonts.HintedVariableFile), "vhea", "vmtx"));
+        Font face = family.CreateFont(12);
+        Font instance = family.CreateFont(12, FontStyle.Regular, new FontVariation(Weight, 400), new FontVariation(Width, 192));
+        int space = Array.IndexOf(GlyphNames, "space");
+
+        GlyphMetrics defaults = GetMetrics(face, space);
+        GlyphMetrics varied = GetMetrics(instance, space);
+
+        await Assert.That(varied.AdvanceWidth).IsEqualTo((ushort)(defaults.AdvanceWidth - 32));
+        await Assert.That(varied.LeftSideBearing).IsEqualTo(defaults.LeftSideBearing);
+        await Assert.That(varied.TopSideBearing).IsEqualTo(defaults.TopSideBearing);
+        await Assert.That(varied.Bounds).IsEqualTo(defaults.Bounds);
+        await Assert.That(defaults.TopSideBearing).IsEqualTo((short)160);
     }
 
     [Test]
@@ -142,7 +249,7 @@ public class HintedVariableFontTests
         }
 
         await Assert.That(differences).IsEmpty();
-        await Assert.That(reference.Count).IsEqualTo(3);
+        await Assert.That(reference.Count).IsEqualTo(4);
     }
 
     [Test]
@@ -338,5 +445,24 @@ public class HintedVariableFontTests
         public int? LeftSideBearing { get; set; }
 
         public int? TopSideBearing { get; set; }
+
+        public HarfBuzzReference HarfBuzz { get; set; } = new();
+    }
+
+    private sealed class HarfBuzzReference
+    {
+        public int AdvanceWidth { get; set; }
+
+        public int AdvanceHeight { get; set; }
+
+        public int LeftSideBearing { get; set; }
+
+        public int TopSideBearing { get; set; }
+
+        public int YMax { get; set; }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
     }
 }

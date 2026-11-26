@@ -211,13 +211,21 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
                 return default;
             }
 
+            // The varied points of a glyph have moved left by the first phantom point. The hinting programs work on the points
+            // before that move, and the hinted points move after it by the phantom point as hinting rounds it.
+            bool isVaried = this.varied.ControlPoints is not null;
+            float originX = isVaried ? this.varied.OriginX : this.Bounds.Min.X - this.LeftSideBearing;
             vector.Bounds = this.Bounds;
             var matrix = Matrix3x2.CreateScale(scale);
-            matrix.Translation = this.Offset * scale;
+            matrix.Translation = (this.Offset + new Vector2(isVaried ? originX : 0, 0)) * scale;
             GlyphVector.TransformInPlace(ref vector, matrix);
 
             float pixelSize = scaledPPEM / 72F;
-            this.FontMetrics.ApplyTrueTypeHinting(hintingMode, this, ref vector, scale, pixelSize);
+            float hintedOriginX = this.FontMetrics.ApplyTrueTypeHinting(hintingMode, this, ref vector, scale, pixelSize, originX);
+            if (isVaried)
+            {
+                GlyphVector.TransformInPlace(ref vector, Matrix3x2.CreateTranslation((this.Offset.X * scale.X) - hintedOriginX, 0));
+            }
 
             // Rotation must happen after hinting.
             GlyphVector.TransformInPlace(ref vector, rotation);
@@ -235,7 +243,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
             return this.glyphs.TryReadPoints(this.GlyphId, out vector);
         }
 
-        vector = new GlyphVector((ControlPoint[])this.varied.ControlPoints.Clone(), this.varied.EndPoints, default, this.varied.Instructions, this.varied.IsComposite);
+        vector = new GlyphVector((ControlPoint[])this.varied.ControlPoints.Clone(), this.varied.EndPoints, default, this.varied.Instructions, this.varied.IsComposite)
+        {
+            OriginX = this.varied.OriginX,
+        };
         return true;
     }
 }

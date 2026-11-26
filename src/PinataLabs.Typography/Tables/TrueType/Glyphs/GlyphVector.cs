@@ -40,6 +40,12 @@ internal struct GlyphVector
     public Bounds Bounds { get; set; }
 
     /// <summary>
+    /// Gets or sets the x of the first phantom point of the glyph at its variation instance, in font units. The points of a varied
+    /// glyph are already moved left by it, so that the origin is at 0, and a hinting program works on the points before that move.
+    /// </summary>
+    public float OriginX { get; set; }
+
+    /// <summary>
     /// Transforms a glyph vector by a specified 3x2 matrix.
     /// </summary>
     /// <param name="src">The glyph vector to transform.</param>
@@ -64,7 +70,8 @@ internal struct GlyphVector
     /// <param name="pp2">The second phantom point.</param>
     /// <param name="pp3">The third phantom point.</param>
     /// <param name="pp4">The fourth phantom point.</param>
-    public static void Hint(
+    /// <returns>The x of the first phantom point after hinting.</returns>
+    public static float Hint(
         ref GlyphVector glyph,
         TrueTypeInterpreter interpreter,
         Vector2 pp1,
@@ -85,5 +92,6 @@ internal struct GlyphVector
         interpreter.HintGlyph(controlPoints, glyph.EndPoints, glyph.Instructions, glyph.IsComposite);
 
         Array.Copy(controlPoints, glyph.ControlPoints, count);
+        return controlPoints[count].Point.X;
     }
 }

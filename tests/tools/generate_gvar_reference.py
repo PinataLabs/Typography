@@ -3,7 +3,7 @@
 # Licensed under the Apache License, Version 2.0.
 """Writes Gvar.fonttools.json, the fontTools reference for the outlines, bounds and advances of a TrueType variation instance.
 
-Usage (from the repository root, fontTools 4.68 or later):
+Usage (from the repository root, fontTools 4.68 or later, and uharfbuzz for the advances):
 
     python tests/tools/generate_gvar_reference.py
 
@@ -18,8 +18,10 @@ For every glyph of the font the reference holds at each location:
 
 * the control bounds of the varied outline, which fontTools computes from the points of the decomposed glyph. The bounds that
   fontTools keeps in a composite glyph come from the unvaried components, so the script does not use them.
-* the advance width that the phantom points give. Teko-Variable.ttf has an HVAR table, which makes fontTools use it, so the
-  script reads the advances from a copy of the font that has none.
+* the advance width that the phantom points give. Teko-Variable.ttf has an HVAR table, which makes a font program use it, so the
+  script reads the advances from a copy of the font that has none. They come from HarfBuzz, which takes the phantom points of a
+  composite glyph from its component that has the USE_MY_METRICS flag, as FreeType does, where fontTools keeps those of the composite
+  (the glyphs Edieresis and Odieresis, for one, have different advances in the two). The bounds and the left side bearing come from fontTools.
 * the left side bearing, which is the rounded left edge of the bounds less the first phantom point.
 
 For a sample of the glyphs it also holds the varied outline: the Basic Latin glyphs, the composites that the sample picks,
@@ -31,10 +33,12 @@ on: the glyphs have a left side bearing equal to xMin, and no 'gvar' delta moves
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
 """
 
+import io
 import json
 import os
 
 import fontTools
+import uharfbuzz
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import BasePen
@@ -148,19 +152,20 @@ def choose_outline_glyphs(font):
     return sorted(chosen)
 
 
-def get_instance_reference(font, without_hvar, location, outline_glyphs):
+def get_instance_reference(font, without_hvar_data, location, outline_glyphs):
     glyph_set = font.getGlyphSet(location=location["location"], normalized=True)
-    phantom_set = without_hvar.getGlyphSet(location=location["location"], normalized=True)
+    phantom_font = uharfbuzz.Font(uharfbuzz.Face(without_hvar_data))
+    phantom_font.set_variations(location["user"])
     order = font.getGlyphOrder()
     bounds = []
     advances = []
     side_bearings = []
-    for name in order:
+    for glyph_id, name in enumerate(order):
         pen = ControlBoundsPen(glyph_set)
         glyph_set[name].draw(pen)
         box = pen.bounds
         bounds.append(None if box is None else [number(v) for v in box])
-        advances.append(otRound(phantom_set[name].width))
+        advances.append(phantom_font.get_glyph_h_advance(glyph_id))
         side_bearings.append(0 if box is None else otRound(box[0]))
     outlines = {}
     for index in outline_glyphs:
@@ -201,6 +206,8 @@ def main():
         font = TTFont(os.path.join(FONTS, path))
         without_hvar = TTFont(os.path.join(FONTS, path))
         del without_hvar["HVAR"]
+        buffer = io.BytesIO()
+        without_hvar.save(buffer)
         check_origin_phantom_point(font)
         outline_glyphs = choose_outline_glyphs(font)
         reference["fonts"][name] = {
@@ -208,7 +215,7 @@ def main():
             "glyphCount": len(font.getGlyphOrder()),
             "outlineGlyphs": outline_glyphs,
             "instances": [
-                get_instance_reference(font, without_hvar, location, outline_glyphs)
+                get_instance_reference(font, buffer.getvalue(), location, outline_glyphs)
                 for location in get_locations(font, names, extra)
             ],
         }

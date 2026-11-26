@@ -170,8 +170,10 @@ the font variations reference gives, as normalised coordinates. fontTools applie
 untouched points, the deltas of the component offsets of composite glyphs, and the deltas of the phantom points.
 
 For every glyph the reference holds the control bounds of the varied outline, the advance width that the phantom points give, and
-the left side bearing. Teko has an `HVAR` table, which fontTools then uses for the advance, so the script reads the advances from a
-copy of the font that has none. fontTools takes the bounds of a composite glyph from its unvaried components, so the script
+the left side bearing. Teko has an `HVAR` table, which a font program then uses for the advance, so the script reads the advances from a
+copy of the font that has none, with HarfBuzz (install uharfbuzz). HarfBuzz and FreeType give a composite glyph the phantom points of
+its component that has the USE_MY_METRICS flag, where fontTools keeps those of the composite, and six glyphs of Teko differ in
+the two. fontTools takes the bounds of a composite glyph from its unvaried components, so the script
 measures the drawn outline instead. For a sample of the glyphs, which has the Basic Latin glyphs, every fourth composite and the
 empty glyphs, it also holds the outline as the path commands that the font program fixtures use. The script checks that the first
 phantom point of every glyph is the origin, which the left side bearing relies on.
@@ -194,7 +196,7 @@ em, so that a font unit is a whole number of 1/64 pixel at 16 and 32 pixels to t
 
 The font has `gvar` tuples that leave points out, cover every point, span an intermediate region and use two axes, composite
 glyphs whose components have offsets, a scaled offset, and a placement by points, a glyph with phantom point deltas for the advance and
-the vertical advance, a `cvar` table with tuples on each axis and on an intermediate region, an `fpgm` function, a `prep` program that
+the vertical advance, a glyph whose first phantom point moves, two composites with a component that has the USE_MY_METRICS flag, a `cvar` table with tuples on each axis and on an intermediate region, an `fpgm` function, a `prep` program that
 sets a control value from another, and glyphs whose instructions go to a control value, call the function, or use the instructions
 GETVARIATION and GETINFO. The script's own documentation lists each glyph.
 
@@ -202,10 +204,12 @@ The reference holds, at five locations:
 
 - the control values of the instance, from `fontTools.varLib.instancer`, which sums the `cvar` deltas and rounds once;
 - the outline, the bounds, the advances and the side bearings of each glyph from fontTools `getGlyphSet`, where fontTools can draw the glyph;
+- the advances and extents of each glyph from HarfBuzz, which moves an outline by its first phantom point and takes the phantom points of
+  a composite from its USE_MY_METRICS component, as FreeType does and fontTools does not;
 - the unhinted outline of each glyph from FreeType at 16384 pixels to the em, which keeps it to 1/1024 of a font unit;
-- the hinted outlines of the three hinted glyphs at 16 and 32 pixels to the em, from FreeType with its version 35 interpreter.
+- the hinted outlines of the four hinted glyphs at 16 and 32 pixels to the em, from FreeType with its version 35 interpreter.
 
-To write the font and the reference again, install fontTools 4.68 or later and `freetype-py`, and run this from the repository root:
+To write the font and the reference again, install fontTools 4.68 or later, `freetype-py` and `uharfbuzz`, and run this from the repository root:
 
 ```
 python tests/tools/generate_hinted_variable_font.py

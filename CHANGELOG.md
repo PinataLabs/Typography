@@ -83,9 +83,12 @@ An additive or breaking public API change needs all of these:
   component that a composite places by points is placed by the varied points. The bounds of a glyph are those of its varied
   points. When the font has no `HVAR` table, the advance width comes from the first two phantom points, and the advance height
   from the other two when the font has no `VVAR` table. The left side bearing and the top side bearing are the distance from a phantom
-  point to the varied bounds, and each value rounds once, after the deltas are summed. For `Teko-Variable.ttf` at the default
-  instance, the "SemiBold" named instance, the maximum and a user location, the outlines, the bounds and the advances match
-  fontTools. A glyph whose `gvar` data is malformed draws at the default instance, and so does a glyph that has such a
+  point to the varied bounds, and each value rounds once, after the deltas are summed. The outline moves left by the x of the
+  first phantom point, so that the origin stays at 0, as it does in HarfBuzz and FreeType, and a hinted glyph moves by that
+  point as hinting rounds it. A composite takes the four phantom points of its last component that has the USE_MY_METRICS
+  flag, with the deltas of that component, and drops its own. An empty glyph keeps its bounds, so a glyph with no deltas
+  keeps its bearings. For `Teko-Variable.ttf` at the default instance, the "SemiBold" named instance, the maximum and a user
+  location, the outlines and the bounds match fontTools, and the advances match HarfBuzz. A glyph whose `gvar` data is malformed draws at the default instance, and so does a glyph that has such a
   component. A `gvar` table that is malformed, or has another number of axes than `fvar`, counts as absent. (#127)
 - **Hinting for variation instances.** A variation instance of a TrueType font hints its glyphs, with an interpreter of its own
   and the control values of its own. Its control values are those of the `cvt ` table plus the deltas of the `cvar` table for its
