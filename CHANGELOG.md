@@ -126,7 +126,8 @@ An additive or breaking public API change needs all of these:
 - Default-ignorable characters such as ZWJ, ZWNJ, the Mongolian free variation selectors and the vowel separator are
   drawn with the glyph of U+0020 and no advance after shaping, or left out when the font has no U+0020, as in
   HarfBuzz. SOFT HYPHEN, COMBINING GRAPHEME JOINER and the selectors no longer take their own advance. A character
-  that GSUB substituted keeps its glyph. Line breaking does not change. (#110)
+  that GSUB substituted keeps its glyph. Line breaking does not change. The Hangul fillers and the shorthand format
+  controls keep their own glyph and advance, as in HarfBuzz. (#110)
 - The universal shaper finds syllables from the HarfBuzz 15.0.0 categories, as HarfBuzz does. A combining grapheme
   joiner, a ZWJ, or a ZWNJ before a mark stays in the syllable around it. A vowel sign that goes before its base
   moves in front of a space, a punctuation mark or a symbol before it, as in a HarfBuzz symbol cluster. A letter that
@@ -144,7 +145,9 @@ An additive or breaking public API change needs all of these:
   type U, such as U+180E and U+0600, keep it. A context subtable that matches ends its lookup, even when it has no
   substitution records. A lookup skips the marks outside its GDEF mark filtering set, whose offsets are now read as
   32-bit. Reverse chaining substitution runs from the last glyph to the first, follows the lookup flags, and
-  substitutes the one glyph at its Coverage index. (#111)
+  substitutes the one glyph at its Coverage index. A glyph that it has no substitute for stays. (#111)
+- Chained context and reverse chaining lookups match a backtrack of two or more glyphs from the glyph nearest to the
+  input, as the OpenType specification orders it. Before, they matched it in the reverse order.
 - Adlam, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N'Ko, Old Uyghur, Phags-pa, Psalter Pahlavi
   and Sogdian use the universal shaper, which now joins their letters. Phags-pa letters had no joining type. (#102)
 - In the universal shaper, a sign after a space, a digit, a punctuation mark or a symbol takes that character as its
