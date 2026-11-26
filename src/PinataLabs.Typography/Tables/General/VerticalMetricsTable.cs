@@ -18,7 +18,7 @@ internal sealed class VerticalMetricsTable : Table
 
     public ushort GetAdvancedHeight(int glyphIndex)
     {
-        if (glyphIndex >= this.advancedHeights.Length)
+        if ((uint)glyphIndex >= (uint)this.advancedHeights.Length)
         {
             return this.advancedHeights[^1];
         }
