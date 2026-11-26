@@ -47,6 +47,36 @@ python tests/tools/generate_item_variation_store_reference.py
 
 The output is deterministic for one fontTools version. The file records the version that wrote it.
 
+## Font variations reference
+
+`generate_font_variations_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/FontVariations.fonttools.json`,
+the fontTools reference for `fvar`, `avar` and the normalised coordinates of a variation instance (issue #125).
+It also builds the two small variable fonts that the variation tests need, next to the reference:
+
+- `VariationAxes.ttf` has the axes `wght`, `wdth`, `opsz`, `ital` and a hidden `GRAD` axis, with an `avar` segment map
+  for `wght` and `opsz`. Neither `Teko-Variable.ttf` nor `SourceSans3VF-Upright.otf` has an `opsz` axis, so the
+  `opsz` tests use this font.
+- `VariationSlant.ttf` has the axes `wght` and `slnt` and no `ital` axis, so an italic request has to use `slnt`.
+
+Both fonts have `fvar` and `avar` and no outline variation data, because instances draw the default outlines
+until the CFF2 `blend` and `gvar` issues land.
+
+For these two fonts and the two variable fonts of the test project, the reference holds the axes, the named
+instances, the `avar` segment maps, and a list of locations. A location is the user coordinates of every axis and the
+F2Dot14 coordinates that the Font Variations Overview, "Coordinate Scales and Normalization", gives for them:
+fontTools `normalizeLocation` clamps and normalises each coordinate, `piecewiseLinearMap` applies the `avar` segment map,
+and `floatToFixed` rounds the result to F2Dot14. The locations are the default, the minimum and the maximum of each axis,
+every axis at its minimum and at its maximum, each named instance, and some user locations between them.
+`FontVariationTests` checks that the library gives the same F2Dot14 coordinates.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_font_variations_reference.py
+```
+
+The output is deterministic for one fontTools version. The reference records the version that wrote it.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).

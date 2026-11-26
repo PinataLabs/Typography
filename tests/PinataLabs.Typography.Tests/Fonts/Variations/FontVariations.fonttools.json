@@ -1,0 +1,263 @@
+{
+  "fontTools": "4.69.1",
+  "fonts": {
+    "VariationAxes.ttf": {
+      "file": "Variations/VariationAxes.ttf",
+      "axes": [
+        {"tag": "wght", "min": 100.0, "default": 400.0, "max": 900.0, "hidden": false, "name": "Weight"},
+        {"tag": "wdth", "min": 75.0, "default": 100.0, "max": 125.0, "hidden": false, "name": "Width"},
+        {"tag": "opsz", "min": 8.0, "default": 14.0, "max": 144.0, "hidden": false, "name": "Optical size"},
+        {"tag": "ital", "min": 0.0, "default": 0.0, "max": 1.0, "hidden": false, "name": "Italic"},
+        {"tag": "GRAD", "min": -100.0, "default": 0.0, "max": 100.0, "hidden": true, "name": "Grade"}
+      ],
+      "instances": [
+        {
+          "name": "Regular",
+          "coordinates": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0}
+        },
+        {
+          "name": "Bold",
+          "coordinates": {"wght": 700.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0}
+        },
+        {
+          "name": "Condensed Bold",
+          "coordinates": {"wght": 700.0, "wdth": 75.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0}
+        },
+        {
+          "name": "Italic",
+          "coordinates": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 1.0, "GRAD": 0.0}
+        },
+        {
+          "name": "Display Thin",
+          "coordinates": {"wght": 100.0, "wdth": 100.0, "opsz": 144.0, "ital": 0.0, "GRAD": 0.0}
+        }
+      ],
+      "avar": {
+        "wght": [[-1.0, -1.0], [-0.5, -0.25], [0.0, 0.0], [0.5, 0.625], [1.0, 1.0]],
+        "wdth": [[-1.0, -1.0], [0.0, 0.0], [1.0, 1.0]],
+        "opsz": [[-1.0, -1.0], [0.0, 0.0], [0.25, 0.5], [1.0, 1.0]],
+        "ital": [[-1.0, -1.0], [0.0, 0.0], [1.0, 1.0]],
+        "GRAD": [[-1.0, -1.0], [0.0, 0.0], [1.0, 1.0]]
+      },
+      "locations": [
+        {
+          "name": "Default",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 0, 0, 0]
+        },
+        {
+          "name": "wght minimum",
+          "user": {"wght": 100.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [-16384, 0, 0, 0, 0]
+        },
+        {
+          "name": "wght maximum",
+          "user": {"wght": 900.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [16384, 0, 0, 0, 0]
+        },
+        {
+          "name": "wdth minimum",
+          "user": {"wght": 400.0, "wdth": 75.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, -16384, 0, 0, 0]
+        },
+        {
+          "name": "wdth maximum",
+          "user": {"wght": 400.0, "wdth": 125.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 16384, 0, 0, 0]
+        },
+        {
+          "name": "opsz minimum",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 8.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 0, -16384, 0, 0]
+        },
+        {
+          "name": "opsz maximum",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 144.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 16384, 0, 0]
+        },
+        {
+          "name": "ital minimum",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 0, 0, 0]
+        },
+        {
+          "name": "ital maximum",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 1.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 0, 16384, 0]
+        },
+        {
+          "name": "GRAD minimum",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": -100.0},
+          "coordinates": [0, 0, 0, 0, -16384]
+        },
+        {
+          "name": "GRAD maximum",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 100.0},
+          "coordinates": [0, 0, 0, 0, 16384]
+        },
+        {
+          "name": "Minimum",
+          "user": {"wght": 100.0, "wdth": 75.0, "opsz": 8.0, "ital": 0.0, "GRAD": -100.0},
+          "coordinates": [-16384, -16384, -16384, 0, -16384]
+        },
+        {
+          "name": "Maximum",
+          "user": {"wght": 900.0, "wdth": 125.0, "opsz": 144.0, "ital": 1.0, "GRAD": 100.0},
+          "coordinates": [16384, 16384, 16384, 16384, 16384]
+        },
+        {
+          "name": "Regular",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 0, 0, 0]
+        },
+        {
+          "name": "Bold",
+          "user": {"wght": 700.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [11469, 0, 0, 0, 0]
+        },
+        {
+          "name": "Condensed Bold",
+          "user": {"wght": 700.0, "wdth": 75.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [11469, -16384, 0, 0, 0]
+        },
+        {
+          "name": "Italic",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 1.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 0, 16384, 0]
+        },
+        {
+          "name": "Display Thin",
+          "user": {"wght": 100.0, "wdth": 100.0, "opsz": 144.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [-16384, 0, 16384, 0, 0]
+        },
+        {
+          "name": "User wght=250",
+          "user": {"wght": 250, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [-4096, 0, 0, 0, 0]
+        },
+        {
+          "name": "User wght=650 wdth=90",
+          "user": {"wght": 650, "wdth": 90, "opsz": 14.0, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [10240, -6554, 0, 0, 0]
+        },
+        {
+          "name": "User opsz=24",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 24, "ital": 0.0, "GRAD": 0.0},
+          "coordinates": [0, 0, 2521, 0, 0]
+        },
+        {
+          "name": "User opsz=100 ital=0.5",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 100, "ital": 0.5, "GRAD": 0.0},
+          "coordinates": [0, 0, 12687, 8192, 0]
+        },
+        {
+          "name": "User GRAD=-50",
+          "user": {"wght": 400.0, "wdth": 100.0, "opsz": 14.0, "ital": 0.0, "GRAD": -50},
+          "coordinates": [0, 0, 0, 0, -8192]
+        }
+      ]
+    },
+    "VariationSlant.ttf": {
+      "file": "Variations/VariationSlant.ttf",
+      "axes": [
+        {"tag": "wght", "min": 300.0, "default": 400.0, "max": 800.0, "hidden": false, "name": "Weight"},
+        {"tag": "slnt", "min": -12.0, "default": 0.0, "max": 0.0, "hidden": false, "name": "Slant"}
+      ],
+      "instances": [
+        {"name": "Regular", "coordinates": {"wght": 400.0, "slnt": 0.0}},
+        {"name": "Oblique", "coordinates": {"wght": 400.0, "slnt": -12.0}}
+      ],
+      "avar": {},
+      "locations": [
+        {"name": "Default", "user": {"wght": 400.0, "slnt": 0.0}, "coordinates": [0, 0]},
+        {"name": "wght minimum", "user": {"wght": 300.0, "slnt": 0.0}, "coordinates": [-16384, 0]},
+        {"name": "wght maximum", "user": {"wght": 800.0, "slnt": 0.0}, "coordinates": [16384, 0]},
+        {"name": "slnt minimum", "user": {"wght": 400.0, "slnt": -12.0}, "coordinates": [0, -16384]},
+        {"name": "slnt maximum", "user": {"wght": 400.0, "slnt": 0.0}, "coordinates": [0, 0]},
+        {"name": "Minimum", "user": {"wght": 300.0, "slnt": -12.0}, "coordinates": [-16384, -16384]},
+        {"name": "Maximum", "user": {"wght": 800.0, "slnt": 0.0}, "coordinates": [16384, 0]},
+        {"name": "Regular", "user": {"wght": 400.0, "slnt": 0.0}, "coordinates": [0, 0]},
+        {"name": "Oblique", "user": {"wght": 400.0, "slnt": -12.0}, "coordinates": [0, -16384]},
+        {"name": "User wght=600 slnt=-6", "user": {"wght": 600, "slnt": -6}, "coordinates": [8192, -8192]}
+      ]
+    },
+    "Teko-Variable.ttf": {
+      "file": "Teko/Teko-Variable.ttf",
+      "axes": [{"tag": "wght", "min": 300.0, "default": 300.0, "max": 700.0, "hidden": false, "name": "Weight"}],
+      "instances": [
+        {"name": "Light", "coordinates": {"wght": 300.0}},
+        {"name": "Regular", "coordinates": {"wght": 400.0}},
+        {"name": "Medium", "coordinates": {"wght": 500.0}},
+        {"name": "SemiBold", "coordinates": {"wght": 600.0}},
+        {"name": "Bold", "coordinates": {"wght": 700.0}}
+      ],
+      "avar": {
+        "wght": [
+          [-1.0, -1.0],
+          [0.0, 0.0],
+          [0.25, 0.210693359375],
+          [0.5, 0.4398193359375],
+          [0.75, 0.70098876953125],
+          [1.0, 1.0]
+        ]
+      },
+      "locations": [
+        {"name": "Default", "user": {"wght": 300.0}, "coordinates": [0]},
+        {"name": "wght minimum", "user": {"wght": 300.0}, "coordinates": [0]},
+        {"name": "wght maximum", "user": {"wght": 700.0}, "coordinates": [16384]},
+        {"name": "Minimum", "user": {"wght": 300.0}, "coordinates": [0]},
+        {"name": "Maximum", "user": {"wght": 700.0}, "coordinates": [16384]},
+        {"name": "Light", "user": {"wght": 300.0}, "coordinates": [0]},
+        {"name": "Regular", "user": {"wght": 400.0}, "coordinates": [3452]},
+        {"name": "Medium", "user": {"wght": 500.0}, "coordinates": [7206]},
+        {"name": "SemiBold", "user": {"wght": 600.0}, "coordinates": [11485]},
+        {"name": "Bold", "user": {"wght": 700.0}, "coordinates": [16384]},
+        {"name": "User wght=350", "user": {"wght": 350}, "coordinates": [1726]},
+        {"name": "User wght=450", "user": {"wght": 450}, "coordinates": [5329]},
+        {"name": "User wght=650", "user": {"wght": 650}, "coordinates": [13935]}
+      ]
+    },
+    "SourceSans3VF-Upright.otf": {
+      "file": "SourceSans3/SourceSans3VF-Upright.otf",
+      "axes": [{"tag": "wght", "min": 200.0, "default": 200.0, "max": 900.0, "hidden": false, "name": "Weight"}],
+      "instances": [
+        {"name": "ExtraLight", "coordinates": {"wght": 200.0}},
+        {"name": "Light", "coordinates": {"wght": 300.0}},
+        {"name": "Regular", "coordinates": {"wght": 400.0}},
+        {"name": "Medium", "coordinates": {"wght": 500.0}},
+        {"name": "Semibold", "coordinates": {"wght": 600.0}},
+        {"name": "Bold", "coordinates": {"wght": 700.0}},
+        {"name": "Black", "coordinates": {"wght": 900.0}}
+      ],
+      "avar": {
+        "wght": [
+          [-1.0, -1.0],
+          [0.0, 0.0],
+          [0.14288330078125, 0.0999755859375],
+          [0.28570556640625, 0.36798095703125],
+          [0.4285888671875, 0.48602294921875],
+          [0.5714111328125, 0.5999755859375],
+          [0.71429443359375, 0.823974609375],
+          [1.0, 1.0]
+        ]
+      },
+      "locations": [
+        {"name": "Default", "user": {"wght": 200.0}, "coordinates": [0]},
+        {"name": "wght minimum", "user": {"wght": 200.0}, "coordinates": [0]},
+        {"name": "wght maximum", "user": {"wght": 900.0}, "coordinates": [16384]},
+        {"name": "Minimum", "user": {"wght": 200.0}, "coordinates": [0]},
+        {"name": "Maximum", "user": {"wght": 900.0}, "coordinates": [16384]},
+        {"name": "ExtraLight", "user": {"wght": 200.0}, "coordinates": [0]},
+        {"name": "Light", "user": {"wght": 300.0}, "coordinates": [1638]},
+        {"name": "Regular", "user": {"wght": 400.0}, "coordinates": [6029]},
+        {"name": "Medium", "user": {"wght": 500.0}, "coordinates": [7963]},
+        {"name": "Semibold", "user": {"wght": 600.0}, "coordinates": [9830]},
+        {"name": "Bold", "user": {"wght": 700.0}, "coordinates": [13500]},
+        {"name": "Black", "user": {"wght": 900.0}, "coordinates": [16384]},
+        {"name": "User wght=350", "user": {"wght": 350}, "coordinates": [3833]},
+        {"name": "User wght=450", "user": {"wght": 450}, "coordinates": [6996]},
+        {"name": "User wght=850", "user": {"wght": 850}, "coordinates": [15663]}
+      ]
+    }
+  }
+}
