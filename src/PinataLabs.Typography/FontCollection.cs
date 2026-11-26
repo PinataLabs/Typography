@@ -19,7 +19,11 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     private static readonly StringComparer GroupComparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(CultureInfo.InvariantCulture);
 
     private readonly HashSet<string> searchDirectories = [];
-    private readonly HashSet<FontMetrics> metricsCollection = [];
+
+    // The faces in the order in which they were added, which MatchFace uses to break ties.
+    // The set keeps a face that is added twice from being listed twice.
+    private readonly List<FontMetrics> metricsCollection = [];
+    private readonly HashSet<FontMetrics> knownMetrics = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FontCollection"/> class.
@@ -159,7 +163,10 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
 
         lock (this.metricsCollection)
         {
-            this.metricsCollection.Add(metrics);
+            if (this.knownMetrics.Add(metrics))
+            {
+                this.metricsCollection.Add(metrics);
+            }
         }
     }
 

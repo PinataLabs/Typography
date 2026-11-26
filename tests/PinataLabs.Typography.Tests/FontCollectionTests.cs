@@ -204,6 +204,23 @@ public class FontCollectionTests
     }
 
     [Test]
+    public async Task FacesKeepTheOrderInWhichTheyWereAdded()
+    {
+        var collection = new FontCollection();
+        var metrics = (IFontMetricsCollection)collection;
+        FakeFontInstance[] faces = [.. Enumerable.Range(0, 50).Select(i => FakeFontInstance.CreateWithNames(Name(KnownNameIds.FontFamilyName, "Family", 0x0409)))];
+        foreach (FakeFontInstance face in Enumerable.Reverse(faces))
+        {
+            metrics.AddMetrics(face);
+        }
+
+        // Adding a face again changes neither the order nor the count.
+        metrics.AddMetrics(faces[10]);
+
+        await Assert.That(collection.Get("Family").Faces.Cast<FakeFontInstance>().SequenceEqual(Enumerable.Reverse(faces))).IsTrue();
+    }
+
+    [Test]
     public async Task ReadingWhileAddingFacesDoesNotThrow()
     {
         // MatchFace reads the collection on every Font, so a thread that creates fonts
