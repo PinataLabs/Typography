@@ -153,7 +153,18 @@ internal static class ItemVariationStoreOracle
         List<(int Index, int Items, int Regions)> samples = [];
         for (int i = 0; i < store.DataCount; i = i == 3 && store.DataCount > 8 ? store.DataCount - 4 : i + 1)
         {
-            if (!store.TryGetDataCounts(i, out int items, out int regions) || items is < 0 or > MaxCount || regions is < 0 or > MaxCount)
+            // A malformed subtable is absent, and the rest of the store answers.
+            if (!store.TryGetDataCounts(i, out int items, out int regions))
+            {
+                if (items != 0 || regions != 0)
+                {
+                    throw new FuzzFindingException($"Subtable {i} of {store.DataCount} is absent and has {items} rows and {regions} regions.");
+                }
+
+                continue;
+            }
+
+            if (items is < 0 or > MaxCount || regions is < 0 or > MaxCount)
             {
                 throw new FuzzFindingException($"Subtable {i} of {store.DataCount} has {items} rows and {regions} regions.");
             }

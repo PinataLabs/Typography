@@ -58,6 +58,7 @@ internal static class Cff2Parser
         CffIndex charStrings = CffIndex.Read(data, charStringsOffset, 4, out _);
 
         // A store that is missing or malformed is absent. A glyph with a blend operator then fails, as it does with no store.
+        // A subtable that is malformed has the count -1, and only a glyph that blends with it fails.
         ItemVariationStore store = default;
         if (vstoreOffset > 0)
         {
@@ -67,7 +68,10 @@ internal static class Cff2Parser
         int[] regionCounts = new int[store.DataCount];
         for (int i = 0; i < regionCounts.Length; i++)
         {
-            store.TryGetDataCounts(i, out _, out regionCounts[i]);
+            if (!store.TryGetDataCounts(i, out _, out regionCounts[i]))
+            {
+                regionCounts[i] = -1;
+            }
         }
 
         FontDictData[] fonts = ReadFontDicts(data, fdArrayOffset);

@@ -287,37 +287,72 @@ public class ItemVariationStoreTests
     }
 
     [Test]
-    public async Task ACff2StoreThatTheLengthDoesNotCoverIsMalformed()
+    public async Task ACff2StoreRunsToTheEndOfTheTableWhateverItsLengthSays()
     {
-        byte[] store = Cff2Store(1, Regions, [0, 1]);
+        byte[] store = Cff2Store(1, Regions, [0, 1], [2]);
         List<string> failures = [];
 
-        // A length that runs past the table, a length that cuts off the last subtable, and no room for a length.
+        // A length that runs past the table, a length that cuts off the last subtable, and a length of 0.
         byte[] longer = [.. store];
         longer[1]++;
         byte[] shorter = [.. store];
         shorter[1]--;
-        Expect(ItemVariationStore.TryReadCff2(longer, 0, out _), false, "length past the table", failures);
-        Expect(ItemVariationStore.TryReadCff2(shorter, 0, out _), false, "length that cuts the store", failures);
+        byte[] none = [.. store];
+        none[0] = 0;
+        none[1] = 0;
+        Expect(ReadsCff2WithTwoSubtables(longer), true, "length past the table", failures);
+        Expect(ReadsCff2WithTwoSubtables(shorter), true, "length that cuts the store", failures);
+        Expect(ReadsCff2WithTwoSubtables(none), true, "length of 0", failures);
+        Expect(ReadsCff2WithTwoSubtables(store), true, "intact", failures);
+
+        // There is no room for a length, or the offset is not in the table.
         Expect(ItemVariationStore.TryReadCff2(store, store.Length - 1, out _), false, "offset on the last byte", failures);
         Expect(ItemVariationStore.TryReadCff2(store, store.Length + 1, out _), false, "offset past the table", failures);
-        Expect(ItemVariationStore.TryReadCff2(store, 0, out _), true, "intact", failures);
+        await Assert.That(failures).IsEmpty();
+    }
+
+    [Test]
+    public async Task ACff2StoreWithoutARegionListKeepsTheRegionCountsOfItsSubtables()
+    {
+        byte[] store = Cff2Store(1, Regions, [0, 1], [2]);
+        List<string> failures = [];
+
+        // The store starts after the length, so its region list offset is at 4 and its region list is at 18.
+        byte[][] broken =
+        [
+            Patch(store, 4, 0, 0, 0, 0),
+            Patch(store, 4, 0xFF, 0xFF, 0xFF, 0xFF),
+            Patch(store, 18, 0xFF, 0xFF),
+        ];
+        foreach (byte[] table in broken)
+        {
+            bool found = ItemVariationStore.TryReadCff2(table, 0, out ItemVariationStore read);
+            bool first = read.TryGetDataCounts(0, out _, out int firstRegions);
+            bool second = read.TryGetDataCounts(1, out _, out int secondRegions);
+            Expect(found && first && second && read.RegionCount == 0 && read.AxisCount == 0 && firstRegions == 2 && secondRegions == 1, true, "region list", failures);
+        }
 
         await Assert.That(failures).IsEmpty();
     }
 
     [Test]
-    public async Task EveryCutOfAStoreIsMalformed()
+    public async Task ACutThroughTheHeaderOrTheSubtableOffsetsIsMalformed()
     {
         byte[] store = Store(1, Regions, new ItemData([0, 1], 1, [[1, 2], [3, 4]]), new ItemData([2], 0, [[5]]));
+        int offsetsEnd = 8 + (4 * 2);
         List<string> failures = [];
 
-        for (int length = 0; length < store.Length; length++)
+        for (int length = 0; length < offsetsEnd; length++)
         {
-            Expect(ItemVariationStore.TryRead(store.AsMemory(0, length), 0, out _), false, $"cut to {length}", failures);
+            Expect(IsReadable(store.AsMemory(0, length)), false, $"cut to {length}", failures);
         }
 
-        Expect(ItemVariationStore.TryRead(store, 0, out _), true, "intact", failures);
+        // Past them, what is cut off is a region list or a subtable, and only that part is lost.
+        for (int length = offsetsEnd; length <= store.Length; length++)
+        {
+            Expect(IsReadable(store.AsMemory(0, length)), true, $"cut to {length}", failures);
+        }
+
         await Assert.That(failures).IsEmpty();
     }
 
@@ -325,25 +360,79 @@ public class ItemVariationStoreTests
     public async Task AStoreWithABrokenHeaderIsMalformed()
     {
         byte[] store = Store(1, Regions, new ItemData([0, 1], 1, [[1, 2]]));
-        int regionList = 8 + 4;
-        int item = regionList + 4 + (Regions.Length * 6);
         List<string> failures = [];
 
         Expect(IsReadable(Patch(store, 0, 0, 2)), false, "format 2", failures);
-        Expect(IsReadable(Patch(store, 2, 0, 0, 0, 0)), false, "null region list", failures);
-        Expect(IsReadable(Patch(store, 2, 0, 0, 0xFF, 0xFF)), false, "region list past the end", failures);
         Expect(IsReadable(Patch(store, 6, 0xFF, 0xFF)), false, "more subtables than offsets", failures);
-        Expect(IsReadable(Patch(store, 8, 0, 0, 0xFF, 0xFF)), false, "subtable past the end", failures);
-        Expect(IsReadable(Patch(store, regionList, 0xFF, 0xFF)), false, "more axes than bytes", failures);
-        Expect(IsReadable(Patch(store, regionList + 2, 0xFF, 0xFF)), false, "more regions than bytes", failures);
-        Expect(IsReadable(Patch(store, regionList, 0, 0)), false, "regions with no axes", failures);
-        Expect(IsReadable(Patch(store, item, 0xFF, 0xFF)), false, "more rows than bytes", failures);
-        Expect(IsReadable(Patch(store, item + 2, 0, 3)), false, "more words than regions", failures);
-        Expect(IsReadable(Patch(store, item + 2, 0x80, 3)), false, "more long words than regions", failures);
-        Expect(IsReadable(Patch(store, item + 4, 0xFF, 0xFF)), false, "more region indexes than bytes", failures);
         Expect(IsReadable(store), true, "intact", failures);
 
         await Assert.That(failures).IsEmpty();
+    }
+
+    [Test]
+    public async Task AMalformedRegionListLeavesNoRegionsAndKeepsTheSubtables()
+    {
+        byte[] store = Store(1, Regions, new ItemData([0, 1], 1, [[1, 2]]));
+        int regionList = 8 + 4;
+        List<string> failures = [];
+
+        byte[][] broken =
+        [
+            Patch(store, 2, 0, 0, 0, 0),
+            Patch(store, 2, 0, 0, 0xFF, 0xFF),
+            Patch(store, regionList, 0xFF, 0xFF),
+            Patch(store, regionList + 2, 0xFF, 0xFF),
+            Patch(store, regionList, 0, 0),
+        ];
+        foreach (byte[] bytes in broken)
+        {
+            bool found = ItemVariationStore.TryRead(bytes, 0, out ItemVariationStore read);
+            bool counts = read.TryGetDataCounts(0, out int items, out int regions);
+            ItemVariationScalars scalars = read.CreateScalars([F2Dot14(0.5)]);
+            Expect(found && counts && (read.AxisCount, read.RegionCount, read.DataCount) == (0, 0, 1) && (items, regions) == (1, 2), true, "subtable counts", failures);
+            Expect(scalars.Regions.Length == 0 && scalars.GetDelta(0, 0) == 0, true, "no delta", failures);
+        }
+
+        await Assert.That(failures).IsEmpty();
+    }
+
+    [Test]
+    public async Task AMalformedSubtableIsAbsentAndTheOthersStillAnswer()
+    {
+        byte[] store = Store(1, Regions, new ItemData([0, 1], 1, [[100, 8]]), new ItemData([0], 1, [[40]]));
+        int first = 8 + 8 + 4 + (Regions.Length * 6);
+        List<string> failures = [];
+
+        byte[][] broken =
+        [
+            Patch(store, 8, 0, 0, 0xFF, 0xFF),
+            Patch(store, first, 0xFF, 0xFF),
+            Patch(store, first + 2, 0, 3),
+            Patch(store, first + 2, 0x80, 3),
+            Patch(store, first + 4, 0xFF, 0xFF),
+        ];
+        foreach (byte[] bytes in broken)
+        {
+            bool found = ItemVariationStore.TryRead(bytes, 0, out ItemVariationStore read);
+            bool lost = read.TryGetDataCounts(0, out _, out _);
+            bool kept = read.TryGetDataCounts(1, out _, out int regions);
+            ItemVariationScalars scalars = read.CreateScalars([F2Dot14(1)]);
+            Expect(found && !lost && kept && regions == 1 && read.DataCount == 2, true, "subtables", failures);
+            Expect(scalars.GetDelta(0, 0) == 0 && scalars.GetDelta(1, 0) == 40F, true, "deltas", failures);
+        }
+
+        await Assert.That(failures).IsEmpty();
+    }
+
+    [Test]
+    public async Task LargeLongWordDeltasAreSummedWithoutLosingPrecision()
+    {
+        // 2^24 + 1 is not a float, so a sum in floats would make this 0.
+        ItemVariationStore store = Read(Store(1, Regions, new ItemData([0, 0], 2, [[16_777_217, -16_777_216]], LongWords: true)));
+
+        ItemVariationScalars scalars = store.CreateScalars([F2Dot14(1)]);
+
+        await Assert.That(scalars.GetDelta(0, 0)).IsEqualTo(1F);
     }
 
     [Test]
@@ -383,7 +472,14 @@ public class ItemVariationStoreTests
             ? store
             : throw new InvalidOperationException("The test store is malformed.");
 
-    private static bool IsReadable(byte[] bytes) => ItemVariationStore.TryRead(bytes, 0, out _);
+    private static bool IsReadable(ReadOnlyMemory<byte> bytes) => ItemVariationStore.TryRead(bytes, 0, out _);
+
+    private static bool ReadsCff2WithTwoSubtables(byte[] table)
+        => ItemVariationStore.TryReadCff2(table, 0, out ItemVariationStore store)
+            && store.DataCount == 2
+            && store.TryGetDataCounts(0, out _, out int first)
+            && store.TryGetDataCounts(1, out _, out int second)
+            && (first, second) == (2, 1);
 
     // Replaces the bytes at a position.
     private static byte[] Patch(byte[] bytes, int position, params byte[] values)

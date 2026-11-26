@@ -1,6 +1,8 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Threading.Tasks;
 using PinataLabs.Typography.FontPrograms;
@@ -24,7 +26,7 @@ public class Cff2VariationStoreTests
     public async Task TheStoreOfSourceSans3HasTheRegionsAndSubtablesOfTheFont()
     {
         byte[] table = ReadCff2Table();
-        Cff2TopDict.TryGetVariationStoreOffset(table, out int offset);
+        int offset = GetStoreOffset(table);
 
         bool found = ItemVariationStore.TryReadCff2(table, offset, out ItemVariationStore store);
         bool first = store.TryGetDataCounts(0, out int firstItems, out int firstRegions);
@@ -50,7 +52,7 @@ public class Cff2VariationStoreTests
     public async Task AMalformedStoreIsAbsentAndOnlyGlyphsWithBlendOperatorsFail()
     {
         byte[] table = ReadCff2Table();
-        Cff2TopDict.TryGetVariationStoreOffset(table, out int offset);
+        int offset = GetStoreOffset(table);
 
         // The format of the store is the first field after the length.
         table[offset + 3] = 2;
@@ -60,6 +62,70 @@ public class Cff2VariationStoreTests
         await Assert.That(Draws(glyphs[GlyphWithBlend])).IsFalse();
         await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();
     }
+
+    [Test]
+    [Arguments(1)]
+    [Arguments(-1)]
+    [Arguments(0)]
+    public async Task AWrongLengthOfTheStoreStillDrawsGlyphsWithBlendOperators(int change)
+    {
+        byte[] table = ReadCff2Table();
+        int offset = GetStoreOffset(table);
+        int length = (table[offset] << 8) | table[offset + 1];
+        int wrong = change == 0 ? 0 : length + change;
+        table[offset] = (byte)(wrong >> 8);
+        table[offset + 1] = (byte)wrong;
+
+        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+
+        await Assert.That(Draws(glyphs[GlyphWithBlend])).IsTrue();
+        await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();
+    }
+
+    [Test]
+    [Arguments(0, 0)]
+    [Arguments(0xFF, 0xFF)]
+    public async Task AMalformedRegionListStillDrawsGlyphsWithBlendOperators(int high, int low)
+    {
+        byte[] table = ReadCff2Table();
+        int store = GetStoreOffset(table) + 2;
+
+        // The offset of the region list is the second field of the store. A null offset and one past the table are both malformed.
+        table[store + 2] = (byte)high;
+        table[store + 3] = (byte)high;
+        table[store + 4] = (byte)low;
+        table[store + 5] = (byte)low;
+        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+
+        bool found = ItemVariationStore.TryReadCff2(table, store - 2, out ItemVariationStore read);
+
+        await Assert.That(found).IsTrue();
+        await Assert.That(read.RegionCount).IsEqualTo(0);
+        await Assert.That(read.DataCount).IsEqualTo(2);
+        await Assert.That(Draws(glyphs[GlyphWithBlend])).IsTrue();
+        await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();
+    }
+
+    [Test]
+    public async Task AMalformedSubtableFailsOnlyTheGlyphsThatBlendWithIt()
+    {
+        byte[] table = ReadCff2Table();
+        int store = GetStoreOffset(table) + 2;
+        int first = store + (int)BinaryPrimitives.ReadUInt32BigEndian(table.AsSpan(store + 8));
+
+        // More words than regions in the first subtable, which the glyph with blend operators uses.
+        table[first + 2] = 0;
+        table[first + 3] = 9;
+        CffGlyphData[] glyphs = Cff2Parser.Load(table);
+
+        await Assert.That(Draws(glyphs[GlyphWithBlend])).IsFalse();
+        await Assert.That(Draws(glyphs[GlyphWithoutBlend])).IsTrue();
+    }
+
+    private static int GetStoreOffset(byte[] table)
+        => Cff2TopDict.TryGetVariationStoreOffset(table, out int offset)
+            ? offset
+            : throw new InvalidOperationException("The CFF2 table has no variation store.");
 
     private static byte[] ReadCff2Table()
         => SfntDirectory.Read(File.ReadAllBytes(TestFonts.SourceSans3VariableCff2File))

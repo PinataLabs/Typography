@@ -10,9 +10,10 @@ namespace PinataLabs.Typography.Tables.Variations;
 /// An Item Variation Store as a view over the table bytes. It serves HVAR, VVAR, MVAR, GDEF and the CFF2
 /// variation store, which all use the same layout:
 /// https://learn.microsoft.com/typography/opentype/spec/otvarcommonformats#item-variation-store
-/// The store checks the headers of its VariationRegionList and its ItemVariationData subtables when it is read.
-/// It copies no delta rows, and it reads each delta from the bytes when asked. A <see langword="default"/> store
-/// has no regions and no data, and every delta from it is 0.
+/// The store checks its own header and the offsets of its subtables when it is read. A VariationRegionList that is
+/// missing or malformed counts as no regions, so every delta is 0, and an ItemVariationData subtable that is
+/// malformed counts as absent, so the other subtables still answer. It copies no delta rows, and it reads each delta
+/// from the bytes when asked. A <see langword="default"/> store has no regions and no data, and every delta from it is 0.
 /// </summary>
 internal readonly struct ItemVariationStore
 {
@@ -57,7 +58,7 @@ internal readonly struct ItemVariationStore
     /// <param name="table">The table that holds the store.</param>
     /// <param name="offset">The position of the store in <paramref name="table"/>.</param>
     /// <param name="store">The store.</param>
-    /// <returns><see langword="false"/> if the store is malformed. The caller then treats it as absent.</returns>
+    /// <returns><see langword="false"/> if the header of the store or its list of subtables is malformed. The caller then treats it as absent.</returns>
     public static bool TryRead(ReadOnlyMemory<byte> table, int offset, out ItemVariationStore store)
     {
         if ((uint)offset > (uint)table.Length)
@@ -71,22 +72,19 @@ internal readonly struct ItemVariationStore
 
     /// <summary>
     /// Reads the variation store of a CFF2 table. It has a 16-bit length in front of the store, and the
-    /// ItemVariationData subtables have a region index list and no delta rows.
+    /// ItemVariationData subtables have a region index list and no delta rows. The length is not a bound: the store
+    /// runs to the end of the table, as it did before the length was read, so a font with a wrong length still draws.
     /// </summary>
     /// <param name="table">The CFF2 table.</param>
     /// <param name="offset">The position of the length field in <paramref name="table"/>.</param>
     /// <param name="store">The store.</param>
-    /// <returns><see langword="false"/> if the store is malformed. The caller then treats it as absent.</returns>
+    /// <returns><see langword="false"/> if the header of the store or its list of subtables is malformed. The caller then treats it as absent.</returns>
     public static bool TryReadCff2(ReadOnlyMemory<byte> table, int offset, out ItemVariationStore store)
     {
         store = default;
-        if ((uint)offset > (uint)table.Length || table.Length - offset < 2)
-        {
-            return false;
-        }
-
-        int length = BinaryPrimitives.ReadUInt16BigEndian(table.Span.Slice(offset));
-        return table.Length - offset - 2 >= length && TryReadStore(table.Slice(offset + 2, length), out store);
+        return (uint)offset <= (uint)table.Length
+            && table.Length - offset >= 2
+            && TryReadStore(table.Slice(offset + 2), out store);
     }
 
     /// <summary>
@@ -95,7 +93,7 @@ internal readonly struct ItemVariationStore
     /// <param name="dataIndex">The index of the subtable, which is the outer index of a delta, or the <c>vsindex</c> of CFF2.</param>
     /// <param name="itemCount">The number of delta rows.</param>
     /// <param name="regionIndexCount">The number of regions that each row has a delta for.</param>
-    /// <returns><see langword="false"/> if the store has no such subtable.</returns>
+    /// <returns><see langword="false"/> if the store has no such subtable, or the subtable is malformed.</returns>
     public bool TryGetDataCounts(int dataIndex, out int itemCount, out int regionIndexCount)
     {
         if (!this.TryGetData(dataIndex, out DataHeader header))
@@ -181,7 +179,7 @@ internal readonly struct ItemVariationStore
         ReadOnlySpan<byte> row = span.Slice(header.RowsPosition + (inner * header.RowSize), header.RowSize);
         int wordSize = header.LongWords ? 4 : 2;
         int byteSize = header.LongWords ? 2 : 1;
-        float delta = 0;
+        double delta = 0;
         int position = 0;
         for (int i = 0; i < header.RegionIndexCount; i++)
         {
@@ -194,10 +192,10 @@ internal readonly struct ItemVariationStore
             };
 
             position += size;
-            delta += GetRegionScalar(regionScalars, BinaryPrimitives.ReadUInt16BigEndian(indexes.Slice(2 * i))) * value;
+            delta += (double)GetRegionScalar(regionScalars, BinaryPrimitives.ReadUInt16BigEndian(indexes.Slice(2 * i))) * value;
         }
 
-        return delta;
+        return (float)delta;
     }
 
     // A region index past the region list names no region, so it contributes nothing.
@@ -215,34 +213,39 @@ internal readonly struct ItemVariationStore
 
         uint regionListOffset = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(2));
         int dataCount = BinaryPrimitives.ReadUInt16BigEndian(span.Slice(6));
-        if (HeaderSize + (4L * dataCount) > span.Length
-            || regionListOffset == 0
-            || (long)regionListOffset + RegionListHeaderSize > span.Length)
+        if (HeaderSize + (4L * dataCount) > span.Length)
         {
             return false;
         }
 
-        int regionList = (int)regionListOffset;
-        int axisCount = BinaryPrimitives.ReadUInt16BigEndian(span.Slice(regionList));
-        int regionCount = BinaryPrimitives.ReadUInt16BigEndian(span.Slice(regionList + 2));
+        // A region list that is missing or malformed leaves no regions, but the subtables keep their region counts.
+        result = TryReadRegionList(span, regionListOffset, out int axisCount, out int regionCount)
+            ? new ItemVariationStore(store, (int)regionListOffset, axisCount, regionCount, dataCount)
+            : new ItemVariationStore(store, 0, 0, 0, dataCount);
+        return true;
+    }
+
+    private static bool TryReadRegionList(ReadOnlySpan<byte> span, uint offset, out int axisCount, out int regionCount)
+    {
+        axisCount = 0;
+        regionCount = 0;
+        if (offset == 0 || (long)offset + RegionListHeaderSize > span.Length)
+        {
+            return false;
+        }
+
+        int axes = BinaryPrimitives.ReadUInt16BigEndian(span.Slice((int)offset));
+        int regions = BinaryPrimitives.ReadUInt16BigEndian(span.Slice((int)offset + 2));
 
         // Regions with no axes would let a few bytes of input ask for 4 bytes for each of 65535 regions.
-        if ((axisCount == 0 && regionCount > 0)
-            || regionList + RegionListHeaderSize + ((long)axisCount * regionCount * RegionAxisSize) > span.Length)
+        if ((axes == 0 && regions > 0)
+            || offset + RegionListHeaderSize + ((long)axes * regions * RegionAxisSize) > span.Length)
         {
             return false;
         }
 
-        ItemVariationStore candidate = new(store, regionList, axisCount, regionCount, dataCount);
-        for (int i = 0; i < dataCount; i++)
-        {
-            if (!candidate.TryGetData(i, out _))
-            {
-                return false;
-            }
-        }
-
-        result = candidate;
+        axisCount = axes;
+        regionCount = regions;
         return true;
     }
 
