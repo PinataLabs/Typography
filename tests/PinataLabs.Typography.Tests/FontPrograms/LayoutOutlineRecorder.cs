@@ -19,12 +19,12 @@ internal sealed class LayoutOutlineRecorder : IGlyphRenderer
     private readonly StringBuilder calls = new();
 
     /// <summary>
-    /// Renders one glyph by glyph ID at a scale of one, so that the recorded points are in font units.
-    /// The layout path points y down, so y is the negative of the glyph space y.
+    /// Renders one glyph by glyph ID. A font that is as large in points as it has units to the em draws at a scale of one,
+    /// so that the recorded points are in font units. The layout path points y down, so y is the negative of the glyph space y.
     /// </summary>
-    public static string Render(Font font, ushort glyphId)
+    public static string Render(Font font, ushort glyphId, HintingMode hinting = HintingMode.None)
     {
-        TextOptions options = new(font) { Dpi = 72, HintingMode = HintingMode.None };
+        TextOptions options = new(font) { Dpi = 72, HintingMode = hinting };
         GlyphMetrics cached = GetMetrics(font, glyphId);
         GlyphMetrics metrics = cached.CloneForRendering(new TextRun { Font = font }, cached.CodePoint);
         LayoutOutlineRecorder recorder = new();

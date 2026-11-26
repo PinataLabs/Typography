@@ -117,6 +117,12 @@ public static class TestFonts
     // maps no top side bearing, and VariationCff2VerticalTsb has a map.
     public static string Cff2VerticalOriginsFontToolsReference => GetFullPath("Variations/Cff2VerticalOrigins.fonttools.json");
 
+    // Built by tests/tools/generate_hinted_variable_font.py, which also writes the reference. The font has the axes wght and wdth, the
+    // tables fpgm, prep, cvt, cvar and gvar, and glyphs whose hinting depends on the control values and on the coordinates.
+    public static string HintedVariableFile => GetFullPath("Variations/HintedVariable.ttf");
+
+    public static string HintedVariableFontToolsReference => GetFullPath("Variations/HintedVariable.fonttools.json");
+
     // Written by tests/tools/generate_gvar_reference.py, from Teko-Variable.ttf.
     public static string GvarFontToolsReference => GetFullPath("Variations/Gvar.fonttools.json");
 

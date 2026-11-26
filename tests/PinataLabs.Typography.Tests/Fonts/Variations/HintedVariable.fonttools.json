@@ -1,0 +1,710 @@
+{
+ "fontTools": "4.69.1",
+ "freetype": "2.13.2",
+ "controlValues": [
+  656,
+  128,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "hintedSizes": [
+  16,
+  32
+ ],
+ "locations": [
+  {
+   "name": "Default",
+   "user": {
+    "wght": 400,
+    "wdth": 128
+   },
+   "coordinates": [
+    0,
+    0
+   ],
+   "controlValues": [
+    656,
+    128,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "glyphs": {
+    ".notdef": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 512,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "space": {
+     "unhinted": "",
+     "advanceWidth": 256,
+     "outline": "",
+     "bounds": null,
+     "leftSideBearing": 0,
+     "topSideBearing": 800,
+     "advanceHeight": 1024
+    },
+    "A": {
+     "unhinted": "M 64 0 L 64 512 Q 192 640 320 640 Q 448 640 448 512 L 448 0 Z M 192 128 L 320 128 L 320 384 L 192 384 Z",
+     "advanceWidth": 512,
+     "outline": "M 64 0 L 64 512 Q 192 640 320 640 Q 448 640 448 512 L 448 0 Z M 192 128 L 320 128 L 320 384 L 192 384 Z",
+     "bounds": [
+      64,
+      0,
+      448,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "B": {
+     "unhinted": "M 64 0 L 64 512 Q 192 640 320 640 Q 448 640 448 512 L 448 0 Z M 192 128 L 320 128 L 320 384 L 192 384 Z M 384 64 L 384 576 Q 512 704 640 704 Q 768 704 768 576 L 768 64 Z M 512 192 L 640 192 L 640 448 L 512 448 Z",
+     "advanceWidth": 832,
+     "outline": "M 64 0 L 64 512 Q 192 640 320 640 Q 448 640 448 512 L 448 0 Z M 192 128 L 320 128 L 320 384 L 192 384 Z M 384 64 L 384 576 Q 512 704 640 704 Q 768 704 768 576 L 768 64 Z M 512 192 L 640 192 L 640 448 L 512 448 Z",
+     "bounds": [
+      64,
+      0,
+      768,
+      704
+     ],
+     "leftSideBearing": null,
+     "topSideBearing": null,
+     "advanceHeight": 1024
+    },
+    "C": {
+     "unhinted": "M 64 0 L 64 512 Q 192 640 320 640 Q 448 640 448 512 L 448 0 Z M 192 128 L 320 128 L 320 384 L 192 384 Z M 448 0 L 448 256 Q 512 320 576 320 Q 640 320 640 256 L 640 0 Z M 512 64 L 576 64 L 576 192 L 512 192 Z",
+     "advanceWidth": 928,
+     "advanceHeight": 1024
+    },
+    "D": {
+     "unhinted": "M 64 0 L 64 512 Q 192 640 320 640 Q 448 640 448 512 L 448 0 Z M 192 128 L 320 128 L 320 384 L 192 384 Z M 160 64 L 160 320 Q 224 384 288 384 Q 352 384 352 320 L 352 64 Z M 224 128 L 288 128 L 288 256 L 224 256 Z",
+     "advanceWidth": 640,
+     "advanceHeight": 1024
+    },
+    "H": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 640,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "P": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 640,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "V": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 656,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    }
+   },
+   "hinted": {
+    "16": {
+     "H": "M 1 0 L 1 10.25 L 9 10.25 L 9 0 Z",
+     "P": "M 1 0 L 1 11.25 L 9 11.25 L 9 0 Z",
+     "V": "M 1 0 L 1 0 L 9 0 L 9 2 Z"
+    },
+    "32": {
+     "H": "M 2 0 L 2 20.5 L 18 20.5 L 18 0 Z",
+     "P": "M 2 0 L 2 21.5 L 18 21.5 L 18 0 Z",
+     "V": "M 2 0 L 2 0 L 18 0 L 18 2 Z"
+    }
+   }
+  },
+  {
+   "name": "Half weight",
+   "user": {
+    "wght": 528,
+    "wdth": 128
+   },
+   "coordinates": [
+    8192,
+    0
+   ],
+   "controlValues": [
+    704,
+    146,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "glyphs": {
+    ".notdef": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 512,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "space": {
+     "unhinted": "",
+     "advanceWidth": 288,
+     "outline": "",
+     "bounds": null,
+     "leftSideBearing": 0,
+     "topSideBearing": 808,
+     "advanceHeight": 1040
+    },
+    "A": {
+     "unhinted": "M 64 0 L 64 537.609 Q 196 672 328 672 Q 464 672 464 537.609 L 464 0 Z M 196 140 L 324 140 L 324 396 L 196 396 Z",
+     "advanceWidth": 536,
+     "outline": "M 64 0 L 64 537.6 Q 196 672 328 672 Q 464 672 464 537.6 L 464 0 Z M 196 140 L 324 140 L 324 396 L 196 396 Z",
+     "bounds": [
+      64,
+      0,
+      464,
+      672
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 128,
+     "advanceHeight": 1024
+    },
+    "B": {
+     "unhinted": "M 64 0 L 64 537.609 Q 196 672 328 672 Q 464 672 464 537.609 L 464 0 Z M 196 140 L 324 140 L 324 396 L 196 396 Z M 408 72 L 408 609.609 Q 540 744 672 744 Q 808 744 808 609.609 L 808 72 Z M 540 212 L 668 212 L 668 468 L 540 468 Z",
+     "advanceWidth": 872,
+     "outline": "M 64 0 L 64 537.6 Q 196 672 328 672 Q 464 672 464 537.6 L 464 0 Z M 196 140 L 324 140 L 324 396 L 196 396 Z M 408 72 L 408 609.6 Q 540 744 672 744 Q 808 744 808 609.6 L 808 72 Z M 540 212 L 668 212 L 668 468 L 540 468 Z",
+     "bounds": [
+      64,
+      0,
+      808,
+      744
+     ],
+     "leftSideBearing": null,
+     "topSideBearing": null,
+     "advanceHeight": 1032
+    },
+    "C": {
+     "unhinted": "M 76 4 L 76 541.609 Q 208 676 340 676 Q 476 676 476 541.609 L 476 4 Z M 208 144 L 336 144 L 336 400 L 208 400 Z M 476 4 L 476 272.805 Q 542 340 608 340 Q 676 340 676 272.805 L 676 4 Z M 542 74 L 606 74 L 606 202 L 542 202 Z",
+     "advanceWidth": 976,
+     "advanceHeight": 1024
+    },
+    "D": {
+     "unhinted": "M 64 0 L 64 537.609 Q 196 672 328 672 Q 464 672 464 537.609 L 464 0 Z M 196 140 L 324 140 L 324 396 L 196 396 Z M 168 68 L 168 336.805 Q 234 404 300 404 Q 368 404 368 336.805 L 368 68 Z M 234 138 L 298 138 L 298 266 L 234 266 Z",
+     "advanceWidth": 664,
+     "advanceHeight": 1024
+    },
+    "H": {
+     "unhinted": "M 64 0 L 64 672 L 576 672 L 576 0 Z",
+     "advanceWidth": 656,
+     "outline": "M 64 0 L 64 672 L 576 672 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      672
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 128,
+     "advanceHeight": 1024
+    },
+    "P": {
+     "unhinted": "M 64 0 L 64 672 L 576 672 L 576 0 Z",
+     "advanceWidth": 656,
+     "outline": "M 64 0 L 64 672 L 576 672 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      672
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 128,
+     "advanceHeight": 1024
+    },
+    "V": {
+     "unhinted": "M 64 0 L 64 672 L 576 672 L 576 0 Z",
+     "advanceWidth": 672,
+     "outline": "M 64 0 L 64 672 L 576 672 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      672
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 128,
+     "advanceHeight": 1024
+    }
+   },
+   "hinted": {
+    "16": {
+     "H": "M 1 0 L 1 11 L 9 11 L 9 0 Z",
+     "P": "M 1 0 L 1 12 L 9 12 L 9 0 Z",
+     "V": "M 1 0 L 1 1 L 9 0 L 9 2 Z"
+    },
+    "32": {
+     "H": "M 2 0 L 2 22 L 18 22 L 18 0 Z",
+     "P": "M 2 0 L 2 23 L 18 23 L 18 0 Z",
+     "V": "M 2 0 L 2 1 L 18 0 L 18 2 Z"
+    }
+   }
+  },
+  {
+   "name": "Maximum",
+   "user": {
+    "wght": 656,
+    "wdth": 192
+   },
+   "coordinates": [
+    16384,
+    16384
+   ],
+   "controlValues": [
+    784,
+    144,
+    8,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "glyphs": {
+    ".notdef": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 512,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "space": {
+     "unhinted": "",
+     "advanceWidth": 288,
+     "outline": "",
+     "bounds": null,
+     "leftSideBearing": 0,
+     "topSideBearing": 816,
+     "advanceHeight": 1056
+    },
+    "A": {
+     "unhinted": "M 88 0 L 88 563.203 Q 208 704 328 704 Q 456 704 456 571.203 L 456 0 Z M 210 152 L 338 152 L 338 424 L 210 424 Z",
+     "advanceWidth": 624,
+     "outline": "M 88 0 L 88 563.2 Q 208 704 328 704 Q 456 704 456 571.2 L 456 0 Z M 210 152 L 338 152 L 338 424 L 210 424 Z",
+     "bounds": [
+      88,
+      0,
+      456,
+      704
+     ],
+     "leftSideBearing": 88,
+     "topSideBearing": 96,
+     "advanceHeight": 1024
+    },
+    "B": {
+     "unhinted": "M 88 0 L 88 563.203 Q 208 704 328 704 Q 456 704 456 571.203 L 456 0 Z M 210 152 L 338 152 L 338 424 L 210 424 Z M 472 72 L 472 635.203 Q 592 776 712 776 Q 840 776 840 643.203 L 840 72 Z M 594 224 L 722 224 L 722 496 L 594 496 Z",
+     "advanceWidth": 944,
+     "outline": "M 88 0 L 88 563.2 Q 208 704 328 704 Q 456 704 456 571.2 L 456 0 Z M 210 152 L 338 152 L 338 424 L 210 424 Z M 472 72 L 472 635.2 Q 592 776 712 776 Q 840 776 840 643.2 L 840 72 Z M 594 224 L 722 224 L 722 496 L 594 496 Z",
+     "bounds": [
+      88,
+      0,
+      840,
+      776
+     ],
+     "leftSideBearing": null,
+     "topSideBearing": null,
+     "advanceHeight": 1040
+    },
+    "C": {
+     "unhinted": "M 112 8 L 112 571.203 Q 232 712 352 712 Q 480 712 480 579.203 L 480 8 Z M 234 160 L 362 160 L 362 432 L 234 432 Z M 480 8 L 480 289.602 Q 540 360 600 360 Q 664 360 664 293.602 L 664 8 Z M 541 84 L 605 84 L 605 220 L 541 220 Z",
+     "advanceWidth": 1024,
+     "advanceHeight": 1024
+    },
+    "D": {
+     "unhinted": "M 88 0 L 88 563.203 Q 208 704 328 704 Q 456 704 456 571.203 L 456 0 Z M 210 152 L 338 152 L 338 424 L 210 424 Z M 188 72 L 188 353.602 Q 248 424 308 424 Q 372 424 372 357.602 L 372 72 Z M 249 148 L 313 148 L 313 284 L 249 284 Z",
+     "advanceWidth": 688,
+     "advanceHeight": 1024
+    },
+    "H": {
+     "unhinted": "M 96 0 L 96 704 L 608 704 L 608 0 Z",
+     "advanceWidth": 736,
+     "outline": "M 96 0 L 96 704 L 608 704 L 608 0 Z",
+     "bounds": [
+      96,
+      0,
+      608,
+      704
+     ],
+     "leftSideBearing": 96,
+     "topSideBearing": 96,
+     "advanceHeight": 1024
+    },
+    "P": {
+     "unhinted": "M 64 0 L 64 704 L 576 704 L 576 0 Z",
+     "advanceWidth": 672,
+     "outline": "M 64 0 L 64 704 L 576 704 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      704
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 96,
+     "advanceHeight": 1024
+    },
+    "V": {
+     "unhinted": "M 64 0 L 64 704 L 576 704 L 576 0 Z",
+     "advanceWidth": 688,
+     "outline": "M 64 0 L 64 704 L 576 704 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      704
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 96,
+     "advanceHeight": 1024
+    }
+   },
+   "hinted": {
+    "16": {
+     "H": "M 1.5 0 L 1.5 12.25 L 9.5 12.25 L 9.5 0 Z",
+     "P": "M 1 0 L 1 13.25 L 9 13.25 L 9 0 Z",
+     "V": "M 1 0 L 1 2 L 9 2 L 9 2 Z"
+    },
+    "32": {
+     "H": "M 3 0 L 3 24.5 L 19 24.5 L 19 0 Z",
+     "P": "M 2 0 L 2 25.5 L 18 25.5 L 18 0 Z",
+     "V": "M 2 0 L 2 2 L 18 2 L 18 2 Z"
+    }
+   }
+  },
+  {
+   "name": "Light and half width",
+   "user": {
+    "wght": 272,
+    "wdth": 160
+   },
+   "coordinates": [
+    -8192,
+    8192
+   ],
+   "controlValues": [
+    640,
+    128,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "glyphs": {
+    ".notdef": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 512,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "space": {
+     "unhinted": "",
+     "advanceWidth": 240,
+     "outline": "",
+     "bounds": null,
+     "leftSideBearing": 0,
+     "topSideBearing": 800,
+     "advanceHeight": 1024
+    },
+    "A": {
+     "unhinted": "M 74 0 L 73.5 513 Q 193 642 312.5 643 Q 432 644 431.5 521 L 431 6 Z M 191.5 135 L 319 136 L 318.5 401 L 190 402 Z",
+     "advanceWidth": 536,
+     "outline": "M 74 0 L 73.5 513 Q 193 642 312.5 643 Q 432 644 431.5 521 L 431 6 Z M 191.5 135 L 319 136 L 318.5 401 L 190 402 Z",
+     "bounds": [
+      73.5,
+      0,
+      432,
+      644
+     ],
+     "leftSideBearing": 74,
+     "topSideBearing": 156,
+     "advanceHeight": 1024
+    },
+    "B": {
+     "unhinted": "M 74 0 L 73.5 513 Q 193 642 312.5 643 Q 432 644 431.5 521 L 431 6 Z M 191.5 135 L 319 136 L 318.5 401 L 190 402 Z M 402 60 L 401.5 573 Q 521 702 640.5 703 Q 760 704 759.5 581 L 759 66 Z M 519.5 195 L 647 196 L 646.5 461 L 518 462 Z",
+     "advanceWidth": 848,
+     "outline": "M 74 0 L 73.5 513 Q 193 642 312.5 643 Q 432 644 431.5 521 L 431 6 Z M 191.5 135 L 319 136 L 318.5 401 L 190 402 Z M 402 60 L 401.5 573 Q 521 702 640.5 703 Q 760 704 759.5 581 L 759 66 Z M 519.5 195 L 647 196 L 646.5 461 L 518 462 Z",
+     "bounds": [
+      73.5,
+      0,
+      760,
+      704
+     ],
+     "leftSideBearing": null,
+     "topSideBearing": null,
+     "advanceHeight": 1024
+    },
+    "C": {
+     "unhinted": "M 74 0 L 73.5 513 Q 193 642 312.5 643 Q 432 644 431.5 521 L 431 6 Z M 191.5 135 L 319 136 L 318.5 401 L 190 402 Z M 431 6 L 430.75 262.5 Q 490.5 327 550.25 327.5 Q 610 328 609.75 266.5 L 609.5 9 Z M 489.75 73.5 L 553.5 74 L 553.25 206.5 L 489 207 Z",
+     "advanceWidth": 928,
+     "advanceHeight": 1024
+    },
+    "D": {
+     "unhinted": "M 74 0 L 73.5 513 Q 193 642 312.5 643 Q 432 644 431.5 521 L 431 6 Z M 191.5 135 L 319 136 L 318.5 401 L 190 402 Z M 165 64 L 164.75 320.5 Q 224.5 385 284.25 385.5 Q 344 386 343.75 324.5 L 343.5 67 Z M 223.75 131.5 L 287.5 132 L 287.25 264.5 L 223 265 Z",
+     "advanceWidth": 640,
+     "advanceHeight": 1024
+    },
+    "H": {
+     "unhinted": "M 80 0 L 80 640 L 592 640 L 592 0 Z",
+     "advanceWidth": 672,
+     "outline": "M 80 0 L 80 640 L 592 640 L 592 0 Z",
+     "bounds": [
+      80,
+      0,
+      592,
+      640
+     ],
+     "leftSideBearing": 80,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "P": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 640,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "V": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 656,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    }
+   },
+   "hinted": {
+    "16": {
+     "H": "M 1.25 0 L 1.25 10 L 9.25 10 L 9.25 0 Z",
+     "P": "M 1 0 L 1 11 L 9 11 L 9 0 Z",
+     "V": "M 1 0 L 1 -1 L 9 1 L 9 2 Z"
+    },
+    "32": {
+     "H": "M 2.5 0 L 2.5 20 L 18.5 20 L 18.5 0 Z",
+     "P": "M 2 0 L 2 21 L 18 21 L 18 0 Z",
+     "V": "M 2 0 L 2 -1 L 18 1 L 18 2 Z"
+    }
+   }
+  },
+  {
+   "name": "Three quarters weight",
+   "user": {
+    "wght": 592,
+    "wdth": 128
+   },
+   "coordinates": [
+    12288,
+    0
+   ],
+   "controlValues": [
+    728,
+    140,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "glyphs": {
+    ".notdef": {
+     "unhinted": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "advanceWidth": 512,
+     "outline": "M 64 0 L 64 640 L 576 640 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      640
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 160,
+     "advanceHeight": 1024
+    },
+    "space": {
+     "unhinted": "",
+     "advanceWidth": 304,
+     "outline": "",
+     "bounds": null,
+     "leftSideBearing": 0,
+     "topSideBearing": 812,
+     "advanceHeight": 1048
+    },
+    "A": {
+     "unhinted": "M 64 0 L 64 550.406 Q 198 688 332 688 Q 472 688 472 550.406 L 472 0 Z M 198 146 L 326 146 L 326 402 L 198 402 Z",
+     "advanceWidth": 548,
+     "outline": "M 64 0 L 64 550.4 Q 198 688 332 688 Q 472 688 472 550.4 L 472 0 Z M 198 146 L 326 146 L 326 402 L 198 402 Z",
+     "bounds": [
+      64,
+      0,
+      472,
+      688
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 112,
+     "advanceHeight": 1024
+    },
+    "B": {
+     "unhinted": "M 64 0 L 64 550.406 Q 198 688 332 688 Q 472 688 472 550.406 L 472 0 Z M 198 146 L 326 146 L 326 402 L 198 402 Z M 420 76 L 420 626.406 Q 554 764 688 764 Q 828 764 828 626.406 L 828 76 Z M 554 222 L 682 222 L 682 478 L 554 478 Z",
+     "advanceWidth": 892,
+     "outline": "M 64 0 L 64 550.4 Q 198 688 332 688 Q 472 688 472 550.4 L 472 0 Z M 198 146 L 326 146 L 326 402 L 198 402 Z M 420 76 L 420 626.4 Q 554 764 688 764 Q 828 764 828 626.4 L 828 76 Z M 554 222 L 682 222 L 682 478 L 554 478 Z",
+     "bounds": [
+      64,
+      0,
+      828,
+      764
+     ],
+     "leftSideBearing": null,
+     "topSideBearing": null,
+     "advanceHeight": 1036
+    },
+    "C": {
+     "unhinted": "M 82 6 L 82 556.406 Q 216 694 350 694 Q 490 694 490 556.406 L 490 6 Z M 216 152 L 344 152 L 344 408 L 216 408 Z M 490 6 L 490 281.203 Q 557 350 624 350 Q 694 350 694 281.203 L 694 6 Z M 557 79 L 621 79 L 621 207 L 557 207 Z",
+     "advanceWidth": 1000,
+     "advanceHeight": 1024
+    },
+    "D": {
+     "unhinted": "M 64 0 L 64 550.406 Q 198 688 332 688 Q 472 688 472 550.406 L 472 0 Z M 198 146 L 326 146 L 326 402 L 198 402 Z M 172 70 L 172 345.203 Q 239 414 306 414 Q 376 414 376 345.203 L 376 70 Z M 239 143 L 303 143 L 303 271 L 239 271 Z",
+     "advanceWidth": 676,
+     "advanceHeight": 1024
+    },
+    "H": {
+     "unhinted": "M 64 0 L 64 688 L 576 688 L 576 0 Z",
+     "advanceWidth": 664,
+     "outline": "M 64 0 L 64 688 L 576 688 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      688
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 112,
+     "advanceHeight": 1024
+    },
+    "P": {
+     "unhinted": "M 64 0 L 64 688 L 576 688 L 576 0 Z",
+     "advanceWidth": 664,
+     "outline": "M 64 0 L 64 688 L 576 688 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      688
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 112,
+     "advanceHeight": 1024
+    },
+    "V": {
+     "unhinted": "M 64 0 L 64 688 L 576 688 L 576 0 Z",
+     "advanceWidth": 680,
+     "outline": "M 64 0 L 64 688 L 576 688 L 576 0 Z",
+     "bounds": [
+      64,
+      0,
+      576,
+      688
+     ],
+     "leftSideBearing": 64,
+     "topSideBearing": 112,
+     "advanceHeight": 1024
+    }
+   },
+   "hinted": {
+    "16": {
+     "H": "M 1 0 L 1 11.375 L 9 11.375 L 9 0 Z",
+     "P": "M 1 0 L 1 12.375 L 9 12.375 L 9 0 Z",
+     "V": "M 1 0 L 1 1.5 L 9 0 L 9 2 Z"
+    },
+    "32": {
+     "H": "M 2 0 L 2 22.75 L 18 22.75 L 18 0 Z",
+     "P": "M 2 0 L 2 23.75 L 18 23.75 L 18 0 Z",
+     "V": "M 2 0 L 2 1.5 L 18 0 L 18 2 Z"
+    }
+   }
+  }
+ ]
+}

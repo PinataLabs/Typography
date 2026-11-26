@@ -184,6 +184,35 @@ python tests/tools/generate_gvar_reference.py
 
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
 
+## Hinted variable font
+
+`generate_hinted_variable_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/Variations/HintedVariable.ttf` and writes
+`HintedVariable.fonttools.json` next to it (issues #127 and #130). Neither variable test font has a `cvar` table or hinting
+instructions that depend on the control values, so this font has them. It has the axes `wght` and `wdth`, with ranges that are powers
+of two on both sides of the default, so that every location of the reference is an exact F2Dot14 coordinate. It has 1024 units to the
+em, so that a font unit is a whole number of 1/64 pixel at 16 and 32 pixels to the em.
+
+The font has `gvar` tuples that leave points out, cover every point, span an intermediate region and use two axes, composite
+glyphs whose components have offsets, a scaled offset, and a placement by points, a glyph with phantom point deltas for the advance and
+the vertical advance, a `cvar` table with tuples on each axis and on an intermediate region, an `fpgm` function, a `prep` program that
+sets a control value from another, and glyphs whose instructions go to a control value, call the function, or use the instructions
+GETVARIATION and GETINFO. The script's own documentation lists each glyph.
+
+The reference holds, at five locations:
+
+- the control values of the instance, from `fontTools.varLib.instancer`, which sums the `cvar` deltas and rounds once;
+- the outline, the bounds, the advances and the side bearings of each glyph from fontTools `getGlyphSet`, where fontTools can draw the glyph;
+- the unhinted outline of each glyph from FreeType at 16384 pixels to the em, which keeps it to 1/1024 of a font unit;
+- the hinted outlines of the three hinted glyphs at 16 and 32 pixels to the em, from FreeType with its version 35 interpreter.
+
+To write the font and the reference again, install fontTools 4.68 or later and `freetype-py`, and run this from the repository root:
+
+```
+python tests/tools/generate_hinted_variable_font.py
+```
+
+The output is deterministic for one fontTools and FreeType version. The reference records both.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).

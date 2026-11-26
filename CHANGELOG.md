@@ -87,6 +87,14 @@ An additive or breaking public API change needs all of these:
   instance, the "SemiBold" named instance, the maximum and a user location, the outlines, the bounds and the advances match
   fontTools. A glyph whose `gvar` data is malformed draws at the default instance, and so does a glyph that has such a
   component. A `gvar` table that is malformed, or has another number of axes than `fvar`, counts as absent. (#127)
+- **Hinting for variation instances.** A variation instance of a TrueType font hints its glyphs, with an interpreter of its own
+  and the control values of its own. Its control values are those of the `cvt ` table plus the deltas of the `cvar` table for its
+  coordinates, summed and rounded once, as fontTools does. A font that has `fpgm` and `prep` tables and no `cvar` table, or a
+  `cvar` table that is malformed, hints an instance with the control values of the face. The interpreter runs the
+  `GETVARIATION` instruction, which pushes the F2Dot14 coordinates of the instance, one for each axis, and sets the variation
+  bit of `GETINFO`, which a font with axes always has. A font without axes treats `GETVARIATION` as unknown. A hinted glyph of
+  `HintedVariable.ttf`, whose instructions use the control values and the coordinates, matches the hinted outline of FreeType
+  at five locations. (#130)
 - **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
   axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
   italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face
