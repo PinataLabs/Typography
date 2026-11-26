@@ -10,13 +10,14 @@ Usage (from the repository root, Python 3.9 or later, with network access):
 HarfBuzz builds its universal shaper (USE) category table with gen-use-table.py and ships the result as
 src/hb-ot-shaper-use-table.hh. HarfBuzz has no API that returns the category of a code point, so the script reads
 that file at the HarfBuzz tag below, or at the path given, and runs its lookup function for every code point. The
-lookup is plain array arithmetic, which this script evaluates as Python.
+lookup is plain array arithmetic, which this script interprets.
 
 The output lists each range of code points whose category is not O, the category of every other code point.
 UniversalShaperTests checks that the library gives every code point the same category.
 The output is deterministic for one HarfBuzz version.
 """
 
+import ast
 import os
 import re
 import sys
@@ -45,20 +46,38 @@ def build_lookup(source):
     for kind, name, body in re.findall(r"static const (uint8_t|uint16_t) (\w+)\[\d+\]=\s*\{(.*?)\};", fast, re.S):
         namespace[name] = [int(v) if v.isdigit() else v for v in (x.strip() for x in body.split(",")) if v]
 
-    namespace["hb_use_b4"] = lambda a, i: (a[i >> 1] >> ((i & 1) << 2)) & 15
-
     match = re.search(r"return u<(\d+)u \? \(uint8_t\)\((.*)\) : (\w+);", fast)
     limit, expression, default = int(match.group(1)), match.group(2), match.group(3)
-    expression = re.sub(r"(\d+)u\b", r"\1", expression)
-    code = compile(expression, "hb_use_get_category", "eval")
+    tree = ast.parse(re.sub(r"(\d+)u\b", r"\1", expression), mode="eval").body
 
     def lookup(u):
-        if u >= limit:
-            return default
-        namespace["u"] = u
-        return eval(code, namespace)
+        return evaluate(tree, namespace, u) if u < limit else default
 
     return lookup
+
+
+OPERATORS = {
+    ast.Add: lambda a, b: a + b,
+    ast.BitAnd: lambda a, b: a & b,
+    ast.LShift: lambda a, b: a << b,
+    ast.RShift: lambda a, b: a >> b,
+}
+
+
+def evaluate(node, arrays, u):
+    # Interprets the array arithmetic of the lookup, so no downloaded text runs as code.
+    if isinstance(node, ast.Constant) and isinstance(node.value, int):
+        return node.value
+    if isinstance(node, ast.Name) and node.id == "u":
+        return u
+    if isinstance(node, ast.BinOp) and type(node.op) in OPERATORS:
+        return OPERATORS[type(node.op)](evaluate(node.left, arrays, u), evaluate(node.right, arrays, u))
+    if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name):
+        return arrays[node.value.id][evaluate(node.slice, arrays, u)]
+    if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "hb_use_b4":
+        array, index = arrays[node.args[0].id], evaluate(node.args[1], arrays, u)
+        return (array[index >> 1] >> ((index & 1) << 2)) & 15
+    raise ValueError(f"unexpected expression in hb-ot-shaper-use-table.hh: {ast.dump(node)}")
 
 
 def main():
