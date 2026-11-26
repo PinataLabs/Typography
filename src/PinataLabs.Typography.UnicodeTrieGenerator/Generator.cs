@@ -478,7 +478,6 @@ public static partial class Generator
     private const int CodePointCount = 0x110000;
 
     private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new(GetSolutionDirectoryFullPathImpl);
-    private static readonly Dictionary<int, int> Bidi = new();
 
     private static string SolutionDirectoryFullPath => SolutionDirectoryFullPathLazy.Value;
 
@@ -487,8 +486,7 @@ public static partial class Generator
     /// </summary>
     public static void GenerateUnicodeTries()
     {
-        ProcessUnicodeData();
-        GenerateBidiBracketsTrie();
+        GenerateBidiTrie();
         GenerateBidiMirrorTrie();
         GenerateLineBreakTrie();
         UnicodeTrie ugc = GenerateUnicodeCategoryTrie();
@@ -502,25 +500,6 @@ public static partial class Generator
         List<Codepoint> codePoints = GenerateUniversalShapingDataTrie(ugc, uisc, uipc, uajt);
         GenerateIndicShapingDataTrie(codePoints.ToArray());
         GenerateNormalizationData();
-    }
-
-    private static void ProcessUnicodeData()
-    {
-        using StreamReader sr = GetStreamReader("UnicodeData.txt");
-        string? line;
-        while ((line = sr.ReadLine()) != null)
-        {
-            string[] parts = line.Split(';');
-
-            if (parts.Length > 4)
-            {
-                // Get the directionality.
-                int codePoint = ParseHexInt(parts[0]);
-
-                _ = UnicodeTypeMaps.BidiCharacterTypeMap.TryGetValue(parts[4], out BidiCharacterType cls);
-                Bidi[codePoint] = (int)cls << 24;
-            }
-        }
     }
 
     /// <summary>
@@ -561,13 +540,33 @@ public static partial class Generator
     }
 
     /// <summary>
-    /// Generates the UnicodeTrie for the Bidi Brackets code points.
+    /// Generates the UnicodeTrie for the bidi class and paired bracket of every code point.
     /// </summary>
-    private static void GenerateBidiBracketsTrie()
+    private static void GenerateBidiTrie()
     {
-        var regex = new Regex(@"^([0-9A-F]+);\s([0-9A-F]+);\s([ocn])");
-        var builder = new UnicodeTrieBuilder(0u);
+        uint[] values = new uint[CodePointCount];
 
+        // The @missing lines give the default class of each range, which unassigned code points take.
+        // A later line overrides an earlier one. The data lines give every other class.
+        var missing = new Regex(@"^# @missing: ([0-9A-F]+)\.\.([0-9A-F]+); (\w+)");
+        using (StreamReader sr = GetStreamReader("DerivedBidiClass.txt"))
+        {
+            string? line;
+            while ((line = sr.ReadLine()) != null)
+            {
+                Match match = missing.Match(line);
+                if (match.Success)
+                {
+                    var type = Enum.Parse<BidiCharacterType>(match.Groups[3].Value.Replace("_", string.Empty));
+                    FillBidiClass(values, ParseHexInt(match.Groups[1].Value), ParseHexInt(match.Groups[2].Value), type);
+                }
+            }
+        }
+
+        ForEachRange("DerivedBidiClass.txt", (start, end, value)
+            => FillBidiClass(values, start, end, UnicodeTypeMaps.BidiCharacterTypeMap[value]));
+
+        var regex = new Regex(@"^([0-9A-F]+);\s([0-9A-F]+);\s([ocn])");
         using (StreamReader sr = GetStreamReader("BidiBrackets.txt"))
         {
             string? line;
@@ -581,22 +580,16 @@ public static partial class Generator
 
                     _ = BidiPairedBracketTypeMap.TryGetValue(match.Groups[3].Value, out BidiPairedBracketType kind);
 
-                    Bidi[point] |= otherPoint | ((int)kind << 16);
+                    values[point] |= (uint)otherPoint | ((uint)kind << 16);
                 }
             }
         }
 
-        foreach (KeyValuePair<int, int> item in Bidi)
-        {
-            if (item.Value != 0)
-            {
-                builder.Set(item.Key, (uint)item.Value);
-            }
-        }
-
-        UnicodeTrie trie = builder.Freeze();
-        GenerateTrieClass("Bidi", trie);
+        GenerateTrieClass("Bidi", BuildTrie(values, 0u));
     }
+
+    private static void FillBidiClass(uint[] values, int start, int end, BidiCharacterType type)
+        => values.AsSpan(start, end - start + 1).Fill((uint)type << 24);
 
     /// <summary>
     /// Generates the UnicodeTrie for the Bidi Brackets code points.
