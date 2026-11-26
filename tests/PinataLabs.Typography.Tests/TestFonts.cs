@@ -65,6 +65,9 @@ public static class TestFonts
     // Written by tests/tools/generate_default_ignorable_reference.py, with the DefaultIgnorables fonts.
     public static string DefaultIgnorablesHarfBuzzReference => GetFullPath("DefaultIgnorables.harfbuzz.json");
 
+    // Written by tests/tools/generate_mongolian_lookups_reference.py, with MongolianLookups.ttf.
+    public static string MongolianLookupsHarfBuzzReference => GetFullPath("MongolianLookups.harfbuzz.json");
+
     // Written by tests/tools/generate_text_run_context_reference.py.
     public static string TextRunContextHarfBuzzReference => GetFullPath("TextRunContext.harfbuzz.json");
 

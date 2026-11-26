@@ -469,3 +469,31 @@ python tests/tools/generate_khmer_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Mongolian lookups reference
+
+`generate_mongolian_lookups_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/MongolianLookups.ttf` and
+writes `MongolianLookups.harfbuzz.json` next to it (issue #111). Mongolian Baiti cannot ship in the repository, so
+the font copies the four things in it that the library shaped differently from HarfBuzz. Each row of the reference
+names one of them:
+
+- `joining`: the Mongolian vowel separator U+180E and the Arabic number sign U+0600 have joining type U, so the
+  letters next to them take their isolated forms.
+- `context-match`: a chaining subtable that matches with no substitution records, from an `ignore sub` rule, ends
+  its lookup.
+- `mark-filtering-set`: a lookup with the UseMarkFilteringSet flag skips the marks that are not in its GDEF mark
+  glyph set.
+- `reverse-chaining`: a reverse chaining lookup runs from the last glyph to the first, skips the glyphs that its
+  flags ignore, and substitutes the glyph at its Coverage index.
+
+The reference holds the glyph IDs, where HarfBuzz draws each glyph, and the advance of each text.
+`MongolianLookupsTests` checks that the library gives the same glyphs, one test case for each cause.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_mongolian_lookups_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
