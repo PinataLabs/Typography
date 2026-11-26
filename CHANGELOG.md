@@ -136,6 +136,11 @@ An additive or breaking public API change needs all of these:
 - GPOS pair positioning finds the second glyph past the glyphs that the lookup flags skip, so a lookup that ignores
   marks kerns the letters on both sides of a mark. GPOS mark-to-mark attaches a mark to a mark of the same base, as
   in HarfBuzz. A GPOS mark moves with a base that the `kern` table moved. (#111)
+- Mongolian in Mongolian Baiti shapes as in HarfBuzz. The format characters that ArabicShaping.txt lists as joining
+  type U, such as U+180E and U+0600, keep it. A context subtable that matches ends its lookup, even when it has no
+  substitution records. A lookup skips the marks outside its GDEF mark filtering set, whose offsets are now read as
+  32-bit. Reverse chaining substitution runs from the last glyph to the first, follows the lookup flags, and
+  substitutes the one glyph at its Coverage index. (#111)
 - Adlam, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N'Ko, Old Uyghur, Phags-pa, Psalter Pahlavi
   and Sogdian use the universal shaper, which now joins their letters. Phags-pa letters had no joining type. (#102)
 - In the universal shaper, a sign after a space, a digit, a punctuation mark or a symbol takes that character as its
