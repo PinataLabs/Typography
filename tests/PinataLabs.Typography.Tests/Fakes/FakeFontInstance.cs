@@ -57,6 +57,18 @@ internal class FakeFontInstance : StreamFontMetrics
         return new FakeFontInstance(tables);
     }
 
+    /// <summary>
+    /// Creates a fake font whose name table holds exactly the given records.
+    /// </summary>
+    /// <param name="names">The name records.</param>
+    /// <returns>The font.</returns>
+    public static FakeFontInstance CreateWithNames(params NameRecord[] names)
+    {
+        TrueTypeFontTables tables = CreateTrueTypeFontTables("A");
+        tables.Name = new NameTable(names, []);
+        return new FakeFontInstance(tables);
+    }
+
     internal static TrueTypeFontTables CreateTrueTypeFontTables(string text, string fontName = "name")
     {
         List<FakeGlyphSource> glyphs = GetGlyphs(text);

@@ -52,10 +52,20 @@ internal class NameTable : Table
     /// </summary>
     /// <param name="culture">The culture to load the name in.</param>
     /// <returns>The typographic family name.</returns>
+    /// <remarks>
+    /// A name in the language of <paramref name="culture"/> beats a name in another language, and in one language
+    /// ID 16 beats ID 1. So a font that has ID 16 only in English and ID 1 in Japanese gives the Japanese name for ja-JP.
+    /// Without a name in that language, the order is the same as <see cref="GetNameById(CultureInfo, KnownNameIds)"/>:
+    /// US English, the first Windows name, then the first name, with ID 16 before ID 1.
+    /// </remarks>
     public string TypographicFamilyName(CultureInfo culture)
     {
-        string name = this.GetNameById(culture, KnownNameIds.TypographicFamilyName);
-        return name.Length > 0 ? name : this.FontFamilyName(culture);
+        int languageId = culture.LCID;
+        return NonEmpty(this.FindInLanguage(KnownNameIds.TypographicFamilyName, languageId))
+            ?? NonEmpty(this.FindInLanguage(KnownNameIds.FontFamilyName, languageId))
+            ?? NonEmpty(this.FindInAnyLanguage(KnownNameIds.TypographicFamilyName))
+            ?? NonEmpty(this.FindInAnyLanguage(KnownNameIds.FontFamilyName))
+            ?? string.Empty;
     }
 
     /// <summary>
@@ -68,44 +78,57 @@ internal class NameTable : Table
         => this.GetNameById(culture, KnownNameIds.FontSubfamilyName);
 
     public string GetNameById(CultureInfo culture, KnownNameIds nameId)
+        => (this.FindInLanguage(nameId, culture.LCID) ?? this.FindInAnyLanguage(nameId))?.Value ?? string.Empty;
+
+    public string GetNameById(CultureInfo culture, ushort nameId)
+        => this.GetNameById(culture, (KnownNameIds)nameId);
+
+    private static string? NonEmpty(NameRecord? record)
     {
-        int languageId = culture.LCID;
+        string? value = record?.Value;
+        return string.IsNullOrEmpty(value) ? null : value;
+    }
+
+    // The first Windows record of the name in a language.
+    private NameRecord? FindInLanguage(KnownNameIds nameId, int languageId)
+    {
+        foreach (NameRecord name in this.names)
+        {
+            if (name.NameID == nameId && name.Platform == PlatformIDs.Windows && name.LanguageID == languageId)
+            {
+                return name;
+            }
+        }
+
+        return null;
+    }
+
+    // The record of the name when the language has none: US English, else the first Windows record, else the first.
+    private NameRecord? FindInAnyLanguage(KnownNameIds nameId)
+    {
         NameRecord? usaVersion = null;
         NameRecord? firstWindows = null;
         NameRecord? first = null;
         foreach (NameRecord name in this.names)
         {
-            if (name.NameID == nameId)
+            if (name.NameID != nameId)
             {
-                // Get just the first one, just in case.
-                first ??= name;
-                if (name.Platform == PlatformIDs.Windows)
-                {
-                    // If us not found return the first windows one.
-                    firstWindows ??= name;
-                    if (name.LanguageID == 0x0409)
-                    {
-                        // Grab the us version as its on next best match.
-                        usaVersion ??= name;
-                    }
+                continue;
+            }
 
-                    if (name.LanguageID == languageId)
-                    {
-                        // Return the most exact first.
-                        return name.Value;
-                    }
+            first ??= name;
+            if (name.Platform == PlatformIDs.Windows)
+            {
+                firstWindows ??= name;
+                if (name.LanguageID == 0x0409)
+                {
+                    usaVersion ??= name;
                 }
             }
         }
 
-        return usaVersion?.Value ??
-               firstWindows?.Value ??
-               first?.Value ??
-               string.Empty;
+        return usaVersion ?? firstWindows ?? first;
     }
-
-    public string GetNameById(CultureInfo culture, ushort nameId)
-        => this.GetNameById(culture, (KnownNameIds)nameId);
 
     public static NameTable? Load(FontReader fontReader)
     {

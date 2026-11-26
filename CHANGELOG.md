@@ -138,7 +138,10 @@ An additive or breaking public API change needs all of these:
   `SystemFonts` now use name ID 16, and fall back to name ID 1 for a font that has no ID 16. A family with more than
   four weights is one family, and `Teko-Variable.ttf` is the family "Teko" where it was "Teko Light". A font that
   has an ID 16 that differs from its ID 1 is no longer found under its ID 1, so `Get("Teko Light")` fails.
-  Use `FontDescription.LegacyFontFamily(culture)` for the old name. (#123)
+  Use `FontDescription.LegacyFontFamily(culture)` for the old name. In a culture, a name in the language of the
+  culture beats a name in another language, and in one language ID 16 beats ID 1. Faces are grouped by their
+  invariant family name, so faces whose names are in different languages stay in one family, and any of their
+  localized names finds the family. (#123)
 - **Unicode 18.0.0.** All Unicode data moves from Unicode 14.0.0 to 18.0.0, the version that HarfBuzz 15.0.0 uses:
   scripts, general category, line break, East Asian width, bidi, grapheme break, vertical orientation, Arabic joining,
   Indic categories, emoji and canonical mappings. Line breaking follows the UAX #14 rules of Unicode 18.0.0, including

@@ -7,7 +7,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.General.Name;
+using PinataLabs.Typography.Tests.Fakes;
 using PinataLabs.Typography.Unicode;
+using PinataLabs.Typography.WellKnownIds;
 
 namespace PinataLabs.Typography.Tests;
 
@@ -148,4 +151,37 @@ public class FontCollectionTests
         await Assert.That(collection.Families.Any()).IsTrue();
         await Assert.That(collection.Families.Count()).IsEqualTo(SystemFonts.Collection.Families.Count());
     }
+
+    [Test]
+    public async Task FacesWithDifferentLocalizedNamesStayInOneFamily()
+    {
+        // The Light face has the typographic name only in English. The Regular face has its family name in Japanese.
+        // Each face gives a different name for ja-JP, and they must still be one family.
+        var ja = new CultureInfo("ja-JP");
+        FakeFontInstance light = FakeFontInstance.CreateWithNames(
+            Name(KnownNameIds.FontFamilyName, "Foo Light", 0x0409),
+            Name(KnownNameIds.TypographicFamilyName, "Foo", 0x0409));
+        FakeFontInstance regular = FakeFontInstance.CreateWithNames(
+            Name(KnownNameIds.FontFamilyName, "Foo", 0x0409),
+            Name(KnownNameIds.FontFamilyName, "フー", 0x0411));
+        var collection = new FontCollection();
+        ((IFontMetricsCollection)collection).AddMetrics(light);
+        ((IFontMetricsCollection)collection).AddMetrics(regular);
+
+        FontFamily[] families = collection.GetByCulture(ja).ToArray();
+
+        await Assert.That(families.Length).IsEqualTo(1);
+        await Assert.That(families[0].Faces.Count).IsEqualTo(2);
+
+        // Either name of the family finds both faces, and the family is the same one.
+        FontFamily byJapanese = collection.Get("フー", ja);
+        FontFamily byEnglish = collection.Get("Foo", ja);
+        await Assert.That(byJapanese.Faces.Count).IsEqualTo(2);
+        await Assert.That(byEnglish.Faces.Count).IsEqualTo(2);
+        await Assert.That(byJapanese).IsEqualTo(byEnglish);
+        await Assert.That(byJapanese).IsEqualTo(families[0]);
+    }
+
+    private static NameRecord Name(KnownNameIds id, string value, ushort languageId)
+        => new(PlatformIDs.Windows, languageId, id, value);
 }

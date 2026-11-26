@@ -16,6 +16,8 @@ namespace PinataLabs.Typography;
 /// </summary>
 public sealed class FontCollection : IFontCollection, IFontMetricsCollection
 {
+    private static readonly StringComparer GroupComparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(CultureInfo.InvariantCulture);
+
     private readonly HashSet<string> searchDirectories = [];
     private readonly HashSet<FontMetrics> metricsCollection = [];
 
@@ -142,7 +144,7 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
     FontFamily IFontMetricsCollection.AddMetrics(FontMetrics metrics, CultureInfo culture)
     {
         ((IFontMetricsCollection)this).AddMetrics(metrics);
-        return new FontFamily(metrics.Description.FontFamily(culture), this, culture);
+        return new FontFamily(this.GroupName(metrics, culture), this, culture);
     }
 
     /// <inheritdoc/>
@@ -167,8 +169,19 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
         ArgumentNullException.ThrowIfNull(name);
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
 
+        // A face is named in the culture by the language of its names, and faces of one family can have names
+        // in different languages. So the name finds a face, and the family of that face is every face with its group.
+        HashSet<string> groups = new(GroupComparer);
+        foreach (FontMetrics metrics in this.metricsCollection)
+        {
+            if (comparer.Equals(metrics.Description.FontFamily(culture), name))
+            {
+                groups.Add(metrics.Description.FontFamilyInvariantCulture);
+            }
+        }
+
         return this.metricsCollection
-            .Where(x => comparer.Equals(x.Description.FontFamily(culture), name))
+            .Where(x => groups.Contains(x.Description.FontFamilyInvariantCulture))
             .ToArray();
     }
 
@@ -242,25 +255,43 @@ public sealed class FontCollection : IFontCollection, IFontMetricsCollection
         return installedFamilies;
     }
 
+    // Faces are grouped by the invariant family name. The name in a culture depends on which languages
+    // the names of a face have, so grouping by it would split a family whose faces have different languages.
     private IEnumerable<FontFamily> FamiliesByCultureImpl(CultureInfo culture)
-        => this.metricsCollection
-        .Select(x => x.Description.FontFamily(culture))
-        .Distinct()
-        .Select(x => new FontFamily(x, this, culture))
-        .ToArray();
+    {
+        HashSet<string> groups = new(GroupComparer);
+        List<FontFamily> families = [];
+        foreach (FontMetrics metrics in this.metricsCollection)
+        {
+            if (groups.Add(metrics.Description.FontFamilyInvariantCulture))
+            {
+                families.Add(new FontFamily(metrics.Description.FontFamily(culture), this, culture));
+            }
+        }
+
+        return families;
+    }
+
+    // The name of a family in a culture is the name of the first face of its group, whichever face a name found.
+    private string GroupName(FontMetrics metrics, CultureInfo culture)
+    {
+        string group = metrics.Description.FontFamilyInvariantCulture;
+        FontMetrics first = this.metricsCollection
+            .First(x => GroupComparer.Equals(x.Description.FontFamilyInvariantCulture, group));
+        return first.Description.FontFamily(culture);
+    }
 
     private bool TryGetImpl(string name, CultureInfo culture, out FontFamily family)
     {
         ArgumentNullException.ThrowIfNull(name);
         StringComparer comparer = StringComparerHelpers.GetCaseInsensitiveStringComparer(culture);
 
-        string? match = this.metricsCollection
-            .Select(x => x.Description.FontFamily(culture))
-            .FirstOrDefault(x => comparer.Equals(name, x));
+        FontMetrics? match = this.metricsCollection
+            .FirstOrDefault(x => comparer.Equals(name, x.Description.FontFamily(culture)));
 
         if (match != null)
         {
-            family = new FontFamily(match, this, culture);
+            family = new FontFamily(this.GroupName(match, culture), this, culture);
             return true;
         }
 

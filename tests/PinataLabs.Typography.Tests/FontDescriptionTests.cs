@@ -97,6 +97,30 @@ public class FontDescriptionTests
     }
 
     [Test]
+    public async Task LoadFontDescription_FamilyInTheCultureBeatsTheTypographicNameInAnotherLanguage()
+    {
+        var us = new CultureInfo(0x0409);
+        var ja = new CultureInfo(0x0411);
+
+        var writer = new BigEndianBinaryWriter();
+        writer.WriteTrueTypeFileHeader(1, 0, 0, 0);
+        writer.WriteTableHeader("name", 0, 28, 999);
+        writer.WriteNameTable(
+            (KnownNameIds.FontFamilyName, "legacy_us", us),
+            (KnownNameIds.TypographicFamilyName, "typographic_us", us),
+            (KnownNameIds.FontFamilyName, "legacy_ja", ja));
+
+        var description = FontDescription.LoadDescription(writer.GetStream());
+
+        await Assert.That(description.FontFamily(ja)).IsEqualTo("legacy_ja");
+        await Assert.That(description.FontFamily(us)).IsEqualTo("typographic_us");
+
+        // A culture that the font has no name for takes the US name, typographic first.
+        await Assert.That(description.FontFamily(new CultureInfo("de-DE"))).IsEqualTo("typographic_us");
+        await Assert.That(description.FontFamilyInvariantCulture).IsEqualTo("typographic_us");
+    }
+
+    [Test]
     public async Task LoadFontDescription_CultureNamePriority_FirstWindows()
     {
         var usCulture = new CultureInfo(0x0409);
