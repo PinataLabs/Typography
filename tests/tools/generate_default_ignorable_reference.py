@@ -14,6 +14,8 @@ glyph out of its output. The script builds two fonts to show both:
 * DefaultIgnorables.ttf has U+0020, two Latin letters, an Arabic letter, a Mongolian letter, two Sinhala letters
   and the virama, and the default-ignorable characters ZWJ, ZWNJ, the Mongolian free variation selectors, the
   Mongolian vowel separator, COMBINING GRAPHEME JOINER, SOFT HYPHEN and WORD JOINER. Every glyph is 600 units wide.
+  It also has the Hangul fillers and SHORTHAND FORMAT LETTER OVERLAP. Unicode makes them default-ignorable, but
+  HarfBuzz draws them with their own glyphs.
   Its GSUB `ccmp` feature substitutes WORD JOINER, which HarfBuzz then draws as GSUB left it.
 * DefaultIgnorablesNoSpace.ttf has the same glyphs without U+0020 and without GSUB.
 
@@ -42,6 +44,9 @@ REFERENCE = os.path.join(FONTS, "DefaultIgnorables.harfbuzz.json")
 ZWNJ, ZWJ, WJ = 0x200C, 0x200D, 0x2060
 IGNORABLES = [0x00AD, 0x034F, 0x180B, 0x180C, 0x180D, 0x180E, 0x180F, ZWNJ, ZWJ, WJ]
 
+# The Hangul fillers U+115F, U+1160, U+3164 and U+FFA0, and SHORTHAND FORMAT LETTER OVERLAP.
+DRAWN_IGNORABLES = [0x115F, 0x1160, 0x3164, 0xFFA0, 0x1BCA0]
+
 # a, b, BEH, MONGOLIAN LETTER A, SINHALA KA, SINHALA YAYANNA, SINHALA AL-LAKUNA.
 LETTERS = [0x61, 0x62, 0x0628, 0x1820, 0x0D9A, 0x0DBA, 0x0DCA]
 
@@ -64,7 +69,7 @@ BUILT_TEXTS = [
     [0x0D9A, 0x0DCA, ZWJ, 0x0DBA],
     [0x0D9A, 0x0DCA, ZWNJ, 0x0DBA],
     [0x61, ZWJ, 0x62, 0x20, 0x61, ZWNJ, 0x62],
-]
+] + [[0x61, c, 0x62] for c in DRAWN_IGNORABLES]
 
 # Text in fonts of the repository: (font, text).
 FONT_TEXTS = [
@@ -121,7 +126,7 @@ def shape(path, text):
 
 
 def main():
-    characters = sorted(LETTERS + IGNORABLES)
+    characters = sorted(LETTERS + IGNORABLES + DRAWN_IGNORABLES)
     features = "languagesystem DFLT dflt;\nfeature ccmp { sub u%04X by wj.alt; } ccmp;\n" % WJ
     built = [
         build("DefaultIgnorables.ttf", sorted([0x20] + characters), features),
