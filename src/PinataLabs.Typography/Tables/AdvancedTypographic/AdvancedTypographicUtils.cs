@@ -345,6 +345,26 @@ internal static class AdvancedTypographicUtils
         Span<int> matches)
     {
         int position = iterator.Index;
+
+        // A backtrack sequence lists its glyphs from the one nearest to the input to the farthest one.
+        if (increment < 0)
+        {
+            int matched = 0;
+            while (matched < sequence.Length)
+            {
+                int previous = iterator.Increment(-1);
+                if (previous < 0 || !condition(sequence[matched], iterator.Collection[previous]))
+                {
+                    break;
+                }
+
+                matched++;
+            }
+
+            iterator.Index = position;
+            return matched == sequence.Length;
+        }
+
         int offset = iterator.Increment(increment);
         IGlyphShapingCollection collection = iterator.Collection;
 
