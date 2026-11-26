@@ -317,10 +317,11 @@ public class FontVariationInstanceTests
     }
 
     [Test]
-    public async Task AnInstanceRendersUnhintedAndTheDefaultInstanceHinted()
+    public async Task AnInstanceOfAFontWithoutCvarHintsWithTheControlValuesOfTheFace()
     {
         // The glyph program of VariationAxes rounds the top of its boxes to the pixel grid. Its default instance is at
-        // opsz 14, so a font of size 14 is the face, and a font of size 12 is an instance.
+        // opsz 14, so a font of size 14 is the face, and a font of size 12 is an instance. The font has no 'cvar' table, so both
+        // hint with the same control values, and the hinted box is the same at both sizes in pixels.
         FontFamily family = new FontCollection().Add(TestFonts.VariationAxesFile);
         Font face = family.CreateFont(14);
         Font instance = family.CreateFont(12);
@@ -333,7 +334,7 @@ public class FontVariationInstanceTests
         await Assert.That(face.FontMetrics).IsSameReferenceAs(family.Faces[0]);
         await Assert.That(instance.FontMetrics).IsNotSameReferenceAs(family.Faces[0]);
         await Assert.That(faceHinted.SequenceEqual(faceUnhinted)).IsFalse();
-        await Assert.That(instanceHinted).IsEquivalentTo(instanceUnhinted, CollectionOrdering.Matching);
+        await Assert.That(instanceHinted.SequenceEqual(instanceUnhinted)).IsFalse();
     }
 
     [Test]

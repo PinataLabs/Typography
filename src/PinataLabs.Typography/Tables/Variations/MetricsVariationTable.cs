@@ -14,7 +14,7 @@ namespace PinataLabs.Typography.Tables.Variations;
 /// </summary>
 /// <remarks>
 /// A table that is truncated, has another major version, or has a store or a map that is malformed is absent, so
-/// that a table that is read always answers. The right side bearing and bottom side bearing maps, and the vertical
+/// that a table that is read always answers. A map of no entries is no map. The right side bearing and bottom side bearing maps, and the vertical
 /// origin map of 'VVAR', are not read: <see cref="GlyphMetrics.RightSideBearing"/> and
 /// <see cref="GlyphMetrics.BottomSideBearing"/> follow from the advance, the other bearing and the size of the glyph.
 /// </remarks>
@@ -134,7 +134,9 @@ internal abstract class MetricsVariationTable : Table
             return false;
         }
 
-        map = read;
+        // HarfBuzz reads a map of no entries as it reads no map: the advance takes the glyph index as its inner index, and no bearing
+        // is mapped.
+        map = read.Count == 0 ? null : read;
         return true;
     }
 }

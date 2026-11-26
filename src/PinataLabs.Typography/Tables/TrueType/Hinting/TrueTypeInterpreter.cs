@@ -25,6 +25,9 @@ internal class TrueTypeInterpreter
     private readonly InstructionStream[] instructionDefs;
     private float[] controlValueTable;
     private readonly int[] storage;
+
+    // The F2Dot14 coordinates of the instance that the font program sees, one for each axis of the font. A font without axes has none.
+    private readonly short[] variationCoordinates;
     private IReadOnlyList<ushort> contours;
     private float scale;
     private int ppem;
@@ -50,8 +53,9 @@ internal class TrueTypeInterpreter
 
     private readonly List<OpCode> debugList = [];
 
-    public TrueTypeInterpreter(int maxStack, int maxStorage, int maxFunctions, int maxInstructionDefs, int maxTwilightPoints)
+    public TrueTypeInterpreter(int maxStack, int maxStorage, int maxFunctions, int maxInstructionDefs, int maxTwilightPoints, short[]? variationCoordinates = null)
     {
+        this.variationCoordinates = variationCoordinates ?? [];
         this.stack = new ExecutionStack(maxStack);
         this.storage = new int[maxStorage];
         this.functions = new InstructionStream[maxFunctions];
@@ -1438,6 +1442,12 @@ internal class TrueTypeInterpreter
                     // if ((selector & 0x2) != 0)
                     // if ((selector & 0x4) != 0)
 
+                    // a font with variation axes is a variable font, at whatever instance it runs
+                    if ((selector & 0x8) != 0 && this.variationCoordinates.Length > 0)
+                    {
+                        result |= 1 << 10;
+                    }
+
                     // we're always rendering in grayscale
                     if ((selector & 0x20) != 0)
                     {
@@ -1446,6 +1456,18 @@ internal class TrueTypeInterpreter
 
                     // TODO: ClearType flags
                     this.stack.Push(result);
+                }
+
+                break;
+
+                // A font without axes has no coordinates to give, so the opcode is unknown to it, as it is to any
+                // font program that defines it itself.
+                case OpCode.GETVARIATION when this.variationCoordinates.Length > 0:
+                {
+                    foreach (short coordinate in this.variationCoordinates)
+                    {
+                        this.stack.Push((int)coordinate);
+                    }
                 }
 
                 break;
@@ -2177,7 +2199,9 @@ internal class TrueTypeInterpreter
         MIN,
         SCANTYPE,
         INSTCTRL,
-        /* unused: 0x8F - 0xAF */
+        /* unused: 0x8F - 0x90 */
+        GETVARIATION = 0x91,
+        /* unused: 0x92 - 0xAF */
         PUSHB1 = 0xB0,
         PUSHB2,
         PUSHB3,

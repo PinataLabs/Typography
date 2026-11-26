@@ -7,6 +7,7 @@ using System.Buffers.Binary;
 using System.Numerics;
 using PinataLabs.Typography.FontPrograms;
 using PinataLabs.Typography.Tables.General;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Tables.Woff;
 
 namespace PinataLabs.Typography.Tables.TrueType.Glyphs;
@@ -85,6 +86,18 @@ internal sealed class GlyphTable : Table
     /// <returns><see langword="false"/> if the glyph is malformed.</returns>
     public bool TryReadPoints(int glyphId, out GlyphVector vector)
         => TrueTypeGlyphDecoder.TryReadPoints(this.data, this.Resolve(glyphId), out vector);
+
+    /// <summary>
+    /// Reads the points of a glyph at a variation instance in glyph space, for the hinting interpreter and for the outline.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="gvar">The 'gvar' table of the font.</param>
+    /// <param name="coordinates">The F2Dot14 coordinates of the instance, in <c>fvar</c> order.</param>
+    /// <param name="vector">The points of the glyph.</param>
+    /// <param name="phantoms">The deltas of the phantom points of the glyph.</param>
+    /// <returns><see langword="false"/> if the glyph or its variation data is malformed.</returns>
+    public bool TryReadVariedPoints(int glyphId, GvarTable gvar, ReadOnlySpan<short> coordinates, out GlyphVector vector, out PhantomDeltas phantoms)
+        => TrueTypeGlyphDecoder.TryReadVariedPoints(this.data, gvar, coordinates, this.Resolve(glyphId), out vector, out phantoms);
 
     /// <summary>
     /// Gets one point of a glyph in glyph space.

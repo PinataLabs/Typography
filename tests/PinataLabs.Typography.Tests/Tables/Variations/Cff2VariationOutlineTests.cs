@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -197,6 +198,42 @@ public class Cff2VariationOutlineTests
         await Assert.That(light.FontMetrics).IsSameReferenceAs(face);
         await Assert.That(instance).IsNotEqualTo(before);
         await Assert.That(after).IsEqualTo(before);
+    }
+
+    [Test]
+    public async Task TheTopSideBearingOfAGlyphBelowTheBaselineClampsAtTheLimitOfTheType()
+    {
+        // The font has no 'vmtx' table, so the top side bearing of a glyph is the distance from the ascender to the top of its outline.
+        // An ascender of 32767 and an outline below the baseline put that distance beyond a 16-bit integer, which a cast would wrap
+        // into a negative bearing.
+        byte[] bytes = File.ReadAllBytes(TestFonts.SourceSans3VariableCff2File);
+        byte[] hhea = SfntRewriter.GetTable(bytes, "hhea")!;
+        byte[] os2 = SfntRewriter.GetTable(bytes, "OS/2")!;
+        BinaryPrimitives.WriteInt16BigEndian(hhea.AsSpan(4), short.MaxValue);
+        BinaryPrimitives.WriteInt16BigEndian(os2.AsSpan(68), short.MaxValue);
+        FontFamily family = VariationFontBytes.Load(SfntRewriter.Rewrite(bytes, new Dictionary<string, byte[]?> { ["hhea"] = hhea, ["OS/2"] = os2 }));
+        Font font = family.CreateFont(FontTools.UnitsPerEm, default, new FontVariation(Tag.Parse("wght"), 650F));
+
+        List<string> differences = [];
+        int below = 0;
+        foreach (int codePoint in new[] { '_', 0x2017 })
+        {
+            if (!font.FontMetrics.TryGetGlyphMetrics(new CodePoint(codePoint), TextAttributes.None, TextDecorations.None, LayoutMode.HorizontalTopBottom, ColorFontSupport.None, out IReadOnlyList<GlyphMetrics>? glyphs)
+                || glyphs[0].Bounds.Max.Y >= 0)
+            {
+                continue;
+            }
+
+            below++;
+            if (glyphs[0].TopSideBearing != short.MaxValue)
+            {
+                differences.Add($"U+{codePoint:X4}: {glyphs[0].TopSideBearing}, with the top of the outline at {glyphs[0].Bounds.Max.Y}");
+            }
+        }
+
+        await Assert.That(font.FontMetrics.HorizontalMetrics.Ascender).IsEqualTo(short.MaxValue);
+        await Assert.That(differences).IsEmpty();
+        await Assert.That(below).IsGreaterThan(0);
     }
 
     private static Font CreateFont(Location location)

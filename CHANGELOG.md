@@ -47,7 +47,7 @@ An additive or breaking public API change needs all of these:
   creates a font for every draw does not rebuild glyphs, and one that changes the weight every frame does not
   accumulate instances. `FontMetrics.Variations` of an instance gives the values of the request that made it.
   `CreateFont(12)` on Teko is the instance `wght` 400, and `FontStyle.Bold` is `wght` 700. An instance draws the
-  TrueType outlines and the positions of the default instance until the `gvar` and GPOS variation data are read. (#125)
+  positions of the default instance until the GPOS variation data are read. (#125)
 - **CFF2 variation instances.** A variation instance of a CFF2 font draws the outlines of its coordinates. A `blend`
   operator adds each delta, scaled by the scalar of its region, to its value, for the regions that the `vsindex` of the
   glyph names, and the bounds of a glyph come from the varied outline. The scalars of an instance are made once, when
@@ -56,6 +56,19 @@ An additive or breaking public API change needs all of these:
   bounds of 38 glyphs, which blend in the charstring, blend in a subroutine, switch to `vsindex` 1 and do not blend,
   match fontTools `getGlyphSet(location=...)` at the default instance, Regular, Bold, `wght` 900 and two locations
   between them. (#126)
+- **TrueType variation outlines.** A variation instance of a TrueType font that has a `gvar` table draws the varied
+  outline. The new tuple variation store reader decodes the shared and private point numbers, the packed deltas and the
+  intermediate regions of the tuples of a glyph. The deltas move the points of a simple glyph, with interpolation of the points
+  that a tuple leaves out, and the offsets of the components of a composite glyph, and they move its four phantom points. A
+  component that a composite places by points is placed by the varied points. The bounds of a glyph are those of its varied
+  points. The outline moves left by the x of the first phantom point, so that the origin stays at 0, as it does in HarfBuzz and
+  FreeType, and a hinted glyph moves by that point as hinting rounds it, unless the font has `HVAR`, as the entry on hinting says. A composite takes the four phantom points of its last
+  component that has the USE_MY_METRICS flag, with the deltas of that component, and drops its own. An empty glyph keeps its
+  bounds, so a glyph with no deltas keeps its bearings. The phantom points give the advances and side bearings that `HVAR` and
+  `VVAR` do not give, as the entry on metrics says. For `Teko-Variable.ttf` at the default instance, the "SemiBold" named
+  instance, the maximum and a user location, the outlines and the bounds match fontTools, and the advances of the phantom
+  points match HarfBuzz. A glyph whose `gvar` data is malformed draws at the default instance, and so does a glyph that has
+  such a component. A `gvar` table that is malformed, or has another number of axes than `fvar`, counts as absent. (#127)
 - **Advances and global metrics of variation instances.** A variation instance adds the `HVAR` delta of a glyph to its
   advance width, and the `VVAR` delta to its advance height. When the table maps the left or top side bearing, the
   delta varies it too. A table with no advance mapping uses the glyph ID as its inner index and 0 as its outer
@@ -70,12 +83,43 @@ An additive or breaking public API change needs all of these:
   bearing and the size of the glyph. A CFF2 glyph keeps its origin where the default outline puts it, so without a left
   side bearing mapping its bearing is the left edge of its varied outline, and without a top side bearing mapping its
   bearing is the distance from the vertical origin of the default outline, which is its top plus the `vmtx` bearing, to
-  the top of the varied outline. A TrueType glyph keeps the bearing of `hmtx` until its `gvar` variation is read. The win
-  ascent and descent are added to their `MVAR` deltas as integers and clamped once, so a value above 32767 does not
-  wrap. Advance widths of every glyph that `hmtx` lists match fontTools and HarfBuzz for `Teko-Variable.ttf` and
-  `SourceSans3VF-Upright.otf` at the axis minimum, named instances, the axis maximum and between them. The global
-  metrics, advance heights and bearings match them for two built fonts that have every mapping and an `MVAR` record for
-  every metric. (#128)
+  the top of the varied outline. The win ascent and descent are added to their `MVAR` deltas as integers and clamped once,
+  so a value above 32767 does not wrap. Advance widths of every glyph that `hmtx` lists match fontTools and HarfBuzz for
+  `Teko-Variable.ttf` and `SourceSans3VF-Upright.otf` at the axis minimum, named instances, the axis maximum and between
+  them. The global metrics, advance heights and bearings match them for built fonts that have every mapping and an `MVAR`
+  record for every metric. (#128)
+- **HVAR and VVAR win over the phantom points.** A TrueType font that has `gvar` takes an advance from `HVAR` or `VVAR`
+  when the table is there, as HarfBuzz does, and the left or top side bearing when the table maps it, which HarfBuzz does
+  not: it takes both bearings from the varied outline. What the table
+  leaves out comes from the phantom points of `gvar`: the advance is the distance between two phantom points, and a side
+  bearing is the distance from a phantom point to the varied bounds, each rounded once after the deltas are summed. A
+  table that is malformed counts as absent, so the phantom points then give the advances. A font with no `gvar` table
+  keeps the bearing of `hmtx` where `HVAR` maps none. For `Teko-Variable.ttf`, which has `HVAR` and no side bearing
+  mapping, the advances match fontTools and HarfBuzz with `HVAR` at `wght` 300, 600 and 700 and a location between, and
+  match HarfBuzz without `HVAR` from the phantom points. The two sources agree for every glyph except six composites of a
+  letter and a mark, Edieresis, Odieresis, Ohungarumlaut, Uhungarumlaut, Ydieresis and ydieresis, away from the default
+  instance. For those `HVAR` has a delta of its own and `gvar` moves the phantom points of the letter, and the font gives the
+  two different deltas. A built font whose `gvar` deltas for the phantom points differ from its `HVAR` and `VVAR` deltas
+  checks that the tables win, and that the phantom points give a value when the table, or its mapping of that side
+  bearing, is missing or malformed. A mapping of no entries is no mapping: HarfBuzz gives an advance the glyph ID as its
+  inner index, as for a table with no advance mapping, and leaves the bearing to the varied outline. `VVAR` goes with
+  `vmtx`. In a font without one the advance height stays the advance height that the font gives to every glyph, as in
+  HarfBuzz, whatever `VVAR` and the phantom points say, and the top side bearing comes from the phantom points. The
+  advance heights of a font without `vmtx`, and the advances of a table with a mapping of no entries, match HarfBuzz at the locations of the
+  reference. (#127, #128)
+- **Hinting for variation instances.** A variation instance of a TrueType font hints its glyphs, with an interpreter of its own
+  and the control values of its own. Its control values are those of the `cvt ` table plus the deltas of the `cvar` table for its
+  coordinates, summed and rounded once, as fontTools does. A font that has `fpgm` and `prep` tables and no `cvar` table, or a
+  `cvar` table that is malformed, hints an instance with the control values of the face. The interpreter runs the
+  `GETVARIATION` instruction, which pushes the F2Dot14 coordinates of the instance, one for each axis, and sets the variation
+  bit of `GETINFO`, which a font with axes always has. A font without axes treats `GETVARIATION` as unknown. A hinted glyph of
+  `HintedVariable.ttf`, whose instructions use the control values and the coordinates, matches the hinted outline of FreeType
+  at five locations. A font that has `HVAR` hints as FreeType does: the deltas of `gvar` leave the first two phantom points
+  out, so the outline does not move by the first phantom point and the advance is that of `HVAR`, and with `VVAR` and `vmtx`
+  the top of the vertical advance is where `vmtx` puts it. Unhinted, the outline still moves by the first phantom point, as in
+  HarfBuzz. The phantom points round to the pixel with a half going up, as in FreeType, and the fourth is the third before it
+  rounds less the advance height. `HintedVariableMetricsTables.ttf`, whose `gvar` deltas for the phantom points are not those of its
+  `HVAR` and `VVAR`, matches the hinted outlines of FreeType at five locations. (#127, #130)
 - **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
   axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
   italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face
@@ -184,8 +228,7 @@ An additive or breaking public API change needs all of these:
   default instance, which is the face itself. Two instances of one face give different `GlyphRendererParameters`, and
   `GlyphRendererParameters.FontMetrics` is the instance. `Font.Name` is the family name and the subfamily name of the
   named instance that the font draws, such as "Teko SemiBold", and for any other coordinates it is the full name of the
-  face. A variation instance draws unhinted, so `HintingMode.Standard` acts as `HintingMode.None` for it. The default
-  instance keeps its hinting. A text layout creates each fallback font with the size, the style and the variations of
+  face. A text layout creates each fallback font with the size, the style and the variations of
   the font of the text. (#125)
 - **A font takes the best face by weight, width and slope.** `Font.FontMetrics` is the face that
   `FontFamily.MatchFace(font.Style)` gives. A family with static Regular and Bold faces renders as before. A
@@ -409,9 +452,9 @@ These members are removed in #123. Each entry names its replacement.
   Before, Myanmar text had no script-specific processing, so these marks stayed in logical order.
   The shaper uses the `mym2` script tag, and falls back to `mymr`. (#30)
 - **CFF2 fonts.** Fonts with a `CFF2` outline table, such as variable OpenType/CFF2 fonts, now load
-  and render. They are supported at the default instance only. `blend` operators use their default
-  values, and the variation axes (`fvar`, `avar`, `HVAR`, `MVAR`) are ignored. Before, loading
-  such a font threw `NotSupportedException`. (#21)
+  and render. A face draws the default instance, where `blend` operators use their default
+  values. The variation instances of such a font are described under "CFF2 variation instances". Before,
+  loading such a font threw `NotSupportedException`. (#21)
 
 ### Changed
 

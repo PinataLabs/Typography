@@ -59,9 +59,9 @@ It also builds the two small variable fonts that the variation tests need, next 
 - `VariationSlant.ttf` has the axes `wght` and `slnt` and no `ital` axis, so an italic request has to use `slnt`.
 
 Both fonts have `fvar` and `avar` and no outline variation data, because instances draw the default outlines
-until the CFF2 `blend` and `gvar` issues land. Each glyph has a short glyph program that rounds the top of its box to
-the pixel grid, so that hinting changes the outline. The tests use it to check that the default instance draws hinted
-and that a variation instance draws unhinted.
+until the CFF2 `blend` issue lands. Each glyph has a short glyph program that rounds the top of its box to
+the pixel grid, so that hinting changes the outline. The tests use it to check that the default instance and a variation
+instance of a font with no `cvar` table both draw hinted.
 
 For these two fonts and the two variable fonts of the test project, the reference holds the axes, the named
 instances, the `avar` segment maps, and a list of locations. A location is the user coordinates of every axis and the
@@ -119,7 +119,7 @@ The output is deterministic for one fontTools version. The file records the vers
 `generate_metrics_variation_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/MetricsVariations.fonttools.json`,
 the fontTools reference for the advances, side bearings and global metrics of variation instances (issue #128).
 Neither variable test font has `HVAR` side bearing mappings or `VVAR`, and their `MVAR` varies only the strikeout position
-and the heights, so the script builds two small TrueType fonts that have all of them, next to the reference:
+and the heights, so the script builds three small TrueType fonts that have all of them, next to the reference:
 
 - `VariationMetrics.ttf` has the axes `wght` and `wdth` and six glyphs. Its `HVAR` has an advance width map that shares one
   row between glyphs, a left side bearing map that leaves a glyph out, and a right side bearing map. It has `vhea`, `vmtx`
@@ -127,10 +127,21 @@ and the heights, so the script builds two small TrueType fonts that have all of 
   descender and line gap, the win ascent and descent, the `vhea` metrics, and the subscript, superscript, strikeout and
   underline values. Its `hhea`, typo and win values differ, and its `USE_TYPO_METRICS` bit is clear.
 - `VariationMetricsTypo.ttf` is the same font with the `USE_TYPO_METRICS` bit set.
+- `VariationMetricsGvar.ttf` is the first font with a `gvar` table (issue #127). Its tuples move the points of each glyph and
+  its four phantom points, by deltas that are not those of `HVAR` and `VVAR`, so the font tells which source the library takes.
+  `HVAR` and `VVAR` win for the advances, as they do in HarfBuzz, and the library also gives the left and top side bearings that
+  a mapping gives, which HarfBuzz does not: it takes both bearings from the varied outline, measured from the phantom points,
+  whatever the tables map. The reference records the values of the tables like those of the other fonts, and records under
+  `phantom` what the phantom points give: the advances, the left side bearing (the left edge of the varied outline less the
+  first phantom point) and the top side bearing. They come from fontTools on a copy of the font that has no `HVAR` and `VVAR`,
+  and the script checks the advances, and the bearings, against HarfBuzz. Under `harfbuzz` the reference holds what HarfBuzz gives
+  for three edits that the tests make: the font without `vmtx`, where every glyph has the advance height of the font; an advance
+  width map of no entries; and an advance height map of no entries, which HarfBuzz reads as no map. The tests break or remove a
+  table, or the mapping of a bearing, and expect those values.
 
-The glyphs of both fonts have no `gvar` variation, so only their metrics change.
+The glyphs of the first two fonts have no `gvar` variation, so only their metrics change.
 
-For these two fonts and the two variable fonts of the test project, the file holds, at the axis minimum, a named instance, the
+For these three fonts and the two variable fonts of the test project, the file holds, at the axis minimum, a named instance, the
 axis maximum and some user locations, the advance width of each glyph that `hmtx` lists and the advance height of each glyph
 that `vmtx` lists (`TTFont.getGlyphSet(location=..., normalized=True)`, rounded as `otRound` does), the global metrics, which
 are the value of a table plus the rounded `MVAR` delta of its tag, and the `MVAR` delta of every tag. For the built fonts
@@ -159,6 +170,74 @@ python tests/tools/generate_metrics_variation_reference.py
 ```
 
 The output is deterministic for one fontTools version. The file records the version that wrote it.
+
+## TrueType variation reference
+
+`generate_gvar_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/Gvar.fonttools.json`, the fontTools
+reference for the outlines, bounds and advances of a TrueType variation instance (issue #127). `Teko-Variable.ttf` is the one
+variable test font with TrueType outlines. The script draws it with fontTools `getGlyphSet(location=..., normalized=True)` at the
+default instance, the "SemiBold" named instance, the maximum and a user location. Each location is the F2Dot14 coordinates that
+the font variations reference gives, as normalised coordinates. fontTools applies the `gvar` deltas with interpolation of
+untouched points, the deltas of the component offsets of composite glyphs, and the deltas of the phantom points.
+
+For every glyph the reference holds the control bounds of the varied outline, the advance width that the phantom points give
+(`advances`), the advance width that `HVAR` gives (`hvarAdvances`), and the left side bearing. Teko has an `HVAR` table, which a
+font program then uses for the advance, so the script reads the phantom point advances from a copy of the font that has none, with
+HarfBuzz (install uharfbuzz). HarfBuzz and FreeType give a composite glyph the phantom points of its component that has the
+USE_MY_METRICS flag, where fontTools keeps those of the composite, and six glyphs of Teko differ in the two. The `HVAR` advances
+come from the font as it is, and the script stops when HarfBuzz and fontTools differ. `HVAR` and the phantom points give the same
+advance for every glyph but six composites (Edieresis, Odieresis, Ohungarumlaut, Uhungarumlaut, Ydieresis and ydieresis), away
+from the default instance. Each is a mark and a letter that has USE_MY_METRICS, `HVAR` has a delta for the composite, and `gvar`
+moves the phantom points of the letter. The script stops when another glyph differs. fontTools takes the bounds of a composite glyph
+from its unvaried components, so the script measures the drawn outline instead. For a sample of the glyphs, which has the Basic Latin glyphs, every fourth composite and the
+empty glyphs, it also holds the outline as the path commands that the font program fixtures use. The script checks that the first
+phantom point of every glyph is the origin, which the left side bearing relies on.
+
+To write the file again, install fontTools 4.68 or later, and run this from the repository root:
+
+```
+python tests/tools/generate_gvar_reference.py
+```
+
+The output is deterministic for one fontTools version. The reference records the version that wrote it.
+
+## Hinted variable font
+
+`generate_hinted_variable_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/Variations/HintedVariable.ttf` and writes
+`HintedVariable.fonttools.json` next to it (issues #127 and #130). Neither variable test font has a `cvar` table or hinting
+instructions that depend on the control values, so this font has them. It has the axes `wght` and `wdth`, with ranges that are powers
+of two on both sides of the default, so that every location of the reference is an exact F2Dot14 coordinate. It has 1024 units to the
+em, so that a font unit is a whole number of 1/64 pixel at 16 and 32 pixels to the em.
+
+The font has `gvar` tuples that leave points out, cover every point, span an intermediate region and use two axes, composite
+glyphs whose components have offsets, a scaled offset, and a placement by points, a glyph with phantom point deltas for the advance and
+the vertical advance, a glyph whose first phantom point moves, two composites with a component that has the USE_MY_METRICS flag, a `cvar` table with tuples on each axis and on an intermediate region, an `fpgm` function, a `prep` program that
+sets a control value from another, and glyphs whose instructions go to a control value, call the function, or use the instructions
+GETVARIATION and GETINFO. The script's own documentation lists each glyph.
+
+The reference holds, at five locations:
+
+- the control values of the instance, from `fontTools.varLib.instancer`, which sums the `cvar` deltas and rounds once;
+- the outline, the bounds, the advances and the side bearings of each glyph from fontTools `getGlyphSet`, where fontTools can draw the glyph;
+- the advances and extents of each glyph from HarfBuzz, which moves an outline by its first phantom point and takes the phantom points of
+  a composite from its USE_MY_METRICS component, as FreeType does and fontTools does not;
+- the unhinted outline of each glyph from FreeType at 16384 pixels to the em, which keeps it to 1/1024 of a font unit;
+- the hinted outlines of the four hinted glyphs at 16 and 32 pixels to the em, from FreeType with its version 35 interpreter.
+
+The script also builds `HintedVariableMetricsTables.ttf` and writes `HintedVariableMetricsTables.fonttools.json`: the same font with
+two glyphs more and an `HVAR` and a `VVAR`, whose advances and bearings are not the deltas of the phantom points. FreeType leaves
+the deltas of `gvar` out of the phantom points of a direction when the font has the table of it, so the outline does not move by the
+first phantom point, and the advance is the table's. R is a composite whose right edge goes to the second phantom point, and T is a
+box whose top and bottom go to the third and fourth. The reference holds the hinted outlines of L, R, T and H, from FreeType, and the
+advances and extents from HarfBuzz, which still moves the outline by the first phantom point.
+
+To write the font and the reference again, install fontTools 4.68 or later, `freetype-py` and `uharfbuzz`, and run this from the repository root:
+
+```
+python tests/tools/generate_hinted_variable_font.py
+```
+
+The output is deterministic for one fontTools and FreeType version. The reference records both.
 
 ## Central baseline reference
 

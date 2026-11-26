@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Fuzzes the font program API (issue #74), the Item Variation Store reader (issue #124) and the HVAR, VVAR and MVAR readers (issue #128) with libFuzzer through SharpFuzz, or in process without it.
+    Fuzzes the font program API (issue #74), the Item Variation Store reader (issue #124), the HVAR, VVAR and MVAR readers (issue #128) and the tuple variation store reader (issue #127) with libFuzzer through SharpFuzz, or in process without it.
 
 .DESCRIPTION
     Publishes the harness to artifacts/fuzz/publish, instruments PinataLabs.Typography.dll, copies the committed
@@ -20,7 +20,7 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('program', 'type1-plain', 'item-variation-store', 'metrics-variation')]
+    [ValidateSet('program', 'type1-plain', 'item-variation-store', 'metrics-variation', 'tuple-variation-store')]
     [string] $Target = 'program',
     [string] $LibFuzzer = (Join-Path $PSScriptRoot 'tools/libfuzzer-dotnet-windows.exe'),
     [string] $Replay,

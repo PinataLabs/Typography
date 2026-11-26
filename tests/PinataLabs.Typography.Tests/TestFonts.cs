@@ -117,6 +117,21 @@ public static class TestFonts
     // maps no top side bearing, and VariationCff2VerticalTsb has a map.
     public static string Cff2VerticalOriginsFontToolsReference => GetFullPath("Variations/Cff2VerticalOrigins.fonttools.json");
 
+    // Built by tests/tools/generate_hinted_variable_font.py, which also writes the reference. The font has the axes wght and wdth, the
+    // tables fpgm, prep, cvt, cvar and gvar, and glyphs whose hinting depends on the control values and on the coordinates.
+    public static string HintedVariableFile => GetFullPath("Variations/HintedVariable.ttf");
+
+    public static string HintedVariableFontToolsReference => GetFullPath("Variations/HintedVariable.fonttools.json");
+
+    // Built by the same script: HintedVariable.ttf with the glyphs R and T, which go to the phantom points, and with 'HVAR' and 'VVAR' tables
+    // whose advances and side bearings are not the deltas of the phantom points.
+    public static string HintedVariableMetricsTablesFile => GetFullPath("Variations/HintedVariableMetricsTables.ttf");
+
+    public static string HintedVariableMetricsTablesReference => GetFullPath("Variations/HintedVariableMetricsTables.fonttools.json");
+
+    // Written by tests/tools/generate_gvar_reference.py, from Teko-Variable.ttf.
+    public static string GvarFontToolsReference => GetFullPath("Variations/Gvar.fonttools.json");
+
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 

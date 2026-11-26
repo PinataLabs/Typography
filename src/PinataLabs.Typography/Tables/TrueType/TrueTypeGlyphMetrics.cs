@@ -18,6 +18,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 {
     private readonly GlyphTable glyphs;
 
+    // The points of the glyph at the variation instance of its font, in glyph space, which replace the points of the font data.
+    // A glyph of the default instance has none, and its ControlPoints are null.
+    private readonly GlyphVector varied;
+
     // The hinted points of the glyph for each size. An unhinted glyph is drawn from the font data and keeps nothing.
     private readonly ConcurrentDictionary<float, GlyphVector> hintedVectorCache = new();
 
@@ -35,7 +39,8 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         TextAttributes textAttributes,
         TextDecorations textDecorations,
         GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null)
+        GlyphColor? glyphColor = null,
+        GlyphVector varied = default)
         : base(
               font,
               glyphId,
@@ -50,7 +55,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
               textDecorations,
               glyphType,
               glyphColor)
-        => this.glyphs = glyphs;
+    {
+        this.glyphs = glyphs;
+        this.varied = varied;
+    }
 
     internal TrueTypeGlyphMetrics(
         StreamFontMetrics font,
@@ -67,7 +75,8 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         Vector2 scaleFactor,
         TextRun textRun,
         GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null)
+        GlyphColor? glyphColor = null,
+        GlyphVector varied = default)
         : base(
               font,
               glyphId,
@@ -83,7 +92,10 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
               textRun,
               glyphType,
               glyphColor)
-        => this.glyphs = glyphs;
+    {
+        this.glyphs = glyphs;
+        this.varied = varied;
+    }
 
     /// <inheritdoc/>
     internal override GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint)
@@ -102,16 +114,26 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
             this.ScaleFactor,
             textRun,
             this.GlyphType,
-            this.GlyphColor);
+            this.GlyphColor,
+            this.varied);
 
     /// <summary>
-    /// Gets one point of the unhinted glyph in glyph space.
+    /// Gets one point of the unhinted glyph in glyph space, at the variation instance of its font.
     /// </summary>
     /// <param name="index">The number of the point.</param>
     /// <param name="point">The point.</param>
     /// <returns><see langword="false"/> if the glyph has no such point.</returns>
     internal bool TryGetPoint(int index, out Vector2 point)
-        => this.glyphs.TryGetPoint(this.GlyphId, index, out point);
+    {
+        if (this.varied.ControlPoints is null)
+        {
+            return this.glyphs.TryGetPoint(this.GlyphId, index, out point);
+        }
+
+        bool found = (uint)index < (uint)this.varied.ControlPoints.Length;
+        point = found ? this.varied.ControlPoints[index].Point : default;
+        return found;
+    }
 
     /// <inheritdoc/>
     internal override void RenderTo(IGlyphRenderer renderer, Vector2 location, Vector2 offset, GlyphLayoutMode mode, TextOptions options)
@@ -155,9 +177,16 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
                 }
                 else
                 {
-                    // A malformed glyph draws the part of its outline that comes before the fault.
                     TransformingGlyphRenderer sink = new(renderer, renderLocation, scale, this.Offset * scale, rotation);
-                    this.glyphs.TryWriteOutline(this.GlyphId, ref sink);
+                    if (this.varied.ControlPoints is not null)
+                    {
+                        TrueTypeGlyphDecoder.WriteOutline(this.varied.ControlPoints, this.varied.EndPoints, ref sink);
+                    }
+                    else
+                    {
+                        // A malformed glyph draws the part of its outline that comes before the fault.
+                        this.glyphs.TryWriteOutline(this.GlyphId, ref sink);
+                    }
                 }
             }
 
@@ -169,9 +198,7 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 
     private bool TryGetHintedVector(float scaledPPEM, Vector2 scale, Matrix3x2 rotation, HintingMode hintingMode, out GlyphVector hinted)
     {
-        // The control values of the font are those of the default instance, so hinting a varied outline with them snaps
-        // its stems to the wrong widths. A variation instance draws unhinted, whatever mode the text asks for.
-        if (hintingMode == HintingMode.None || !this.FontMetrics.IsDefaultInstance)
+        if (hintingMode == HintingMode.None)
         {
             hinted = default;
             return false;
@@ -179,18 +206,29 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 
         hinted = this.hintedVectorCache.GetOrAdd(scaledPPEM, _ =>
         {
-            if (!this.glyphs.TryReadPoints(this.GlyphId, out GlyphVector vector))
+            if (!this.TryGetPoints(out GlyphVector vector))
             {
                 return default;
             }
 
+            // The varied points of a glyph have moved left by the first phantom point. The hinting programs work on the points
+            // before that move, and the hinted points move after it by the phantom point as hinting rounds it. The phantom points that
+            // the programs see are those of FreeType, which are not always those that moved the points: a font with 'HVAR' or 'VVAR'
+            // has its advances from the tables, and the deltas of 'gvar' do not move the phantom points of that direction.
+            bool isVaried = this.varied.ControlPoints is not null;
+            float originX = isVaried ? this.varied.HintedOriginX : this.Bounds.Min.X - this.LeftSideBearing;
+            float top = isVaried ? this.varied.HintedTop : this.Bounds.Max.Y + this.TopSideBearing;
             vector.Bounds = this.Bounds;
             var matrix = Matrix3x2.CreateScale(scale);
-            matrix.Translation = this.Offset * scale;
+            matrix.Translation = (this.Offset + new Vector2(isVaried ? this.varied.OriginX : 0, 0)) * scale;
             GlyphVector.TransformInPlace(ref vector, matrix);
 
             float pixelSize = scaledPPEM / 72F;
-            this.FontMetrics.ApplyTrueTypeHinting(hintingMode, this, ref vector, scale, pixelSize);
+            float hintedOriginX = this.FontMetrics.ApplyTrueTypeHinting(hintingMode, this, ref vector, scale, pixelSize, originX, top);
+            if (isVaried)
+            {
+                GlyphVector.TransformInPlace(ref vector, Matrix3x2.CreateTranslation((this.Offset.X * scale.X) - hintedOriginX, 0));
+            }
 
             // Rotation must happen after hinting.
             GlyphVector.TransformInPlace(ref vector, rotation);
@@ -198,5 +236,17 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         });
 
         return hinted.ControlPoints is not null;
+    }
+
+    // The interpreter changes the points in place, so a glyph of an instance hints a copy of its varied points.
+    private bool TryGetPoints(out GlyphVector vector)
+    {
+        if (this.varied.ControlPoints is null)
+        {
+            return this.glyphs.TryReadPoints(this.GlyphId, out vector);
+        }
+
+        vector = new GlyphVector((ControlPoint[])this.varied.ControlPoints.Clone(), this.varied.EndPoints, default, this.varied.Instructions, this.varied.IsComposite);
+        return true;
     }
 }

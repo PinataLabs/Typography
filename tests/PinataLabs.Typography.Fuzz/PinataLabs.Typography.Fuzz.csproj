@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The fuzz harness of the font program API (issue #74), of the Item Variation Store reader (issue #124), and of the
-    HVAR, VVAR and MVAR readers (issue #128).
+    The fuzz harness of the font program API (issue #74), of the Item Variation Store reader (issue #124), of the
+    HVAR, VVAR and MVAR readers (issue #128) and of the tuple variation store reader (issue #127).
     It is a libFuzzer target through SharpFuzz, and it has an in-process mutation runner for machines without
     libFuzzer. fuzz.ps1 publishes, instruments and runs it.
     CI builds it but does not run it: libFuzzer is a separate native binary. The test project compiles

@@ -112,12 +112,12 @@ internal partial class StreamFontMetrics
         // side bearing, the bearing of a varied outline is where the outline starts, as it is in hmtx at the default instance.
         if (!this.IsDefaultInstance && !this.hvar.HasLeadingBearings)
         {
-            lsb = (short)bounds.Min.X;
+            lsb = VariationRounding.ToInt16(bounds.Min.X);
         }
 
         IMetricsHeader metrics = isVerticalLayout ? this.VerticalMetrics : this.HorizontalMetrics;
         ushort advancedHeight = (ushort)(metrics.Ascender - metrics.Descender);
-        short tsb = (short)(metrics.Ascender - bounds.Max.Y);
+        short tsb = VariationRounding.ToInt16(metrics.Ascender - bounds.Max.Y);
         if (vtmx != null)
         {
             advancedHeight = this.vvar.VaryAdvance(glyphId, vtmx.GetAdvancedHeight(glyphId));
