@@ -10,6 +10,7 @@ using System.Numerics;
 using PinataLabs.Typography.Tables;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -113,6 +114,10 @@ internal sealed class FileFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     public override IReadOnlyList<FontVariation> Variations => this.Description.Fvar?.DefaultVariations ?? [];
+
+    /// <inheritdoc/>
+    internal override FontMetrics GetInstance(NormalizedCoordinates coordinates, ReadOnlySpan<double> userCoordinates)
+        => coordinates.IsDefault ? this : this.fontMetrics.Value.GetInstance(coordinates, userCoordinates);
 
     /// <inheritdoc/>
     internal override bool TryGetGlyphId(CodePoint codePoint, out ushort glyphId)

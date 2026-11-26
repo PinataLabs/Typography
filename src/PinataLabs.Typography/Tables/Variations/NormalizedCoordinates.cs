@@ -78,7 +78,4 @@ internal readonly struct NormalizedCoordinates : IEquatable<NormalizedCoordinate
 
         return hash.ToHashCode();
     }
-
-    /// <inheritdoc/>
-    public override string ToString() => "[" + string.Join(", ", this.Values.ToArray()) + "]";
 }

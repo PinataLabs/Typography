@@ -18,6 +18,7 @@ using PinataLabs.Typography.Tables.General.Colr;
 using PinataLabs.Typography.Tables.General.Kern;
 using PinataLabs.Typography.Tables.General.Post;
 using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.Variations;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -65,6 +66,16 @@ internal partial class StreamFontMetrics : FontMetrics
     private float italicAngle;
     private FontMetrics? owner;
 
+    // A face of a variable font keeps weak references to the variation instances that are alive, so that fonts that ask
+    // for the same coordinates share one instance and its glyph caches, and an instance that no font uses is collected.
+    // A static font and an instance have none.
+    private readonly ConcurrentDictionary<NormalizedCoordinates, WeakReference<StreamFontMetrics>>? instances;
+
+    // The face that an instance varies, which is null for a face. An instance shares the tables of its face.
+    private readonly StreamFontMetrics? face;
+    private readonly NormalizedCoordinates coordinates;
+    private readonly IReadOnlyList<FontVariation> variations;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class.
     /// </summary>
@@ -84,6 +95,9 @@ internal partial class StreamFontMetrics : FontMetrics
         (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) metrics = this.Initialize(tables);
         this.horizontalMetrics = metrics.HorizontalMetrics;
         this.verticalMetrics = metrics.VerticalMetrics;
+        this.coordinates = tables.Fvar?.DefaultCoordinates ?? default;
+        this.variations = tables.Fvar?.DefaultVariations ?? [];
+        this.instances = tables.Fvar is null ? null : new();
     }
 
     /// <summary>
@@ -105,6 +119,53 @@ internal partial class StreamFontMetrics : FontMetrics
         (HorizontalMetrics HorizontalMetrics, VerticalMetrics VerticalMetrics) metrics = this.Initialize(tables);
         this.horizontalMetrics = metrics.HorizontalMetrics;
         this.verticalMetrics = metrics.VerticalMetrics;
+        this.coordinates = tables.Fvar?.DefaultCoordinates ?? default;
+        this.variations = tables.Fvar?.DefaultVariations ?? [];
+        this.instances = tables.Fvar is null ? null : new();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class as a variation instance of a face.
+    /// The instance shares the parsed tables of the face, which do not change after they load, and owns what depends on
+    /// the coordinates, which for now is the glyph caches.
+    /// </summary>
+    /// <param name="face">The face to vary.</param>
+    /// <param name="coordinates">The normalised coordinates of the instance. They are not all 0.</param>
+    /// <param name="variations">The user coordinates of the request that made the instance.</param>
+    private StreamFontMetrics(StreamFontMetrics face, NormalizedCoordinates coordinates, IReadOnlyList<FontVariation> variations)
+    {
+        this.face = face;
+        this.coordinates = coordinates;
+        this.variations = variations;
+        this.trueTypeFontTables = face.trueTypeFontTables;
+        this.compactFontTables = face.compactFontTables;
+        this.outlineType = face.outlineType;
+        this.substitution = face.substitution;
+        this.description = face.Owner.Description;
+        this.glyphCache = new();
+        if (face.colorGlyphCache is not null)
+        {
+            this.colorGlyphCache = new();
+        }
+
+        this.horizontalMetrics = face.horizontalMetrics;
+        this.verticalMetrics = face.verticalMetrics;
+        this.HeadFlags = face.HeadFlags;
+        this.unitsPerEm = face.unitsPerEm;
+        this.scaleFactor = face.scaleFactor;
+        this.subscriptXSize = face.subscriptXSize;
+        this.subscriptYSize = face.subscriptYSize;
+        this.subscriptXOffset = face.subscriptXOffset;
+        this.subscriptYOffset = face.subscriptYOffset;
+        this.superscriptXSize = face.superscriptXSize;
+        this.superscriptYSize = face.superscriptYSize;
+        this.superscriptXOffset = face.superscriptXOffset;
+        this.superscriptYOffset = face.superscriptYOffset;
+        this.strikeoutSize = face.strikeoutSize;
+        this.strikeoutPosition = face.strikeoutPosition;
+        this.underlinePosition = face.underlinePosition;
+        this.underlineThickness = face.underlineThickness;
+        this.italicAngle = face.italicAngle;
     }
 
     /// <summary>
@@ -119,6 +180,11 @@ internal partial class StreamFontMetrics : FontMetrics
     }
 
     public HeadTable.HeadFlags HeadFlags { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether these metrics are the face and not a variation instance of it.
+    /// </summary>
+    internal bool IsDefaultInstance => this.face is null;
 
     /// <inheritdoc/>
     public override FontDescription Description => this.description;
@@ -181,7 +247,38 @@ internal partial class StreamFontMetrics : FontMetrics
     public override IReadOnlyList<FontNamedInstance> NamedInstances => this.description.Fvar?.NamedInstances ?? [];
 
     /// <inheritdoc/>
-    public override IReadOnlyList<FontVariation> Variations => this.description.Fvar?.DefaultVariations ?? [];
+    public override IReadOnlyList<FontVariation> Variations => this.variations;
+
+    /// <inheritdoc/>
+    internal override NormalizedCoordinates Coordinates => this.coordinates;
+
+    /// <inheritdoc/>
+    internal override FontMetrics Face => this.face?.Owner ?? this.Owner;
+
+    /// <inheritdoc/>
+    internal override FontMetrics GetInstance(NormalizedCoordinates coordinates, ReadOnlySpan<double> userCoordinates)
+    {
+        if (this.face is not null)
+        {
+            return this.face.GetInstance(coordinates, userCoordinates);
+        }
+
+        FvarTable? fvar = this.description.Fvar;
+        if (this.instances is null || fvar is null || coordinates.IsDefault)
+        {
+            return this.Owner;
+        }
+
+        if (this.instances.TryGetValue(coordinates, out WeakReference<StreamFontMetrics>? existing) && existing.TryGetTarget(out StreamFontMetrics? alive))
+        {
+            return alive;
+        }
+
+        // Two threads that miss together each make an instance, and the second to add its own finds the first.
+        // Both instances are correct, so the race costs an object.
+        StreamFontMetrics created = new(this, coordinates, fvar.CreateVariations(userCoordinates));
+        return this.AddInstance(coordinates, created);
+    }
 
     /// <inheritdoc/>
     internal override bool TryGetGlyphId(CodePoint codePoint, out ushort glyphId)
@@ -548,6 +645,45 @@ internal partial class StreamFontMetrics : FontMetrics
         }
 
         return fonts;
+    }
+
+    // Adds an instance to the table of the face, or gives the instance that a racing thread added first. An entry whose
+    // instance was collected is replaced. Each add also removes the entries of collected instances, so the table does not
+    // grow when an application asks for a new weight every frame.
+    private StreamFontMetrics AddInstance(NormalizedCoordinates coordinates, StreamFontMetrics created)
+    {
+        ConcurrentDictionary<NormalizedCoordinates, WeakReference<StreamFontMetrics>> table = this.instances!;
+        WeakReference<StreamFontMetrics> reference = new(created);
+        while (true)
+        {
+            if (table.TryAdd(coordinates, reference))
+            {
+                break;
+            }
+
+            if (table.TryGetValue(coordinates, out WeakReference<StreamFontMetrics>? existing))
+            {
+                if (existing.TryGetTarget(out StreamFontMetrics? alive))
+                {
+                    return alive;
+                }
+
+                if (table.TryUpdate(coordinates, reference, existing))
+                {
+                    break;
+                }
+            }
+        }
+
+        foreach (KeyValuePair<NormalizedCoordinates, WeakReference<StreamFontMetrics>> entry in table)
+        {
+            if (!entry.Value.TryGetTarget(out _))
+            {
+                ((ICollection<KeyValuePair<NormalizedCoordinates, WeakReference<StreamFontMetrics>>>)table).Remove(entry);
+            }
+        }
+
+        return created;
     }
 
     private static (ushort Id, TextAttributes Attributes, bool IsVerticalLayout) CreateCacheKey(

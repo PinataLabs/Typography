@@ -11,11 +11,17 @@ Usage (from the repository root, fontTools 4.68 or later):
 The fonts go to tests/PinataLabs.Typography.Tests/Fonts/Variations. They have fvar and avar and no outline
 variation data, because the library draws the default outlines until the gvar and CFF2 issues land:
 
-* VariationAxes.ttf has the axes wght, wdth, ital, opsz and a hidden GRAD axis, with an avar segment map for wght
+* VariationAxes.ttf has the axes wght, wdth, opsz, ital and a hidden GRAD axis, with an avar segment map for wght
   and opsz. Neither Teko-Variable.ttf nor SourceSans3VF-Upright.otf has an opsz axis, so the opsz tests use this font.
 * VariationSlant.ttf has the axes wght and slnt and no ital axis, so an italic request has to use slnt.
 
-The reference covers those two fonts and the two variable fonts of the test project. For each font it holds the axes,
+The glyphs of both fonts have a short glyph program, so that hinting changes their outlines. The test of the default
+instance and of a variation instance compares a hinted and an unhinted rendering of them.
+
+The script also writes Teko-Variable.woff and Teko-Variable.woff2 next to them, to check that a compressed font loads
+its fvar and avar. They need the brotli package.
+
+The reference covers the two built fonts and the two variable fonts of the test project. For each font it holds the axes,
 the named instances and a list of locations. A location is the user coordinates of every axis, and the F2Dot14
 coordinates that the Font Variations Overview, "Coordinate Scales and Normalization", gives for them:
 
@@ -41,6 +47,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.fixedTools import floatToFixed
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import ttProgram
 from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
@@ -101,13 +108,19 @@ SHIPPED_FONTS = {
 
 
 def box():
+    """A box 700 units high. Its glyph program rounds the top left point to the pixel grid, so that the
+    outline of a hinted glyph differs from the unhinted outline at most sizes."""
     pen = TTGlyphPen(None)
     pen.moveTo((50, 0))
     pen.lineTo((50, 700))
     pen.lineTo((550, 700))
     pen.lineTo((550, 0))
     pen.closePath()
-    return pen.glyph()
+    glyph = pen.glyph()
+    program = ttProgram.Program()
+    program.fromAssembly(["PUSHB[ ] 1", "SVTCA[0]", "MDAP[1]"])
+    glyph.program = program
+    return glyph
 
 
 def build(file_name, family, axes, segments, instances):
@@ -139,6 +152,7 @@ def build(file_name, family, axes, segments, instances):
         usWinDescent=200,
     )
     builder.setupPost(keepGlyphNames=False)
+    builder.font["maxp"].maxStackElements = 8
     builder.setupFvar(
         [(tag, low, default, high, name) for tag, low, default, high, name, _ in axes],
         [{"location": location, "stylename": name} for name, location in instances],
@@ -233,8 +247,19 @@ def dump(value, level=0):
     return "[\n" + ",\n".join(lines) + "\n" + end + "]"
 
 
+def write_web_fonts():
+    """Writes Teko-Variable as WOFF and WOFF2, to check that the tables of a compressed font load."""
+    for flavor in ("woff", "woff2"):
+        font = TTFont(os.path.join(FONTS, SHIPPED_FONTS["Teko-Variable.ttf"][0]))
+        font.flavor = flavor
+        path = os.path.join(OUT, "Teko-Variable." + flavor)
+        font.save(path)
+        print(os.path.relpath(path, ROOT))
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
+    write_web_fonts()
     reference = {"fontTools": fontTools.version, "fonts": {}}
     for file_name, (family, axes, segments, instances, extra) in BUILT_FONTS.items():
         path = build(file_name, family, axes, segments, instances)

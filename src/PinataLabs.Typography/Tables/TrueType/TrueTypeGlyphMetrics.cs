@@ -169,7 +169,9 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
 
     private bool TryGetHintedVector(float scaledPPEM, Vector2 scale, Matrix3x2 rotation, HintingMode hintingMode, out GlyphVector hinted)
     {
-        if (hintingMode == HintingMode.None)
+        // The control values of the font are those of the default instance, so hinting a varied outline with them snaps
+        // its stems to the wrong widths. A variation instance draws unhinted, whatever mode the text asks for.
+        if (hintingMode == HintingMode.None || !this.FontMetrics.IsDefaultInstance)
         {
             hinted = default;
             return false;

@@ -88,15 +88,19 @@ public struct FontFamily : IEquatable<FontFamily>
     /// </summary>
     /// <param name="size">The size of the font in PT units.</param>
     /// <param name="style">The font style. The default value is <see cref="FontStyle.Regular"/>.</param>
+    /// <param name="variations">
+    /// The values for the axes of a variable font, which win over the values that the style and the size give.
+    /// See <see cref="Font(FontFamily, float, FontStyle, ReadOnlySpan{FontVariation})"/>.
+    /// </param>
     /// <returns>The new <see cref="Font" />.</returns>
-    public Font CreateFont(float size, FontStyle style = default)
+    public Font CreateFont(float size, FontStyle style = default, params ReadOnlySpan<FontVariation> variations)
     {
         if (this == default)
         {
             FontsThrowHelper.ThrowDefaultInstance();
         }
 
-        return new Font(this, size, style);
+        return new Font(this, size, style, variations);
     }
 
     /// <summary>

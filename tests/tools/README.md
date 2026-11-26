@@ -59,7 +59,9 @@ It also builds the two small variable fonts that the variation tests need, next 
 - `VariationSlant.ttf` has the axes `wght` and `slnt` and no `ital` axis, so an italic request has to use `slnt`.
 
 Both fonts have `fvar` and `avar` and no outline variation data, because instances draw the default outlines
-until the CFF2 `blend` and `gvar` issues land.
+until the CFF2 `blend` and `gvar` issues land. Each glyph has a short glyph program that rounds the top of its box to
+the pixel grid, so that hinting changes the outline. The tests use it to check that the default instance draws hinted
+and that a variation instance draws unhinted.
 
 For these two fonts and the two variable fonts of the test project, the reference holds the axes, the named
 instances, the `avar` segment maps, and a list of locations. A location is the user coordinates of every axis and the
@@ -69,7 +71,11 @@ and `floatToFixed` rounds the result to F2Dot14. The locations are the default, 
 every axis at its minimum and at its maximum, each named instance, and some user locations between them.
 `FontVariationTests` checks that the library gives the same F2Dot14 coordinates.
 
-To write the fonts and the reference again, install fontTools 4.68 or later and run this from the repository root:
+The script also writes `Teko-Variable.woff` and `Teko-Variable.woff2`, which check that a compressed font loads its
+`fvar` and `avar`.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and brotli, and run this from the
+repository root:
 
 ```
 python tests/tools/generate_font_variations_reference.py
