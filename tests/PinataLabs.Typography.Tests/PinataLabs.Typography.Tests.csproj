@@ -19,6 +19,7 @@
   <ItemGroup>
     <Compile Include="..\PinataLabs.Typography.Fuzz\FontProgramOracle.cs" Link="FontPrograms\Fuzz\FontProgramOracle.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\ItemVariationStoreOracle.cs" Link="FontPrograms\Fuzz\ItemVariationStoreOracle.cs" />
+    <Compile Include="..\PinataLabs.Typography.Fuzz\MetricsVariationOracle.cs" Link="FontPrograms\Fuzz\MetricsVariationOracle.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\Cff2TopDict.cs" Link="FontPrograms\Fuzz\Cff2TopDict.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\VariationBytes.cs" Link="FontPrograms\Fuzz\VariationBytes.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\Mutator.cs" Link="FontPrograms\Fuzz\Mutator.cs" />

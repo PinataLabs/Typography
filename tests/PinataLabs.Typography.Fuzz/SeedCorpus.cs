@@ -17,6 +17,8 @@ namespace PinataLabs.Typography.Fuzz;
 /// <c>type1-plain</c> target with the private part decrypted. For the <c>item-variation-store</c> target it writes
 /// the stores and the advance width map of the two variable test fonts, and a few synthetic stores and maps
 /// that have what the fonts lack: long words, several axes, a null subtable and a map of 32-bit entries.
+/// For the <c>metrics-variation</c> target it writes the HVAR, VVAR and MVAR tables of the variable test fonts and of the
+/// built font that has all three with every mapping.
 /// </summary>
 internal static class SeedCorpus
 {
@@ -25,6 +27,14 @@ internal static class SeedCorpus
 
     // The tables with a store, and where each table keeps the offset of its store: HVAR and GDEF 1.3 as 32 bits, MVAR as 16 bits.
     private static readonly (string Tag, int Position, bool IsLong)[] StoreTables = [("HVAR", 4, true), ("MVAR", 10, false), ("GDEF", 14, true)];
+
+    // The tables that the metrics-variation target reads, for each font that has them.
+    private static readonly (string File, string[] Tables)[] MetricsVariationFonts =
+    [
+        ("Teko/Teko-Variable.ttf", ["HVAR", "MVAR"]),
+        ("SourceSans3/SourceSans3VF-Upright.otf", ["HVAR", "MVAR"]),
+        ("Variations/VariationMetrics.ttf", ["HVAR", "VVAR", "MVAR"]),
+    ];
 
     private static readonly string[] FontFiles =
     [
@@ -87,8 +97,25 @@ internal static class SeedCorpus
         File.WriteAllBytes(Path.Combine(program, "seed-bchr8a.pfb"), File.ReadAllBytes(Path.Combine(fonts, "Type1/bchr8a.pfb")));
         string variationStore = Path.Combine(corpusRoot, ItemVariationStoreOracle.Target);
         WriteVariationStores(fonts, variationStore);
-        Console.WriteLine($"Wrote seeds to {program}, {type1Plain} and {variationStore}.");
+        string metricsVariation = Path.Combine(corpusRoot, MetricsVariationOracle.Target);
+        WriteMetricsVariations(fonts, metricsVariation);
+        Console.WriteLine($"Wrote seeds to {program}, {type1Plain}, {variationStore} and {metricsVariation}.");
         return 0;
+    }
+
+    // Each seed is a whole table, which holds the offsets of its store and mappings.
+    private static void WriteMetricsVariations(string fonts, string directory)
+    {
+        Directory.CreateDirectory(directory);
+        foreach ((string file, string[] tables) in MetricsVariationFonts)
+        {
+            byte[] font = File.ReadAllBytes(Path.Combine(fonts, file));
+            string name = Path.GetFileNameWithoutExtension(file).Split('-')[0].ToLowerInvariant();
+            foreach (string tag in tables)
+            {
+                WriteSeed(directory, $"{name}-{tag.ToLowerInvariant()}", GetTable(font, tag));
+            }
+        }
     }
 
     // Each store runs from its offset in the table to the end of the table, so a seed also has what follows it.
