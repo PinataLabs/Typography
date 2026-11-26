@@ -119,6 +119,23 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- `FontMetrics.TryGetGlyphMetrics` reports the text decorations that the caller passed. Before, a glyph reported the
+  decorations of whichever caller asked for it first. (#106)
+- Letters on both sides of a `TextRun` boundary join as in one run: each run is shaped with up to five characters of
+  the text around it as context, as a HarfBuzz caller does. No GSUB lookup applies across the boundary. (#109)
+- Default-ignorable characters such as ZWJ, ZWNJ, the Mongolian free variation selectors and the vowel separator are
+  drawn with the glyph of U+0020 and no advance after shaping, or left out when the font has no U+0020, as in
+  HarfBuzz. SOFT HYPHEN, COMBINING GRAPHEME JOINER and the selectors no longer take their own advance. A character
+  that GSUB substituted keeps its glyph. Line breaking does not change. (#110)
+- In a font whose GSUB table has no `thai` script, Thai marks use the private use glyphs of Windows and Mac Thai fonts
+  where they would clash with their base or another mark, as in HarfBuzz. (#111)
+- The universal shaper gives the syllables of every script `isol`, `init`, `medi` or `fina` by their place in a run
+  of syllables, as HarfBuzz does. Before, only the scripts whose letters join got these features. (#111)
+- Two signs moved in front of a dotted circle each keep their advance. (#111)
+- The Khmer basic features run in one stage, in the order of the lookup list, as in HarfBuzz. (#111)
+- GPOS pair positioning finds the second glyph past the glyphs that the lookup flags skip, so a lookup that ignores
+  marks kerns the letters on both sides of a mark. GPOS mark-to-mark attaches a mark to a mark of the same base, as
+  in HarfBuzz. A GPOS mark moves with a base that the `kern` table moved. (#111)
 - Adlam, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N'Ko, Old Uyghur, Phags-pa, Psalter Pahlavi
   and Sogdian use the universal shaper, which now joins their letters. Phags-pa letters had no joining type. (#102)
 - In the universal shaper, a sign after a space, a digit, a punctuation mark or a symbol takes that character as its
