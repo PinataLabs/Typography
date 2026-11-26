@@ -212,16 +212,19 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
             }
 
             // The varied points of a glyph have moved left by the first phantom point. The hinting programs work on the points
-            // before that move, and the hinted points move after it by the phantom point as hinting rounds it.
+            // before that move, and the hinted points move after it by the phantom point as hinting rounds it. The phantom points that
+            // the programs see are those of FreeType, which are not always those that moved the points: a font with 'HVAR' or 'VVAR'
+            // has its advances from the tables, and the deltas of 'gvar' do not move the phantom points of that direction.
             bool isVaried = this.varied.ControlPoints is not null;
-            float originX = isVaried ? this.varied.OriginX : this.Bounds.Min.X - this.LeftSideBearing;
+            float originX = isVaried ? this.varied.HintedOriginX : this.Bounds.Min.X - this.LeftSideBearing;
+            float top = isVaried ? this.varied.HintedTop : this.Bounds.Max.Y + this.TopSideBearing;
             vector.Bounds = this.Bounds;
             var matrix = Matrix3x2.CreateScale(scale);
-            matrix.Translation = (this.Offset + new Vector2(isVaried ? originX : 0, 0)) * scale;
+            matrix.Translation = (this.Offset + new Vector2(isVaried ? this.varied.OriginX : 0, 0)) * scale;
             GlyphVector.TransformInPlace(ref vector, matrix);
 
             float pixelSize = scaledPPEM / 72F;
-            float hintedOriginX = this.FontMetrics.ApplyTrueTypeHinting(hintingMode, this, ref vector, scale, pixelSize, originX);
+            float hintedOriginX = this.FontMetrics.ApplyTrueTypeHinting(hintingMode, this, ref vector, scale, pixelSize, originX, top);
             if (isVaried)
             {
                 GlyphVector.TransformInPlace(ref vector, Matrix3x2.CreateTranslation((this.Offset.X * scale.X) - hintedOriginX, 0));
@@ -243,10 +246,7 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
             return this.glyphs.TryReadPoints(this.GlyphId, out vector);
         }
 
-        vector = new GlyphVector((ControlPoint[])this.varied.ControlPoints.Clone(), this.varied.EndPoints, default, this.varied.Instructions, this.varied.IsComposite)
-        {
-            OriginX = this.varied.OriginX,
-        };
+        vector = new GlyphVector((ControlPoint[])this.varied.ControlPoints.Clone(), this.varied.EndPoints, default, this.varied.Instructions, this.varied.IsComposite);
         return true;
     }
 }

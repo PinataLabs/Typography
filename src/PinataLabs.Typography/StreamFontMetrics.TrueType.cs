@@ -29,9 +29,12 @@ internal partial class StreamFontMetrics
     // The control values that the interpreter of an instance runs with, which 'cvar' varies. The interpreter lock guards it.
     private short[]? instanceControlValues;
 
-    // Hints the points of a glyph in place. It returns the x of the first phantom point, which is that of the unrounded phantom
-    // point if the glyph is not hinted. A glyph of a variation instance moves left by it after hinting, as FreeType does.
-    internal float ApplyTrueTypeHinting(HintingMode hintingMode, GlyphMetrics metrics, ref GlyphVector glyphVector, Vector2 scaleXY, float pixelSize, float originX)
+    // Hints the points of a glyph in place. The phantom points are the origin at the x of originX, the end of the advance width after it,
+    // the top at the y of top, and the end of the advance height below it. Each is measured from the unrounded point before it, and
+    // rounds to the pixel as FreeType rounds it, with a half going up. It returns the x of the first phantom point after hinting, which
+    // is that of the unrounded phantom point if the glyph is not hinted. A glyph of a variation instance moves left by it after
+    // hinting, as FreeType does.
+    internal float ApplyTrueTypeHinting(HintingMode hintingMode, GlyphMetrics metrics, ref GlyphVector glyphVector, Vector2 scaleXY, float pixelSize, float originX, float top)
     {
         float origin = (originX + metrics.Offset.X) * scaleXY.X;
         if (hintingMode == HintingMode.None || this.outlineType != OutlineType.TrueType)
@@ -40,12 +43,12 @@ internal partial class StreamFontMetrics
         }
 
         TrueTypeFontTables tables = this.trueTypeFontTables!;
-        Bounds bounds = glyphVector.Bounds;
 
-        Vector2 pp1 = new(MathF.Round(origin), 0);
-        Vector2 pp2 = new(MathF.Round(origin + (metrics.AdvanceWidth * scaleXY.X)), 0);
-        Vector2 pp3 = new(0, MathF.Round(bounds.Max.Y + (metrics.TopSideBearing * scaleXY.Y)));
-        Vector2 pp4 = new(0, MathF.Round(pp3.Y - (metrics.AdvanceHeight * scaleXY.Y)));
+        Vector2 pp1 = new(RoundToPixel(origin), 0);
+        Vector2 pp2 = new(RoundToPixel(origin + (metrics.AdvanceWidth * scaleXY.X)), 0);
+        float topY = (top + metrics.Offset.Y) * scaleXY.Y;
+        Vector2 pp3 = new(0, RoundToPixel(topY));
+        Vector2 pp4 = new(0, RoundToPixel(topY - (metrics.AdvanceHeight * scaleXY.Y)));
 
         // The interpreter holds mutable state (stack, zones, storage, scaled control values)
         // so it must only be used by one thread at a time.
@@ -91,6 +94,9 @@ internal partial class StreamFontMetrics
             }
         }
     }
+
+    // FreeType rounds a phantom point to the pixel with a half going up, where MathF.Round sends a half to the even pixel.
+    private static float RoundToPixel(float value) => MathF.Floor(value + 0.5F);
 
     // A face runs its hinting programs with the values of the 'cvt ' table. An instance adds the 'cvar' deltas for its coordinates,
     // and uses the plain values when the font has no 'cvar' table or its data is malformed.
@@ -270,6 +276,7 @@ internal partial class StreamFontMetrics
         ref short tsb)
     {
         int source = deltas.GlyphId;
+        bool hasVmtx = tables.Vmtx is not null;
         Bounds header = tables.Glyf.GetBounds(source);
         float left = header.Min.X - tables.Htmx.GetLeftSideBearing(source);
         float right = left + tables.Htmx.GetAdvancedWidth(source);
@@ -280,6 +287,12 @@ internal partial class StreamFontMetrics
             top = header.Max.Y + vmtx.GetTopSideBearing(source);
             bottom = top - vmtx.GetAdvancedHeight(source);
         }
+
+        // What the hinting programs see of the first and third phantom points. FreeType leaves the deltas of 'gvar' out of the phantom
+        // points of a direction when the font has the table of it: with 'HVAR' the outline does not move by the first phantom point,
+        // and with 'VVAR' and 'vmtx' the top of the vertical advance is where 'vmtx' puts it.
+        varied.HintedOriginX = this.hvar.IsEmpty ? left + deltas.Left : left;
+        varied.HintedTop = hasVmtx && !this.vvar.IsEmpty ? top : top + deltas.Top;
 
         left += deltas.Left;
         right += deltas.Right;
@@ -314,7 +327,6 @@ internal partial class StreamFontMetrics
         }
 
         // VVAR goes with 'vmtx', so that a font without one has neither the advance height nor the bearing of the table.
-        bool hasVmtx = tables.Vmtx is not null;
         if (!(hasVmtx && this.vvar.HasLeadingBearings))
         {
             tsb = VariationRounding.ToInt16(top - yMax);

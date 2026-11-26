@@ -62,7 +62,7 @@ An additive or breaking public API change needs all of these:
   that a tuple leaves out, and the offsets of the components of a composite glyph, and they move its four phantom points. A
   component that a composite places by points is placed by the varied points. The bounds of a glyph are those of its varied
   points. The outline moves left by the x of the first phantom point, so that the origin stays at 0, as it does in HarfBuzz and
-  FreeType, and a hinted glyph moves by that point as hinting rounds it. A composite takes the four phantom points of its last
+  FreeType, and a hinted glyph moves by that point as hinting rounds it, unless the font has `HVAR`, as the entry on hinting says. A composite takes the four phantom points of its last
   component that has the USE_MY_METRICS flag, with the deltas of that component, and drops its own. An empty glyph keeps its
   bounds, so a glyph with no deltas keeps its bearings. The phantom points give the advances and side bearings that `HVAR` and
   `VVAR` do not give, as the entry on metrics says. For `Teko-Variable.ttf` at the default instance, the "SemiBold" named
@@ -89,7 +89,8 @@ An additive or breaking public API change needs all of these:
   them. The global metrics, advance heights and bearings match them for built fonts that have every mapping and an `MVAR`
   record for every metric. (#128)
 - **HVAR and VVAR win over the phantom points.** A TrueType font that has `gvar` takes an advance from `HVAR` or `VVAR`
-  when the table is there, and the left or top side bearing when the table maps it, as HarfBuzz does. What the table
+  when the table is there, as HarfBuzz does, and the left or top side bearing when the table maps it, which HarfBuzz does
+  not: it takes both bearings from the varied outline. What the table
   leaves out comes from the phantom points of `gvar`: the advance is the distance between two phantom points, and a side
   bearing is the distance from a phantom point to the varied bounds, each rounded once after the deltas are summed. A
   table that is malformed counts as absent, so the phantom points then give the advances. A font with no `gvar` table
@@ -100,7 +101,12 @@ An additive or breaking public API change needs all of these:
   instance. For those `HVAR` has a delta of its own and `gvar` moves the phantom points of the letter, and the font gives the
   two different deltas. A built font whose `gvar` deltas for the phantom points differ from its `HVAR` and `VVAR` deltas
   checks that the tables win, and that the phantom points give a value when the table, or its mapping of that side
-  bearing, is missing or malformed. (#127, #128)
+  bearing, is missing or malformed. A mapping of no entries is no mapping: HarfBuzz gives an advance the glyph ID as its
+  inner index, as for a table with no advance mapping, and leaves the bearing to the varied outline. `VVAR` goes with
+  `vmtx`. In a font without one the advance height stays the advance height that the font gives to every glyph, as in
+  HarfBuzz, whatever `VVAR` and the phantom points say, and the top side bearing comes from the phantom points. The
+  advance heights of a font without `vmtx`, and the advances of a table with a mapping of no entries, match HarfBuzz at the locations of the
+  reference. (#127, #128)
 - **Hinting for variation instances.** A variation instance of a TrueType font hints its glyphs, with an interpreter of its own
   and the control values of its own. Its control values are those of the `cvt ` table plus the deltas of the `cvar` table for its
   coordinates, summed and rounded once, as fontTools does. A font that has `fpgm` and `prep` tables and no `cvar` table, or a
@@ -108,7 +114,12 @@ An additive or breaking public API change needs all of these:
   `GETVARIATION` instruction, which pushes the F2Dot14 coordinates of the instance, one for each axis, and sets the variation
   bit of `GETINFO`, which a font with axes always has. A font without axes treats `GETVARIATION` as unknown. A hinted glyph of
   `HintedVariable.ttf`, whose instructions use the control values and the coordinates, matches the hinted outline of FreeType
-  at five locations. (#130)
+  at five locations. A font that has `HVAR` hints as FreeType does: the deltas of `gvar` leave the first two phantom points
+  out, so the outline does not move by the first phantom point and the advance is that of `HVAR`, and with `VVAR` and `vmtx`
+  the top of the vertical advance is where `vmtx` puts it. Unhinted, the outline still moves by the first phantom point, as in
+  HarfBuzz. The phantom points round to the pixel with a half going up, as in FreeType, and the fourth is the third before it
+  rounds less the advance height. `HintedVariableMetricsTables.ttf`, whose `gvar` deltas for the phantom points are not those of its
+  `HVAR` and `VVAR`, matches the hinted outlines of FreeType at five locations. (#127, #130)
 - **Style range of a variable face.** `FontDescription.StyleRange` of a variable face covers the weights of its `wght`
   axis and the widths of its `wdth` axis. An `ital` axis that reaches 0 adds upright slopes, and one that reaches 1 adds
   italic. A `slnt` axis adds the oblique angles from its negated maximum to its negated minimum. Before, a variable face

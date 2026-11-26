@@ -41,9 +41,22 @@ internal struct GlyphVector
 
     /// <summary>
     /// Gets or sets the x of the first phantom point of the glyph at its variation instance, in font units. The points of a varied
-    /// glyph are already moved left by it, so that the origin is at 0, and a hinting program works on the points before that move.
+    /// glyph are already moved left by it, so that the origin is at 0, and the hinting programs work on the points before that move.
     /// </summary>
     public float OriginX { get; set; }
+
+    /// <summary>
+    /// Gets or sets the x of the first phantom point that the hinting programs of the glyph see, in font units. It is <see cref="OriginX"/>
+    /// unless the font has 'HVAR', and then it is the x of the phantom point at the default instance, as FreeType leaves the deltas
+    /// of 'gvar' out of the phantom points that the table gives an advance for.
+    /// </summary>
+    public float HintedOriginX { get; set; }
+
+    /// <summary>
+    /// Gets or sets the y of the third phantom point that the hinting programs of the glyph see, in font units. It is the top of the
+    /// vertical advance at the variation instance unless the font has 'VVAR' and 'vmtx', and then it is the top at the default instance.
+    /// </summary>
+    public float HintedTop { get; set; }
 
     /// <summary>
     /// Transforms a glyph vector by a specified 3x2 matrix.

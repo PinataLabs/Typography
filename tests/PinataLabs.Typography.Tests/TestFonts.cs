@@ -123,6 +123,12 @@ public static class TestFonts
 
     public static string HintedVariableFontToolsReference => GetFullPath("Variations/HintedVariable.fonttools.json");
 
+    // Built by the same script: HintedVariable.ttf with the glyphs R and T, which go to the phantom points, and with 'HVAR' and 'VVAR' tables
+    // whose advances and side bearings are not the deltas of the phantom points.
+    public static string HintedVariableMetricsTablesFile => GetFullPath("Variations/HintedVariableMetricsTables.ttf");
+
+    public static string HintedVariableMetricsTablesReference => GetFullPath("Variations/HintedVariableMetricsTables.fonttools.json");
+
     // Written by tests/tools/generate_gvar_reference.py, from Teko-Variable.ttf.
     public static string GvarFontToolsReference => GetFullPath("Variations/Gvar.fonttools.json");
 

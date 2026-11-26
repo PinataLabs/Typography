@@ -51,6 +51,20 @@ The reference holds, for the locations that LOCATIONS lists:
 * the hinted outline of H, P, V and L at 16 and 32 pixels to the em, which FreeType gives with its version 35 interpreter in monochrome
   rendering. The library hints with an interpreter that follows the version 35 one.
 
+It also builds HintedVariableMetricsTables.ttf and writes HintedVariableMetricsTables.fonttools.json, for the glyphs of a font that has
+'HVAR' and 'VVAR' as well as 'gvar'. FreeType leaves the deltas of the phantom points out of a glyph when the font has the table of the
+direction, and takes the advance from the table: it neither moves the outline by the first phantom point nor takes the advance from the
+phantom points of 'gvar', and the vertical phantom points are those of 'vmtx' with the 'VVAR' advance. The font is the one above with two more
+glyphs and the two tables:
+
+* R is a composite of the box .notdef whose right edge goes to the second phantom point, so that its hinted outline shows where FreeType puts the end of the advance
+  and, with the origin, where it puts the first phantom point. Its 'gvar' deltas for the phantom points differ from its 'HVAR' advance.
+* T is a box whose top goes to the third phantom point and whose bottom goes to the fourth, so that its hinted outline shows the vertical phantom
+  points. Its 'gvar' deltas differ from its 'VVAR' advance.
+
+The reference for it holds the hinted outlines of L, R, T and H at 16 and 32 pixels to the em that FreeType gives, and the advances and extents
+that HarfBuzz gives, which still move the outline by the first phantom point, as HarfBuzz does when it has 'HVAR'.
+
 The output is deterministic for one fontTools and FreeType version. The reference records the versions that wrote it.
 """
 
@@ -74,12 +88,16 @@ from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.varLib import instancer
+from fontTools.varLib import builder as var_builder
 from fontTools.varLib.models import supportScalar
+from fontTools.ttLib.tables import otTables as ot
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts", "Variations")
 FONT = os.path.join(OUT, "HintedVariable.ttf")
 REFERENCE = os.path.join(OUT, "HintedVariable.fonttools.json")
+TABLES_FONT = os.path.join(OUT, "HintedVariableMetricsTables.ttf")
+TABLES_REFERENCE = os.path.join(OUT, "HintedVariableMetricsTables.fonttools.json")
 
 UNITS_PER_EM = 1024
 ASCENT = 800
@@ -224,6 +242,47 @@ ADVANCES = {".notdef": 512, "space": 256, "A": 512, "B": 832, "C": 928, "D": 640
 CMAP = {0x20: "space", 0x41: "A", 0x42: "B", 0x43: "C", 0x44: "D", 0x48: "H", 0x4C: "L", 0x4D: "M", 0x4E: "N", 0x50: "P", 0x56: "V"}
 
 
+# The glyphs that only the font with 'HVAR' and 'VVAR' has. R goes to the second phantom point on the x axis, and T to the third and the
+# fourth on the y axis. The phantom points follow the four points of the box, as points 4 to 7.
+TABLES_ADVANCES = {**ADVANCES, "R": 736, "T": 752}
+TABLES_CMAP = {**CMAP, 0x52: "R", 0x54: "T"}
+TABLES_HINTED_GLYPHS = ["L", "R", "T", "H"]
+
+
+def tables_glyphs():
+    # R is a composite because the library, like FreeType with its version 40 interpreter, leaves a move on the x axis out of a simple glyph.
+    r = composite([component(".notdef")])
+    r.program = ttProgram.Program()
+    r.program.fromAssembly(["SVTCA[1]", "PUSHB[ ] 2 5", "GC[0]", "SCFS[ ]", "PUSHB[ ] 3 5", "GC[0]", "SCFS[ ]"])
+    extra = {
+        "R": r,
+        "T": box(
+            [
+                "SVTCA[0]",
+                "PUSHB[ ] 1 6", "GC[0]", "SCFS[ ]", "PUSHB[ ] 2 6", "GC[0]", "SCFS[ ]",
+                "PUSHB[ ] 0 7", "GC[0]", "SCFS[ ]", "PUSHB[ ] 3 7", "GC[0]", "SCFS[ ]",
+            ]
+        ),
+    }
+    return {**glyphs(), **extra}
+
+
+def tables_gvar_variations():
+    """The 'gvar' tuples of the font with 'HVAR' and 'VVAR': those of the other font, and for R and T deltas of the phantom points that
+    are not what the tables give."""
+    result = gvar_variations()
+    zero = [(0, 0)] * 4
+    result["R"] = [
+        variation({"wght": (0, 1, 1)}, [(0, 0)] + [(24, 0), (60, 0), (0, 0), (0, 0)]),
+        variation({"wdth": (0, 1, 1)}, [(0, 0)] + [(8, 0), (-16, 0), (0, 0), (0, 0)]),
+    ]
+    result["T"] = [
+        variation({"wght": (0, 1, 1)}, zero + [(0, 0), (0, 0), (0, 48), (0, -32)]),
+        variation({"wdth": (0, 1, 1)}, zero + [(0, 0), (0, 0), (0, -16), (0, 8)]),
+    ]
+    return result
+
+
 def variation(axes, coordinates):
     return TupleVariation({tag: tuple(value) for tag, value in axes.items()}, coordinates)
 
@@ -309,18 +368,19 @@ def cvar_variations():
     ]
 
 
-def build():
-    order = list(ADVANCES)
+def build(path=FONT, with_tables=False):
+    advances = TABLES_ADVANCES if with_tables else ADVANCES
+    order = list(advances)
     builder = FontBuilder(UNITS_PER_EM, isTTF=True)
     builder.setupGlyphOrder(order)
-    builder.setupCharacterMap(CMAP)
-    builder.setupGlyf(glyphs())
+    builder.setupCharacterMap(TABLES_CMAP if with_tables else CMAP)
+    builder.setupGlyf(tables_glyphs() if with_tables else glyphs())
     table = builder.font["glyf"]
     metrics = {}
     for name in order:
         glyph = table[name]
         glyph.recalcBounds(table)
-        metrics[name] = (ADVANCES[name], getattr(glyph, "xMin", 0) if glyph.numberOfContours else 0)
+        metrics[name] = (advances[name], getattr(glyph, "xMin", 0) if glyph.numberOfContours else 0)
     builder.setupHorizontalMetrics(metrics)
     builder.setupHorizontalHeader(ascent=ASCENT, descent=DESCENT)
 
@@ -333,14 +393,15 @@ def build():
     builder.setupVerticalMetrics(vertical)
     builder.setupVerticalHeader(ascent=ASCENT, descent=DESCENT)
 
+    family = "Hinted Variable Metrics Tables" if with_tables else "Hinted Variable"
     builder.setupNameTable(
         {
-            "familyName": "Hinted Variable",
+            "familyName": family,
             "styleName": "Regular",
-            "uniqueFontIdentifier": "HintedVariable",
-            "fullName": "Hinted Variable Regular",
+            "uniqueFontIdentifier": family.replace(" ", ""),
+            "fullName": family + " Regular",
             "version": "Version 1.000",
-            "psName": "HintedVariable-Regular",
+            "psName": family.replace(" ", "") + "-Regular",
         },
         mac=False,
     )
@@ -372,7 +433,7 @@ def build():
     font["gvar"] = newTable("gvar")
     font["gvar"].version = 1
     font["gvar"].reserved = 0
-    font["gvar"].variations = gvar_variations()
+    font["gvar"].variations = tables_gvar_variations() if with_tables else gvar_variations()
     font["cvar"] = newTable("cvar")
     font["cvar"].version = 1
     font["cvar"].variations = cvar_variations()
@@ -385,7 +446,46 @@ def build():
     maxp.maxTwilightPoints = 4
     maxp.maxSizeOfInstructions = 128
     maxp.maxZones = 2
-    font.save(FONT)
+    if with_tables:
+        add_metrics_tables(font, order)
+    font.save(path)
+
+
+def add_metrics_tables(font, order):
+    """Adds 'HVAR' and 'VVAR'. The advance of each glyph takes the row of its glyph index in the first subtable of the store, and the side bearing
+    the row in the second. For each step of the index the advance has the deltas 8 on the weight, -8 on the lower half of the weight and -4 on the
+    width, and the bearing 6, -6 and 3. They are not the deltas of the phantom points of the glyph."""
+    regions = var_builder.buildVarRegionList([{"wght": (0, 1, 1)}, {"wght": (-1, -1, 0)}, {"wdth": (0, 1, 1)}], ["wght", "wdth"])
+
+    def store(advance_scale, bearing_scale):
+        advances = [[advance_scale * 8 * (i + 1), -advance_scale * 8 * (i + 1), -advance_scale * 4 * (i + 1)] for i in range(len(order))]
+        bearings = [[bearing_scale * 6 * (i + 1), -bearing_scale * 6 * (i + 1), bearing_scale * 3 * (i + 1)] for i in range(len(order))]
+        return var_builder.buildVarStore(
+            regions,
+            [var_builder.buildVarData([0, 1, 2], rows, optimize=False) for rows in (advances, bearings)],
+        )
+
+    advance_map = var_builder.buildVarIdxMap(list(range(len(order))), order)
+    bearing_map = var_builder.buildVarIdxMap([(1 << 16) | i for i in range(len(order))], order)
+
+    hvar = newTable("HVAR")
+    hvar.table = ot.HVAR()
+    hvar.table.Version = 0x00010000
+    hvar.table.VarStore = store(1, 1)
+    hvar.table.AdvWidthMap = advance_map
+    hvar.table.LsbMap = bearing_map
+    hvar.table.RsbMap = None
+    font["HVAR"] = hvar
+
+    vvar = newTable("VVAR")
+    vvar.table = ot.VVAR()
+    vvar.table.Version = 0x00010000
+    vvar.table.VarStore = store(1, 1)
+    vvar.table.AdvHeightMap = advance_map
+    vvar.table.TsbMap = bearing_map
+    vvar.table.BsbMap = None
+    vvar.table.VOrgMap = None
+    font["VVAR"] = vvar
 
 
 class OutlinePen(BasePen):
@@ -474,13 +574,13 @@ def contour_commands(contour):
     return commands
 
 
-def freetype_face():
+def freetype_face(path=FONT):
     """Opens the font with the version 35 interpreter, which the interpreter of the library follows."""
     library = freetype.get_handle()
     version = ctypes.c_uint(35)
     if freetype.FT_Property_Set(library, b"truetype", b"interpreter-version", ctypes.byref(version)):
         raise SystemExit("This FreeType has no version 35 interpreter.")
-    return freetype.Face(FONT)
+    return freetype.Face(path)
 
 
 def get_phantom(font, name, location, index_from_end):
@@ -578,5 +678,51 @@ def main():
     print(os.path.relpath(FONT, ROOT), os.path.getsize(FONT), "bytes;", os.path.relpath(REFERENCE, ROOT), os.path.getsize(REFERENCE), "bytes")
 
 
+def tables_reference():
+    build(TABLES_FONT, with_tables=True)
+    font = TTFont(TABLES_FONT)
+    order = font.getGlyphOrder()
+    reference = {
+        "freetype": ".".join(str(v) for v in freetype.version()),
+        "harfbuzz": uharfbuzz.version_string(),
+        "hintedSizes": HINTED_SIZES,
+        "glyphs": order,
+        "locations": [],
+    }
+    face = freetype_face(TABLES_FONT)
+    with open(TABLES_FONT, "rb") as file:
+        data = file.read()
+    for name, user in LOCATIONS:
+        location = normalised(font, user)
+        coordinates = [otRound(location[a.axisTag] * 16384) for a in font["fvar"].axes]
+        hb_font = uharfbuzz.Font(uharfbuzz.Face(data))
+        hb_font.set_variations(user)
+        face.set_var_blend_coords([location[a.axisTag] for a in font["fvar"].axes])
+        entry = {"name": name, "user": user, "coordinates": coordinates, "harfbuzz": {}, "hinted": {}}
+        for glyph_id, glyph_name in enumerate(order):
+            extents = hb_font.get_glyph_extents(glyph_id)
+            entry["harfbuzz"][glyph_name] = {
+                "advanceWidth": hb_font.get_glyph_h_advance(glyph_id),
+                "advanceHeight": -hb_font.get_glyph_v_advance(glyph_id),
+                "leftSideBearing": extents.x_bearing,
+                "yMax": extents.y_bearing,
+                "width": extents.width,
+                "height": -extents.height,
+                "topSideBearing": hb_font.get_glyph_v_origin(glyph_id)[1] - extents.y_bearing,
+            }
+        for size in HINTED_SIZES:
+            face.set_pixel_sizes(0, size)
+            flags = freetype.FT_LOAD_TARGET_MONO | freetype.FT_LOAD_NO_AUTOHINT | freetype.FT_LOAD_NO_BITMAP
+            entry["hinted"][str(size)] = {
+                glyph_name: outline_text(freetype_outline(face, order.index(glyph_name), 64, flags), 4) for glyph_name in TABLES_HINTED_GLYPHS
+            }
+        reference["locations"].append(entry)
+
+    with open(TABLES_REFERENCE, "w", encoding="utf-8", newline="\n") as file:
+        file.write(json.dumps(reference, indent=1) + "\n")
+    print(os.path.relpath(TABLES_FONT, ROOT), os.path.getsize(TABLES_FONT), "bytes;", os.path.relpath(TABLES_REFERENCE, ROOT), os.path.getsize(TABLES_REFERENCE), "bytes")
+
+
 if __name__ == "__main__":
     main()
+    tables_reference()

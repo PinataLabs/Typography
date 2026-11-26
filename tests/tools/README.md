@@ -129,11 +129,15 @@ and the heights, so the script builds three small TrueType fonts that have all o
 - `VariationMetricsTypo.ttf` is the same font with the `USE_TYPO_METRICS` bit set.
 - `VariationMetricsGvar.ttf` is the first font with a `gvar` table (issue #127). Its tuples move the points of each glyph and
   its four phantom points, by deltas that are not those of `HVAR` and `VVAR`, so the font tells which source the library takes.
-  `HVAR` and `VVAR` win, as they do in HarfBuzz: the advances, and the left and top side bearings that a mapping gives, are the
-  tables'. The reference records them like those of the other fonts, and records under `phantom` what the phantom points
-  give: the advances, the left side bearing (the left edge of the varied outline less the first phantom point) and the top
-  side bearing. They come from fontTools on a copy of the font that has no `HVAR` and `VVAR`, and the script checks the
-  advances against HarfBuzz. The tests break or remove a table, or the mapping of a bearing, and expect those values.
+  `HVAR` and `VVAR` win for the advances, as they do in HarfBuzz, and the library also gives the left and top side bearings that
+  a mapping gives, which HarfBuzz does not: it takes both bearings from the varied outline, measured from the phantom points,
+  whatever the tables map. The reference records the values of the tables like those of the other fonts, and records under
+  `phantom` what the phantom points give: the advances, the left side bearing (the left edge of the varied outline less the
+  first phantom point) and the top side bearing. They come from fontTools on a copy of the font that has no `HVAR` and `VVAR`,
+  and the script checks the advances, and the bearings, against HarfBuzz. Under `harfbuzz` the reference holds what HarfBuzz gives
+  for three edits that the tests make: the font without `vmtx`, where every glyph has the advance height of the font; an advance
+  width map of no entries; and an advance height map of no entries, which HarfBuzz reads as no map. The tests break or remove a
+  table, or the mapping of a bearing, and expect those values.
 
 The glyphs of the first two fonts have no `gvar` variation, so only their metrics change.
 
@@ -219,6 +223,13 @@ The reference holds, at five locations:
   a composite from its USE_MY_METRICS component, as FreeType does and fontTools does not;
 - the unhinted outline of each glyph from FreeType at 16384 pixels to the em, which keeps it to 1/1024 of a font unit;
 - the hinted outlines of the four hinted glyphs at 16 and 32 pixels to the em, from FreeType with its version 35 interpreter.
+
+The script also builds `HintedVariableMetricsTables.ttf` and writes `HintedVariableMetricsTables.fonttools.json`: the same font with
+two glyphs more and an `HVAR` and a `VVAR`, whose advances and bearings are not the deltas of the phantom points. FreeType leaves
+the deltas of `gvar` out of the phantom points of a direction when the font has the table of it, so the outline does not move by the
+first phantom point, and the advance is the table's. R is a composite whose right edge goes to the second phantom point, and T is a
+box whose top and bottom go to the third and fourth. The reference holds the hinted outlines of L, R, T and H, from FreeType, and the
+advances and extents from HarfBuzz, which still moves the outline by the first phantom point.
 
 To write the font and the reference again, install fontTools 4.68 or later, `freetype-py` and `uharfbuzz`, and run this from the repository root:
 
