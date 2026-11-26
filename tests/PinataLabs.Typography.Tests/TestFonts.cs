@@ -44,6 +44,11 @@ public static class TestFonts
 
     public static string GposLookupOrderHarfBuzzReference => GetFullPath("GposLookupOrder.harfbuzz.json");
 
+    // Built by tests/tools/generate_chain_backtrack_reference.py, which also writes the HarfBuzz reference.
+    public static string ChainBacktrackFile => GetFullPath("ChainBacktrack.ttf");
+
+    public static string ChainBacktrackHarfBuzzReference => GetFullPath("ChainBacktrack.harfbuzz.json");
+
     // Written by tests/tools/generate_default_langsys_reference.py.
     public static string DefaultLangSysHarfBuzzReference => GetFullPath("DefaultLangSys.harfbuzz.json");
 
