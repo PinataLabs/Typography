@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -130,6 +131,12 @@ internal sealed class ArabicShaper : DefaultShaper
         int state = 0;
         byte[] actions = new byte[count];
 
+        // As in HarfBuzz, the first character before the glyphs that is not transparent sets the state to start in.
+        if (TryGetContextJoiningType(collection, index - 1, -1, out ArabicJoiningType before))
+        {
+            state = StateTable[0, GetShapingClassIndex(before)][2];
+        }
+
         // Apply the state machine to map glyphs to features.
         for (int i = 0; i < count; i++)
         {
@@ -155,6 +162,16 @@ internal sealed class ArabicShaper : DefaultShaper
 
             actions[i] = curAction;
             prev = i;
+        }
+
+        // The first character after the glyphs that is not transparent can change the form of the last letter.
+        if (prev != -1 && TryGetContextJoiningType(collection, index + count, 1, out ArabicJoiningType after))
+        {
+            byte prevAction = StateTable[state, GetShapingClassIndex(after)][0];
+            if (prevAction != None)
+            {
+                actions[prev] = prevAction;
+            }
         }
 
         // As in HarfBuzz, a Mongolian free variation selector takes the form of the glyph before it.
@@ -195,6 +212,46 @@ internal sealed class ArabicShaper : DefaultShaper
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets the joining type of the first character that is not transparent, in the given direction from a glyph,
+    /// among the glyphs of the collection and then the text around them. As in HarfBuzz, it looks at no more than
+    /// five characters.
+    /// </summary>
+    /// <param name="collection">The glyph shaping collection.</param>
+    /// <param name="start">The zero-based index of the glyph to start at.</param>
+    /// <param name="step">-1 to look before the glyph, and 1 to look after it.</param>
+    /// <param name="joiningType">The joining type that was found.</param>
+    /// <returns><see langword="true"/> if a character that is not transparent was found.</returns>
+    private static bool TryGetContextJoiningType(IGlyphShapingCollection collection, int start, int step, out ArabicJoiningType joiningType)
+    {
+        const int contextLength = 5;
+        IReadOnlyList<CodePoint> context = collection is GlyphSubstitutionCollection substitutions
+            ? step < 0 ? substitutions.PreContext : substitutions.PostContext
+            : [];
+
+        int looked = 0;
+        for (int i = start; i >= 0 && i < collection.Count && looked < contextLength; i += step, looked++)
+        {
+            joiningType = CodePoint.GetArabicJoiningClass(collection[i].CodePoint).JoiningType;
+            if (joiningType != ArabicJoiningType.Transparent)
+            {
+                return true;
+            }
+        }
+
+        for (int i = 0; i < context.Count && looked < contextLength; i++, looked++)
+        {
+            joiningType = CodePoint.GetArabicJoiningClass(context[i]).JoiningType;
+            if (joiningType != ArabicJoiningType.Transparent)
+            {
+                return true;
+            }
+        }
+
+        joiningType = default;
+        return false;
     }
 
     private static int GetShapingClassIndex(ArabicJoiningType joiningType) => joiningType switch
