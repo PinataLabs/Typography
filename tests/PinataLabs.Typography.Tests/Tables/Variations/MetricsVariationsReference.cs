@@ -98,6 +98,30 @@ internal static class MetricsVariationsReference
         /// Gets what the phantom points of 'gvar' give, for a font that has 'gvar' as well as HVAR and VVAR, where the tables win.
         /// </summary>
         public PhantomReference? Phantom { get; init; }
+
+        /// <summary>
+        /// Gets what HarfBuzz gives for the font after the edits that the tests of the phantom points make.
+        /// </summary>
+        public HarfBuzzReference? HarfBuzz { get; init; }
+    }
+
+    /// <summary>
+    /// What HarfBuzz gives for a font with 'vmtx' removed, and for fonts whose advance maps have no entries.
+    /// </summary>
+    internal sealed class HarfBuzzReference
+    {
+        public HarfBuzzAdvances WithoutVmtx { get; init; } = new();
+
+        public HarfBuzzAdvances EmptyAdvanceWidthMap { get; init; } = new();
+
+        public HarfBuzzAdvances EmptyAdvanceHeightMap { get; init; } = new();
+    }
+
+    internal sealed class HarfBuzzAdvances
+    {
+        public int[][] AdvanceWidths { get; init; } = [];
+
+        public int[][] AdvanceHeights { get; init; } = [];
     }
 
     /// <summary>

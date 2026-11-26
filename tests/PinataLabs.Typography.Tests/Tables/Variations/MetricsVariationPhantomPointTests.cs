@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,7 @@ public class MetricsVariationPhantomPointTests
     // The header of HVAR has the Offset32 of the advance width map, then of the left side bearing map. VVAR has the same with the
     // advance height map and the top side bearing map, after the version and the store.
     private const int LeadingBearingMapOffset = 12;
+    private const int AdvanceMapOffset = 8;
 
     public static IEnumerable<object[]> Locations => GetLocations(font => font.Phantom is not null);
 
@@ -112,6 +114,123 @@ public class MetricsVariationPhantomPointTests
         Font font = CreateFont(VariationFontBytes.Load(bytes), reference.Locations[index]);
 
         await Assert.That(GetDifferences(font, reference.AdvanceWidths[index], reference.AdvanceHeights![index], reference.LeftSideBearings![index], reference.Phantom!.TopSideBearings[index])).IsEmpty();
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task WithoutVmtxTheAdvanceHeightIsTheSynthesizedDefaultAtEveryInstance(string fontName, string locationName)
+    {
+        // HarfBuzz gives every glyph the advance height of the font, and neither VVAR nor the phantom points of 'gvar' move it. The font
+        // without VVAR has only the phantom points to take it from, and the font with VVAR has a table that 'vmtx' does not go with.
+        FontReference reference = Fonts[fontName];
+        int index = IndexOf(reference, locationName);
+        int[] expected = reference.HarfBuzz!.WithoutVmtx.AdvanceHeights[index];
+
+        await Assert.That(expected.Distinct().Count()).IsEqualTo(1);
+        foreach (string[] removed in new[] { new[] { "vmtx" }, new[] { "vmtx", "VVAR" } })
+        {
+            Font font = CreateFont(VariationFontBytes.Load(SfntRewriter.Remove(VariationFontBytes.Read(FontFile), removed)), reference.Locations[index]);
+
+            await Assert.That(Enumerable.Range(0, expected.Length).Select(glyph => (int)GetMetrics(font, (ushort)glyph).AdvanceHeight)).IsEquivalentTo(expected);
+        }
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task WithoutVmtxVvarDoesNotApplyAndTheTopSideBearingIsThePhantomPoints(string fontName, string locationName)
+    {
+        // VVAR is read only with 'vmtx', so a font without one has the top side bearings of the phantom points whether or not it has
+        // a VVAR top side bearing map. The font without VVAR is the reference.
+        FontReference reference = Fonts[fontName];
+        int index = IndexOf(reference, locationName);
+        Font withVvar = CreateFont(VariationFontBytes.Load(SfntRewriter.Remove(VariationFontBytes.Read(FontFile), "vmtx")), reference.Locations[index]);
+        Font withoutVvar = CreateFont(VariationFontBytes.Load(SfntRewriter.Remove(VariationFontBytes.Read(FontFile), "vmtx", "VVAR")), reference.Locations[index]);
+        int count = reference.AdvanceWidths[index].Length;
+        Font defaultInstance = CreateFont(VariationFontBytes.Load(SfntRewriter.Remove(VariationFontBytes.Read(FontFile), "vmtx")), reference.Locations[IndexOf(reference, "Regular")]);
+
+        int[] expected = GetTopSideBearings(withoutVvar, count);
+
+        await Assert.That(GetTopSideBearings(withVvar, count)).IsEquivalentTo(expected);
+        await Assert.That(expected.Zip(GetTopSideBearings(defaultInstance, count), (varied, original) => varied != original).Any(differs => differs)).IsEqualTo(locationName != "Regular");
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task AnAdvanceWidthMapOfNoEntriesIsAsNoMap(string fontName, string locationName)
+    {
+        // HarfBuzz reads such a map as it reads none, with the glyph index as the index in the first subtable.
+        FontReference reference = Fonts[fontName];
+        int index = IndexOf(reference, locationName);
+        byte[] bytes = WithEmptyMap(VariationFontBytes.Read(FontFile), "HVAR", AdvanceMapOffset);
+        Font font = CreateFont(VariationFontBytes.Load(bytes), reference.Locations[index]);
+
+        await Assert.That(GetDifferences(font, reference.HarfBuzz!.EmptyAdvanceWidthMap.AdvanceWidths[index], reference.AdvanceHeights![index], reference.LeftSideBearings![index], reference.TopSideBearings![index])).IsEmpty();
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task AnAdvanceHeightMapOfNoEntriesIsAsNoMap(string fontName, string locationName)
+    {
+        FontReference reference = Fonts[fontName];
+        int index = IndexOf(reference, locationName);
+        byte[] bytes = WithEmptyMap(VariationFontBytes.Read(FontFile), "VVAR", AdvanceMapOffset);
+        Font font = CreateFont(VariationFontBytes.Load(bytes), reference.Locations[index]);
+
+        await Assert.That(GetDifferences(font, reference.AdvanceWidths[index], reference.HarfBuzz!.EmptyAdvanceHeightMap.AdvanceHeights[index], reference.LeftSideBearings![index], reference.TopSideBearings![index])).IsEmpty();
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task ALeftSideBearingMapOfNoEntriesIsAsNoMapSoTheBearingFollowsTheVariedOutline(string fontName, string locationName)
+    {
+        FontReference reference = Fonts[fontName];
+        int index = IndexOf(reference, locationName);
+        byte[] bytes = WithEmptyMap(VariationFontBytes.Read(FontFile), "HVAR", LeadingBearingMapOffset);
+        Font font = CreateFont(VariationFontBytes.Load(bytes), reference.Locations[index]);
+
+        await Assert.That(GetDifferences(font, reference.AdvanceWidths[index], reference.AdvanceHeights![index], reference.Phantom!.LeftSideBearings[index], reference.TopSideBearings![index])).IsEmpty();
+        await Assert.That(GetBoundsDifferences(font, reference.Phantom.LeftSideBearings[index])).IsEmpty();
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task ATopSideBearingMapOfNoEntriesIsAsNoMapSoTheBearingIsThePhantomPoints(string fontName, string locationName)
+    {
+        FontReference reference = Fonts[fontName];
+        int index = IndexOf(reference, locationName);
+        byte[] bytes = WithEmptyMap(VariationFontBytes.Read(FontFile), "VVAR", LeadingBearingMapOffset);
+        Font font = CreateFont(VariationFontBytes.Load(bytes), reference.Locations[index]);
+
+        await Assert.That(GetDifferences(font, reference.AdvanceWidths[index], reference.AdvanceHeights![index], reference.LeftSideBearings![index], reference.Phantom!.TopSideBearings[index])).IsEmpty();
+    }
+
+    // Points the Offset32 at `position` in a table at a DeltaSetIndexMap of format 0 that has no entries: the format, the entry format
+    // and a count of 0.
+    private static byte[] WithEmptyMap(byte[] font, string table, int position)
+    {
+        byte[] original = SfntRewriter.GetTable(font, table)!;
+        byte[] changed = [.. original, 0, 0, 0, 0];
+        BinaryPrimitives.WriteUInt32BigEndian(changed.AsSpan(position), (uint)original.Length);
+        return SfntRewriter.Replace(font, table, changed);
+    }
+
+    private static int[] GetTopSideBearings(Font font, int count)
+        => [.. Enumerable.Range(0, count).Select(glyph => (int)GetMetrics(font, (ushort)glyph).TopSideBearing)];
+
+    // The left side bearing is the left edge of the bounds, to the unit that HarfBuzz rounds it to.
+    private static List<string> GetBoundsDifferences(Font font, int[] leftSideBearings)
+    {
+        List<string> differences = [];
+        for (int glyph = 0; glyph < leftSideBearings.Length; glyph++)
+        {
+            float left = GetMetrics(font, (ushort)glyph).Bounds.Min.X;
+            if (Math.Abs(left - leftSideBearings[glyph]) > 0.51F)
+            {
+                differences.Add($"glyph {glyph} bounds start at {left}, expected {leftSideBearings[glyph]}");
+            }
+        }
+
+        return differences;
     }
 
     private static List<string> GetDifferences(Font font, int[] advanceWidths, int[] advanceHeights, int[] leftSideBearings, int[] topSideBearings)

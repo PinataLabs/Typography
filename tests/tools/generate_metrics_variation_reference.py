@@ -27,6 +27,13 @@ the heights, so the script builds three small TrueType fonts that have them all,
   checks the advances of that copy against HarfBuzz. A test that removes or breaks the tables, or the mapping of a bearing,
   expects those values.
 
+  It also records under "harfbuzz" what HarfBuzz gives for three edits of the font, which tests make with the same edit:
+  the advance heights of the font without vmtx, where HarfBuzz gives every glyph the same synthesized advance height and
+  neither VVAR nor the phantom points vary it; the advance widths with an advance width map of no entries; and the advance
+  heights with an advance height map of no entries, which HarfBuzz reads as it reads no map, as the glyph index in the
+  first subtable. HarfBuzz takes the left and top side bearings of such a font from the varied outline and ignores the maps
+  of HVAR and VVAR for them, which the script checks against the phantom reference.
+
 The glyphs of the first two fonts have no gvar variation, so their outlines do not change, and only their metrics do.
 
 A CFF2 outline does change, so the script also builds two CFF2 fonts for the vertical origin of a variation instance, and
@@ -64,6 +71,7 @@ The output is deterministic for one fontTools version. The reference records the
 
 import io
 import os
+import struct
 
 os.environ["SOURCE_DATE_EPOCH"] = "0"
 
@@ -545,12 +553,81 @@ def get_phantom_reference(path, locations):
                 mismatches.append("%s glyph %d advance %d, HarfBuzz %d" % (location["name"], gid, widths[-1], hb_font.get_glyph_h_advance(gid)))
             if heights[-1] != -hb_font.get_glyph_v_advance(gid):
                 mismatches.append("%s glyph %d height %d, HarfBuzz %d" % (location["name"], gid, heights[-1], -hb_font.get_glyph_v_advance(gid)))
+            # The bearings are not those of the tables, which HarfBuzz leaves out of the extents and the vertical origin: they are those of
+            # the varied outline, measured from the phantom points.
+            extents = hb_font.get_glyph_extents(gid)
+            if left[-1] != extents.x_bearing:
+                mismatches.append("%s glyph %d left side bearing %d, HarfBuzz %d" % (location["name"], gid, left[-1], extents.x_bearing))
+            if top[-1] != hb_font.get_glyph_v_origin(gid)[1] - extents.y_bearing:
+                mismatches.append("%s glyph %d top side bearing %d, HarfBuzz %d" % (location["name"], gid, top[-1], hb_font.get_glyph_v_origin(gid)[1] - extents.y_bearing))
         reference["advanceWidths"].append(widths)
         reference["advanceHeights"].append(heights)
         reference["leftSideBearings"].append(left)
         reference["topSideBearings"].append(top)
     if mismatches:
         raise SystemExit("HarfBuzz differs from the phantom point reference:\n  " + "\n  ".join(mismatches[:20]))
+    return reference
+
+
+def read_tables(data):
+    """Gives the tables of an sfnt file as a dictionary of tag to bytes."""
+    count = struct.unpack(">H", data[4:6])[0]
+    tables = {}
+    for index in range(count):
+        tag, _, offset, length = struct.unpack(">4sIII", data[12 + 16 * index : 28 + 16 * index])
+        tables[tag.decode("latin-1")] = data[offset : offset + length]
+    return tables
+
+
+def write_tables(tables):
+    """Writes the tables of an sfnt file. The checksums are 0, which neither HarfBuzz nor the library reads."""
+    items = sorted(tables.items())
+    position = 12 + 16 * len(items)
+    directory = b"\x00\x01\x00\x00" + struct.pack(">HHHH", len(items), 0, 0, 0)
+    body = b""
+    for tag, table in items:
+        directory += struct.pack(">4sIII", tag.encode("latin-1"), 0, position + len(body), len(table))
+        body += table + b"\0" * (-len(table) % 4)
+    return directory + body
+
+
+def with_empty_map(data, table_tag, position):
+    """Gives the font with the Offset32 at `position` of a table, which is that of its advance map or of its side bearing map,
+    pointing at a DeltaSetIndexMap of format 0 that has no entries."""
+    tables = read_tables(data)
+    table = bytearray(tables[table_tag])
+    struct.pack_into(">I", table, position, len(table))
+    table += struct.pack(">BBH", 0, 0, 0)
+    tables[table_tag] = bytes(table)
+    return write_tables(tables)
+
+
+def get_harfbuzz_edge_cases(path, locations):
+    """Gives, for a font that has gvar, HVAR and VVAR, what HarfBuzz gives for the edits that a test makes: no vmtx table, and an
+    advance map of no entries in HVAR and in VVAR. The side bearings are checked against the phantom reference by the caller."""
+    font = TTFont(path)
+    del font["vmtx"]
+    buffer = io.BytesIO()
+    font.save(buffer)
+    with open(path, "rb") as file:
+        data = file.read()
+    fonts = {
+        "withoutVmtx": ("advanceHeights", buffer.getvalue()),
+        "emptyAdvanceWidthMap": ("advanceWidths", with_empty_map(data, "HVAR", 8)),
+        "emptyAdvanceHeightMap": ("advanceHeights", with_empty_map(data, "VVAR", 8)),
+    }
+    glyph_count = len(font.getGlyphOrder())
+    reference = {}
+    for name, (kind, edited) in fonts.items():
+        hb_font = hb.Font(hb.Face(edited))
+        rows = []
+        for location in locations:
+            hb_font.set_var_coords_normalized([fixedToFloat(value, 14) for value in location["coordinates"]])
+            if kind == "advanceWidths":
+                rows.append([hb_font.get_glyph_h_advance(gid) for gid in range(glyph_count)])
+            else:
+                rows.append([-hb_font.get_glyph_v_advance(gid) for gid in range(glyph_count)])
+        reference[name] = {kind: rows}
     return reference
 
 
@@ -587,6 +664,7 @@ def get_reference(path, names, extra, harfbuzz_metrics, with_phantom=False):
     }
     if with_phantom:
         reference["phantom"] = get_phantom_reference(path, locations)
+        reference["harfbuzz"] = get_harfbuzz_edge_cases(path, locations)
     return reference
 
 

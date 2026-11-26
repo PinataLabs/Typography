@@ -243,9 +243,21 @@ internal partial class StreamFontMetrics
     // between two phantom points. Each value rounds once, after the deltas are summed. A glyph that has no points keeps its
     // bounds, which are those of glyph 0 if the font gives it none.
     //
-    // 'HVAR' and 'VVAR' win over the phantom points, as they do in HarfBuzz. The caller has already varied the advances and
-    // bearings through them, and this method keeps what a table gives: an advance when the table is there, and a leading
-    // bearing when the table maps it. A table that is malformed is absent.
+    // Which table gives each value of an instance, as it does in HarfBuzz for the advances. A table is there when the font has it and
+    // it is not malformed, and a map of no entries is no map.
+    //
+    // * The advance width is that of 'HVAR' when the font has the table, with or without an advance map, and else the distance
+    //   between the first two phantom points.
+    // * The left side bearing is that of 'HVAR' when its table has a map of the left side bearing, and else the distance from the
+    //   first phantom point to the left of the varied outline.
+    // * The advance height is that of 'VVAR' when the font has 'vmtx' and 'VVAR', the distance between the last two phantom points
+    //   when it has 'vmtx' only, and else the advance height that the font gives to every glyph.
+    // * The top side bearing is that of 'VVAR' when the font has 'vmtx' and the table maps it, and else the distance from the top
+    //   phantom point to the top of the varied outline.
+    //
+    // The caller has already varied the advances and bearings through the tables. HarfBuzz takes the bearings of the outline, which
+    // it measures from the phantom points, and not those of the maps, so a bearing that a map gives is the one thing here that it
+    // does not match.
     private void VaryMetrics(
         TrueTypeFontTables tables,
         ref GlyphVector varied,
@@ -301,7 +313,9 @@ internal partial class StreamFontMetrics
             lsb = VariationRounding.ToInt16(xMin);
         }
 
-        if (!this.vvar.HasLeadingBearings)
+        // VVAR goes with 'vmtx', so that a font without one has neither the advance height nor the bearing of the table.
+        bool hasVmtx = tables.Vmtx is not null;
+        if (!(hasVmtx && this.vvar.HasLeadingBearings))
         {
             tsb = VariationRounding.ToInt16(top - yMax);
         }
@@ -311,7 +325,9 @@ internal partial class StreamFontMetrics
             advanceWidth = VariationRounding.ToUInt16(right - left);
         }
 
-        if (this.vvar.IsEmpty)
+        // Without 'vmtx' HarfBuzz gives every glyph the advance height of the font, which the caller has set, and the phantom points
+        // do not move it.
+        if (hasVmtx && this.vvar.IsEmpty)
         {
             advanceHeight = VariationRounding.ToUInt16(top - bottom);
         }
