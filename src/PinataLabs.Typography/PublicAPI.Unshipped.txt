@@ -81,3 +81,60 @@ PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownSeen = 112 -> PinataLabs.T
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownTah = 113 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.KashmiriYeh = 114 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.ThinNoon = 115 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.FontSlope
+PinataLabs.Typography.FontSlope.Equals(PinataLabs.Typography.FontSlope other) -> bool
+PinataLabs.Typography.FontSlope.FontSlope() -> void
+PinataLabs.Typography.FontSlope.Kind.get -> PinataLabs.Typography.FontSlopeKind
+PinataLabs.Typography.FontSlope.ObliqueAngle.get -> float
+PinataLabs.Typography.FontSlopeKind
+PinataLabs.Typography.FontSlopeKind.Italic = 1 -> PinataLabs.Typography.FontSlopeKind
+PinataLabs.Typography.FontSlopeKind.Normal = 0 -> PinataLabs.Typography.FontSlopeKind
+PinataLabs.Typography.FontSlopeKind.Oblique = 2 -> PinataLabs.Typography.FontSlopeKind
+PinataLabs.Typography.FontWeight
+PinataLabs.Typography.FontWeight.CompareTo(PinataLabs.Typography.FontWeight other) -> int
+PinataLabs.Typography.FontWeight.Equals(PinataLabs.Typography.FontWeight other) -> bool
+PinataLabs.Typography.FontWeight.FontWeight() -> void
+PinataLabs.Typography.FontWeight.FontWeight(float value) -> void
+PinataLabs.Typography.FontWeight.Value.get -> float
+PinataLabs.Typography.FontWidth
+PinataLabs.Typography.FontWidth.CompareTo(PinataLabs.Typography.FontWidth other) -> int
+PinataLabs.Typography.FontWidth.Equals(PinataLabs.Typography.FontWidth other) -> bool
+PinataLabs.Typography.FontWidth.FontWidth() -> void
+PinataLabs.Typography.FontWidth.FontWidth(float percent) -> void
+PinataLabs.Typography.FontWidth.Percent.get -> float
+override PinataLabs.Typography.FontSlope.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontSlope.GetHashCode() -> int
+override PinataLabs.Typography.FontSlope.ToString() -> string!
+override PinataLabs.Typography.FontWeight.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontWeight.GetHashCode() -> int
+override PinataLabs.Typography.FontWeight.ToString() -> string!
+override PinataLabs.Typography.FontWidth.Equals(object? obj) -> bool
+override PinataLabs.Typography.FontWidth.GetHashCode() -> int
+override PinataLabs.Typography.FontWidth.ToString() -> string!
+static PinataLabs.Typography.FontSlope.Italic.get -> PinataLabs.Typography.FontSlope
+static PinataLabs.Typography.FontSlope.Normal.get -> PinataLabs.Typography.FontSlope
+static PinataLabs.Typography.FontSlope.Oblique(float degrees = 14) -> PinataLabs.Typography.FontSlope
+static PinataLabs.Typography.FontSlope.operator !=(PinataLabs.Typography.FontSlope left, PinataLabs.Typography.FontSlope right) -> bool
+static PinataLabs.Typography.FontSlope.operator ==(PinataLabs.Typography.FontSlope left, PinataLabs.Typography.FontSlope right) -> bool
+static PinataLabs.Typography.FontWeight.Black.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.Bold.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.ExtraBold.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.ExtraLight.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.Light.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.Medium.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.Normal.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.SemiBold.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.Thin.get -> PinataLabs.Typography.FontWeight
+static PinataLabs.Typography.FontWeight.operator !=(PinataLabs.Typography.FontWeight left, PinataLabs.Typography.FontWeight right) -> bool
+static PinataLabs.Typography.FontWeight.operator ==(PinataLabs.Typography.FontWeight left, PinataLabs.Typography.FontWeight right) -> bool
+static PinataLabs.Typography.FontWidth.Condensed.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.Expanded.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.ExtraCondensed.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.ExtraExpanded.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.Normal.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.SemiCondensed.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.SemiExpanded.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.UltraCondensed.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.UltraExpanded.get -> PinataLabs.Typography.FontWidth
+static PinataLabs.Typography.FontWidth.operator !=(PinataLabs.Typography.FontWidth left, PinataLabs.Typography.FontWidth right) -> bool
+static PinataLabs.Typography.FontWidth.operator ==(PinataLabs.Typography.FontWidth left, PinataLabs.Typography.FontWidth right) -> bool

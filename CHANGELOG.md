@@ -25,6 +25,11 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Font weight, width and slope.** `FontWeight` (1 to 1000), `FontWidth` (50 to 200 percent) and `FontSlope`
+  (`Normal`, `Italic` or `Oblique(degrees)`, with `FontSlopeKind`) hold the parts of a font style with the ranges of
+  the CSS `font-weight`, `font-stretch` and `font-style` properties. `FontWeight` and `FontWidth` have the CSS
+  keywords as static properties, such as `FontWeight.Bold` and `FontWidth.Condensed`. The default value of each type
+  is its normal value. A constructor clamps a value to the CSS range and rejects `NaN`. (#123)
 - **Unicode 18.0.0 scripts and classes.** `ScriptClass` has members for the 16 scripts of Unicode 15.0 to 18.0, with
   their OpenType tags, and they use the universal shaper. `LineBreakClass` gains `AK`, `AP`, `AS`, `HH`, `VF` and `VI`,
   `IndicSyllabicCategory` gains `ReorderingKiller`, and `ArabicJoiningGroup` gains 12 members. (#103)
