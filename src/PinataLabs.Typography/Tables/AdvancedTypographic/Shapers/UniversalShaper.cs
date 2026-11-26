@@ -74,7 +74,7 @@ internal sealed class UniversalShaper : DefaultShaper
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
     {
         // Default glyph pre-processing group
-        this.AddFeature(collection, index, count, LoclTag, preAction: SetupSyllables);
+        this.AddFeature(collection, index, count, LoclTag, preAction: this.SetupSyllables);
         this.AddFeature(collection, index, count, CcmpTag);
         this.AddFeature(collection, index, count, NuktTag);
         this.AddFeature(collection, index, count, AkhnTag);
@@ -93,14 +93,11 @@ internal sealed class UniversalShaper : DefaultShaper
         this.AddFeature(collection, index, count, CjctTag, postAction: Reorder);
 
         // As in HarfBuzz, the joining forms are a stage of their own, after the reordering.
-        if (this.joinsLetters)
-        {
-            this.AddFeature(collection, index, count, IsolTag, false);
-            this.AddFeature(collection, index, count, InitTag, false);
-            this.AddFeature(collection, index, count, MediTag, false);
-            this.AddFeature(collection, index, count, FinaTag, false);
-            this.EndStage();
-        }
+        this.AddFeature(collection, index, count, IsolTag, false);
+        this.AddFeature(collection, index, count, InitTag, false);
+        this.AddFeature(collection, index, count, MediTag, false);
+        this.AddFeature(collection, index, count, FinaTag, false);
+        this.EndStage();
 
         // Standard topographic presentation and positional feature application
         this.AddFeature(collection, index, count, AbvsTag);
@@ -162,13 +159,22 @@ internal sealed class UniversalShaper : DefaultShaper
         }
     }
 
-    private static void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
+    private void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
     {
         if (collection is not GlyphSubstitutionCollection substitutionCollection)
         {
             return;
         }
 
+        FindSyllables(substitutionCollection, index, count);
+        if (!this.joinsLetters)
+        {
+            AssignSyllableForms(substitutionCollection, index, count);
+        }
+    }
+
+    private static void FindSyllables(GlyphSubstitutionCollection substitutionCollection, int index, int count)
+    {
         Span<int> values = count <= 64 ? stackalloc int[count] : new int[count];
         for (int i = index; i < index + count; i++)
         {
@@ -236,6 +242,62 @@ internal sealed class UniversalShaper : DefaultShaper
             {
                 data.UniversalShapingEngineInfo = new(UniversalShapingData.Categories[HalantCategory], "broken_cluster", ++syllable);
             }
+        }
+    }
+
+    /// <summary>
+    /// Enables isol, init, medi or fina on each syllable of a script whose letters do not join, as HarfBuzz does: a
+    /// run of syllables takes init on the first, medi on the middle ones and fina on the last, and a syllable alone
+    /// takes isol. A character outside every syllable ends the run.
+    /// </summary>
+    /// <param name="collection">The glyph shaping collection.</param>
+    /// <param name="index">The zero-based index of the first glyph.</param>
+    /// <param name="count">The number of glyphs.</param>
+    private static void AssignSyllableForms(GlyphSubstitutionCollection collection, int index, int count)
+    {
+        int end = index + count;
+        int lastStart = index;
+        Tag? lastForm = null;
+        for (int start = index; start < end;)
+        {
+            UniversalShapingEngineInfo? info = collection[start].UniversalShapingEngineInfo;
+            int syllableEnd = start + 1;
+            while (info is not null && syllableEnd < end && collection[syllableEnd].UniversalShapingEngineInfo?.Syllable == info.Syllable)
+            {
+                syllableEnd++;
+            }
+
+            if (info is null || info.SyllableType is "independent_cluster" or "hieroglyph_cluster" or "non_cluster")
+            {
+                lastForm = null;
+            }
+            else
+            {
+                bool joins = lastForm == FinaTag || lastForm == IsolTag;
+                if (joins)
+                {
+                    lastForm = lastForm == FinaTag ? MediTag : InitTag;
+                    SetForm(collection, lastStart, start, lastForm.Value);
+                }
+
+                lastForm = joins ? FinaTag : IsolTag;
+                SetForm(collection, start, syllableEnd, lastForm.Value);
+            }
+
+            lastStart = start;
+            start = syllableEnd;
+        }
+    }
+
+    private static void SetForm(GlyphSubstitutionCollection collection, int start, int end, Tag form)
+    {
+        for (int i = start; i < end; i++)
+        {
+            collection.DisableShapingFeature(i, IsolTag);
+            collection.DisableShapingFeature(i, InitTag);
+            collection.DisableShapingFeature(i, MediTag);
+            collection.DisableShapingFeature(i, FinaTag);
+            collection.EnableShapingFeature(i, form);
         }
     }
 
