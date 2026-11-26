@@ -83,6 +83,9 @@ public static class TestFonts
     // Written by tests/tools/generate_hebrew_marks_reference.py, with HebrewKernMark.ttf.
     public static string HebrewMarksHarfBuzzReference => GetFullPath("HebrewMarks.harfbuzz.json");
 
+    // Written by tests/tools/generate_use_syllable_reference.py, with the Syllables fonts.
+    public static string SyllablesHarfBuzzReference => GetFullPath("Syllables.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");

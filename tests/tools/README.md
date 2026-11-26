@@ -269,6 +269,51 @@ python tests/tools/generate_universal_shaper_reference.py
 The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
 HarfBuzz version that wrote it.
 
+## Universal shaper categories
+
+`derive_harfbuzz_use_categories.py` writes `tests/UnicodeTestData/UniversalShapingCategory.harfbuzz.txt`, the
+universal shaper (USE) category of every code point in HarfBuzz 15.0.0.
+
+HarfBuzz builds its category table with `gen-use-table.py` and ships it as `src/hb-ot-shaper-use-table.hh`. HarfBuzz
+has no API that returns a category, so the script downloads that file at the HarfBuzz tag and runs its lookup for
+every code point. The output lists each range whose category is not `O`.
+
+`UniversalShapingCategoryTests` checks that the library gives every code point the same category.
+
+To write the reference again, run this from the repository root. It needs only Python and network access, or the
+path of a local copy of `hb-ot-shaper-use-table.hh`:
+
+```
+python tests/tools/derive_harfbuzz_use_categories.py
+```
+
+The output is deterministic for one HarfBuzz version.
+
+## Syllable reference
+
+`generate_use_syllable_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Syllables.harfbuzz.json`.
+
+It builds two fonts that have no GSUB table:
+
+- `SyllablesBalinese.ttf` has a Balinese letter, two vowel signs, the dotted circle, and the combining grapheme
+  joiner, ZWJ and ZWNJ. The universal shaper of HarfBuzz leaves these three out when it finds syllables, so a sign
+  after one of them stays in the syllable of the letter before it. The `joiners` rows hold such texts.
+- `SyllablesInvalid.ttf` has the characters of `IndicShapingInvalidCluster.txt`. The `invalid` rows hold each
+  sequence of that file, which HarfBuzz breaks with a dotted circle.
+
+HarfBuzz shapes with `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`, so it keeps the joiners in its output as the
+library does. `SyllableTests` checks that the library gives the same glyphs and positions.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_use_syllable_reference.py
+```
+
+The output is deterministic for one HarfBuzz version and one set of Unicode data files. The reference records the
+HarfBuzz version that wrote it.
+
 ## Shaper choice reference
 
 `generate_shaper_choice_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ShaperChoice.harfbuzz.json`.
