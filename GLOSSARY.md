@@ -32,6 +32,24 @@ _Avoid_: Instance font, variable instance, location
 A variation instance that the font itself lists in `fvar`, with a name such as "Semibold".
 _Avoid_: Predefined instance, preset
 
+## Font matching
+
+**Typographic family name**:
+The family name in `name` ID 16, or in ID 1 when the font has no ID 16. It groups every weight, width and slope of a design into one family, for example "Teko".
+_Avoid_: Legacy family name (that is ID 1, which can hold a weight, as in "Teko Light")
+
+**Font style**:
+A request for a weight, a width and a slope, with the ranges and meanings of the CSS `font-weight`, `font-stretch` and `font-style` properties.
+_Avoid_: Style flags, bold and italic flags
+
+**Style range**:
+The font styles that one face can draw. A static face covers one style. A variable face covers the range of its `wght`, `wdth`, `ital` and `slnt` axes.
+_Avoid_: Available styles
+
+**Font matching**:
+Picking the face of a family for a font style with the CSS Fonts Level 4 algorithm, which narrows by width, then slope, then weight. When the face is variable, the request also sets its axes.
+_Avoid_: Style lookup, font fallback (that picks another family for a missing glyph)
+
 ## Shaping
 
 **Glyph normalization**:
