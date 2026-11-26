@@ -428,3 +428,19 @@ python tests/tools/generate_universal_forms_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Khmer reference
+
+`generate_khmer_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Khmer.harfbuzz.json`, how the Khmer
+shaper of HarfBuzz shapes 1350 syllables in `NotoSansKhmer-Regular.ttf`: a consonant with a vowel, with one or two
+subscript consonants before the vowel, with a register shifter, with ROBAT and with a sign after the vowel. The
+reference holds the glyph IDs and where HarfBuzz draws each glyph. `KhmerTests` checks that the library gives the
+same, except for the syllables that #114 tracks.
+
+To write the reference again, install uharfbuzz and run this from the repository root:
+
+```
+python tests/tools/generate_khmer_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

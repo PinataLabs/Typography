@@ -74,6 +74,9 @@ public static class TestFonts
     // Written by tests/tools/generate_universal_forms_reference.py, with UniversalForms.ttf.
     public static string UniversalFormsHarfBuzzReference => GetFullPath("UniversalForms.harfbuzz.json");
 
+    // Written by tests/tools/generate_khmer_reference.py.
+    public static string KhmerHarfBuzzReference => GetFullPath("Khmer.harfbuzz.json");
+
     public static string ArabicFontFile => GetFullPath("Dubai-Regular.ttf");
 
     public static string Anchor2FontFile => GetFullPath("DejaVuSans.ttf");
