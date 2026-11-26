@@ -67,9 +67,12 @@ An additive or breaking public API change needs all of these:
   range of its type. A table that is truncated, has another major version, or has a store or mapping that is malformed
   counts as absent, and nothing throws when a glyph is drawn. A font without `fvar` does not load the tables. The right
   side bearing and bottom side bearing mappings are not read, because those bearings follow from the advance, the other
-  bearing and the size of the glyph. Without a left side bearing mapping a CFF glyph has the left edge of its varied
-  outline as its bearing, and a TrueType glyph keeps the bearing of `hmtx` until its `gvar` variation is read. Advance
-  widths of every glyph that `hmtx` lists match fontTools and HarfBuzz for `Teko-Variable.ttf` and
+  bearing and the size of the glyph. A CFF2 glyph keeps its origin where the default outline puts it, so without a left
+  side bearing mapping its bearing is the left edge of its varied outline, and without a top side bearing mapping its
+  bearing is the distance from the vertical origin of the default outline, which is its top plus the `vmtx` bearing, to
+  the top of the varied outline. A TrueType glyph keeps the bearing of `hmtx` until its `gvar` variation is read. The win
+  ascent and descent are added to their `MVAR` deltas as integers and clamped once, so a value above 32767 does not
+  wrap. Advance widths of every glyph that `hmtx` lists match fontTools and HarfBuzz for `Teko-Variable.ttf` and
   `SourceSans3VF-Upright.otf` at the axis minimum, named instances, the axis maximum and between them. The global
   metrics, advance heights and bearings match them for two built fonts that have every mapping and an `MVAR` record for
   every metric. (#128)
