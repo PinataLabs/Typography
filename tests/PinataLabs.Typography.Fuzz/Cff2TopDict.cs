@@ -19,7 +19,7 @@ internal static class Cff2TopDict
     /// </summary>
     /// <param name="table">The CFF2 table.</param>
     /// <param name="offset">The position of the length field of the variation store in <paramref name="table"/>.</param>
-    /// <returns><see langword="false"/> if the table has no Top DICT with a <c>vstore</c> operator.</returns>
+    /// <returns><see langword="false"/> if the table has no Top DICT with a <c>vstore</c> operator. Operators that this does not know are skipped.</returns>
     public static bool TryGetVariationStoreOffset(ReadOnlySpan<byte> table, out int offset)
     {
         offset = 0;
@@ -86,7 +86,8 @@ internal static class Cff2TopDict
                     break;
 
                 default:
-                    return false;
+                    // A reserved byte is an unknown operator, and it takes no operand.
+                    continue;
             }
 
             position += size;

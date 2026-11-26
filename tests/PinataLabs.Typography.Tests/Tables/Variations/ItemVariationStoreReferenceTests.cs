@@ -256,7 +256,11 @@ public class ItemVariationStoreReferenceTests
                 break;
 
             default:
-                Cff2TopDict.TryGetVariationStoreOffset(bytes, out int offset);
+                if (!Cff2TopDict.TryGetVariationStoreOffset(bytes, out int offset))
+                {
+                    throw new InvalidOperationException($"{fontName} {table}: the table has no variation store.");
+                }
+
                 read = ItemVariationStore.TryReadCff2(bytes, offset, out store);
                 break;
         }

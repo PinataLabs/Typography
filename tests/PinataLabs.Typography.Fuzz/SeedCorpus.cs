@@ -102,8 +102,18 @@ internal static class SeedCorpus
             foreach ((string tag, int position, bool isLong) in StoreTables)
             {
                 byte[] table = GetTable(font, tag);
+
+                // Only GDEF 1.3 and later has a store, and its offset is 0 when the table has none.
+                if (tag == "GDEF" && (table.Length < position + 4 || BinaryPrimitives.ReadUInt16BigEndian(table.AsSpan(2)) < 3))
+                {
+                    continue;
+                }
+
                 int storeOffset = isLong ? (int)BinaryPrimitives.ReadUInt32BigEndian(table.AsSpan(position)) : BinaryPrimitives.ReadUInt16BigEndian(table.AsSpan(position));
-                WriteSeed(directory, $"{name}-{tag.ToLowerInvariant()}", table.AsSpan(storeOffset));
+                if (storeOffset != 0)
+                {
+                    WriteSeed(directory, $"{name}-{tag.ToLowerInvariant()}", table.AsSpan(storeOffset));
+                }
             }
 
             // HVAR holds the offset of the advance width map after the offset of its store. Teko has no map.
@@ -117,7 +127,11 @@ internal static class SeedCorpus
             if (hasCff2)
             {
                 byte[] cff2 = GetTable(font, "CFF2");
-                Cff2TopDict.TryGetVariationStoreOffset(cff2, out int cff2Offset);
+                if (!Cff2TopDict.TryGetVariationStoreOffset(cff2, out int cff2Offset))
+                {
+                    throw new InvalidOperationException($"{file}: the CFF2 table has no variation store.");
+                }
+
                 int length = BinaryPrimitives.ReadUInt16BigEndian(cff2.AsSpan(cff2Offset));
                 WriteSeed(directory, $"{name}-cff2", cff2.AsSpan(cff2Offset, 2 + length));
             }
