@@ -51,6 +51,8 @@ internal class TableLoader
         this.Register(Cff2Table.TableName, Cff2Table.Load);
         this.Register(FvarTable.TableName, FvarTable.Load);
         this.Register(AvarTable.TableName, AvarTable.Load);
+        this.Register(HvarTable.TableName, HvarTable.Load);
+        this.Register(VvarTable.TableName, VvarTable.Load);
     }
 
     public static TableLoader Default { get; } = new();

@@ -57,6 +57,10 @@ internal partial class StreamFontMetrics
         CpalTable? cpal = reader.TryGetTable<CpalTable>();
         FvarTable? fvar = reader.TryGetTable<FvarTable>();
 
+        // Only a variable font has instances to vary, so only it needs these.
+        HvarTable? hvar = fvar is null ? null : reader.TryGetTable<HvarTable>();
+        VvarTable? vvar = fvar is null ? null : reader.TryGetTable<VvarTable>();
+
         CompactFontTables tables = new(cmap, head, hhea, htmx, maxp, name, os2, post, cff)
         {
             Kern = kern,
@@ -67,6 +71,8 @@ internal partial class StreamFontMetrics
             GPos = gPos,
             Colr = colr,
             Cpal = cpal,
+            Hvar = hvar,
+            Vvar = vvar,
             Fvar = fvar,
         };
 
@@ -94,16 +100,23 @@ internal partial class StreamFontMetrics
         }
 
         Bounds bounds = vector.GetBounds();
-        ushort advanceWidth = htmx.GetAdvancedWidth(glyphId);
-        short lsb = htmx.GetLeftSideBearing(glyphId);
+        ushort advanceWidth = this.hvar.VaryAdvance(glyphId, htmx.GetAdvancedWidth(glyphId));
+        short lsb = this.hvar.VaryLeadingBearing(glyphId, htmx.GetLeftSideBearing(glyphId));
+
+        // A CFF glyph has no phantom points, and its origin is where its outline puts it. When HVAR does not map the left
+        // side bearing, the bearing of a varied outline is where the outline starts, as it is in hmtx at the default instance.
+        if (!this.IsDefaultInstance && !this.hvar.HasLeadingBearings)
+        {
+            lsb = (short)bounds.Min.X;
+        }
 
         IMetricsHeader metrics = isVerticalLayout ? this.VerticalMetrics : this.HorizontalMetrics;
         ushort advancedHeight = (ushort)(metrics.Ascender - metrics.Descender);
         short tsb = (short)(metrics.Ascender - bounds.Max.Y);
         if (vtmx != null)
         {
-            advancedHeight = vtmx.GetAdvancedHeight(glyphId);
-            tsb = vtmx.GetTopSideBearing(glyphId);
+            advancedHeight = this.vvar.VaryAdvance(glyphId, vtmx.GetAdvancedHeight(glyphId));
+            tsb = this.vvar.VaryLeadingBearing(glyphId, vtmx.GetTopSideBearing(glyphId));
         }
 
         GlyphColor? color = null;

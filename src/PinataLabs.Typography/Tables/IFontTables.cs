@@ -139,6 +139,18 @@ internal interface IFontTables
     // The 'fvar' table holds the 'avar' table that belongs to it. A font that has no 'fvar' table, or whose table
     // is malformed, is a static font.
     FvarTable? Fvar { get; set; }
+
+    // The tables that vary the metrics of an instance. A font without 'fvar' loads none of them.
+    // +------+---------------------------+
+    // | Tag  | Name                      |
+    // +======+===========================+
+    // | HVAR | Horizontal metrics        |
+    // +------+---------------------------+
+    // | VVAR | Vertical metrics          |
+    // +------+---------------------------+
+    HvarTable? Hvar { get; set; }
+
+    VvarTable? Vvar { get; set; }
 }
 #pragma warning restore SA1600 // Elements should be documented
 

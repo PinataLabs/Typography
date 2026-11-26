@@ -129,7 +129,7 @@ internal partial class StreamFontMetrics : FontMetrics
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class as a variation instance of a face.
     /// The instance shares the parsed tables of the face, which do not change after they load, and owns what depends on
-    /// the coordinates, which for now is the glyph caches.
+    /// the coordinates: the glyph caches and the region scalars of its variation tables.
     /// </summary>
     /// <param name="face">The face to vary.</param>
     /// <param name="coordinates">The normalised coordinates of the instance. They are not all 0.</param>
@@ -169,6 +169,10 @@ internal partial class StreamFontMetrics : FontMetrics
         this.underlineThickness = face.underlineThickness;
         this.italicAngle = face.italicAngle;
         this.blendScalars = (face.compactFontTables?.Cff as Cff2Table)?.CreateBlendScalars(coordinates.Values);
+
+        IFontTables tables = (IFontTables?)face.trueTypeFontTables ?? face.compactFontTables!;
+        this.hvar = tables.Hvar?.CreateVariation(coordinates.Values) ?? default;
+        this.vvar = tables.Vvar?.CreateVariation(coordinates.Values) ?? default;
     }
 
     /// <summary>

@@ -95,6 +95,55 @@ public class Cff2VariationOutlineTests
     }
 
     [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task AdvancesAreTheAdvancesOfFontToolsRoundedOnce(string locationName)
+    {
+        int index = Array.FindIndex(FontTools.Locations, location => location.Name == locationName);
+        Font font = CreateFont(FontTools.Locations[index]);
+        List<string> differences = [];
+
+        foreach (GlyphReference glyph in FontTools.Glyphs)
+        {
+            ushort actual = GetMetrics(font, glyph.Id).AdvanceWidth;
+            double expected = Math.Floor(glyph.Advances[index] + 0.5);
+            if (actual != expected)
+            {
+                differences.Add($"{glyph.Name}: {actual}, expected {expected}");
+            }
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Locations))]
+    public async Task TheLeftSideBearingIsWhereTheOutlineStartsSinceHvarDoesNotMapIt(string locationName)
+    {
+        // A CFF glyph has no phantom points, so without an HVAR mapping its left side bearing is the left edge of its
+        // varied outline, which fontTools finds exactly and the library rounds down.
+        int index = Array.FindIndex(FontTools.Locations, location => location.Name == locationName);
+        Font font = CreateFont(FontTools.Locations[index]);
+        List<string> differences = [];
+
+        foreach (GlyphReference glyph in FontTools.Glyphs)
+        {
+            double expected = glyph.Bounds[index].Length == 0 ? 0 : glyph.Bounds[index][0];
+            GlyphMetrics metrics = GetMetrics(font, glyph.Id);
+            if (!(metrics.LeftSideBearing <= expected + 0.01 && metrics.LeftSideBearing > expected - 1.01))
+            {
+                differences.Add($"{glyph.Name}: {metrics.LeftSideBearing}, expected {expected}");
+            }
+
+            if (metrics.RightSideBearing != metrics.AdvanceWidth - metrics.LeftSideBearing - metrics.Width)
+            {
+                differences.Add($"{glyph.Name}: the right side bearing is {metrics.RightSideBearing}");
+            }
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
     public async Task TheReferenceCoordinatesAreTheOnesTheLibraryNormalisesTo()
     {
         List<string> differences = [];

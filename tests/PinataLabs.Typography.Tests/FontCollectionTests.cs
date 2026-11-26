@@ -73,13 +73,14 @@ public class FontCollectionTests
     }
 
     [Test]
-    public async Task VariableFontIsStillDrawnAtItsDefaultInstance()
+    public async Task VariableFontHasTheAdvanceOfHmtxAtItsDefaultInstance()
     {
         var sut = new FontCollection();
         FontFamily family = sut.Add(TestFonts.TekoVariableFile);
 
         // fontTools reads the advance of A at the default instance, wght 300, from hmtx: 343 of 1000 units.
-        Font font = family.CreateFont(12);
+        // A regular request is the instance wght 400, so the test asks for the default.
+        Font font = family.CreateFont(12, default, [.. family.Faces[0].Variations]);
 
         await Assert.That(font.FontMetrics.UnitsPerEm).IsEqualTo((ushort)1000);
         await Assert.That(font.TryGetGlyphs(new CodePoint('A'), out IReadOnlyList<Glyph>? glyphs)).IsTrue();
