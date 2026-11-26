@@ -18,10 +18,17 @@ For every glyph of the font the reference holds at each location:
 
 * the control bounds of the varied outline, which fontTools computes from the points of the decomposed glyph. The bounds that
   fontTools keeps in a composite glyph come from the unvaried components, so the script does not use them.
-* the advance width that the phantom points give. Teko-Variable.ttf has an HVAR table, which makes a font program use it, so the
-  script reads the advances from a copy of the font that has none. They come from HarfBuzz, which takes the phantom points of a
-  composite glyph from its component that has the USE_MY_METRICS flag, as FreeType does, where fontTools keeps those of the composite
-  (the glyphs Edieresis and Odieresis, for one, have different advances in the two). The bounds and the left side bearing come from fontTools.
+* the advance width that the phantom points give, as "advances". Teko-Variable.ttf has an HVAR table, which makes a font program
+  use it, so the script reads these advances from a copy of the font that has none. They come from HarfBuzz, which takes the
+  phantom points of a composite glyph from its component that has the USE_MY_METRICS flag, as FreeType does, where fontTools keeps
+  those of the composite (the glyphs Edieresis and Odieresis, for one, have different advances in the two). The bounds and the left
+  side bearing come from fontTools.
+* the advance width that HVAR gives, as "hvarAdvances", from the font as it is. fontTools and HarfBuzz both read it, and the script
+  stops when they differ. HVAR wins over the phantom points whenever a font has it. The two advances differ for six composite
+  glyphs of Teko: Edieresis, Odieresis, Ohungarumlaut, Uhungarumlaut, Ydieresis and ydieresis. At the default instance they
+  agree with each other and with hmtx. Away from it HVAR has a delta of its own for the composite and 'gvar' moves the phantom
+  points of the component that has USE_MY_METRICS, and the two deltas are not the same. The script lists them, and stops when
+  another glyph differs, so that the test that pins the six keeps its meaning.
 * the left side bearing, which is the rounded left edge of the bounds less the first phantom point.
 
 For a sample of the glyphs it also holds the varied outline: the Basic Latin glyphs, the composites that the sample picks,
@@ -152,13 +159,16 @@ def choose_outline_glyphs(font):
     return sorted(chosen)
 
 
-def get_instance_reference(font, without_hvar_data, location, outline_glyphs):
+def get_instance_reference(font, font_data, without_hvar_data, location, outline_glyphs):
     glyph_set = font.getGlyphSet(location=location["location"], normalized=True)
     phantom_font = uharfbuzz.Font(uharfbuzz.Face(without_hvar_data))
     phantom_font.set_variations(location["user"])
+    hvar_font = uharfbuzz.Font(uharfbuzz.Face(font_data))
+    hvar_font.set_variations(location["user"])
     order = font.getGlyphOrder()
     bounds = []
     advances = []
+    hvar_advances = []
     side_bearings = []
     for glyph_id, name in enumerate(order):
         pen = ControlBoundsPen(glyph_set)
@@ -166,7 +176,11 @@ def get_instance_reference(font, without_hvar_data, location, outline_glyphs):
         box = pen.bounds
         bounds.append(None if box is None else [number(v) for v in box])
         advances.append(phantom_font.get_glyph_h_advance(glyph_id))
+        hvar_advances.append(hvar_font.get_glyph_h_advance(glyph_id))
+        if glyph_id < font["hhea"].numberOfHMetrics and otRound(glyph_set[name].width) != hvar_advances[-1]:
+            raise SystemExit("%s at %s has the HVAR advance %d in HarfBuzz and %d in fontTools" % (name, location["name"], hvar_advances[-1], otRound(glyph_set[name].width)))
         side_bearings.append(0 if box is None else otRound(box[0]))
+    check_hvar_differences(order, location["name"], advances, hvar_advances)
     outlines = {}
     for index in outline_glyphs:
         pen = OutlinePen(glyph_set)
@@ -178,9 +192,25 @@ def get_instance_reference(font, without_hvar_data, location, outline_glyphs):
         "coordinates": location["coordinates"],
         "bounds": bounds,
         "advances": advances,
+        "hvarAdvances": hvar_advances,
         "leftSideBearings": side_bearings,
         "outlines": outlines,
     }
+
+
+# The glyphs whose HVAR advance differs from the advance of their phantom points somewhere on the axis. See the docstring.
+HVAR_DIFFERENCES = ["Edieresis", "Odieresis", "Ohungarumlaut", "Uhungarumlaut", "Ydieresis", "ydieresis"]
+
+
+def check_hvar_differences(order, location_name, advances, hvar_advances):
+    """Stops when a glyph other than the six composites has an HVAR advance that differs from its phantom point advance."""
+    differing = [order[i] for i in range(len(order)) if advances[i] != hvar_advances[i]]
+    if location_name == "Default":
+        expected = []
+    else:
+        expected = HVAR_DIFFERENCES
+    if differing != expected:
+        raise SystemExit("At %s the HVAR advances differ from the phantom point advances for %s, expected %s" % (location_name, differing, expected))
 
 
 def dump(value, level=0):
@@ -206,6 +236,8 @@ def main():
         font = TTFont(os.path.join(FONTS, path))
         without_hvar = TTFont(os.path.join(FONTS, path))
         del without_hvar["HVAR"]
+        with open(os.path.join(FONTS, path), "rb") as file:
+            font_data = file.read()
         buffer = io.BytesIO()
         without_hvar.save(buffer)
         check_origin_phantom_point(font)
@@ -215,7 +247,7 @@ def main():
             "glyphCount": len(font.getGlyphOrder()),
             "outlineGlyphs": outline_glyphs,
             "instances": [
-                get_instance_reference(font, buffer.getvalue(), location, outline_glyphs)
+                get_instance_reference(font, font_data, buffer.getvalue(), location, outline_glyphs)
                 for location in get_locations(font, names, extra)
             ],
         }

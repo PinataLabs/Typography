@@ -9,7 +9,7 @@ Usage (from the repository root, fontTools 4.68 or later, and uharfbuzz for the 
     python tests/tools/generate_metrics_variation_reference.py
 
 Neither test font has HVAR side bearing mappings, VVAR, or an MVAR record for anything but the strikeout position and
-the heights, so the script builds two small TrueType fonts that have them all, next to the reference:
+the heights, so the script builds three small TrueType fonts that have them all, next to the reference:
 
 * VariationMetrics.ttf has the axes wght and wdth and six glyphs. Its HVAR has an advance width mapping that shares one
   row between glyphs, a left side bearing mapping that leaves a glyph out, and a right side bearing mapping. It has
@@ -18,8 +18,16 @@ the heights, so the script builds two small TrueType fonts that have them all, n
   superscript, strikeout and underline values. The values of hhea, typo and win differ, and its USE_TYPO_METRICS bit is
   clear, so the library takes the hhea values.
 * VariationMetricsTypo.ttf is the same font with the USE_TYPO_METRICS bit set, so the library takes the typo values.
+* VariationMetricsGvar.ttf is the first font with a gvar table, whose tuples move the points of each glyph and its four phantom
+  points (issue #127). The deltas of the phantom points are not those of HVAR and VVAR, so the font tells which of the two the
+  library takes. HVAR and VVAR win, as they do in HarfBuzz: the advances, and the left and top side bearings that the
+  mappings give, are those of the tables. The reference records them like those of the other fonts, and it records under
+  "phantom" what the phantom points give: the advances, the left side bearing (the left edge of the varied outline less the
+  first phantom point) and the top side bearing, from fontTools on a copy of the font that has no HVAR and VVAR. The script
+  checks the advances of that copy against HarfBuzz. A test that removes or breaks the tables, or the mapping of a bearing,
+  expects those values.
 
-A glyph of either font has no gvar variation, so its outline does not change, and only its metrics do.
+The glyphs of the first two fonts have no gvar variation, so their outlines do not change, and only their metrics do.
 
 A CFF2 outline does change, so the script also builds two CFF2 fonts for the vertical origin of a variation instance, and
 writes Cff2VerticalOrigins.fonttools.json for them (see build_cff2_vertical):
@@ -54,6 +62,7 @@ built fonts and for the advances of the shipped fonts, and stops when it does no
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
 """
 
+import io
 import os
 
 os.environ["SOURCE_DATE_EPOCH"] = "0"
@@ -69,6 +78,7 @@ from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.varLib import builder
 from fontTools.varLib.varStore import VarStoreInstancer
 
@@ -91,7 +101,12 @@ SHIPPED_FONTS = {
 
 # The built fonts. The F2Dot14 coordinates of these locations are exact: 650 and 250 of wght are 0.5 and -0.5 of its
 # range, 112.5 and 87.5 of wdth are 0.5 and -0.5 of its range.
-BUILT_FONTS = {"VariationMetrics.ttf": False, "VariationMetricsTypo.ttf": True}
+# For each font: whether it has USE_TYPO_METRICS set, and whether it has a gvar table.
+BUILT_FONTS = {
+    "VariationMetrics.ttf": (False, False),
+    "VariationMetricsTypo.ttf": (True, False),
+    "VariationMetricsGvar.ttf": (False, True),
+}
 BUILT_NAMES = ["Regular", "Bold", "Light", "Condensed", "Extended"]
 BUILT_EXTRA = [
     {"wght": 650.0},
@@ -137,6 +152,27 @@ REGIONS = [
     {"wght": (0, 1, 1), "wdth": (0, 1, 1)},
 ]
 AXIS_TAGS = [axis[0] for axis in AXES]
+
+# The gvar tuples of VariationMetricsGvar.ttf, for the peak of wght at 1 and the peak of wdth at 1. Each has the deltas of the four
+# points of a box and then of the four phantom points, in the order of the font program: the origin, the end of the advance, the top and
+# the bottom of the vertical advance. They are even, so that a half of one is a whole number and no value is a tie. The deltas of
+# the phantom points are not those of HVAR and VVAR below, so each metric that both could give differs between the two.
+GVAR_WGHT = {
+    ".notdef": [(4, 0), (4, 10), (20, 10), (20, 0), (2, 0), (30, 0), (0, 16), (0, -24)],
+    "space": [(0, 0), (0, 8), (16, 8), (16, 0), (0, 0), (-10, 0), (0, 20), (0, -40)],
+    "A": [(10, 0), (10, 30), (30, 30), (30, 0), (4, 0), (90, 0), (0, 40), (0, -70)],
+    "B": [(-8, 0), (-8, 20), (12, 20), (12, 0), (-2, 0), (-50, 0), (0, -30), (0, 60)],
+    "C": [(6, -4), (6, 16), (26, 16), (26, -4), (6, 0), (70, 0), (0, 26), (0, -34)],
+    "D": [(0, 0), (0, 12), (40, 12), (40, 0), (0, 0), (-20, 0), (0, -14), (0, 80)],
+}
+GVAR_WDTH = {
+    ".notdef": [(-2, 0), (-2, 6), (8, 6), (8, 0), (-4, 0), (16, 0), (0, 10), (0, 12)],
+    "space": [(0, 0), (0, 4), (6, 4), (6, 0), (2, 0), (24, 0), (0, -8), (0, 14)],
+    "A": [(4, 0), (4, 8), (-6, 8), (-6, 0), (-2, 0), (-36, 0), (0, 18), (0, 22)],
+    "B": [(2, -2), (2, 14), (10, 14), (10, -2), (8, 0), (44, 0), (0, 6), (0, -16)],
+    "C": [(0, 0), (0, -6), (-12, -6), (-12, 0), (-6, 0), (20, 0), (0, -12), (0, 30)],
+    "D": [(6, 2), (6, 22), (22, 22), (22, 2), (4, 0), (-30, 0), (0, 24), (0, -48)],
+}
 
 # The rows of the HVAR store. Subtable 0 has the deltas of the four single axis regions, and subtable 1 the delta of
 # the region of both axes. A delta of 5 at the scalar 0.5 gives 2.5, which must round up.
@@ -242,7 +278,21 @@ def build_mvar():
     return table
 
 
-def build(file_name, use_typo):
+def build_gvar():
+    table = newTable("gvar")
+    table.version = 1
+    table.reserved = 0
+    table.variations = {
+        name: [
+            TupleVariation({"wght": (0.0, 1.0, 1.0)}, GVAR_WGHT[name]),
+            TupleVariation({"wdth": (0.0, 1.0, 1.0)}, GVAR_WDTH[name]),
+        ]
+        for name in GLYPHS
+    }
+    return table
+
+
+def build(file_name, use_typo, with_gvar):
     path = os.path.join(VARIATIONS, file_name)
     family = file_name.replace(".ttf", "")
     builder_ = FontBuilder(1000, isTTF=True)
@@ -296,6 +346,8 @@ def build(file_name, use_typo):
     builder_.font["HVAR"] = build_hvar()
     builder_.font["VVAR"] = build_vvar()
     builder_.font["MVAR"] = build_mvar()
+    if with_gvar:
+        builder_.font["gvar"] = build_gvar()
     builder_.font.save(path)
     print(os.path.relpath(path, os.path.join(FONTS, "..", "..", "..")))
     return path
@@ -465,7 +517,44 @@ def check_with_harfbuzz(path, font, locations, advances, heights, metrics):
         raise SystemExit("HarfBuzz differs from the reference:\n  " + "\n  ".join(mismatches[:20]))
 
 
-def get_reference(path, names, extra, harfbuzz_metrics):
+def get_phantom_reference(path, locations):
+    """Gives, for a font that has gvar, the advances and side bearings that the phantom points give: those that fontTools gives on a
+    copy of the font without HVAR and VVAR, which then reads them from the phantom points. HarfBuzz must give the same advances."""
+    font = TTFont(path)
+    del font["HVAR"]
+    del font["VVAR"]
+    buffer = io.BytesIO()
+    font.save(buffer)
+    data = buffer.getvalue()
+    font = TTFont(io.BytesIO(data))
+    hb_font = hb.Font(hb.Face(data))
+    glyph_order = font.getGlyphOrder()
+    reference = {"advanceWidths": [], "advanceHeights": [], "leftSideBearings": [], "topSideBearings": []}
+    mismatches = []
+    for location in locations:
+        glyph_set = font.getGlyphSet(location=get_axis_location(font, location["coordinates"]), normalized=True)
+        hb_font.set_var_coords_normalized([fixedToFloat(value, 14) for value in location["coordinates"]])
+        widths, heights, left, top = [], [], [], []
+        for gid, name in enumerate(glyph_order):
+            glyph = glyph_set[name]
+            widths.append(ot_round(glyph.width))
+            heights.append(ot_round(glyph.height))
+            left.append(ot_round(glyph.lsb))
+            top.append(ot_round(glyph.tsb))
+            if widths[-1] != hb_font.get_glyph_h_advance(gid):
+                mismatches.append("%s glyph %d advance %d, HarfBuzz %d" % (location["name"], gid, widths[-1], hb_font.get_glyph_h_advance(gid)))
+            if heights[-1] != -hb_font.get_glyph_v_advance(gid):
+                mismatches.append("%s glyph %d height %d, HarfBuzz %d" % (location["name"], gid, heights[-1], -hb_font.get_glyph_v_advance(gid)))
+        reference["advanceWidths"].append(widths)
+        reference["advanceHeights"].append(heights)
+        reference["leftSideBearings"].append(left)
+        reference["topSideBearings"].append(top)
+    if mismatches:
+        raise SystemExit("HarfBuzz differs from the phantom point reference:\n  " + "\n  ".join(mismatches[:20]))
+    return reference
+
+
+def get_reference(path, names, extra, harfbuzz_metrics, with_phantom=False):
     font = TTFont(path)
     locations = get_locations(font, names, extra)
     glyph_order = font.getGlyphOrder()
@@ -486,7 +575,7 @@ def get_reference(path, names, extra, harfbuzz_metrics):
         top.append(get_bearings(font, "VVAR", "TsbMap", "vmtx", normalized) if "VVAR" in font else None)
     metrics = [get_metrics(font, delta) for delta in deltas]
     check_with_harfbuzz(path, font, locations, advances, heights or None, metrics if harfbuzz_metrics else None)
-    return {
+    reference = {
         "numberOfHMetrics": horizontal_count,
         "locations": locations,
         "advanceWidths": advances,
@@ -496,6 +585,9 @@ def get_reference(path, names, extra, harfbuzz_metrics):
         "metrics": metrics,
         "mvar": [{tag: delta[tag] for tag in sorted(delta)} for delta in deltas],
     }
+    if with_phantom:
+        reference["phantom"] = get_phantom_reference(path, locations)
+    return reference
 
 
 # The CFF2 fonts of the vertical origin. For each glyph: the top of its box at wght 100 and at wght 900, the advance height at
@@ -667,11 +759,11 @@ def check_vertical_descender_with_harfbuzz(path):
 def main():
     os.makedirs(VARIATIONS, exist_ok=True)
     reference = {"fontTools": fontTools.version, "fonts": {}}
-    for file_name, use_typo in BUILT_FONTS.items():
-        path = build(file_name, use_typo)
+    for file_name, (use_typo, with_gvar) in BUILT_FONTS.items():
+        path = build(file_name, use_typo, with_gvar)
         reference["fonts"][file_name] = dict(
             file="Variations/" + file_name,
-            **get_reference(path, BUILT_NAMES, BUILT_EXTRA, harfbuzz_metrics=True),
+            **get_reference(path, BUILT_NAMES, BUILT_EXTRA, harfbuzz_metrics=True, with_phantom=with_gvar),
         )
     for file_name, (path, names, extra) in SHIPPED_FONTS.items():
         reference["fonts"][file_name] = dict(

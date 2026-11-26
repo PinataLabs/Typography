@@ -47,8 +47,14 @@ internal static class MetricsVariationsReference
     /// Creates a font of a family at the user coordinates of a location.
     /// </summary>
     public static Font CreateFont(string fontName, Location location)
-        => Families[fontName].CreateFont(
-            Families[fontName].Faces[0].UnitsPerEm,
+        => CreateFont(Families[fontName], location);
+
+    /// <summary>
+    /// Creates a font of a family that a test has built, at the user coordinates of a location.
+    /// </summary>
+    public static Font CreateFont(FontFamily family, Location location)
+        => family.CreateFont(
+            family.Faces[0].UnitsPerEm,
             default,
             [.. location.User.Select(axis => new FontVariation(Tag.Parse(axis.Key), (float)axis.Value))]);
 
@@ -87,6 +93,25 @@ internal static class MetricsVariationsReference
         public Dictionary<string, int>[] Metrics { get; init; } = [];
 
         public Dictionary<string, int>[] Mvar { get; init; } = [];
+
+        /// <summary>
+        /// Gets what the phantom points of 'gvar' give, for a font that has 'gvar' as well as HVAR and VVAR, where the tables win.
+        /// </summary>
+        public PhantomReference? Phantom { get; init; }
+    }
+
+    /// <summary>
+    /// The advances and side bearings of the phantom points at each location, as fontTools gives them for a copy of the font that has no HVAR and VVAR.
+    /// </summary>
+    internal sealed class PhantomReference
+    {
+        public int[][] AdvanceWidths { get; init; } = [];
+
+        public int[][] AdvanceHeights { get; init; } = [];
+
+        public int[][] LeftSideBearings { get; init; } = [];
+
+        public int[][] TopSideBearings { get; init; } = [];
     }
 
     internal sealed class Location

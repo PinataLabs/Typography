@@ -119,7 +119,7 @@ The output is deterministic for one fontTools version. The file records the vers
 `generate_metrics_variation_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/MetricsVariations.fonttools.json`,
 the fontTools reference for the advances, side bearings and global metrics of variation instances (issue #128).
 Neither variable test font has `HVAR` side bearing mappings or `VVAR`, and their `MVAR` varies only the strikeout position
-and the heights, so the script builds two small TrueType fonts that have all of them, next to the reference:
+and the heights, so the script builds three small TrueType fonts that have all of them, next to the reference:
 
 - `VariationMetrics.ttf` has the axes `wght` and `wdth` and six glyphs. Its `HVAR` has an advance width map that shares one
   row between glyphs, a left side bearing map that leaves a glyph out, and a right side bearing map. It has `vhea`, `vmtx`
@@ -127,10 +127,17 @@ and the heights, so the script builds two small TrueType fonts that have all of 
   descender and line gap, the win ascent and descent, the `vhea` metrics, and the subscript, superscript, strikeout and
   underline values. Its `hhea`, typo and win values differ, and its `USE_TYPO_METRICS` bit is clear.
 - `VariationMetricsTypo.ttf` is the same font with the `USE_TYPO_METRICS` bit set.
+- `VariationMetricsGvar.ttf` is the first font with a `gvar` table (issue #127). Its tuples move the points of each glyph and
+  its four phantom points, by deltas that are not those of `HVAR` and `VVAR`, so the font tells which source the library takes.
+  `HVAR` and `VVAR` win, as they do in HarfBuzz: the advances, and the left and top side bearings that a mapping gives, are the
+  tables'. The reference records them like those of the other fonts, and records under `phantom` what the phantom points
+  give: the advances, the left side bearing (the left edge of the varied outline less the first phantom point) and the top
+  side bearing. They come from fontTools on a copy of the font that has no `HVAR` and `VVAR`, and the script checks the
+  advances against HarfBuzz. The tests break or remove a table, or the mapping of a bearing, and expect those values.
 
-The glyphs of both fonts have no `gvar` variation, so only their metrics change.
+The glyphs of the first two fonts have no `gvar` variation, so only their metrics change.
 
-For these two fonts and the two variable fonts of the test project, the file holds, at the axis minimum, a named instance, the
+For these three fonts and the two variable fonts of the test project, the file holds, at the axis minimum, a named instance, the
 axis maximum and some user locations, the advance width of each glyph that `hmtx` lists and the advance height of each glyph
 that `vmtx` lists (`TTFont.getGlyphSet(location=..., normalized=True)`, rounded as `otRound` does), the global metrics, which
 are the value of a table plus the rounded `MVAR` delta of its tag, and the `MVAR` delta of every tag. For the built fonts
@@ -169,12 +176,16 @@ default instance, the "SemiBold" named instance, the maximum and a user location
 the font variations reference gives, as normalised coordinates. fontTools applies the `gvar` deltas with interpolation of
 untouched points, the deltas of the component offsets of composite glyphs, and the deltas of the phantom points.
 
-For every glyph the reference holds the control bounds of the varied outline, the advance width that the phantom points give, and
-the left side bearing. Teko has an `HVAR` table, which a font program then uses for the advance, so the script reads the advances from a
-copy of the font that has none, with HarfBuzz (install uharfbuzz). HarfBuzz and FreeType give a composite glyph the phantom points of
-its component that has the USE_MY_METRICS flag, where fontTools keeps those of the composite, and six glyphs of Teko differ in
-the two. fontTools takes the bounds of a composite glyph from its unvaried components, so the script
-measures the drawn outline instead. For a sample of the glyphs, which has the Basic Latin glyphs, every fourth composite and the
+For every glyph the reference holds the control bounds of the varied outline, the advance width that the phantom points give
+(`advances`), the advance width that `HVAR` gives (`hvarAdvances`), and the left side bearing. Teko has an `HVAR` table, which a
+font program then uses for the advance, so the script reads the phantom point advances from a copy of the font that has none, with
+HarfBuzz (install uharfbuzz). HarfBuzz and FreeType give a composite glyph the phantom points of its component that has the
+USE_MY_METRICS flag, where fontTools keeps those of the composite, and six glyphs of Teko differ in the two. The `HVAR` advances
+come from the font as it is, and the script stops when HarfBuzz and fontTools differ. `HVAR` and the phantom points give the same
+advance for every glyph but six composites (Edieresis, Odieresis, Ohungarumlaut, Uhungarumlaut, Ydieresis and ydieresis), away
+from the default instance. Each is a mark and a letter that has USE_MY_METRICS, `HVAR` has a delta for the composite, and `gvar`
+moves the phantom points of the letter. The script stops when another glyph differs. fontTools takes the bounds of a composite glyph
+from its unvaried components, so the script measures the drawn outline instead. For a sample of the glyphs, which has the Basic Latin glyphs, every fourth composite and the
 empty glyphs, it also holds the outline as the path commands that the font program fixtures use. The script checks that the first
 phantom point of every glyph is the origin, which the left side bearing relies on.
 
