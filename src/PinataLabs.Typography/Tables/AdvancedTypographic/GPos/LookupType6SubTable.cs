@@ -106,13 +106,16 @@ internal static class LookupType6SubTable
                 return false;
             }
 
-            // Get the previous mark to attach to.
-            if (index < 1)
+            // As in HarfBuzz, the previous mark is found with the mark attachment type and the mark filtering set of the
+            // lookup, and without its Ignore flags.
+            const LookupFlags ignoreFlags = LookupFlags.IgnoreBaseGlyphs | LookupFlags.IgnoreLigatures | LookupFlags.IgnoreMarks;
+            SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags & ~ignoreFlags);
+            int prevIdx = iterator.Increment(-1);
+            if (prevIdx < 0)
             {
                 return false;
             }
 
-            int prevIdx = index - 1;
             ushort prevGlyphId = collection[prevIdx].GlyphId;
             GlyphShapingData prevGlyph = collection[prevIdx];
             if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, prevGlyphId, prevGlyph))
