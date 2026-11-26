@@ -25,7 +25,7 @@ internal sealed class HorizontalMetricsTable : Table
 
         if ((uint)glyphIndex >= (uint)this.advancedWidths.Length)
         {
-            return this.advancedWidths[0];
+            return this.advancedWidths[^1];
         }
 
         return this.advancedWidths[glyphIndex];
