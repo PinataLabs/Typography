@@ -75,9 +75,16 @@ internal static class AdvancedTypographicUtils
         {
             ushort sequenceIndex = lookupRecord.SequenceIndex;
             ushort lookupIndex = lookupRecord.LookupListIndex;
+            GSub.LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
+
+            // As in HarfBuzz, a reverse chaining substitution applies only as a lookup of a feature.
+            if (lookup.IsReverse)
+            {
+                continue;
+            }
+
             iterator.Index = index;
             iterator.Increment(sequenceIndex);
-            GSub.LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
             lookup.TrySubstitution(fontMetrics, table, collection, features, iterator.Index, count - (iterator.Index - index));
 
             // Account for substitutions changing the length of the collection.
