@@ -60,6 +60,15 @@ internal struct SkippingGlyphIterator
         this.markFilteringSet = (ushort)((uint)(lookupFlags & LookupFlags.MarkFilteringSetMask) >> 16);
     }
 
+    /// <summary>
+    /// Resets the iterator to the first glyph at or after the index that the lookup flags do not skip.
+    /// </summary>
+    public void Start(int index, LookupFlags lookupFlags)
+    {
+        this.Reset(index - 1, lookupFlags);
+        this.Move(1);
+    }
+
     private void Move(int direction)
     {
         this.Index += direction;

@@ -298,6 +298,14 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- GSUB and GPOS lookups apply where HarfBuzz 15.0.0 applies them. A lookup starts at the first glyph that its flags
+  do not skip, where it used to apply to a first glyph that its flags or mark filtering set skip (#120). A chained
+  context positioning lookup counts the sequence index of a nested lookup over the glyphs that are not skipped (#118).
+  Mark-to-mark attachment finds the second mark with the mark attachment type and the mark filtering set of the
+  lookup, so a mark outside the set no longer takes the attachment (#119). A reverse chaining substitution that a
+  contextual lookup calls makes no substitution (#121). A cursive chain keeps its first glyph on the baseline, or its
+  last glyph when the lookup has the RightToLeft flag, and a chain of more than two glyphs adds up the offsets of all
+  of them in either direction (#139).
 - A font with no `glyf`, `CFF ` or `CFF2` outline table is absent from `SystemFonts`. On macOS this is PingFang, which
   keeps its outlines in Apple's `hvgl` table. Before, the font was listed and threw `MissingFontTableException` when it
   was first used. `FontCollection.Add` and `FontCollection.AddCollection` throw `InvalidFontFileException` for such a

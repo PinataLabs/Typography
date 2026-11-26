@@ -47,8 +47,8 @@ public class GposVariationTests
             Font font = family.CreateFont(size, FontStyle.Regular, new FontVariation(Weight, weights[weight]));
             foreach (Row row in rows)
             {
-                Positioned[] expected = Relative(kind, GposOnly(row.Locations[weight]));
-                Positioned[] actual = Relative(kind, GposOnly(Shape(font, row.Text)));
+                Positioned[] expected = GposOnly(row.Locations[weight]);
+                Positioned[] actual = GposOnly(Shape(font, row.Text));
                 if (!expected.SequenceEqual(actual))
                 {
                     different.Add($"wght {weights[weight]} [{CodePoints(row.Text)}] expected [{string.Join(' ', expected)}] actual [{string.Join(' ', actual)}]");
@@ -59,12 +59,4 @@ public class GposVariationTests
         await Assert.That(rows).IsNotEmpty();
         await Assert.That(different).IsEmpty();
     }
-
-    /// <summary>
-    /// Takes the y offset of each glyph of a cursive chain from the first glyph. For a lookup without the RightToLeft flag,
-    /// HarfBuzz keeps the first glyph of the chain on the baseline and the library keeps the last one there, so the chains
-    /// differ by one offset that is the same for every glyph. The offset from one glyph to the next is the same in both.
-    /// </summary>
-    private static Positioned[] Relative(string kind, Positioned[] glyphs)
-        => kind == "cursive" ? glyphs.Select(g => g with { Y = g.Y - glyphs[0].Y }).ToArray() : glyphs;
 }

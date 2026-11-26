@@ -124,9 +124,9 @@ internal class GlyphShapingData
     public int MarkAttachment { get; set; } = -1;
 
     /// <summary>
-    /// Gets or sets the index of any cursive attachment.
+    /// Gets or sets the offset from the glyph to the glyph that it is cursively attached to, or 0 when it is not attached.
     /// </summary>
-    public int CursiveAttachment { get; set; } = -1;
+    public int CursiveAttachment { get; set; }
 
     /// <summary>
     /// Gets or sets the collection of features.

@@ -95,13 +95,7 @@ internal static class LookupType8SubTable
                     continue;
                 }
 
-                for (int j = 0; j < rule.SequenceLookupRecords.Length; j++)
-                {
-                    SequenceLookupRecord sequenceLookupRecord = rule.SequenceLookupRecords[j];
-                    LookupTable lookup = table.LookupList.LookupTables[sequenceLookupRecord.LookupListIndex];
-                    ushort sequenceIndex = sequenceLookupRecord.SequenceIndex;
-                    lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1);
-                }
+                AdvancedTypographicUtils.ApplyLookupList(fontMetrics, table, features, this.LookupFlags, rule.SequenceLookupRecords, collection, index, count);
 
                 return true;
             }
@@ -188,13 +182,7 @@ internal static class LookupType8SubTable
                     continue;
                 }
 
-                for (int j = 0; j < rule.SequenceLookupRecords.Length; j++)
-                {
-                    SequenceLookupRecord sequenceLookupRecord = rule.SequenceLookupRecords[j];
-                    LookupTable lookup = table.LookupList.LookupTables[sequenceLookupRecord.LookupListIndex];
-                    ushort sequenceIndex = sequenceLookupRecord.SequenceIndex;
-                    lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, 1);
-                }
+                AdvancedTypographicUtils.ApplyLookupList(fontMetrics, table, features, this.LookupFlags, rule.SequenceLookupRecords, collection, index, count);
 
                 return true;
             }
@@ -255,15 +243,8 @@ internal static class LookupType8SubTable
                 return false;
             }
 
-            // It's a match. Perform the position updates. The subtable has applied whether or not they move a glyph.
-            foreach (SequenceLookupRecord lookupRecord in this.seqLookupRecords)
-            {
-                ushort sequenceIndex = lookupRecord.SequenceIndex;
-                ushort lookupIndex = lookupRecord.LookupListIndex;
-
-                LookupTable lookup = table.LookupList.LookupTables[lookupIndex];
-                lookup.TryUpdatePosition(fontMetrics, table, collection, features, index + sequenceIndex, count - sequenceIndex);
-            }
+            // The subtable has applied whether or not its nested lookups move a glyph.
+            AdvancedTypographicUtils.ApplyLookupList(fontMetrics, table, features, this.LookupFlags, this.seqLookupRecords, collection, index, count);
 
             return true;
         }

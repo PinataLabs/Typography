@@ -26,6 +26,9 @@ internal class GPosTable : Table
 
     internal const string TableName = "GPOS";
 
+    // HB_MAX_NESTING_LEVEL.
+    private const int MaxCursiveNesting = 64;
+
     private readonly FeatureVariationsTable? featureVariations;
 
     public GPosTable(ScriptList? scriptList, FeatureListTable featureList, LookupListTable lookupList, FeatureVariationsTable? featureVariations = null)
@@ -215,7 +218,7 @@ internal class GPosTable : Table
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
                 {
                     LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
-                    iterator.Reset(index, lookupTable.LookupFlags);
+                    iterator.Start(index, lookupTable.LookupFlags);
 
                     while (iterator.Index < index + count)
                     {
@@ -309,29 +312,42 @@ internal class GPosTable : Table
 
     private static void FixCursiveAttachment(GlyphPositioningCollection collection, int index, int count)
     {
-        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        for (int i = 0; i < count; i++)
+        for (int i = index; i < index + count; i++)
         {
-            int currentIndex = i + index;
-            GlyphShapingData data = collection[currentIndex];
-            if (data.CursiveAttachment != -1)
-            {
-                int j = data.CursiveAttachment + currentIndex;
-                if (j > count)
-                {
-                    return;
-                }
+            PropagateCursiveOffset(collection, i, index, count, MaxCursiveNesting);
+        }
+    }
 
-                GlyphShapingData cursiveData = collection[j];
-                if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, data.HasVerticalForm))
-                {
-                    data.Bounds.Y += cursiveData.Bounds.Y;
-                }
-                else
-                {
-                    data.Bounds.X += cursiveData.Bounds.X;
-                }
-            }
+    /// <summary>
+    /// Adds the offset of the glyph that a glyph is cursively attached to, once that glyph has its own, as HarfBuzz
+    /// does and with its nesting limit.
+    /// </summary>
+    private static void PropagateCursiveOffset(GlyphPositioningCollection collection, int i, int index, int count, int nesting)
+    {
+        GlyphShapingData data = collection[i];
+        int chain = data.CursiveAttachment;
+        if (chain == 0)
+        {
+            return;
+        }
+
+        data.CursiveAttachment = 0;
+        int j = i + chain;
+        if (j < index || j >= index + count || nesting == 0)
+        {
+            return;
+        }
+
+        PropagateCursiveOffset(collection, j, index, count, nesting - 1);
+
+        GlyphShapingData parent = collection[j];
+        if (!AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, collection.TextOptions.LayoutMode, data.HasVerticalForm))
+        {
+            data.Bounds.Y += parent.Bounds.Y;
+        }
+        else
+        {
+            data.Bounds.X += parent.Bounds.X;
         }
     }
 
