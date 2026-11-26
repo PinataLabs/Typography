@@ -78,6 +78,10 @@ internal partial class StreamFontMetrics : FontMetrics
     private readonly NormalizedCoordinates coordinates;
     private readonly IReadOnlyList<FontVariation> variations;
 
+    // The scalars of the GDEF Item Variation Store for the coordinates of an instance, which give the deltas of the
+    // VariationIndex device tables of GPOS. A face has none, and its deltas are 0.
+    private readonly ItemVariationScalars layoutScalars;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamFontMetrics"/> class.
     /// </summary>
@@ -143,6 +147,7 @@ internal partial class StreamFontMetrics : FontMetrics
         this.compactFontTables = face.compactFontTables;
         this.outlineType = face.outlineType;
         this.substitution = face.substitution;
+        this.layoutScalars = this.FontTables.Gdef?.VariationStore.CreateScalars(coordinates.Values) ?? default;
         this.description = face.Owner.Description;
         this.glyphCache = new();
         if (face.colorGlyphCache is not null)
@@ -159,6 +164,8 @@ internal partial class StreamFontMetrics : FontMetrics
         MvarVariation mvar = tables.Mvar?.CreateVariation(coordinates.Values) ?? default;
         (this.horizontalMetrics, this.verticalMetrics) = this.Initialize(tables, mvar);
     }
+
+    private IFontTables FontTables => this.outlineType == OutlineType.TrueType ? this.trueTypeFontTables! : this.compactFontTables!;
 
     /// <summary>
     /// Gets or sets the metrics that the caller sees in place of this object. A <see cref="FileFontMetrics"/>
@@ -357,6 +364,10 @@ internal partial class StreamFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     internal override GSubTable GetGSubTable() => this.substitution;
+
+    /// <inheritdoc/>
+    internal override float GetDeviceDelta(VariationIndex index)
+        => index.IsNone ? 0 : this.layoutScalars.GetDelta(index.Outer, index.Inner);
 
     /// <inheritdoc/>
     internal override ArabicFallbackPlan GetArabicFallbackPlan()

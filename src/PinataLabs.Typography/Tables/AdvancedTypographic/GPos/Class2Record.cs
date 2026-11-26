@@ -18,10 +18,11 @@ internal readonly struct Class2Record
     /// <param name="reader">The big endian binary reader.</param>
     /// <param name="valueFormat1">The value format for value record 1.</param>
     /// <param name="valueFormat2">The value format for value record 2.</param>
-    public Class2Record(BigEndianBinaryReader reader, ValueFormat valueFormat1, ValueFormat valueFormat2)
+    /// <param name="subtableOffset">The position of the PairPos subtable from the beginning of the GPOS table.</param>
+    public Class2Record(BigEndianBinaryReader reader, ValueFormat valueFormat1, ValueFormat valueFormat2, long subtableOffset)
     {
-        this.ValueRecord1 = new ValueRecord(reader, valueFormat1);
-        this.ValueRecord2 = new ValueRecord(reader, valueFormat2);
+        this.ValueRecord1 = new ValueRecord(reader, valueFormat1, subtableOffset);
+        this.ValueRecord2 = new ValueRecord(reader, valueFormat2, subtableOffset);
     }
 
     /// <summary>

@@ -281,6 +281,15 @@ public abstract class FontMetrics
     internal abstract GSubTable GetGSubTable();
 
     /// <summary>
+    /// Gets the delta that the GDEF Item Variation Store gives to the <c>VariationIndex</c> device table of a GPOS value
+    /// record or anchor, for the coordinates of this font. The face of a variable font has no delta, because its
+    /// coordinates are the default ones.
+    /// </summary>
+    /// <param name="index">The index of the delta.</param>
+    /// <returns>The delta in font units, which is 0 when the font has no such delta.</returns>
+    internal abstract float GetDeviceDelta(VariationIndex index);
+
+    /// <summary>
     /// Gets what the Arabic fallback shaper needs from the font. The font builds it once.
     /// </summary>
     /// <returns>The plan.</returns>

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using PinataLabs.Typography.Tables.TrueType;
+using PinataLabs.Typography.Tables.Variations;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
 
@@ -51,7 +52,7 @@ internal abstract class AnchorTable
         {
             1 => AnchorFormat1.Load(reader),
             2 => AnchorFormat2.Load(reader),
-            3 => AnchorFormat3.Load(reader),
+            3 => AnchorFormat3.LoadWithVariations(reader, offset),
             _ => throw new InvalidFontFileException($"anchorFormat identifier {anchorFormat} is invalid. Should be '1', '2' or '3'.")
         };
     }
@@ -141,20 +142,17 @@ internal abstract class AnchorTable
 
     internal sealed class AnchorFormat3 : AnchorTable
     {
-        // TODO: actually use the xDeviceOffset.
-        private readonly ushort xDeviceOffset;
+        private readonly VariationIndex xVariation;
+        private readonly VariationIndex yVariation;
 
-        // TODO: actually use the yDeviceOffset.
-        private readonly ushort yDeviceOffset;
-
-        public AnchorFormat3(short xCoordinate, short yCoordinate, ushort xDeviceOffset, ushort yDeviceOffset)
+        public AnchorFormat3(short xCoordinate, short yCoordinate, VariationIndex xVariation, VariationIndex yVariation)
             : base(xCoordinate, yCoordinate)
         {
-            this.xDeviceOffset = xDeviceOffset;
-            this.yDeviceOffset = yDeviceOffset;
+            this.xVariation = xVariation;
+            this.yVariation = yVariation;
         }
 
-        public static AnchorFormat3 Load(BigEndianBinaryReader reader)
+        public static AnchorFormat3 LoadWithVariations(BigEndianBinaryReader reader, long anchorOffset)
         {
             // +--------------+------------------------+-----------------------------------------------------------+
             // | Type         | Name                   | Description                                               |
@@ -179,10 +177,16 @@ internal abstract class AnchorTable
             short yCoordinate = reader.ReadInt16();
             ushort xDeviceOffset = reader.ReadOffset16();
             ushort yDeviceOffset = reader.ReadOffset16();
-            return new AnchorFormat3(xCoordinate, yCoordinate, xDeviceOffset, yDeviceOffset);
+
+            // Only a VariationIndex table has a use. A Device table holds deltas for sizes of a font that does not vary.
+            return new AnchorFormat3(
+                xCoordinate,
+                yCoordinate,
+                DeviceTable.LoadVariationIndex(reader, anchorOffset, xDeviceOffset),
+                DeviceTable.LoadVariationIndex(reader, anchorOffset, yDeviceOffset));
         }
 
         public override AnchorXY GetAnchor(FontMetrics fontMetrics, GlyphShapingData data, GlyphPositioningCollection collection)
-            => new(this.XCoordinate, this.YCoordinate);
+            => new(this.XCoordinate + fontMetrics.GetDeviceDelta(this.xVariation), this.YCoordinate + fontMetrics.GetDeviceDelta(this.yVariation));
     }
 }

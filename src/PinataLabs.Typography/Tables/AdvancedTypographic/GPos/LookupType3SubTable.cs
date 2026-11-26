@@ -130,8 +130,9 @@ internal static class LookupType3SubTable
             GlyphShapingData current = collection[index];
             GlyphShapingData next = collection[nextIndex];
 
-            AnchorXY exitXY = exit.GetAnchor(fontMetrics, current, collection);
-            AnchorXY entryXY = entry.GetAnchor(fontMetrics, next, collection);
+            // As in HarfBuzz, the delta of a variation instance makes an anchor fractional, and each coordinate rounds on its own.
+            (int XCoordinate, int YCoordinate) exitXY = exit.GetAnchor(fontMetrics, current, collection).Round();
+            (int XCoordinate, int YCoordinate) entryXY = entry.GetAnchor(fontMetrics, next, collection).Round();
 
             bool isVerticalLayout = AdvancedTypographicUtils.IsVerticalGlyph(current.CodePoint, collection.TextOptions.LayoutMode, current.HasVerticalForm);
             if (!isVerticalLayout)

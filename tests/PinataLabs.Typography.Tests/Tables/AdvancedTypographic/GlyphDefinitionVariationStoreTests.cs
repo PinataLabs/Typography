@@ -2,12 +2,14 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.Variations;
+using PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos;
 using PinataLabs.Typography.Tests.Tables.Variations;
 
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
@@ -64,6 +66,32 @@ public class GlyphDefinitionVariationStoreTests
 
         await Assert.That(store.RegionCount).IsEqualTo(0);
         await Assert.That(store.DataCount).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task AFontWithoutAStoreKeepsTheAnchorsOfItsDefaultInstance()
+    {
+        // At wght 700 the mark anchors of Teko move. Without the store they stay where the default instance puts them.
+        byte[] bytes = VariationFontBytes.Read("Teko/Teko-Variable.ttf");
+        BinaryPrimitives.WriteUInt32BigEndian(VariationFontBytes.Table(bytes, "GDEF").Slice(StoreOffsetPosition), 0xFFFFFFF0U);
+        FontFamily family = VariationFontBytes.Load(bytes);
+        float size = 72 * family.CreateFont(1).FontMetrics.UnitsPerEm;
+        (int[] weights, List<GposVariationReference.Row> rows) = GposVariationReference.Get("Teko/Teko-Variable.ttf", "mark");
+        Font bold = family.CreateFont(size, FontStyle.Regular, new FontVariation(Tag.Parse("wght"), weights[2]));
+
+        List<string> moved = [];
+        foreach (GposVariationReference.Row row in rows)
+        {
+            GposVariationReference.Positioned[] atDefault = GposVariationReference.GposOnly(row.Locations[0]);
+            GposVariationReference.Positioned[] withoutStore = GposVariationReference.GposOnly(GposVariationReference.Shape(bold, row.Text));
+            if (!atDefault.SequenceEqual(withoutStore))
+            {
+                moved.Add(GposVariationReference.CodePoints(row.Text));
+            }
+        }
+
+        await Assert.That(rows).IsNotEmpty();
+        await Assert.That(moved).IsEmpty();
     }
 
     private static GlyphDefinitionTable ReadGdef(byte[] font)

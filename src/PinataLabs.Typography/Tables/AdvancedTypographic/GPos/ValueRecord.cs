@@ -2,6 +2,8 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using PinataLabs.Typography.Tables.Variations;
+
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
 
 /// <summary>
@@ -17,7 +19,11 @@ internal readonly struct ValueRecord
     /// </summary>
     /// <param name="reader">The big endian binary reader.</param>
     /// <param name="valueFormat">Defines the types of data in the ValueRecord.</param>
-    public ValueRecord(BigEndianBinaryReader reader, ValueFormat valueFormat)
+    /// <param name="parentOffset">
+    /// The position from the beginning of the GPOS table of the immediate parent table, which the offsets
+    /// of the device tables count from.
+    /// </param>
+    public ValueRecord(BigEndianBinaryReader reader, ValueFormat valueFormat, long parentOffset)
     {
         // +----------+------------------+--------------------------------------------------------------------------------------+
         // | Type     | Name             | Description                                                                          |
@@ -65,10 +71,16 @@ internal readonly struct ValueRecord
         this.YPlacement = (valueFormat & ValueFormat.YPlacement) != 0 ? reader.ReadInt16() : (short)0;
         this.XAdvance = (valueFormat & ValueFormat.XAdvance) != 0 ? reader.ReadInt16() : (short)0;
         this.YAdvance = (valueFormat & ValueFormat.YAdvance) != 0 ? reader.ReadInt16() : (short)0;
-        this.XPlacementDeviceOffset = (valueFormat & ValueFormat.XPlacementDevice) != 0 ? reader.ReadInt16() : (short)0;
-        this.YPlacementDeviceOffset = (valueFormat & ValueFormat.YPlacementDevice) != 0 ? reader.ReadInt16() : (short)0;
-        this.XAdvanceDeviceOffset = (valueFormat & ValueFormat.XAdvanceDevice) != 0 ? reader.ReadInt16() : (short)0;
-        this.YAdvanceDeviceOffset = (valueFormat & ValueFormat.YAdvanceDevice) != 0 ? reader.ReadInt16() : (short)0;
+        ushort xPlacementDeviceOffset = (valueFormat & ValueFormat.XPlacementDevice) != 0 ? reader.ReadOffset16() : (ushort)0;
+        ushort yPlacementDeviceOffset = (valueFormat & ValueFormat.YPlacementDevice) != 0 ? reader.ReadOffset16() : (ushort)0;
+        ushort xAdvanceDeviceOffset = (valueFormat & ValueFormat.XAdvanceDevice) != 0 ? reader.ReadOffset16() : (ushort)0;
+        ushort yAdvanceDeviceOffset = (valueFormat & ValueFormat.YAdvanceDevice) != 0 ? reader.ReadOffset16() : (ushort)0;
+
+        // Only a VariationIndex table has a use. A Device table holds deltas for sizes of a font that does not vary.
+        this.XPlacementVariation = DeviceTable.LoadVariationIndex(reader, parentOffset, xPlacementDeviceOffset);
+        this.YPlacementVariation = DeviceTable.LoadVariationIndex(reader, parentOffset, yPlacementDeviceOffset);
+        this.XAdvanceVariation = DeviceTable.LoadVariationIndex(reader, parentOffset, xAdvanceDeviceOffset);
+        this.YAdvanceVariation = DeviceTable.LoadVariationIndex(reader, parentOffset, yAdvanceDeviceOffset);
     }
 
     public short XPlacement { get; }
@@ -79,11 +91,23 @@ internal readonly struct ValueRecord
 
     public short YAdvance { get; }
 
-    public short XPlacementDeviceOffset { get; }
+    /// <summary>
+    /// Gets the index of the delta of the horizontal placement, in design units.
+    /// </summary>
+    public VariationIndex XPlacementVariation { get; }
 
-    public short YPlacementDeviceOffset { get; }
+    /// <summary>
+    /// Gets the index of the delta of the vertical placement, in design units.
+    /// </summary>
+    public VariationIndex YPlacementVariation { get; }
 
-    public short XAdvanceDeviceOffset { get; }
+    /// <summary>
+    /// Gets the index of the delta of the horizontal advance, in design units.
+    /// </summary>
+    public VariationIndex XAdvanceVariation { get; }
 
-    public short YAdvanceDeviceOffset { get; }
+    /// <summary>
+    /// Gets the index of the delta of the vertical advance, in design units.
+    /// </summary>
+    public VariationIndex YAdvanceVariation { get; }
 }

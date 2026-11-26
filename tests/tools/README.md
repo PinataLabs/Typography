@@ -239,6 +239,37 @@ python tests/tools/generate_hinted_variable_font.py
 
 The output is deterministic for one fontTools and FreeType version. The reference records both.
 
+## GPOS variations reference
+
+`generate_gpos_variations_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/Variations/GposVariations.harfbuzz.json`,
+the HarfBuzz reference for the GPOS `VariationIndex` deltas of the two variable test fonts (issue #129). `Teko-Variable.ttf`
+has 2,385 of these device tables, all in mark anchors, and `SourceSans3VF-Upright.otf` has 6,815, in kerning and in mark
+anchors. Teko has no kerning.
+
+The script finds the glyph sequences that the device tables position, and keeps an even stride of them, in four kinds of row:
+
+- `pair`: two glyphs that a PairPos value record with a device moves, from lookups of format 1 and format 2.
+- `mark`: a base and a mark that a MarkBasePos anchor with a device attaches.
+- `chain`: a base and two marks, where the second attaches to the first. It only moves because the first mark does.
+- `static`: a pair that a value record with no device moves, which does not change with the weight.
+
+A text is in the file when HarfBuzz shapes it to the glyphs that its rules name, so that substitution does not hide the
+positioning, and when its positions differ between the default instance and wght 400 or 700, or for `static` rows when they do not.
+HarfBuzz shapes each text at the default instance, at wght 400 and at wght 700. A glyph holds its ID, the x of its origin from the
+start of the line, its y offset, its final advance, its advance before positioning, and whether it is a mark.
+
+The advance before positioning is what HarfBuzz gives for the glyph at that weight, with HVAR. `GposVariationTests` takes the
+same number from the library, and compares what GPOS adds to it. Outlines and advances of a variation instance
+follow other issues, and the test holds before and after they land.
+
+To write the file again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
+
+```
+python tests/tools/generate_gpos_variations_reference.py
+```
+
+The output is deterministic for one fontTools and HarfBuzz version. The file records the HarfBuzz version.
+
 ## Central baseline reference
 
 `central_baseline/` holds the browser reference for rotated glyphs in vertical mixed layout (issue #50).

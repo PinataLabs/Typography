@@ -258,23 +258,31 @@ internal static class AdvancedTypographicUtils
         GlyphShapingData markData = collection[index];
         AnchorXY markXY = markRecord.MarkAnchorTable.GetAnchor(fontMetrics, markData, collection);
 
-        markData.Bounds.X = baseXY.XCoordinate - markXY.XCoordinate;
-        markData.Bounds.Y = baseXY.YCoordinate - markXY.YCoordinate;
+        markData.Bounds.X = Round(baseXY.XCoordinate - markXY.XCoordinate);
+        markData.Bounds.Y = Round(baseXY.YCoordinate - markXY.YCoordinate);
         markData.MarkAttachment = baseGlyphIndex;
         return true;
     }
 
     public static void ApplyPosition(
+        FontMetrics fontMetrics,
         GlyphPositioningCollection collection,
         int index,
         ValueRecord record)
     {
         GlyphShapingData current = collection[index];
-        current.Bounds.Width += record.XAdvance;
-        current.Bounds.Height += record.YAdvance;
-        current.Bounds.X += record.XPlacement;
-        current.Bounds.Y += record.YPlacement;
+        current.Bounds.Width += record.XAdvance + Round(fontMetrics.GetDeviceDelta(record.XAdvanceVariation));
+        current.Bounds.Height += record.YAdvance + Round(fontMetrics.GetDeviceDelta(record.YAdvanceVariation));
+        current.Bounds.X += record.XPlacement + Round(fontMetrics.GetDeviceDelta(record.XPlacementVariation));
+        current.Bounds.Y += record.YPlacement + Round(fontMetrics.GetDeviceDelta(record.YPlacementVariation));
     }
+
+    /// <summary>
+    /// Rounds a value in font units to the whole unit that positioning adds, as HarfBuzz does: halves round away from zero.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <returns>The rounded value.</returns>
+    public static int Round(float value) => (int)MathF.Round(value, MidpointRounding.AwayFromZero);
 
     public static bool IsMarkGlyph(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
     {
