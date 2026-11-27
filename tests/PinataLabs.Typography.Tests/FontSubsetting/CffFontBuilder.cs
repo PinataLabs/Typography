@@ -27,6 +27,12 @@ public static class CffFontBuilder
 
         /// <summary>Each Font DICT has its own Private DICT, and the Private DICTs name one local Subrs INDEX.</summary>
         SubrsOnly,
+
+        /// <summary>
+        /// Font DICT <c>i</c> names a Private DICT window of <c>12 + (2 * i)</c> bytes at one offset, so the windows overlap. The
+        /// bytes after the DICT are harmless operators, and one local Subrs INDEX follows them.
+        /// </summary>
+        OverlappingPrivateWindows,
     }
 
     // The bias of a font with fewer than 1,240 subroutines.
@@ -88,9 +94,10 @@ public static class CffFontBuilder
         int fdArraySize = Index(Enumerable.Repeat(FontDict(privateSize, 0), fontDictCount).ToArray()).Length;
         int privatesOffset = fdArrayOffset + fdArraySize;
 
-        int privateCount = sharing switch { Sharing.PrivateDict => 1, _ => fontDictCount };
+        int privateCount = sharing switch { Sharing.PrivateDict or Sharing.OverlappingPrivateWindows => 1, _ => fontDictCount };
         int privateStride = privateSize + (sharing == Sharing.None ? subrs.Length : 0);
-        byte[][] fontDicts = [.. Enumerable.Range(0, fontDictCount).Select(i => FontDict(privateSize, privatesOffset + (sharing == Sharing.PrivateDict ? 0 : i * privateStride)))];
+        bool overlapping = sharing == Sharing.OverlappingPrivateWindows;
+        byte[][] fontDicts = [.. Enumerable.Range(0, fontDictCount).Select(i => FontDict(overlapping ? privateSize + (2 * i) : privateSize, privatesOffset + (sharing is Sharing.PrivateDict or Sharing.OverlappingPrivateWindows ? 0 : i * privateStride)))];
         byte[] top = Top(charsetOffset, fdSelectOffset, charStringsOffset, fdArrayOffset);
 
         MemoryStream font = new();
@@ -103,11 +110,17 @@ public static class CffFontBuilder
         font.Write(fdSelect);
         font.Write(charStringsIndex);
         font.Write(Index(fontDicts));
-        int subrsOffset = privatesOffset + (privateCount * privateStride);
+        int padding = overlapping ? 2 * (fontDictCount - 1) : 0;
+        int subrsOffset = privatesOffset + (privateCount * privateStride) + padding;
         for (int i = 0; i < privateCount; i++)
         {
             int distance = sharing == Sharing.None ? privateSize : subrsOffset - (privatesOffset + (i * privateStride));
             font.Write(PrivateDict(i, distance));
+            for (int k = 0; k < padding / 2; k++)
+            {
+                font.Write([139, 0]);
+            }
+
             if (sharing == Sharing.None)
             {
                 font.Write(subrs);

@@ -225,6 +225,18 @@ public class FontSubsetterCffTests
     }
 
     [Test]
+    public async Task FontDictsWhosePrivateDictWindowsOverlapAreRefused()
+    {
+        // 256 Font DICTs name Private DICT windows of 12 to 522 bytes at one offset. Each window is a distinct block, so a copy of each
+        // is 70 KB, and the font is a few KB.
+        byte[][] subrs = [.. Enumerable.Range(0, 10).Select(CffFontBuilder.Subr)];
+        byte[][] charStrings = [.. Enumerable.Range(0, 300).Select(i => i == 0 ? (byte[])[14] : CffFontBuilder.CallingGlyph(i % 10))];
+        byte[] font = CffFontBuilder.Build("T"u8.ToArray(), charStrings, 256, subrs, CffFontBuilder.Sharing.OverlappingPrivateWindows);
+
+        await Assert.That(() => FontSubsetter.Subset(font, [1, 2, 3])).Throws<InvalidFontFileException>();
+    }
+
+    [Test]
     public async Task AFontNameOfZeroBytesStaysAFontName()
     {
         byte[][] charStrings = [[14], [14], [14]];

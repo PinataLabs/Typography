@@ -226,6 +226,28 @@ internal sealed class CffTableMap
             }
         }
 
+        // The Private DICTs and the local Subrs INDEXes of a font are blocks that do not overlap, so the distinct ones are not longer
+        // together than the table. Font DICTs that name overlapping windows make the layout copy the overlap once for each window.
+        long distinctLength = 0;
+        for (int i = 0; i < fontDicts.Length; i++)
+        {
+            if (privateOwners[i] == i)
+            {
+                distinctLength += fontDicts[i].Private.Length;
+            }
+
+            if (subrsOwners[i] == i)
+            {
+                CffIndex.Read(table, fontDicts[i].SubrsStart, 2, out int subrsEnd);
+                distinctLength += subrsEnd - fontDicts[i].SubrsStart;
+            }
+        }
+
+        if (distinctLength > table.Length)
+        {
+            throw new InvalidFontFileException("The Private DICTs or the local subroutines of the CFF table overlap.");
+        }
+
         return new CffTableMap(
             table.Slice(0, headerSize),
             hasName,

@@ -150,7 +150,8 @@ Unicode conformance suites to that version.
   FDSelect and String INDEX stay as they were, so glyph names, SIDs and CIDs stay. A TrueType font keeps the format of its `loca`, and each kept
   glyph starts on a 2-byte boundary for short offsets and a 4-byte boundary for long ones. Kept glyphs whose `loca` entries share
   the bytes of `glyf` cannot share them in a subset, so a font whose kept glyphs need more bytes than `glyf` has throws
-  `InvalidFontFileException`. An sfnt file keeps `FontSubsetOptions.DefaultTables`, which are the tables that a PDF reader and PDF/A
+  `InvalidFontFileException`, and so does a CFF font whose distinct Private DICTs and local Subrs INDEXes are longer together than
+  the table, because their windows overlap. An sfnt file keeps `FontSubsetOptions.DefaultTables`, which are the tables that a PDF reader and PDF/A
   validators read, with the outline tables of its own format only, the checksum of each table and the `head` adjustment set again,
   and `FontSubsetOptions.Tables` chooses other tables. `FontSubsetOptions.ProgramOptions`
   applies the `MaxRetainedBytes` of `FontProgramOptions` to the subsetter, which counts what `FontProgram.RetainedByteCount`
