@@ -502,8 +502,20 @@ Unicode conformance suites to that version.
   syllables kept its full width where the font narrows it. (#163)
 - `TextLayout` and `TextMeasurer` place the glyph after one whose advance GPOS kerning takes below zero or above 65535
   where HarfBuzz places it. The advance wrapped at 16 bits, so a kern of -700 on an advance of 600 moved the next glyph
-  65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a
-  vertical advance outside 0 to 65535, so its placement is not checked against HarfBuzz. (#162)
+  65436 font units forward instead of 100 back. The vertical advance no longer wraps either. (#162)
+- GPOS positioning in a layout changes the advance of a glyph along the line only, as in HarfBuzz 15.0.0. It set both
+  `AdvanceWidth` and `AdvanceHeight` from the shaping bounds, which hold 0 across the line, so a glyph kerned in
+  horizontal text reported an `AdvanceHeight` of 0, and one kerned in vertical text an `AdvanceWidth` of 0, or the GPOS
+  x advance, which HarfBuzz leaves out. The `kern` table no longer adds a horizontal kerning value to the
+  `AdvanceWidth` of a glyph in vertical text either. A test font checks the places down the line against HarfBuzz,
+  among them an advance below zero. (#170)
+- A vertical `kern` subtable moves the pair apart for a positive value, as the OpenType `kern` table says, and
+  as a positive GPOS y advance does. It pulled the pair together, and it changed the advance of the second glyph of
+  the pair, which moved the glyph after the pair instead. HarfBuzz does not kern vertical text with the `kern` table,
+  so this is not checked against it. (#170)
+- TrueType hinting places the phantom points from the advances of `hmtx` and `vmtx`, as FreeType does. It used the
+  advance that kerning in the layout gave the glyph, so a hinting program that aligns the outline to the end of the
+  advance drew a kerned glyph narrower or wider than the same glyph unkerned. (#170)
 - Rule L1 of the bidi algorithm now leaves a character that rule X9 removes, such as U+00AD, at the paragraph level
   when it is in the whitespace that L1 resets at the end of a line or before a separator, as UAX #9 section 5.2 says.
   The pass that gives each removed character the level of the character before it ran after L1 and overwrote the reset,
