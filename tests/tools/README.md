@@ -845,11 +845,13 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 
 ## Font fallback parts fonts
 
-`generate_font_fallback_parts_fonts.py` builds `FontFallbackParts.ttf`, `FontFallbackPartsWhole.ttf` and
-`FontFallbackPartsSplit.ttf` in `tests/PinataLabs.Typography.Tests/Fonts`, and prints the glyph IDs that HarfBuzz gives
-each font alone for each text of the fallback rows. The first is the font of the text. The second is a fallback font that
-has ligatures and keeps a two-part vowel sign whole, as it lacks one of its parts, and the third is a fallback font that
-has every part and splits the sign. The script says which characters each font has.
+`generate_font_fallback_parts_fonts.py` builds `FontFallbackParts.ttf`, `FontFallbackPartsWhole.ttf`,
+`FontFallbackPartsSplit.ttf`, `FontFallbackPartsCircle.ttf` and `FontFallbackPartsNoCircle.ttf` in
+`tests/PinataLabs.Typography.Tests/Fonts`, and prints the glyph IDs that HarfBuzz gives each font alone for each text of
+the fallback rows. The first is a font of the text. The second is a fallback font that has ligatures and keeps a two-part
+vowel sign whole, as it lacks one of its parts, and the third is a fallback font that has every part and splits the sign.
+The fourth is a font of the text that has a dotted circle and no part of the sign, and the fifth is a fallback font that
+has the sign and no dotted circle. The script says which characters each font has.
 
 `FontFallbackTests` gives these glyph IDs for each font alone and checks that the library draws each glyph that the font
 lacks once, with the glyphs of the fallback font.

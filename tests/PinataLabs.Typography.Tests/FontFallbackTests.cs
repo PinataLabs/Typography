@@ -139,6 +139,10 @@ public class FontFallbackTests
     [Arguments("FontFallbackPartsCircle.ttf", "FontFallbackPartsSplit.ttf", "0995 09CB", "1 0", "3 1 2", "3F 1P 2F")]
     [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "1780 17BE", "0 0", "9 10", "9F 10F")]
     [Arguments("FontFallbackParts.ttf", "FontFallbackPartsSplit.ttf", "1780 17BE", "0 0", "7 5 6", "7F 5F 6F")]
+
+    // A lone o: the font gives it a dotted circle. The fallback font, which has no circle, keeps o whole and draws it
+    // after the circle of the font.
+    [Arguments("FontFallbackPartsCircle.ttf", "FontFallbackPartsNoCircle.ttf", "09CB", "2 0", "2", "2P 2F")]
     public async Task FallbackFontDrawsEachGlyphThatTheFontLacksOnceWhereTheFontPutsIt(
         string font,
         string fallback,
