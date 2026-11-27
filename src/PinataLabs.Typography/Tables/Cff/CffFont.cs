@@ -198,22 +198,34 @@ internal sealed class CffFont
     }
 
     /// <summary>
-    /// Gets the charstring of the glyph that a code of the Standard Encoding names, for a seac endchar.
+    /// Gets the glyph that a code of the Standard Encoding names, for a seac endchar.
     /// </summary>
     /// <param name="code">The code in the Standard Encoding.</param>
+    /// <param name="glyphId">The glyph ID.</param>
     /// <param name="charString">The charstring of the glyph.</param>
     /// <returns><see langword="false"/> if the font is CID-keyed or has no glyph for the code.</returns>
-    internal bool TryGetSeacComponent(int code, out ReadOnlyMemory<byte> charString)
+    internal bool TryGetSeacComponent(int code, out int glyphId, out ReadOnlyMemory<byte> charString)
     {
         charString = default;
+        glyphId = -1;
         if (this.IsCidKeyed || (uint)code >= (uint)CffPredefinedTables.StandardEncoding.Length)
         {
             return false;
         }
 
-        int glyphId = this.charset.AsSpan().IndexOf(CffPredefinedTables.StandardEncoding[code]);
+        glyphId = this.charset.AsSpan().IndexOf(CffPredefinedTables.StandardEncoding[code]);
         return glyphId >= 0 && this.charStrings.TryGet(glyphId, out charString);
     }
+
+    /// <summary>
+    /// Runs the charstring of a glyph, with its subroutines and seac components, and tells an observer
+    /// which subroutines and which glyphs it uses. The outline is not kept.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="observer">The observer.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
+    internal bool TryObserveCalls(int glyphId, ICffCallObserver observer)
+        => this.TryGetGlyph(glyphId, out CffGlyphData glyph) && glyph.TryObserveCalls(observer);
 
     /// <summary>
     /// Checks that an FDSelect lies within the table, so that a glyph lookup can read it unchecked.

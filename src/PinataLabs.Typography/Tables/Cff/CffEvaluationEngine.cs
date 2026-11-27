@@ -49,6 +49,7 @@ internal ref struct CffEvaluationEngine
     private readonly float nominalWidthX;
     private readonly float defaultWidthX;
     private readonly float[]?[]? blendScalars;
+    private readonly ICffCallObserver? observer;
     private readonly int initialVsIndex;
     private readonly int globalBias;
     private readonly int localBias;
@@ -83,7 +84,8 @@ internal ref struct CffEvaluationEngine
         Span<float> transient,
         CffFont? font = null,
         float[]?[]? blendScalars = null,
-        int vsIndex = 0)
+        int vsIndex = 0,
+        ICffCallObserver? observer = null)
     {
         this = default;
         this.charString = charString;
@@ -95,6 +97,7 @@ internal ref struct CffEvaluationEngine
         this.stack = blendScalars is null ? stack.Slice(0, Math.Min(stack.Length, Type2StackSize)) : stack;
         this.transient = transient;
         this.blendScalars = blendScalars;
+        this.observer = observer;
         this.initialVsIndex = vsIndex;
         this.globalBias = CalculateBias(globalSubrs.Count);
         this.localBias = CalculateBias(localSubrs.Count);
@@ -400,12 +403,12 @@ internal ref struct CffEvaluationEngine
 
                 case Type2Operator1.Callsubr:
 
-                    this.CallSubr(this.localSubrs, this.localBias, ref sink, depth);
+                    this.CallSubr(this.localSubrs, this.localBias, false, ref sink, depth);
                     break;
 
                 case Type2Operator1.Callgsubr:
 
-                    this.CallSubr(this.globalSubrs, this.globalBias, ref sink, depth);
+                    this.CallSubr(this.globalSubrs, this.globalBias, true, ref sink, depth);
                     break;
 
                 case Type2Operator1.Return:
@@ -749,7 +752,7 @@ internal ref struct CffEvaluationEngine
         }
     }
 
-    private void CallSubr<TSink>(CffIndex subrs, int bias, ref TSink sink, int depth)
+    private void CallSubr<TSink>(CffIndex subrs, int bias, bool isGlobal, ref TSink sink, int depth)
         where TSink : IGlyphOutlineSink
     {
         int index = (int)this.Pop() + bias;
@@ -759,6 +762,7 @@ internal ref struct CffEvaluationEngine
             return;
         }
 
+        this.observer?.SubrCalled(isGlobal, index);
         this.Run(subr.Span, ref sink, depth + 1);
     }
 
@@ -774,14 +778,16 @@ internal ref struct CffEvaluationEngine
         float ownWidth = this.width;
         bool hasOwnWidth = this.hasWidth;
         if (this.font is null
-            || !this.font.TryGetSeacComponent(baseCode, out ReadOnlyMemory<byte> baseGlyph)
-            || !this.font.TryGetSeacComponent(accentCode, out ReadOnlyMemory<byte> accentGlyph))
+            || !this.font.TryGetSeacComponent(baseCode, out int baseGlyphId, out ReadOnlyMemory<byte> baseGlyph)
+            || !this.font.TryGetSeacComponent(accentCode, out int accentGlyphId, out ReadOnlyMemory<byte> accentGlyph))
         {
             this.failed = true;
             this.MissingSeacComponent = true;
             return;
         }
 
+        this.observer?.SeacComponentUsed(baseGlyphId);
+        this.observer?.SeacComponentUsed(accentGlyphId);
         this.inSeac = true;
         this.RunSeacComponent(baseGlyph, 0, 0, ref sink);
         this.RunSeacComponent(accentGlyph, adx, ady, ref sink);
