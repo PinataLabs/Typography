@@ -269,8 +269,8 @@ internal static class AdvancedTypographicUtils
             return glyphClass == GlyphClassDef.MarkGlyph;
         }
 
-        return CodePoint.GetGeneralCategory(shapingData.CodePoint) == UnicodeCategory.NonSpacingMark
-            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)shapingData.CodePoint.Value);
+        return CodePoint.GetGeneralCategory(shapingData.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark
+            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)shapingData.UnicodePropertiesCodePoint.Value);
     }
 
     public static GlyphShapingClass GetGlyphShapingClass(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
@@ -292,7 +292,7 @@ internal static class AdvancedTypographicUtils
         else
         {
             // TODO: We may have to store each codepoint. FontKit checks all.
-            isMark = CodePoint.IsMark(shapingData.CodePoint);
+            isMark = CodePoint.IsMark(shapingData.UnicodePropertiesCodePoint);
             isBase = !isMark;
             isLigature = shapingData.CodePointCount > 1;
         }

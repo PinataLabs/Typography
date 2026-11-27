@@ -97,6 +97,13 @@ internal ref struct GlyphNormalizer
             Tag scriptTag = this.fontMetrics.GetGSubTable().GetScriptTag(script);
             this.profile = ShaperFactory.GetNormalizationProfile(script, scriptTag);
             this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script, this.collection.TextOptions);
+
+            // As in HarfBuzz, this comes before the text is normalized.
+            if (ShaperFactory.BreaksInvalidVowelSequences(script, scriptTag))
+            {
+                this.runEnd += VowelConstraints.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd, script);
+            }
+
             if (this.profile.SplitsVowels)
             {
                 this.SplitVowels();
@@ -112,13 +119,13 @@ internal ref struct GlyphNormalizer
             this.runHasMarks = false;
             for (int i = index + 1; i < this.runEnd && !this.runHasMarks; i++)
             {
-                this.runHasMarks = CodePoint.IsMark(this.collection[i].CodePoint);
+                this.runHasMarks = CodePoint.IsMark(this.collection[i].UnicodePropertiesCodePoint);
             }
 
             while (index < this.runEnd)
             {
                 int end = index + 1;
-                while (end < this.runEnd && IsMarkOrNonStarter(this.collection[end].CodePoint))
+                while (end < this.runEnd && IsMarkOrNonStarter(this.collection[end].UnicodePropertiesCodePoint))
                 {
                     end++;
                 }
@@ -248,8 +255,8 @@ internal ref struct GlyphNormalizer
         for (int i = start; i < end; i++)
         {
             GlyphShapingData data = this.collection[i];
-            bool hasMark = (i > this.runStart && CodePoint.IsMark(data.CodePoint))
-                || (i + 1 < this.runEnd && CodePoint.IsMark(this.collection[i + 1].CodePoint));
+            bool hasMark = (i > this.runStart && CodePoint.IsMark(data.UnicodePropertiesCodePoint))
+                || (i + 1 < this.runEnd && CodePoint.IsMark(this.collection[i + 1].UnicodePropertiesCodePoint));
 
             bool keepsGlyph = this.profile.Mode == NormalizationMode.None
                 || (this.profile.Mode == NormalizationMode.ComposedDiacritics && !hasMark);
@@ -260,7 +267,7 @@ internal ref struct GlyphNormalizer
 
             if (decomposed == 0)
             {
-                items[count++] = new Item(data.CodePoint, data.GlyphId, i - start);
+                items[count++] = new Item(data.CodePoint, data.UnicodePropertiesCodePoint, data.GlyphId, i - start);
                 continue;
             }
 
@@ -398,7 +405,7 @@ internal ref struct GlyphNormalizer
         for (int i = 1; i < items.Length; i++)
         {
             Item item = items[i];
-            if (CodePoint.IsMark(item.CodePoint)
+            if (CodePoint.IsMark(item.UnicodePropertiesCodePoint)
                 && (starter == count - 1 || items[count - 1].Order < item.Order)
                 && this.profile.TryCompose((uint)items[starter].CodePoint.Value, (uint)item.CodePoint.Value, this.composesPresentationForms, out uint composed)
                 && this.TryGetGlyph(composed, out ushort glyphId))
@@ -553,9 +560,15 @@ internal ref struct GlyphNormalizer
     internal struct Item
     {
         public Item(CodePoint codePoint, ushort glyphId, int source)
+            : this(codePoint, codePoint, glyphId, source)
         {
-            uint data = UnicodeData.GetCombiningClassData((uint)codePoint.Value);
+        }
+
+        public Item(CodePoint codePoint, CodePoint unicodePropertiesCodePoint, ushort glyphId, int source)
+        {
+            uint data = UnicodeData.GetCombiningClassData((uint)unicodePropertiesCodePoint.Value);
             this.CodePoint = codePoint;
+            this.UnicodePropertiesCodePoint = unicodePropertiesCodePoint;
             this.GlyphId = glyphId;
             this.Source = source;
             this.Order = (byte)data;
@@ -563,6 +576,11 @@ internal ref struct GlyphNormalizer
         }
 
         public CodePoint CodePoint { get; }
+
+        /// <summary>
+        /// Gets the codepoint whose Unicode properties the glyph has. See <see cref="GlyphShapingData.UnicodePropertiesCodePoint"/>.
+        /// </summary>
+        public CodePoint UnicodePropertiesCodePoint { get; }
 
         public ushort GlyphId { get; }
 

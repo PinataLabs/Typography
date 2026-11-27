@@ -607,6 +607,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             OffsetGlyphDataPair pair = new(offsets[i], new(sources[glyph.Source].Data, false)
             {
                 CodePoint = glyph.CodePoint,
+                UnicodePropertiesCodePoint = glyph.UnicodePropertiesCodePoint,
                 GlyphId = glyph.GlyphId,
                 IsDecomposed = sharesOffset,
             });

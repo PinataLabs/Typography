@@ -489,6 +489,14 @@ Unicode conformance suites to that version.
   only when the font has a glyph for the tone mark whose horizontal advance is 0, as HarfBuzz 15.0.0 does. It took the
   .notdef glyph of a tone mark that the font lacks as zero width when that glyph was 0 wide, and a tone mark as zero
   width when one of its COLR layers was. (#174)
+- The Indic and universal shapers put a dotted circle before the sign of each vowel sequence of
+  `IndicShapingInvalidCluster.txt`, as HarfBuzz 15.0.0 does, so that an independent vowel and the sign after it do not
+  look like another vowel. Devanagari a, short e (U+0905, U+0946) gave a and the sign, where HarfBuzz gives a, the
+  circle and the sign. As in HarfBuzz, the circle comes before the text is normalized and takes the cluster and the
+  Unicode properties of the sign after it. So before a nonspacing mark it is a mark, which loses its advance in a font
+  without glyph classes and which a lookup that ignores marks skips, and before the Sinhala virama it sorts with the
+  marks. A font without U+25CC gives `.notdef` in its place. The Khmer and Myanmar shapers of HarfBuzz insert no such
+  circle, and neither do they here. (#113)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

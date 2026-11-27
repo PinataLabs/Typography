@@ -18,6 +18,8 @@ namespace PinataLabs.Typography;
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal class GlyphShapingData
 {
+    private CodePoint codePoint;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphShapingData"/> class.
     /// </summary>
@@ -32,6 +34,7 @@ internal class GlyphShapingData
     {
         this.GlyphId = data.GlyphId;
         this.CodePoint = data.CodePoint;
+        this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
         this.CodePointCount = data.CodePointCount;
         this.Cluster = data.Cluster;
         this.Direction = data.Direction;
@@ -86,9 +89,24 @@ internal class GlyphShapingData
     public ushort GlyphId { get; set; }
 
     /// <summary>
-    /// Gets or sets the leading codepoint.
+    /// Gets or sets the leading codepoint. Setting it gives the glyph the Unicode properties of the codepoint.
     /// </summary>
-    public CodePoint CodePoint { get; set; }
+    public CodePoint CodePoint
+    {
+        get => this.codePoint;
+        set
+        {
+            this.codePoint = value;
+            this.UnicodePropertiesCodePoint = value;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the codepoint whose Unicode properties the glyph has: the general category that makes it a mark,
+    /// and the combining class that sorts it. It is <see cref="CodePoint"/>, except for the dotted circle that breaks an
+    /// invalid vowel sequence. As in HarfBuzz, that circle has the properties of the character after it.
+    /// </summary>
+    public CodePoint UnicodePropertiesCodePoint { get; set; }
 
     /// <summary>
     /// Gets or sets the codepoint count represented by this glyph.
