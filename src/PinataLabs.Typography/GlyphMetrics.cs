@@ -42,9 +42,7 @@ public abstract class GlyphMetrics
         this.AdvanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
-        this.RightSideBearing = (short)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
         this.TopSideBearing = topSideBearing;
-        this.BottomSideBearing = (short)(this.AdvanceHeight - this.TopSideBearing - this.Height);
         this.TextAttributes = textAttributes;
         this.TextDecorations = textDecorations;
         this.GlyphType = glyphType;
@@ -96,9 +94,7 @@ public abstract class GlyphMetrics
         this.AdvanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
-        this.RightSideBearing = (short)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
         this.TopSideBearing = topSideBearing;
-        this.BottomSideBearing = (short)(this.AdvanceHeight - this.TopSideBearing - this.Height);
         this.TextAttributes = textRun.TextAttributes;
         this.TextDecorations = textRun.TextDecorations;
         this.GlyphType = glyphType;
@@ -136,9 +132,10 @@ public abstract class GlyphMetrics
     public short LeftSideBearing { get; }
 
     /// <summary>
-    /// Gets the right side bearing for horizontal layout, expressed in font units.
+    /// Gets the right side bearing for horizontal layout, expressed in font units: the space from the right edge of the
+    /// ink to the end of <see cref="AdvanceWidth"/>, so it follows the advance that positioning in a layout gives the glyph.
     /// </summary>
-    public short RightSideBearing { get; }
+    public int RightSideBearing => (int)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
 
     /// <summary>
     /// Gets the top side bearing for vertical layout, expressed in font units.
@@ -146,9 +143,10 @@ public abstract class GlyphMetrics
     public short TopSideBearing { get; }
 
     /// <summary>
-    /// Gets the bottom side bearing for vertical layout, expressed in font units.
+    /// Gets the bottom side bearing for vertical layout, expressed in font units: the space from the bottom edge of the
+    /// ink to the end of <see cref="AdvanceHeight"/>, so it follows the advance that positioning in a layout gives the glyph.
     /// </summary>
-    public short BottomSideBearing { get; }
+    public int BottomSideBearing => (int)(this.AdvanceHeight - this.TopSideBearing - this.Height);
 
     /// <summary>
     /// Gets the bounds, expressed in font units.

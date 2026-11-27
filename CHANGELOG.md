@@ -393,6 +393,12 @@ Unicode conformance suites to that version.
 
 ### Changed
 
+- **`GlyphMetrics.RightSideBearing` and `GlyphMetrics.BottomSideBearing` are `int`, and follow the positioned advance.**
+  They were `short` values that the constructor computed once from the advance of the font. They are now the space
+  from the ink to the end of `AdvanceWidth` and `AdvanceHeight` as they are, so after GPOS kerning in a layout they
+  match the advance, and an advance above 32767 no longer wraps: an empty glyph 40960 units wide had a right side
+  bearing of -24576. This is a breaking change: code that assigns either property to a `short` stops compiling, and
+  code compiled against an earlier version must be recompiled. (#170)
 - **`GlyphMetrics.AdvanceWidth` and `GlyphMetrics.AdvanceHeight` are `int`.** They were `ushort`. A font gives an
   advance from 0 to 65535, and GPOS positioning in a layout can take it below zero or above 65535, which a `ushort`
   held modulo 65536. This is a breaking change: code that assigns either property to a `ushort` stops compiling, and
