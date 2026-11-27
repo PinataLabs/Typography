@@ -118,7 +118,7 @@ internal static class LookupType6SubTable
 
             ushort prevGlyphId = collection[prevIdx].GlyphId;
             GlyphShapingData prevGlyph = collection[prevIdx];
-            if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, prevGlyphId, prevGlyph))
+            if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, prevGlyph))
             {
                 return false;
             }

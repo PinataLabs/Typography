@@ -109,7 +109,7 @@ internal static class LookupType4SubTable
             while (--baseGlyphIndex >= 0)
             {
                 GlyphShapingData data = collection[baseGlyphIndex];
-                if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data.GlyphId, data) && !(data.LigatureComponent > 0) && !SkippingGlyphIterator.MaySkip(data, features.InputIgnorables))
+                if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data) && !(data.LigatureComponent > 0) && !SkippingGlyphIterator.MaySkip(data, features.InputIgnorables))
                 {
                     break;
                 }

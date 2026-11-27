@@ -494,11 +494,15 @@ Unicode conformance suites to that version.
   look like another vowel. Devanagari a, short e (U+0905, U+0946) gave a and the sign, where HarfBuzz gives a, the
   circle and the sign. As in HarfBuzz, the circle comes before the text is normalized and takes the cluster and the
   Unicode properties of the sign after it. So before a nonspacing mark it is a mark, which loses its advance in a font
-  without glyph classes and which a lookup that ignores marks skips, and before the Sinhala virama it sorts with the
-  marks. Before a vowel sign it continues a word, so a pre-base vowel sign after it takes no `init`. A font without
-  U+25CC gives `.notdef` in its place, unless `FallbackFontFamilies` is set: then it gets no circle, as a fallback
-  font would replace the `.notdef` together with the sign and give the sign twice. The Khmer and Myanmar shapers of
-  HarfBuzz insert no such circle, and neither do they here. (#113)
+  without glyph classes, which mark positioning attaches past, and which a lookup that ignores marks skips, and before
+  the Sinhala virama it sorts with the marks. Before a vowel sign it continues a word, so a pre-base vowel sign after
+  it takes no `init`. A font without U+25CC gives `.notdef` in its place, unless `FallbackFontFamilies` is set: then
+  it gets no circle, as a fallback font would replace the `.notdef` together with the sign and give the sign twice.
+  The Khmer and Myanmar shapers of HarfBuzz insert no such circle, and neither do they here. (#113)
+- In a font without glyph classes, mark positioning takes the glyph of a nonspacing mark for a mark, as HarfBuzz
+  15.0.0 does. Mark-to-base and mark-to-ligature attach a mark past such a glyph, and mark-to-mark attaches a mark to
+  it. The library took no glyph of such a font for a mark there, so a second accent on a letter stayed where the pen
+  put it. (#113)
 - For an old-spec script tag such as `beng`, the Indic shaper moves the first virama after the base to after the
   last consonant in every script but Kannada, as HarfBuzz 15.0.0 does. It moved it in Malayalam only, so in a syllable
   that ends in a virama, such as ka, virama, ya, virama, the virama after ka stayed before ya. (#175)

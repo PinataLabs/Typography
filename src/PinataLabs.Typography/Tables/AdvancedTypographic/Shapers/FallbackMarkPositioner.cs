@@ -86,7 +86,7 @@ internal static class FallbackMarkPositioner
         for (int i = start; i < end; i++)
         {
             GlyphShapingData data = collection[i];
-            if (!collection.ShouldProcess(fontMetrics, i) || !AdvancedTypographicUtils.IsZeroWidthMark(fontMetrics, data))
+            if (!collection.ShouldProcess(fontMetrics, i) || !AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data))
             {
                 continue;
             }

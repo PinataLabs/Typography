@@ -239,30 +239,15 @@ internal static class AdvancedTypographicUtils
     /// <returns>The rounded value.</returns>
     public static int Round(float value) => (int)MathF.Floor(value + 0.5F);
 
-    public static bool IsMarkGlyph(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
-    {
-        if (!fontMetrics.TryGetGlyphClass(glyphId, out GlyphClassDef? glyphClass) &&
-            !CodePoint.IsMark(shapingData.CodePoint))
-        {
-            return false;
-        }
-
-        if (glyphClass != GlyphClassDef.MarkGlyph)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     /// <summary>
-    /// Gets a value indicating whether the glyph is a mark that takes no advance. As in HarfBuzz, the GDEF table
-    /// says so when it has glyph classes. Without them, the glyph of a non-spacing mark is one.
+    /// Gets a value indicating whether the glyph is a mark: one that mark positioning attaches past, and that takes no
+    /// advance. As in HarfBuzz, the GDEF table says so when it has glyph classes. Without them, the glyph of a
+    /// non-spacing mark is one.
     /// </summary>
     /// <param name="fontMetrics">The font of the glyph.</param>
     /// <param name="shapingData">The glyph.</param>
-    /// <returns><see langword="true"/> if the glyph loses its advance.</returns>
-    public static bool IsZeroWidthMark(FontMetrics fontMetrics, GlyphShapingData shapingData)
+    /// <returns><see langword="true"/> if the glyph is a mark.</returns>
+    public static bool IsMarkGlyph(FontMetrics fontMetrics, GlyphShapingData shapingData)
     {
         if (fontMetrics.TryGetGlyphClass(shapingData.GlyphId, out GlyphClassDef? glyphClass))
         {
