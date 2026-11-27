@@ -317,7 +317,15 @@ internal class DefaultShaper : BaseShaper
     /// <param name="feature">The tag of the feature.</param>
     /// <returns>The planned feature.</returns>
     protected PlannedFeature Plan(Tag feature)
-        => new(feature, this.manualJoiners.TryGetValue(feature, out ManualJoiners joiners) ? joiners : ManualJoiners.None);
+        => new(feature, this.manualJoiners.TryGetValue(feature, out ManualJoiners joiners) ? joiners : ManualJoiners.None, this.IsPerSyllable(feature));
+
+    /// <summary>
+    /// Gets a value indicating whether the GSUB lookups of a feature match only glyphs of the syllable of the glyph that
+    /// they apply to.
+    /// </summary>
+    /// <param name="feature">The tag of the feature.</param>
+    /// <returns><see langword="true"/> if the lookups match per syllable.</returns>
+    protected virtual bool IsPerSyllable(Tag feature) => false;
 
     /// <summary>
     /// Gets the joiners that the lookups of each feature do not skip: the given joiners for the given features, and

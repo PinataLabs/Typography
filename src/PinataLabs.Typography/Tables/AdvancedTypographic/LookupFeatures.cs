@@ -22,13 +22,16 @@ internal readonly struct LookupFeatures
     private readonly int count;
     private readonly bool required;
 
-    private LookupFeatures(Tag[] tags, int offset, int count, bool required, ManualJoiners manualJoiners, bool positioning)
+    private LookupFeatures(Tag[] tags, int offset, int count, bool required, ManualJoiners manualJoiners, bool perSyllable, bool positioning)
     {
         this.tags = tags;
         this.offset = offset;
         this.count = count;
         this.required = required;
         (this.InputIgnorables, this.ContextIgnorables) = GetSkippableIgnorables(manualJoiners, positioning);
+
+        // As in HarfBuzz, only GSUB matches per syllable.
+        this.PerSyllable = perSyllable && !positioning;
     }
 
     /// <summary>
@@ -42,11 +45,16 @@ internal readonly struct LookupFeatures
     public SkippableIgnorables ContextIgnorables { get; }
 
     /// <summary>
+    /// Gets a value indicating whether the lookup matches only glyphs of the syllable of the glyph that it applies to.
+    /// </summary>
+    public bool PerSyllable { get; }
+
+    /// <summary>
     /// Gets the features of a GSUB lookup that a shaper applies to every glyph on its own, outside the features of
     /// the font. As in HarfBuzz, it skips the joiners wherever HarfBuzz skips them by default.
     /// </summary>
     /// <returns>The features.</returns>
-    public static LookupFeatures ForShaperSubstitution() => new([], 0, 0, true, ManualJoiners.None, false);
+    public static LookupFeatures ForShaperSubstitution() => new([], 0, 0, true, ManualJoiners.None, false, false);
 
     /// <summary>
     /// Gets the features without the ones that the caller turned off. A shaper still plans them, so the actions of its
@@ -263,14 +271,17 @@ internal readonly struct LookupFeatures
             int tagStart = tagCount;
             bool required = false;
 
-            // As in HarfBuzz, a lookup keeps a joiner when any of its features does. The required feature keeps none.
+            // As in HarfBuzz, a lookup keeps a joiner when any of its features does, and the required feature keeps none.
+            // A lookup matches per syllable when any of its features does, and the required feature does not.
             ManualJoiners manualJoiners = ManualJoiners.None;
+            bool perSyllable = false;
             for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
             {
                 required |= references[end].Required;
                 if (!references[end].Required && references[end].Order >= 0)
                 {
                     manualJoiners |= features[references[end].Order].ManualJoiners;
+                    perSyllable |= features[references[end].Order].PerSyllable;
                 }
 
                 // Feature records that share a tag, or a feature that lists a lookup twice, repeat a reference.
@@ -280,7 +291,7 @@ internal readonly struct LookupFeatures
                 }
             }
 
-            lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart, required, manualJoiners, positioning)));
+            lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart, required, manualJoiners, perSyllable, positioning)));
         }
 
         return lookups;

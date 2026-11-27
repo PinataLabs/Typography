@@ -21,6 +21,9 @@ internal struct SkippingGlyphIterator
     private bool useMarkFilteringSet;
     private ushort markFilteringSet;
 
+    // The syllable of the Indic shaper that a glyph must be in to match, or 0 to match a glyph of any.
+    private int syllable;
+
     public SkippingGlyphIterator(
         FontMetrics fontMetrics,
         IGlyphShapingCollection collection,
@@ -113,7 +116,9 @@ internal struct SkippingGlyphIterator
                 continue;
             }
 
-            if (matches(component, this.Collection[this.Index]))
+            // As in HarfBuzz, a glyph of another syllable does not match, and the lookup flags still skip it.
+            GlyphShapingData data = this.Collection[this.Index];
+            if ((this.syllable == 0 || SyllableOf(data) == this.syllable) && matches(component, data))
             {
                 return true;
             }
@@ -124,6 +129,13 @@ internal struct SkippingGlyphIterator
             }
         }
     }
+
+    /// <summary>
+    /// Keeps the glyphs that the iterator matches to the syllable of the glyph at its index, when the lookup matches per
+    /// syllable.
+    /// </summary>
+    /// <param name="perSyllable">Whether the lookup matches per syllable.</param>
+    public void MatchSyllable(bool perSyllable) => this.syllable = perSyllable ? SyllableOf(this.Collection[this.Index]) : 0;
 
     /// <summary>
     /// Gets a value indicating whether a lookup may skip a glyph as a default-ignorable glyph.
@@ -148,6 +160,8 @@ internal struct SkippingGlyphIterator
 
         return (ignorables & kind) != 0;
     }
+
+    private static int SyllableOf(GlyphShapingData data) => data.IndicShapingEngineInfo?.Syllable ?? 0;
 
     // Without a component to match, a glyph that may be skipped is skipped.
     private void Move(int direction)

@@ -44,6 +44,10 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
         ManualJoiners.Both, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag);
 
+    // As in HarfBuzz, the lookups of locl, ccmp, the basic and the presentation features match within a syllable.
+    private static readonly HashSet<Tag> PerSyllableFeatures =
+        [LoclTag, CcmpTag, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag];
+
     private const int DottedCircle = 0x25cc;
 
     private readonly TextOptions textOptions;
@@ -100,6 +104,8 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
     }
+
+    protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
 
     private void AddBasicFeature(IGlyphShapingCollection collection, int index, int count, Tag feature, bool enabled = true)
     {
