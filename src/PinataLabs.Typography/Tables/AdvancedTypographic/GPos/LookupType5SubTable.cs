@@ -108,9 +108,9 @@ internal static class LookupType5SubTable
                 return false;
             }
 
-            // Search backward for a base glyph, past the joiners that the lookup skips.
+            // Search backward in the run for a base glyph, past the joiners that the lookup skips.
             int baseGlyphIndex = index;
-            while (--baseGlyphIndex >= 0)
+            while (--baseGlyphIndex >= collection.RunStart)
             {
                 GlyphShapingData data = collection[baseGlyphIndex];
                 if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data) && !SkippingGlyphIterator.MaySkip(data, features.InputIgnorables))
@@ -119,7 +119,7 @@ internal static class LookupType5SubTable
                 }
             }
 
-            if (baseGlyphIndex < 0)
+            if (baseGlyphIndex < collection.RunStart)
             {
                 return false;
             }

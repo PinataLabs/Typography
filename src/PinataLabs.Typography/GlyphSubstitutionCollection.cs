@@ -38,6 +38,11 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     // The syllable numbers that the shapers of the script runs have taken.
     private int syllableNumbers;
 
+    // The glyphs before and after the script run that the table shapes. Substitutions add and remove glyphs of the run
+    // only, so the glyphs after it keep their number, and the end of the run follows the substitutions.
+    private int runStart;
+    private int glyphsAfterRun;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphSubstitutionCollection"/> class.
     /// </summary>
@@ -52,6 +57,12 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <inheritdoc />
     public TextOptions TextOptions { get; }
+
+    /// <inheritdoc />
+    public int RunStart => this.runStart;
+
+    /// <inheritdoc />
+    public int RunEnd => this.glyphs.Count - this.glyphsAfterRun;
 
     /// <summary>
     /// Gets or sets the metrics of the font currently being shaped. This can differ from the font
@@ -100,6 +111,17 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         int last = this.syllableNumbers;
         this.syllableNumbers += count;
         return last;
+    }
+
+    /// <summary>
+    /// Sets the script run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
+    /// </summary>
+    /// <param name="start">The zero-based index of the first glyph of the run.</param>
+    /// <param name="count">The number of glyphs of the run.</param>
+    public void SetRun(int start, int count)
+    {
+        this.runStart = start;
+        this.glyphsAfterRun = this.glyphs.Count - start - count;
     }
 
     /// <summary>
@@ -402,6 +424,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         this.regionalIndicators = 0;
         this.LigatureId = 1;
         this.syllableNumbers = 0;
+        this.SetRun(0, 0);
         this.PreContext.Clear();
         this.PostContext.Clear();
     }

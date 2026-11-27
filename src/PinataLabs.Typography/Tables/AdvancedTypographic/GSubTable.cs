@@ -176,6 +176,9 @@ internal class GSubTable : Table
 
             BaseShaper shaper = ShaperFactory.Create(current, this.GetScriptTag(current), collection.TextOptions);
 
+            // As in HarfBuzz, which shapes each script run in a buffer of its own, lookups apply within the run.
+            collection.SetRun(index, count);
+
             // Plan substitution features for each glyph.
             // Shapers can adjust the count during initialization and feature processing so we must capture
             // the current count to allow resetting indexes and processing counts.
@@ -224,6 +227,8 @@ internal class GSubTable : Table
                 count += delta;
                 i += delta;
             }
+
+            collection.SetRun(0, collection.Count);
         }
     }
 

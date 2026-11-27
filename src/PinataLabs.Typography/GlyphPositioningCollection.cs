@@ -24,6 +24,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// </summary>
     private readonly List<GlyphPositioningData> glyphs = [];
 
+    // The glyphs before and after the script run that the table positions. Positioning neither adds nor removes glyphs.
+    private int runStart;
+    private int glyphsAfterRun;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphPositioningCollection"/> class.
     /// </summary>
@@ -37,10 +41,27 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public TextOptions TextOptions { get; }
 
     /// <inheritdoc />
+    public int RunStart => this.runStart;
+
+    /// <inheritdoc />
+    public int RunEnd => this.glyphs.Count - this.glyphsAfterRun;
+
+    /// <inheritdoc />
     public GlyphShapingData this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => this.glyphs[index].Data;
+    }
+
+    /// <summary>
+    /// Sets the script run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
+    /// </summary>
+    /// <param name="start">The zero-based index of the first glyph of the run.</param>
+    /// <param name="count">The number of glyphs of the run.</param>
+    public void SetRun(int start, int count)
+    {
+        this.runStart = start;
+        this.glyphsAfterRun = this.glyphs.Count - start - count;
     }
 
     /// <summary>

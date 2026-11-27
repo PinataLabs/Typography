@@ -104,10 +104,10 @@ internal static class LookupType4SubTable
                 return false;
             }
 
-            // Search backward for a base glyph, past the joiners that the lookup skips. As in HarfBuzz, a glyph that
-            // the mark does not attach to is skipped too, unless the lookup covers it.
+            // Search backward in the run for a base glyph, past the joiners that the lookup skips. As in HarfBuzz, a
+            // glyph that the mark does not attach to is skipped too, unless the lookup covers it.
             int baseGlyphIndex = index;
-            while (--baseGlyphIndex >= 0)
+            while (--baseGlyphIndex >= collection.RunStart)
             {
                 GlyphShapingData data = collection[baseGlyphIndex];
                 if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data)
@@ -118,7 +118,7 @@ internal static class LookupType4SubTable
                 }
             }
 
-            if (baseGlyphIndex < 0)
+            if (baseGlyphIndex < collection.RunStart)
             {
                 return false;
             }
@@ -151,7 +151,7 @@ internal static class LookupType4SubTable
         private static bool AttachesMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index)
         {
             GlyphShapingData data = collection[index];
-            if (!data.IsMultiplied || data.LigatureComponent <= 0 || index == 0)
+            if (!data.IsMultiplied || data.LigatureComponent <= 0 || index == collection.RunStart)
             {
                 return true;
             }
