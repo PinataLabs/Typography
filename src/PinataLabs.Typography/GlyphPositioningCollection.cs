@@ -382,7 +382,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                 metrics.Add(gm.CloneForRendering(shape.TextRun, codePoint));
             }
 
-            SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm));
+            bool isVertical = AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm);
+            SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, isVertical);
             int maxAdvancedWidth = 0;
             int maxAdvancedHeight = 0;
             for (int k = 0; k < metrics.Count; k++)
@@ -392,10 +393,11 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
 
             // The glyphs at an offset each take an advance only when one of them is decomposed. So a new glyph keeps that
-            // of the glyph whose place it takes, which a shaper may have put at the offset of another glyph.
+            // of the glyph whose place it takes, which a shaper may have put at the offset of another glyph. As for a glyph
+            // of the font, its bounds hold the advance along the line only, which positioning changes.
             GlyphShapingData data = new(shape, true)
             {
-                Bounds = new(0, 0, maxAdvancedWidth, maxAdvancedHeight),
+                Bounds = isVertical ? new(0, 0, 0, maxAdvancedHeight) : new(0, 0, maxAdvancedWidth, 0),
                 IsDecomposed = shape.IsDecomposed || place.Data.IsDecomposed,
             };
 

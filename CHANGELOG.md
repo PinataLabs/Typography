@@ -568,6 +568,10 @@ Unicode conformance suites to that version.
   puts the `.notdef` of the acute on the first. Each font numbers its ligatures from one, so the ligatures of a fallback
   font now take ids that those of the font do not have, and a mark of one font cannot take a ligature of the other
   for its own. (#191)
+- A fallback font with GPOS attaches a mark where it alone does. A glyph that a fallback font drew in horizontal text
+  kept its vertical advance in its bounds, which GPOS took for an advance across the line between a base and its mark,
+  so the mark went down by an em. With `MarksWithoutGlyphClassesGposAcute.ttf` and the fallback
+  `MarksWithoutGlyphClassesGpos.ttf`, which attaches the grave to f at y 700, f, grave put the grave at y -300. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

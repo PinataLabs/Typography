@@ -91,8 +91,9 @@ public class MarksWithoutGlyphClassesTests
     // that the font of the base gives the place of the mark. A font with GPOS cannot attach its marks to a glyph of
     // another font, so those marks go where a font without GPOS places them, and stack on a mark that GPOS attached
     // where GPOS put it: MarksWithoutGlyphClassesGpos.ttf attaches the grave at y 700, and an acute goes over it, at
-    // y 762. P is a glyph of the font and F a glyph of the fallback font. Places are in units of the font:
-    // MarksWithoutGlyphClassesLarge.ttf has an em of 2000 units.
+    // y 762. A fallback font with GPOS attaches its mark to its own base where it alone does. P is a glyph of the font and
+    // F a glyph of the fallback font. Places are in units of the font: MarksWithoutGlyphClassesLarge.ttf has an em of
+    // 2000 units.
     [Test]
     [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesFallback.ttf", "f̀́", "2P@0,0 3P@300,62 4F@300,124")]
     [Arguments("MarksWithoutGlyphClassesFallback.ttf", "MarksWithoutGlyphClassesBase.ttf", "f̀", "2F@0,0 3P@300,62")]
@@ -104,6 +105,7 @@ public class MarksWithoutGlyphClassesTests
     [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "á", "1P@0,0 2F@300,62")]
     [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesBase.ttf", "f́", "2F@0,0 2P@300,62")]
     [Arguments("MarksWithoutGlyphClassesGpos.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "f̀́", "2P@0,0 3P@300,700 2F@300,762")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesGpos.ttf", "f̀", "2F@0,0 3F@300,700")]
     [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesGpos.ttf", "f̀́", "2F@0,0 3F@300,700 2P@300,762")]
     public async Task MarksOfOneFontGoOnABaseOfAnother(string fontName, string fallbackName, string text, string expected)
     {
