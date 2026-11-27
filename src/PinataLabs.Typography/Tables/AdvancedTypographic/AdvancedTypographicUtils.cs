@@ -93,21 +93,21 @@ internal static class AdvancedTypographicUtils
                 continue;
             }
 
-            // As in HarfBuzz, a reverse chaining substitution applies only as a lookup of a feature.
-            GSub.LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
-            if (lookup.IsReverse)
-            {
-                continue;
-            }
-
             if (!TryEnterNestedLookup(collection))
             {
                 break;
             }
 
+            // As in HarfBuzz, a reverse chaining substitution applies only as a lookup of a feature. HarfBuzz turns it
+            // down after it takes the nesting level, so a reverse lookup past the limit puts the run in error too.
+            GSub.LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
             int position = positions[sequenceIndex];
             int length = collection.Count;
-            lookup.TrySubstitution(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            if (!lookup.IsReverse)
+            {
+                lookup.TrySubstitution(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            }
+
             collection.NestingLevel--;
             int delta = collection.Count - length;
             if (delta == 0)
