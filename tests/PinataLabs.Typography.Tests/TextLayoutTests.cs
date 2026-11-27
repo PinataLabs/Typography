@@ -516,7 +516,7 @@ public class TextLayoutTests
     [Test]
     [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 25, 7)]
     [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 50, 7)]
-    [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 6)]
+    [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 7)]
     [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 200, 6)]
     public async Task CountLinesWrappingLength(string text, int wrappingLength, int usedLines)
     {
@@ -1737,6 +1737,25 @@ public class TextLayoutTests
             await Assert.That(Visual(GetLines(text, options))).IsEqualTo(expected);
             await Assert.That(expected.Split('|').Length).IsEqualTo(lineCount);
         }
+    }
+
+    // The b overflows the line, and the line break opportunity is right before it, after the space. No glyph on the
+    // line is at or after the opportunity, so the line wraps there, before the b. BreakAll wraps before the glyph that
+    // overflows, at a break opportunity or not, so it is not at issue.
+    [Test]
+    [Arguments("aaaa b", WordBreaking.Standard)]
+    [Arguments("aaaa b", WordBreaking.KeepAll)]
+    [Arguments("aaaa b", WordBreaking.BreakWord)]
+    [Arguments("aaaa \uFE0Fb", WordBreaking.Standard)]
+    [Arguments("aaaa \uFE0Fb", WordBreaking.KeepAll)]
+    [Arguments("aaaa \uFE0Fb", WordBreaking.BreakWord)]
+    public async Task OverflowAtTheCodepointOfABreak_WrapsAtTheBreak(string text, WordBreaking wordBreaking)
+    {
+        Font font = CreateFont(text, 12);
+        TextOptions options = new(font) { WordBreaking = wordBreaking };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
+
+        await Assert.That(Visual(GetLines(text, options))).IsEqualTo("aaaa|b");
     }
 
     // The font ligates the line feed and the b after it, so the b, at the mandatory break after the line feed, has no
