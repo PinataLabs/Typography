@@ -1,6 +1,6 @@
 ---
 title: Unicode types
-description: API reference for CodePoint, the span enumerators, MemoryExtensions and the Unicode property types in PinataLabs.Typography.Unicode.
+description: API reference for CodePoint, UnicodeInfo, the span enumerators, MemoryExtensions and the Unicode property types in PinataLabs.Typography.Unicode.
 ---
 
 Namespace: `PinataLabs.Typography.Unicode`. Guide:
@@ -51,6 +51,18 @@ character.
 | `TryGetVerticalMirror(CodePoint, out CodePoint mirror)` | The vertical form of the character. |
 | `IsLetter`, `IsDigit`, `IsLetterOrDigit`, `IsNumber`, `IsLower`, `IsUpper`, `IsMark`, `IsPunctuation`, `IsSeparator`, `IsSymbol`, `IsControl`, `IsWhiteSpace` | Tests by general category. |
 | `IsNonBreakingSpace`, `IsNewLine`, `IsTabulation`, `IsVariationSelector`, `IsZeroWidthJoiner`, `IsZeroWidthNonJoiner` | Tests for specific characters. |
+
+## UnicodeInfo
+
+`public static class UnicodeInfo`
+
+| Member | Description |
+| --- | --- |
+| `static string Version` | The version of the Unicode Character Database that the character properties are built from, such as `18.0.0`. |
+
+`Version` is a property and not a constant, so a caller reads the version of the library that is
+loaded, not the one it was compiled against. If you test against the Unicode conformance suites,
+pin them to this version.
 
 ## MemoryExtensions
 
