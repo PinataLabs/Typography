@@ -473,6 +473,12 @@ Unicode conformance suites to that version.
   a vowel and an optional trail that have no precomposed glyph, and a precomposed LV syllable that it takes apart because
   the trail after it does not compose, with that trail. It kept one cluster for each jamo, so `TextShaper` split the
   syllable, and in Noto Sans KR U+AC00 U+11C3 gave the trail cluster 1 where HarfBuzz gives 0. (#174)
+- The Hangul shaper composes and takes apart syllables in a font that lacks some of their glyphs as HarfBuzz 15.0.0
+  does. A trailing consonant after a syllable that the font has no glyph for stays out of the syllable, with no `tjmo`
+  and a cluster of its own. A tone mark moves before the syllable right before it, and any other tone mark gets a
+  dotted circle. The jamo of a syllable compose only to the syllable of all of them, and a syllable that the font cannot
+  take apart into jamo becomes its precomposed syllable and trailing consonant, if the font has those. The shaper moved
+  a tone mark after a trailing consonant three glyphs back, before the start of the syllable. (#174)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
