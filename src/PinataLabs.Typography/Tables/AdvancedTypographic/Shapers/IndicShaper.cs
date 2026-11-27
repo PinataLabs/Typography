@@ -720,7 +720,7 @@ internal sealed class IndicShaper : DefaultShaper
                 {
                     if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.Ra &&
                         substitutionCollection[i + 1].IndicShapingEngineInfo?.Category == Categories.H &&
-                        (i + 1 == basePosition || substitutionCollection[i + 2].IndicShapingEngineInfo?.Category == Categories.ZWJ))
+                        (i + 2 == basePosition || substitutionCollection[i + 2].IndicShapingEngineInfo?.Category != Categories.ZWJ))
                     {
                         substitutionCollection.EnableShapingFeature(i, BlwfTag);
                         substitutionCollection.EnableShapingFeature(i + 1, BlwfTag);

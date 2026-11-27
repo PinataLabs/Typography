@@ -500,6 +500,10 @@ Unicode conformance suites to that version.
 - For an old-spec script tag such as `beng`, the Indic shaper moves the first virama after the base to after the
   last consonant in every script but Kannada, as HarfBuzz 15.0.0 does. It moved it in Malayalam only, so in a syllable
   that ends in a virama, such as ka, virama, ya, virama, the virama after ka stayed before ya. (#175)
+- For the old-spec tag `deva`, the Indic shaper gives `blwf` to a ra, virama before the base when the base or any
+  character but ZWJ follows them, as HarfBuzz 15.0.0 does. It gave `blwf` only when ZWJ followed them, so ta, virama,
+  ra, virama, ka took the half form of ra where HarfBuzz gives its below-base form, and with ZWJ the eyelash ra took
+  its below-base form. (#175)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
