@@ -36,6 +36,7 @@ internal class GlyphShapingData
         this.CodePoint = data.CodePoint;
         this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
         this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
+        this.IsUnclassified = data.IsUnclassified;
         this.IsOtherLetter = data.IsOtherLetter;
         this.CodePointCount = data.CodePointCount;
         this.HoldsInsertedGlyph = data.HoldsInsertedGlyph;
@@ -120,6 +121,13 @@ internal class GlyphShapingData
     /// first component is a mark.
     /// </summary>
     public GlyphClassDef? SubstitutedGlyphClass { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph has no class: the dotted circle of a broken cluster. HarfBuzz
+    /// inserts it after it gives each glyph its class, and gives it none, so it is no base, ligature or mark, and no
+    /// lookup flag skips it. A ligature gives it a class, and in a font with glyph classes so does any substitution.
+    /// </summary>
+    public bool IsUnclassified { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the glyph has the general category Lo where the character whose properties

@@ -536,6 +536,12 @@ Unicode conformance suites to that version.
   the two fonts. Such a cluster kept its marks unplaced: with `MarksWithoutGlyphClassesBase.ttf`, which has f and the
   grave, and the fallback `MarksWithoutGlyphClassesFallback.ttf`, f, grave, acute drew both accents at the start of f
   on the baseline, where each font alone places them over f, the acute on the grave. (#191)
+- The dotted circle that the Indic, Khmer, Myanmar and Universal shapers insert in a broken cluster has no glyph
+  class, as in HarfBuzz 15.0.0, which inserts it after it gives each glyph its class. It took the class of U+25CC, a
+  base. So a lookup that ignores base glyphs skipped it, and in a font without GDEF its ligature with a sign was the
+  ligature of a base and a mark, which takes no ligature class, where HarfBuzz makes a ligature. A ligature gives the
+  circle a class, and in a font with glyph classes so does any substitution. Its Unicode properties stay those of
+  U+25CC: HarfBuzz gives it none, the general category Cc, which no check after the insertion tells from So. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

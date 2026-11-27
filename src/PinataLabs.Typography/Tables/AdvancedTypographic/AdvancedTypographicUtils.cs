@@ -248,12 +248,17 @@ internal static class AdvancedTypographicUtils
     /// <param name="shapingData">The glyph.</param>
     /// <returns><see langword="true"/> if the glyph is a mark.</returns>
     public static bool IsMarkGlyph(FontMetrics fontMetrics, GlyphShapingData shapingData)
-        => fontMetrics.TryGetGlyphClass(shapingData.GlyphId, out GlyphClassDef? glyphClass)
+        => !shapingData.IsUnclassified && (fontMetrics.TryGetGlyphClass(shapingData.GlyphId, out GlyphClassDef? glyphClass)
             ? glyphClass == GlyphClassDef.MarkGlyph
-            : GetSynthesizedGlyphClass(shapingData) == GlyphClassDef.MarkGlyph;
+            : GetSynthesizedGlyphClass(shapingData) == GlyphClassDef.MarkGlyph);
 
     public static GlyphShapingClass GetGlyphShapingClass(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
     {
+        if (shapingData.IsUnclassified)
+        {
+            return default;
+        }
+
         bool isMark;
         bool isBase;
         bool isLigature;
