@@ -143,6 +143,26 @@ public class TextItemizerTests
         await Assert.That(() => TextItemizer.Itemize(paragraph, 2, 2)).Throws<ArgumentOutOfRangeException>();
     }
 
+    [Test]
+    public async Task ACharacterWithNoScriptInsideAWordDoesNotCutIt()
+        => await AssertRuns("ab\uE000cd", BidiParagraphDirection.Auto, new ItemizedRun(0, 5, ScriptClass.Latin, 0));
+
+    [Test]
+    public async Task AJoiningControlBetweenTwoLevelsIsShapedWithTheLetterItShapes()
+        => await AssertRuns(
+            "a \u200D\u0628",
+            BidiParagraphDirection.LeftToRight,
+            new ItemizedRun(0, 2, ScriptClass.Latin, 0),
+            new ItemizedRun(2, 2, ScriptClass.Arabic, 1));
+
+    [Test]
+    public async Task ALineThatSplitsASurrogatePairThrows()
+    {
+        BidiParagraph paragraph = BidiParagraph.Resolve("a\U00010800b", BidiParagraphDirection.Auto);
+
+        await Assert.That(() => TextItemizer.Itemize(paragraph, 2, 2)).Throws<ArgumentOutOfRangeException>();
+    }
+
     private static async Task AssertRuns(string text, BidiParagraphDirection direction, params ItemizedRun[] expected)
         => await Assert.That(TextItemizer.Itemize(text, direction)).IsEquivalentTo(expected, CollectionOrdering.Matching);
 }

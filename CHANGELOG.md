@@ -69,8 +69,8 @@ Unicode conformance suites to that version.
 - **The `PinataLabs.Typography.Unicode` package.** The Unicode algorithms and character properties that were in the
   `PinataLabs.Typography.Unicode` namespace of `PinataLabs.Typography` are now a package of their own, with no font code,
   for the same target frameworks. A caller that needs character properties, code point and grapheme enumeration and no
-  fonts can depend on it alone. The bidi and line-break algorithms stay internal and back the layout of
-  `PinataLabs.Typography`; public APIs for them are to follow. The namespace is the same, so source code needs no change.
+  fonts can depend on it alone. The line-break algorithm stays internal and backs the layout of
+  `PinataLabs.Typography`. The namespace is the same, so source code needs no change.
   `UnicodeInfo.Version` is the new public member: it reports the Unicode version of the property data, which is
   18.0.0. The generator reads it from the rule files and fails when their headers name different versions. `UnicodeData.txt` has no header, so the generator cannot check that file. (#151)
 - **Font descriptor metrics and embedding permissions.** `FontMetrics.DescriptorMetrics` gives the values that a PDF
@@ -88,10 +88,16 @@ Unicode conformance suites to that version.
   right, right to left or from its first strong character (rules P2 and P3). `ParagraphLevel` and `Levels` give the
   embedding level of the paragraph and of each code unit. `GetVisualRuns(lineStart, lineLength)` applies rule L1 to
   one line and returns its `BidiLevelRun` values (`Start`, `Length`, `Level`, `IsRightToLeft`) in visual order (rule
-  L2), so a caller that breaks the lines applies L1 where its lines end. U+200C and U+200D stay inside the run around
-  them, because they decide how the letters on either side join. Every other character that rule X9 removes is in no
-  run and ends the run before it. `TextLayout` runs the same engine. The API passes all of `BidiTest.txt` and
-  `BidiCharacterTest.txt` of Unicode 18.0.0, levels and visual order. (#152)
+  L2), so a caller that breaks the lines applies L1 where its lines end. U+200C and U+200D stay in a run, because they
+  decide how the letters on either side join. A joiner is in the run of the character before it, unless the level
+  changes at the joiner and the character after it joins to the one before it (Arabic joining type R, D or C): then it
+  is in the run after it, so `a ZWJ ب` gives the Arabic run its joiner. A joiner at the start of a line, or after a
+  removed character that is not a joiner, goes with the run after it, and one with no letter after it is a run of its
+  own. Runs never overlap. Every other character that rule X9 removes is in no run and ends the run before it. A line
+  that starts or ends between the two code units of a surrogate pair throws `ArgumentOutOfRangeException`. `Levels`
+  and `GetVisualRuns` give a removed character the level of the character before it after rule L1, as `TextLayout`
+  does. `TextLayout` runs the same engine. The API passes all of `BidiTest.txt` and `BidiCharacterTest.txt` of
+  Unicode 18.0.0, levels and visual order. (#152)
 - **`CodePoint.GetScriptClass` is public.** It gives the Script property of `Scripts.txt` for a code point, and
   `Unknown` for a code point that no script owns. A test compares it with `Scripts.txt` of Unicode 18.0.0 for every
   code point. Script_Extensions is not read. (#154)
@@ -104,8 +110,10 @@ Unicode conformance suites to that version.
 - **`TextItemizer` cuts text into runs of one script and one direction.** `Itemize(text, direction)` gives the
   `ItemizedRun` values (`Start`, `Length`, `Script`, `Level`, `IsRightToLeft`) of a paragraph in visual order, and
   `Itemize(paragraph, lineStart, lineLength)` those of one line of a `BidiParagraph`. Each run of the bidi algorithm is
-  cut at every change of script. Common and Inherited characters take the script of the text before them, or of the
-  first letter after them when nothing comes before. A closing paired bracket takes the script of its opening bracket,
+  cut at every change of script. Common and Inherited characters, and characters that no script owns (Unknown, such as
+  a private-use icon), take the script of the text before them, or of the first letter after them when nothing comes
+  before. This differs from the PdfPinata itemizer, which makes a run of its own of each such character and so cuts
+  a word at an icon; text that has only Unknown characters is one Unknown run. A closing paired bracket takes the script of its opening bracket,
   so `a (б) c` is Latin, Cyrillic and Latin. A script run that sits in a right to left bidi run is drawn in that
   direction, so the piece written first comes last. Script_Extensions is not read. (#154)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the

@@ -204,7 +204,7 @@ internal sealed class BidiAlgorithm
     /// <param name="data">The Bidi Unicode data.</param>
     /// <param name="resetWhitespace">
     /// <see langword="true"/> to apply rule L1 to all of the data as one line; <see langword="false"/> to leave it to the caller,
-    /// which applies it to each line with <see cref="ResetWhitespaceLevels"/>.
+    /// which applies it to each line with <see cref="ResetWhitespaceLevels"/> and then <see cref="AssignLevelsToRemovedCharacters"/>.
     /// </param>
     public void Process(BidiData data, bool resetWhitespace = true)
         => this.Process(
@@ -1447,7 +1447,28 @@ internal sealed class BidiAlgorithm
             if (IsRemovedByX9(t))
             {
                 this.workingTypes[i] = t;
-                this.ResolvedLevels[i] = this.ResolvedLevels[i - 1];
+            }
+        }
+
+        AssignLevelsToRemovedCharacters(this.originalTypes, this.ResolvedLevels);
+    }
+
+    /// <summary>
+    /// Gives each character that rule X9 removes the level of the character before it. The first character of the
+    /// line keeps its level.
+    /// </summary>
+    /// <remarks>
+    /// This follows rule L1, so that a removed character after a separator that L1 reset takes the reset level.
+    /// </remarks>
+    /// <param name="types">The bidi types of the line.</param>
+    /// <param name="levels">The levels of the line, which this sets in place.</param>
+    internal static void AssignLevelsToRemovedCharacters(ReadOnlyArraySlice<BidiCharacterType> types, ArraySlice<sbyte> levels)
+    {
+        for (int i = 1; i < levels.Length; i++)
+        {
+            if (IsRemovedByX9(types[i]))
+            {
+                levels[i] = levels[i - 1];
             }
         }
     }

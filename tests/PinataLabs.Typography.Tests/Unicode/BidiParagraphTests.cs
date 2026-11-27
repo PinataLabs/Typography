@@ -207,6 +207,94 @@ public class BidiParagraphTests
     }
 
     [Test]
+    [Arguments(Zwj)]
+    [Arguments(Zwnj)]
+    public async Task AJoiningControlBeforeALetterThatJoinsBackwardsGoesWithThatLetter(string joiner)
+    {
+        // The joiner shapes the Arabic letter after it, so the shaper of the Arabic run has to see it.
+        string text = "a " + joiner + Beh;
+
+        BidiLevelRun[] runs = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight).GetVisualRuns(0, text.Length);
+
+        await Assert.That(runs).IsEquivalentTo([new BidiLevelRun(0, 2, 0), new BidiLevelRun(2, 2, 1)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task AJoiningControlBeforeALetterThatDoesNotJoinStaysWithTheRunBeforeIt()
+    {
+        // A Latin letter does not join, so the joiner has an effect on the Arabic letter before it only.
+        const string text = Beh + Zwj + "a";
+
+        BidiLevelRun[] runs = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight).GetVisualRuns(0, text.Length);
+
+        await Assert.That(runs).IsEquivalentTo([new BidiLevelRun(0, 2, 1), new BidiLevelRun(2, 1, 0)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task AJoiningControlAtTheStartOfALineGoesWithTheFirstRun()
+    {
+        string text = Zwj + Beh;
+
+        BidiLevelRun[] runs = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight).GetVisualRuns(0, text.Length);
+
+        await Assert.That(runs).IsEquivalentTo([new BidiLevelRun(0, 2, 1)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task AJoiningControlThatNothingFollowsHasARunOfItsOwn()
+    {
+        await Assert.That(BidiParagraph.Resolve(Zwj, BidiParagraphDirection.LeftToRight).GetVisualRuns(0, 1))
+            .IsEquivalentTo([new BidiLevelRun(0, 1, 0)], CollectionOrdering.Matching);
+        await Assert.That(BidiParagraph.Resolve(Zwnj, BidiParagraphDirection.RightToLeft).GetVisualRuns(0, 1))
+            .IsEquivalentTo([new BidiLevelRun(0, 1, 1)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task AJoiningControlBeforeAnotherRemovedCharacterHasARunOfItsOwn()
+    {
+        // The embedding control ends the run, and the joiner before it has no letter to go with.
+        const string text = Zwj + "\u202Ab";
+
+        BidiLevelRun[] runs = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight).GetVisualRuns(0, text.Length);
+
+        await Assert.That(runs).IsEquivalentTo([new BidiLevelRun(0, 1, 0), new BidiLevelRun(2, 1, 2)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    [Arguments("abc\t" + SoftHyphen + "def", BidiParagraphDirection.RightToLeft)]
+    [Arguments("abc " + SoftHyphen + "\tdef", BidiParagraphDirection.RightToLeft)]
+    [Arguments("ab" + SoftHyphen, BidiParagraphDirection.RightToLeft)]
+    [Arguments("\u05D0\t" + SoftHyphen + "\u05D1", BidiParagraphDirection.LeftToRight)]
+    [Arguments("a\u202B\u05D0\t" + SoftHyphen + "b\u202C", BidiParagraphDirection.LeftToRight)]
+    [Arguments("a\u2067" + SoftHyphen + "\t" + SoftHyphen + "\u2069", BidiParagraphDirection.RightToLeft)]
+    public async Task LevelsAreThoseOfTheEngineThatLaysOutText(string text, BidiParagraphDirection direction)
+    {
+        var data = new BidiData();
+        data.Init(text, direction == BidiParagraphDirection.RightToLeft ? (sbyte)1 : (sbyte)0);
+        var bidi = new BidiAlgorithm();
+        bidi.Process(data);
+
+        BidiParagraph paragraph = BidiParagraph.Resolve(text, direction);
+
+        // No character of these texts is outside the BMP, so a code unit is a code point.
+        var expected = new byte[text.Length];
+        for (int i = 0; i < expected.Length; i++)
+        {
+            expected[i] = (byte)bidi.ResolvedLevels[i];
+        }
+
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(expected, CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task ARemovedCharacterAfterAResetSeparatorTakesItsLevel()
+    {
+        BidiParagraph paragraph = BidiParagraph.Resolve("abc\t" + SoftHyphen + "def", BidiParagraphDirection.RightToLeft);
+
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 2, 2, 2, 1, 1, 2, 2, 2 }, CollectionOrdering.Matching);
+    }
+
+    [Test]
     public async Task OtherRemovedCharactersAreInNoRunAndEndTheRunBeforeThem()
     {
         const string text = Alef + SoftHyphen + Beh;
@@ -284,6 +372,30 @@ public class BidiParagraphTests
         BidiParagraph paragraph = BidiParagraph.Resolve("abc", BidiParagraphDirection.Auto);
 
         await Assert.That(() => paragraph.GetVisualRuns(lineStart, lineLength)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    [Arguments(2, 2)]
+    [Arguments(0, 2)]
+    [Arguments(1, 1)]
+    [Arguments(2, 1)]
+    public async Task ALineThatSplitsASurrogatePairThrows(int lineStart, int lineLength)
+    {
+        // The pair is the two code units at index 1 and 2.
+        BidiParagraph paragraph = BidiParagraph.Resolve("a\U00010800b", BidiParagraphDirection.Auto);
+
+        await Assert.That(() => paragraph.GetVisualRuns(lineStart, lineLength)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public async Task ALineThatKeepsASurrogatePairWholeOrSplitsLoneSurrogatesIsAccepted()
+    {
+        BidiParagraph pair = BidiParagraph.Resolve("a\U00010800b", BidiParagraphDirection.Auto);
+        BidiParagraph lone = BidiParagraph.Resolve("a\uD800\uD800b", BidiParagraphDirection.Auto);
+
+        await Assert.That(pair.GetVisualRuns(1, 2)).IsNotEmpty();
+        await Assert.That(lone.GetVisualRuns(2, 2)).IsNotEmpty();
+        await Assert.That(lone.GetVisualRuns(0, 2)).IsNotEmpty();
     }
 
     [Test]

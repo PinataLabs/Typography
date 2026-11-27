@@ -18,10 +18,20 @@ namespace PinataLabs.Typography.Unicode;
 /// </para>
 /// <para>
 /// Rule X9 removes explicit embedding and override controls and every character of class BN from the ordering. Each
-/// still has a level, which is that of the code unit before it, the paragraph level at the start of the text, or the
-/// paragraph level where rule L1 resets it. U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER are kept in the
-/// run around them, because they decide how the letters on either side join and a shaper has to see them. Every other
-/// removed character is in no run, and ends the run before it.
+/// still has a level, which is that of the code unit before it after rule L1, or the paragraph level at the start of
+/// the text. <c>TextLayout</c> of PinataLabs.Typography gives the same levels.
+/// </para>
+/// <para>
+/// U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER are kept in a run, because they decide how the letters
+/// on either side join and a shaper has to see them next to the letter they shape. Every other removed character is
+/// in no run, and ends the run before it. A joiner is in the run of the character before it, with these exceptions.
+/// Where the level changes at the joiner, and the character after it joins to the character before it (the Arabic
+/// joining type of that character is right joining, dual joining or join causing), the joiner is in the run after it,
+/// so that <c>a ZWJ ب</c> gives the Arabic run its joiner. A joiner at the start of a line, or after a removed
+/// character that is not a joiner, is in the run of the character after it, and a joiner that no character follows
+/// before the end of the line or the next removed character is a run of its own. In every case the run has the level
+/// of the characters in it, which for a joiner moved to the run after it is not the entry of that joiner in
+/// <see cref="Levels"/>. A run never overlaps another.
 /// </para>
 /// </remarks>
 public sealed class BidiParagraph
@@ -103,6 +113,7 @@ public sealed class BidiParagraph
 
         var paragraphLevels = (sbyte[])resolvedLevels.Clone();
         BidiAlgorithm.ResetWhitespaceLevels(types, paragraphLevels, paragraphLevel);
+        BidiAlgorithm.AssignLevelsToRemovedCharacters(types, paragraphLevels);
 
         var levels = new byte[text.Length];
         for (int i = 0; i < levels.Length; i++)
@@ -124,15 +135,15 @@ public sealed class BidiParagraph
     /// <param name="lineStart">The index of the first code unit of the line.</param>
     /// <param name="lineLength">The number of code units in the line.</param>
     /// <returns>The runs of the line.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">The line is not inside the text.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The line is not inside the text, or starts or ends between the two code units of a surrogate pair.</exception>
     public BidiLevelRun[] GetVisualRuns(int lineStart, int lineLength)
     {
-        if (lineStart < 0 || lineStart > this.text.Length)
+        if (lineStart < 0 || lineStart > this.text.Length || this.SplitsSurrogatePair(lineStart))
         {
             throw new ArgumentOutOfRangeException(nameof(lineStart));
         }
 
-        if (lineLength < 0 || lineLength > this.text.Length - lineStart)
+        if (lineLength < 0 || lineLength > this.text.Length - lineStart || this.SplitsSurrogatePair(lineStart + lineLength))
         {
             throw new ArgumentOutOfRangeException(nameof(lineLength));
         }
@@ -148,19 +159,35 @@ public sealed class BidiParagraph
             new ReadOnlyArraySlice<BidiCharacterType>(this.types, lineStart, lineLength),
             lineLevels,
             (sbyte)this.ParagraphLevel);
+        BidiAlgorithm.AssignLevelsToRemovedCharacters(
+            new ReadOnlyArraySlice<BidiCharacterType>(this.types, lineStart, lineLength),
+            lineLevels);
 
         List<BidiLevelRun> runs = this.GetLogicalRuns(lineStart, lineLevels);
         OrderVisually(runs);
         return [.. runs];
     }
 
+    private bool SplitsSurrogatePair(int index)
+        => index > 0
+        && index < this.text.Length
+        && char.IsHighSurrogate(this.text[index - 1])
+        && char.IsLowSurrogate(this.text[index]);
+
     private List<BidiLevelRun> GetLogicalRuns(int lineStart, sbyte[] lineLevels)
     {
         var runs = new List<BidiLevelRun>();
+
+        // The open run is [runStart, runEnd), and runEnd includes the joiners after its last character.
         int runStart = -1;
         int runEnd = 0;
         sbyte runLevel = 0;
-        int pendingJoiner = -1;
+
+        // The joiners after the last character that is not removed, or since the last removed character that is not
+        // a joiner when no run is open.
+        int joinersStart = -1;
+        int joinersEnd = 0;
+        sbyte joinersLevel = 0;
 
         for (int i = 0; i < lineLevels.Length; i++)
         {
@@ -169,19 +196,21 @@ public sealed class BidiParagraph
             {
                 if (IsJoiningControl(this.text[index]))
                 {
+                    if (joinersStart < 0)
+                    {
+                        joinersStart = index;
+                        joinersLevel = lineLevels[i];
+                    }
+
+                    joinersEnd = index + 1;
                     if (runStart >= 0)
                     {
-                        runEnd = lineStart + i + 1;
-                    }
-                    else if (pendingJoiner < 0)
-                    {
-                        pendingJoiner = index;
+                        runEnd = joinersEnd;
                     }
                 }
                 else
                 {
-                    EndRun(runs, ref runStart, runEnd, runLevel);
-                    pendingJoiner = -1;
+                    EndRunsAtRemovedCharacter();
                 }
 
                 continue;
@@ -190,30 +219,60 @@ public sealed class BidiParagraph
             if (runStart >= 0 && lineLevels[i] == runLevel)
             {
                 runEnd = index + 1;
+                joinersStart = -1;
                 continue;
             }
 
-            EndRun(runs, ref runStart, runEnd, runLevel);
-            runStart = pendingJoiner >= 0 ? pendingJoiner : index;
-            pendingJoiner = -1;
+            int newStart = index;
+            if (runStart >= 0)
+            {
+                // The level changes here. The joiners before this character go with it when it joins to them.
+                if (joinersStart >= 0 && this.JoinsToPrevious(index))
+                {
+                    runEnd = joinersStart;
+                    newStart = joinersStart;
+                }
+
+                runs.Add(new BidiLevelRun(runStart, runEnd - runStart, (byte)runLevel));
+            }
+            else if (joinersStart >= 0)
+            {
+                newStart = joinersStart;
+            }
+
+            joinersStart = -1;
+            runStart = newStart;
             runEnd = index + 1;
             runLevel = lineLevels[i];
         }
 
-        EndRun(runs, ref runStart, runEnd, runLevel);
+        EndRunsAtRemovedCharacter();
         return runs;
-    }
 
-    private static void EndRun(List<BidiLevelRun> runs, ref int runStart, int runEnd, sbyte runLevel)
-    {
-        if (runStart >= 0)
+        void EndRunsAtRemovedCharacter()
         {
-            runs.Add(new BidiLevelRun(runStart, runEnd - runStart, (byte)runLevel));
-            runStart = -1;
+            if (runStart >= 0)
+            {
+                runs.Add(new BidiLevelRun(runStart, runEnd - runStart, (byte)runLevel));
+                runStart = -1;
+            }
+            else if (joinersStart >= 0)
+            {
+                runs.Add(new BidiLevelRun(joinersStart, joinersEnd - joinersStart, (byte)joinersLevel));
+            }
+
+            joinersStart = -1;
         }
     }
 
-    private static bool IsJoiningControl(char c) => c is '‌' or '‍';
+    private bool JoinsToPrevious(int index)
+    {
+        CodePoint codePoint = CodePoint.DecodeFromUtf16At(this.text, index, out _);
+        return CodePoint.GetArabicJoiningClass(codePoint).JoiningType
+            is ArabicJoiningType.RightJoining or ArabicJoiningType.DualJoining or ArabicJoiningType.JoinCausing;
+    }
+
+    private static bool IsJoiningControl(char c) => c is '\u200C' or '\u200D';
 
     /// <summary>
     /// Reorders the runs of a line into visual order. Implements rule L2.
