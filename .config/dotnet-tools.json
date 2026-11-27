@@ -7,7 +7,7 @@
       "commands": [
         "dotnet-CycloneDX"
       ],
-      "rollForward": false
+      "rollForward": true
     }
   }
 }

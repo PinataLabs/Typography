@@ -11,6 +11,10 @@
   -->
   <PropertyGroup>
     <GenerateSBOM Condition="'$(GenerateSBOM)' == ''">false</GenerateSBOM>
+    <!-- The generator reads the dependencies from project.assets.json. It looks in the project folder
+         by default, but ArtifactsPath puts that file under artifacts/obj/<project>/, so without this
+         the manifest lists only the package itself. -->
+    <SbomGenerationBuildComponentPath>$(MSBuildProjectExtensionsPath)</SbomGenerationBuildComponentPath>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(GenerateSBOM)' == 'true' And '$(IsPackable)' != 'false'">

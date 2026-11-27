@@ -78,13 +78,17 @@ The `GenerateSBOM` property turns it on, and it is off by default, so a PR build
 restore or run the generator. Only the **Pack** step of `release-publish.yml` sets it. The
 `Microsoft.Sbom.Targets` package that does the work is a reference in `Directory.Build.targets`,
 with its version in `Directory.Packages.props`. The step after **Pack** fails the run if a
-package has no manifest.
+package has no manifest, or a manifest that lists no dependency packages. The manifest lists
+the NuGet packages in `project.assets.json`, build-only ones included. `Directory.Build.targets`
+points `SbomGenerationBuildComponentPath` at the folder that holds that file.
 
 To make a package with the manifest on your machine, restore and pack with the property:
 
 ```shell
+dotnet restore src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj -p:GenerateSBOM=true
 dotnet restore src/PinataLabs.Typography/PinataLabs.Typography.csproj -p:GenerateSBOM=true
-dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release -p:GenerateSBOM=true
+dotnet pack src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj -c Release --no-restore -p:GenerateSBOM=true --output ./packages
+dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release --no-restore -p:GenerateSBOM=true --output ./packages
 ```
 
 **CycloneDX, next to the package.** `.github/scripts/generate-sbom.sh` writes one
@@ -96,7 +100,8 @@ cannot be dry run past the tag. The files are in the `packages` artifact of the 
 each package's dependencies, and the build-only packages with the scope `excluded`.
 
 The CycloneDX tool is pinned in `.config/dotnet-tools.json`, and Dependabot's `nuget` entry
-keeps it up to date. Run the script from the repository root, after packing:
+keeps it up to date. Run the script from the repository root, after packing both projects as above. It needs the
+.NET 10 SDK or later, because the tool runs on the newest runtime installed:
 
 ```shell
 dotnet tool restore

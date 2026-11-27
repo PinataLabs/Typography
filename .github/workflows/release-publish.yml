@@ -138,16 +138,22 @@ jobs:
           dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release --no-build --no-restore -p:GenerateSBOM=true --output ./packages
           ls -la ./packages/
 
-      # Fails the run if a package has no manifest, so that a pack that embeds nothing cannot go out.
+      # Fails the run if a package has no manifest, or if the manifest lists only the package itself,
+      # which is what it does when the generator cannot find project.assets.json.
       - name: Check the packages embed an SBOM
         run: |
+          manifest=_manifest/spdx_2.2/manifest.spdx.json
           for package in ./packages/*.nupkg; do
-            if ! unzip -l "$package" | grep -q ' _manifest/spdx_2.2/manifest.spdx.json$'; then
-              echo "::error::$(basename "$package") has no _manifest/spdx_2.2/manifest.spdx.json"
+            if ! unzip -l "$package" "$manifest" >/dev/null; then
+              echo "::error::$(basename "$package") has no $manifest"
+              exit 1
+            fi
+            if ! unzip -p "$package" "$manifest" | jq -e '.packages | length > 1' >/dev/null; then
+              echo "::error::$(basename "$package") has an SPDX manifest that lists no dependency packages"
               exit 1
             fi
           done
-          echo "Every package embeds an SPDX manifest"
+          echo "Every package embeds an SPDX manifest that lists its dependencies"
 
       # What was actually built, read from the packages rather than assumed from inputs.
       # PinataLabs.Typography.<digit> cannot match PinataLabs.Typography.Unicode.<digit>, whose

@@ -7,7 +7,7 @@
 #
 # The version is read from the .nupkg that is already in <packages-dir>, so a bill of materials
 # cannot name a version that was not packed. The components come from each project's restored
-# dependencies (obj/project.assets.json), so run it after the restore and the pack. It does not
+# dependencies (artifacts/obj/<project>/project.assets.json), so run it after the restore and the pack. It does not
 # restore, because the tool's own restore would run without GenerateSBOM and rewrite that file.
 # Packages that only build the project, such as MinVer, are listed with scope "excluded".
 #
