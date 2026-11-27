@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.Cff;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests.Unicode;
@@ -176,5 +177,23 @@ public class GlyphNameEncodingsTests
     {
         await Assert.That(() => GlyphNameEncodings.GetGlyphName((SimpleFontEncoding)6, 0x41)).Throws<ArgumentOutOfRangeException>();
         await Assert.That(() => GlyphNameEncodings.TryGetCode((SimpleFontEncoding)(-1), "A", out _)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    // A CFF font names the Standard Encoding by string ID, and the table of IDs is the Standard Encoding of this class.
+    [Test]
+    public async Task StandardIsTheStandardEncodingOfCff()
+    {
+        List<string> different = [];
+        for (int code = 0; code < 256; code++)
+        {
+            ushort sid = CffPredefinedTables.StandardEncoding[code];
+            string? expected = sid == 0 ? null : CffStandardStrings.GetName(sid);
+            if (GlyphNameEncodings.GetGlyphName(SimpleFontEncoding.Standard, (byte)code) != expected)
+            {
+                different.Add($"{code:X2}");
+            }
+        }
+
+        await Assert.That(different).IsEmpty();
     }
 }

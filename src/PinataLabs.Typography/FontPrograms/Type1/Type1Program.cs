@@ -3,7 +3,7 @@
 
 using System;
 using System.Numerics;
-using PinataLabs.Typography.Tables.Cff;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.FontPrograms.Type1;
 
@@ -285,9 +285,9 @@ internal sealed class Type1Program
             && this.glyphs.TryGet(this.data, glyphId, out charString);
     }
 
-    // Adobe StandardEncoding is the same in Type 1 and CFF, so the CFF table of string IDs serves both.
+    // A code that StandardEncoding leaves empty selects .notdef.
     private static string StandardEncodingName(int code)
-        => CffStandardStrings.GetName(CffPredefinedTables.StandardEncoding[code]);
+        => GlyphNameEncodings.GetGlyphName(SimpleFontEncoding.Standard, (byte)code) ?? ".notdef";
 
     // Orders a name of bytes against a name of characters as if each byte were the character with the same value.
     private static int CompareName(ReadOnlySpan<byte> bytes, ReadOnlySpan<char> name)
