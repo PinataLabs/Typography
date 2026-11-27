@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) PinataLabs.
 # Licensed under the Apache License, Version 2.0.
-"""Builds the three fonts of the fallback rows of FontFallbackTests that draw a character in parts, and prints the
+"""Builds the four fonts of the fallback rows of FontFallbackTests that draw a character in parts, and prints the
 glyphs that HarfBuzz gives each font alone.
 
 Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
@@ -18,8 +18,10 @@ ligatures of f and i, g and h, and i and g, and blws makes one glyph of the dott
 FontFallbackPartsSplit.ttf is a fallback font that has every part: Bengali ka, e, aa and o, Khmer ka, U+17BE and U+17C1,
 and U+25CC. So HarfBuzz splits o into e and aa, and U+17BE into U+17C1 and U+17BE, and moves the first part before ka.
 
-The rows of FontFallbackTests give for each font alone the glyph IDs that this script prints, except where the library
-splits a vowel sign that the font lacks together with one of its parts, as the comments there say.
+FontFallbackPartsCircle.ttf is a font of the text that has Bengali ka and U+25CC, and lacks Bengali e, aa and o. So
+HarfBuzz keeps o whole, one .notdef, and gives a lone o a dotted circle.
+
+The rows of FontFallbackTests give for each font alone the glyph IDs that this script prints.
 """
 
 import os
@@ -41,9 +43,10 @@ feature liga { sub u0066 u0069 by f_i; sub u0067 u0068 by g_h; sub u0069 u0067 b
 feature blws { sub u25CC u0941 by u25CC_u0941; } blws;
 """),
     ("FontFallbackPartsSplit.ttf", [0x0995, 0x09BE, 0x09C7, 0x09CB, 0x1780, 0x17BE, 0x17C1, 0x25CC], [], LANGUAGES),
+    ("FontFallbackPartsCircle.ttf", [0x0995, 0x25CC], [], LANGUAGES),
 ]
 
-TEXTS = ["fi", "gh", "ig", "ु", "কো", "កើ"]
+TEXTS = ["fi", "gh", "ig", "ु", "কো", "ো", "កើ"]
 
 
 def main():
