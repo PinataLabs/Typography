@@ -79,13 +79,16 @@ u25CC.alt are bases, circle_u and circle_u.alt ligatures, and the signs marks.
 LigaturePropertiesComponents.ttf ligates e and the acute into eacute, the ligature of a base and a mark, which has no
 ligature id. It ligates x and y into x_y, and substitutes x_y by p1 and the mark p2, and a by a1 and a2. Then,
 skipping marks, it ligates eacute and f into eacute_f, z and p1 into z_p1, and a1 and a2 into a12. Mark-to-ligature
-has an anchor at x 100 and 700 on the two components of eacute_f, and at x 100, 700 and 1300 on the three of z_p1.
+has an anchor at x 100 and 700 on the two components of eacute_f, and at x 100, 700 and 1300 on the three of z_p1
+and of a12.
 
 * e, acute, grave, f: eacute is no ligature, so it gives one component, whatever characters it holds, and the grave
   that eacute_f skips goes on the first (ligate_input). e, acute, f, grave: the grave after the ligature goes on the
   last component.
 * z, x, y: p2 keeps the ligature id of x_y, which p1 has, but it has no component, as a glyph of a ligature has none.
   So HarfBuzz stops at it when it moves the marks after p1 to z_p1 (ligate_input), and p2 goes on the last component.
+* a, grave: mark-to-ligature puts a mark of another ligature on the last component of the three that the font gives
+  a12 (MarkLigPosFormat1), whatever number of components or characters a12 holds.
 
 LigaturePropertiesComponentsFallback.ttf has the same glyphs and substitutions, and no GDEF or GPOS table, so HarfBuzz
 places marks around their base itself, on an equal part of a ligature for each component.
@@ -190,12 +193,14 @@ feature mark {
     pos ligature eacute_f <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent;
     pos ligature z_p1 <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent
         ligComponent <anchor 1300 500> mark @Accent;
+    pos ligature a12 <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent
+        ligComponent <anchor 1300 500> mark @Accent;
 } mark;
 table GDEF {
     GlyphClassDef [u0061 u0065 u0066 u0078 u0079 u007A eacute p1 a1 a2], [eacute_f x_y z_p1 a12], [u0300 u0301 p2], ;
 } GDEF;
 """
-COMPONENTS_TEXTS = ["é̀f", "éf̀", "zxy"]
+COMPONENTS_TEXTS = ["é̀f", "éf̀", "zxy", "à"]
 COMPONENTS_FALLBACK_FONT = "LigaturePropertiesComponentsFallback.ttf"
 COMPONENTS_FALLBACK_TEXTS = ["é̀f", "éf̀", "à"]
 
