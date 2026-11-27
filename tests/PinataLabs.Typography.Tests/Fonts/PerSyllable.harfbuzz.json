@@ -49,6 +49,10 @@
     ["PerSyllableRequired.ttf","\u1780\u1781",[9,6]],
     ["PerSyllableRequired.ttf","\u1000\u1001",[10,4]],
     ["PerSyllableRequired.ttf","\u1b13\u1b14",[11,8]],
-    ["PerSyllableRequired.ttf","\u0915\u0916",[12,2]]
+    ["PerSyllableRequired.ttf","\u0915\u0916",[12,2]],
+    ["PerSyllableRuns.ttf","\ud804\udc05\u0915",[8,1]],
+    ["PerSyllableRuns.ttf","\u0916\u0995",[2,5]],
+    ["PerSyllableRuns.ttf","\u0917\u1000",[3,6]],
+    ["PerSyllableRuns.ttf","\u0918\u1780",[4,7]]
   ]
 }

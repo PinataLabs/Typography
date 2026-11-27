@@ -14,7 +14,8 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 /// The PerSyllable fonts have lookups that apply to a letter when the letter of the next syllable follows it. As in
 /// HarfBuzz, a lookup of a feature that the Khmer, Myanmar, universal or Indic shaper plans per syllable does not match
 /// across syllables. A lookup that two features of one stage share takes the flag of the feature with the lower tag,
-/// and the lookup of a required feature matches across syllables.
+/// and the lookup of a required feature matches across syllables. A per-syllable lookup does not match a glyph of the
+/// script run before, whose shaper numbers its syllables too.
 /// </summary>
 public class PerSyllableTests
 {

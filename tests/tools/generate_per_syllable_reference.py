@@ -32,6 +32,11 @@ lookup changes the first letter only when it does not match per syllable.
 * PerSyllableRequired.ttf has the required feature ccmp for khmr, mym2, bali and dev2, which the language system
   also lists. HarfBuzz adds the lookups of the required feature first, and not per syllable, so its lookup matches
   across syllables.
+* PerSyllableRuns.ttf has a locl lookup that changes a letter after a letter of another script: Devanagari ka after
+  Brahmi A, Bengali ka after Devanagari kha, Myanmar ka after Devanagari ga, and Khmer ka after Devanagari gha. The
+  pairs cover the universal, Indic, Myanmar and Khmer shapers, and Devanagari and Bengali share a shaper. A caller of
+  HarfBuzz shapes each script run in a buffer of its own, with the text around it as context, so the lookup does not
+  match. The script shapes each letter of these texts so.
 
 Each row holds the font, the text and the glyph IDs that HarfBuzz gives. PerSyllableTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -84,6 +89,19 @@ def shape(font, text):
     return [info.codepoint for info in buffer.glyph_infos]
 
 
+def shape_runs(font, text):
+    """Shapes each character in a buffer of its own, with the rest of the text as context, as a caller of HarfBuzz
+    shapes each script run of a text where each character is a run."""
+    glyphs = []
+    for i in range(len(text)):
+        buffer = hb.Buffer()
+        buffer.add_str(text, i, 1)
+        buffer.guess_segment_properties()
+        hb.shape(font, buffer)
+        glyphs += [info.codepoint for info in buffer.glyph_infos]
+    return glyphs
+
+
 def make_required(path, tags, feature_tag):
     """Makes the feature the required feature of the default language system of each tag, which still lists it."""
     font = TTFont(path)
@@ -98,11 +116,11 @@ def make_required(path, tags, feature_tag):
 def main():
     rows = []
 
-    def add(file_name, path, texts):
+    def add(file_name, path, texts, shaper=shape):
         font = load_font(path)
         for text in texts:
             text = "".join(map(chr, text))
-            rows.append([file_name, text, shape(font, text)])
+            rows.append([file_name, text, shaper(font, text)])
 
     # Khmer: locl and ccmp apply to a letter, the basic features to the consonant after a coeng.
     file_name = "PerSyllableKhmer.ttf"
@@ -177,6 +195,16 @@ def main():
                       extra_glyphs=["u%04X.ccmp" % a for a, _ in pairs.values()])
     make_required(path, pairs, "ccmp")
     add(file_name, path, [list(pair) for pair in pairs.values()])
+
+    # A letter after a letter of another script, each its own script run.
+    file_name = "PerSyllableRuns.ttf"
+    pairs = [(0x11005, 0x0915), (0x0916, 0x0995), (0x0917, 0x1000), (0x0918, 0x1780)]
+    fea = "languagesystem DFLT dflt;\n" + "".join(
+        "languagesystem %s dflt;\n" % tag for tag in ("brah", "dev2", "bng2", "mym2", "khmr"))
+    fea += "feature locl {\n" + "".join("  sub u%04X u%04X' by u%04X.locl;\n" % (a, b, b) for a, b in pairs) + "} locl;\n"
+    path = build_font(file_name, sorted(c for pair in pairs for c in pair), fea,
+                      extra_glyphs=["u%04X.locl" % b for _, b in pairs])
+    add(file_name, path, [list(pair) for pair in pairs], shape_runs)
 
     write_reference(REFERENCE, rows)
 
