@@ -175,11 +175,33 @@ public class BidiAlgorithmTests
     [Arguments("ab­\tcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
     [Arguments("ab\t­cd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
     [Arguments("ab­cd", new sbyte[] { 2, 2, 2, 2, 2 })]
+    [Arguments("ab\u202C", new sbyte[] { 2, 2, 1 })]
+    [Arguments("ab\u202A\tcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab\u202C\u202A \tcd", new sbyte[] { 2, 2, 1, 1, 1, 1, 2, 2 })]
+    [Arguments("ab\u202Ccd", new sbyte[] { 2, 2, 2, 2, 2 })]
     public async Task RuleL1ResetsABoundaryNeutralInTheSequenceItResets(string text, sbyte[] expected)
     {
         // UAX #9 section 5.2: rule L1 resets BN together with the whitespace before a separator or the end of the line.
         var data = new BidiData();
         data.Init(text, 1);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data);
+
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
+    [Test]
+    [Arguments("\u202Babc", new sbyte[] { 0, 2, 2, 2 })]
+    [Arguments("\u202Aabc", new sbyte[] { 0, 2, 2, 2 })]
+    [Arguments("\u202Eabc", new sbyte[] { 0, 1, 1, 1 })]
+    [Arguments("\u202Dabc", new sbyte[] { 0, 2, 2, 2 })]
+    public async Task ARemovedCharacterAtTheStartTakesTheParagraphLevel(string text, sbyte[] expected)
+    {
+        // UAX #9 section 5.2: a removed character takes the level of the character before it, or the paragraph level
+        // when no character is before it. Rules X2 to X5 give an embedding control the level that it pushes.
+        var data = new BidiData();
+        data.Init(text, 0);
         var bidi = new BidiAlgorithm();
 
         bidi.Process(data);
