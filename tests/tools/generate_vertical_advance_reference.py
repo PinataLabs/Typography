@@ -19,9 +19,15 @@ VerticalAdvance.ttf has a GPOS table:
   downward in font space, so -200 makes the advance shorter and -1300 takes it below zero. HarfBuzz does not apply `vkrn`
   unless the caller turns it on, so the vertical rows turn it on.
 
-VerticalAdvanceKern.ttf has no GPOS table and a `kern` table of two subtables: a horizontal one, in which A V is 50 units
+VerticalAdvanceKern.ttf has no GPOS table, a hyphen-minus U+002D 600 wide and 1000 high, and a `kern` table of two
+subtables: a horizontal one, in which A V is 50 units closer, U+4E00 U+002D 150 units closer and U+002D U+4E00 100 units
 closer, and a vertical one, in which U+4E00 U+4E8C is 200 units closer and U+4E8C U+4E09 300 units apart. HarfBuzz applies
-the horizontal subtable to horizontal text and neither subtable to vertical text.
+the horizontal subtable to horizontal text and neither subtable to vertical text, even with `vkrn` turned on.
+
+HarfBuzz has no vertical mixed text, in which U+002D is rotated and the ideographs are upright. The rows of U+002D on its
+own in horizontal text and of U+4E00 on its own in vertical text are what HarfBuzz gives each run of one orientation of
+U+4E00 U+002D U+4E00. No pair spans two runs, so the pairs that the row of that text in horizontal text kerns do not kern
+there.
 
 Each row has the font, the text, the direction and the features of the line, the glyphs in the order of the line as
 [glyph ID, x advance, y advance, x offset, y offset] in the coordinates of HarfBuzz, in which y goes up, and the advances
@@ -49,6 +55,7 @@ KERN_FONT = "VerticalAdvanceKern.ttf"
 IDEOGRAPHS = [0x4E00, 0x4E8C, 0x4E09]
 LETTERS = [0x41, 0x56]
 CODE_POINTS = LETTERS + IDEOGRAPHS
+HYPHEN = 0x2D
 WIDTHS = {**{c: 900 for c in IDEOGRAPHS}, **{c: 600 for c in LETTERS}}
 HEIGHT = 1000
 
@@ -69,6 +76,7 @@ feature vkrn {
 """
 
 ONE, TWO, THREE = "一", "二", "三"
+DASH = "-"
 
 # The font, the text, the direction and the features of each line.
 CASES = [
@@ -78,6 +86,10 @@ CASES = [
     (KERN_FONT, "AV", "ltr", {}),
     (KERN_FONT, "AV", "ttb", {}),
     (KERN_FONT, ONE + TWO + THREE, "ttb", {}),
+    (KERN_FONT, ONE + TWO + THREE, "ttb", {"vkrn": True}),
+    (KERN_FONT, ONE + DASH + ONE, "ltr", {}),
+    (KERN_FONT, DASH, "ltr", {}),
+    (KERN_FONT, ONE, "ttb", {}),
 ]
 
 
@@ -85,11 +97,11 @@ def name(code_point):
     return "u%04X" % code_point
 
 
-def build_font(file_name, features=None, kern_tables=()):
-    names = [".notdef"] + [name(c) for c in CODE_POINTS]
+def build_font(file_name, code_points, features=None, kern_tables=()):
+    names = [".notdef"] + [name(c) for c in code_points]
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(names)
-    builder.setupCharacterMap({c: name(c) for c in CODE_POINTS})
+    builder.setupCharacterMap({c: name(c) for c in code_points})
     builder.setupGlyf({n: Glyph() for n in names})
     builder.setupHorizontalMetrics({n: (WIDTHS.get(int(n[1:], 16), 600) if n != ".notdef" else 600, 0) for n in names})
     builder.setupHorizontalHeader(ascent=800, descent=-200)
@@ -131,10 +143,11 @@ def shape(font, text, direction, features):
 
 def main():
     fonts = {
-        GPOS_FONT: ref.load_font(build_font(GPOS_FONT, features=FEATURES)),
+        GPOS_FONT: ref.load_font(build_font(GPOS_FONT, CODE_POINTS, features=FEATURES)),
         KERN_FONT: ref.load_font(build_font(
             KERN_FONT,
-            kern_tables=[(1, {(0x41, 0x56): -50}), (0, {(0x4E00, 0x4E8C): -200, (0x4E8C, 0x4E09): 300})])),
+            CODE_POINTS + [HYPHEN],
+            kern_tables=[(1, {(0x41, 0x56): -50, (0x4E00, HYPHEN): -150, (HYPHEN, 0x4E00): -100}), (0, {(0x4E00, 0x4E8C): -200, (0x4E8C, 0x4E09): 300})])),
     }
     rows = []
     for font_name, text, direction, features in CASES:

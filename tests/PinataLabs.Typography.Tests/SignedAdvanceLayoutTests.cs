@@ -57,72 +57,62 @@ public class SignedAdvanceLayoutTests
 
     // VerticalAdvance.ttf kerns with GPOS: vkrn makes the advance of U+4E00 200 shorter, that of U+4E8C 300 longer and
     // that of U+4E09 -300, and it moves U+4E09 by 77 across the line, which HarfBuzz leaves out. kern moves A across the
-    // line by 50, which HarfBuzz leaves out too. VerticalAdvanceKern.ttf kerns A V with a horizontal kern subtable, which
-    // HarfBuzz applies to horizontal text only. Along the line each glyph advances as far as HarfBuzz moves the pen, and
-    // across it the glyph keeps the advance of the font.
+    // line by 50, which HarfBuzz leaves out too. VerticalAdvanceKern.ttf kerns A V and U+4E00 U+002D U+4E00 with a
+    // horizontal kern subtable and three ideographs with a vertical one. HarfBuzz applies the horizontal subtable to horizontal text only, and neither
+    // subtable to vertical text, even with vkrn turned on. Along the line each glyph advances as far as HarfBuzz moves the
+    // pen, and across it the glyph keeps the advance of the font.
     [Test]
-    [Arguments("VerticalAdvance.ttf", "AV", "ltr")]
-    [Arguments("VerticalAdvance.ttf", "一二三一", "ttb")]
-    [Arguments("VerticalAdvance.ttf", "三一", "ttb")]
-    [Arguments("VerticalAdvanceKern.ttf", "AV", "ltr")]
-    [Arguments("VerticalAdvanceKern.ttf", "AV", "ttb")]
-    public async Task GlyphsHaveTheAdvancesThatHarfBuzzGivesAlongAndAcrossTheLine(string fontName, string text, string direction)
+    [Arguments("VerticalAdvance.ttf", "AV", "ltr", "")]
+    [Arguments("VerticalAdvance.ttf", "一二三一", "ttb", "vkrn")]
+    [Arguments("VerticalAdvance.ttf", "三一", "ttb", "vkrn")]
+    [Arguments("VerticalAdvanceKern.ttf", "AV", "ltr", "")]
+    [Arguments("VerticalAdvanceKern.ttf", "AV", "ttb", "")]
+    [Arguments("VerticalAdvanceKern.ttf", "一二三", "ttb", "")]
+    [Arguments("VerticalAdvanceKern.ttf", "一二三", "ttb", "vkrn")]
+    [Arguments("VerticalAdvanceKern.ttf", "一-一", "ltr", "")]
+    public async Task GlyphsHaveTheAdvancesThatHarfBuzzGivesAlongAndAcrossTheLine(string fontName, string text, string direction, string features)
     {
-        JsonElement row = GetVerticalAdvanceRow(fontName, text, direction);
         bool vertical = direction == "ttb";
-        int[][] glyphs = ToArrays(row.GetProperty("glyphs"));
-        int[][] fontAdvances = ToArrays(row.GetProperty("advances"));
         List<string> expected = [];
         int pen = 0;
-        int start = 0;
-        int end = 0;
-        for (int i = 0; i < glyphs.Length; i++)
-        {
-            // HarfBuzz gives the advance of vertical text in font space, where y goes up and the line goes down.
-            int advance = vertical ? -glyphs[i][2] : glyphs[i][1];
-            int advanceWidth = vertical ? fontAdvances[i][0] : advance;
-            int advanceHeight = vertical ? advance : fontAdvances[i][1];
-            expected.Add($"{glyphs[i][0]} at {pen} advances {advanceWidth} {advanceHeight}");
-            start = Math.Min(start, pen);
-            pen += advance;
-            end = Math.Max(end, pen);
-        }
+        (int start, int end) = AddHarfBuzzGlyphs(expected, GetVerticalAdvanceRow(fontName, text, direction, features), vertical, ref pen);
 
         TextOptions options = new(GetFont(fontName))
         {
             Dpi = 1,
             LayoutMode = vertical ? LayoutMode.VerticalLeftRight : LayoutMode.HorizontalTopBottom,
-            FeatureTags = row.TryGetProperty("features", out JsonElement features)
-                ? features.EnumerateArray().Select(f => Tag.Parse(f.GetString()!)).ToArray()
-                : [],
+            FeatureTags = features.Length > 0 ? [Tag.Parse(features)] : [],
         };
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
-        string[] actual = layout
-            .Select(g => FormattableString.Invariant(
-                $"{g.Glyph.GlyphMetrics.GlyphId} at {MathF.Round(vertical ? g.PenLocation.Y - layout[0].PenLocation.Y : g.PenLocation.X - layout[0].PenLocation.X)} advances {g.Glyph.GlyphMetrics.AdvanceWidth} {g.Glyph.GlyphMetrics.AdvanceHeight}"))
-            .ToArray();
 
-        await Assert.That(string.Join(", ", actual)).IsEqualTo(string.Join(", ", expected));
+        await Assert.That(string.Join(", ", GetGlyphs(text, options, vertical))).IsEqualTo(string.Join(", ", expected));
         FontRectangle measured = TextMeasurer.MeasureAdvance(text, options);
         await Assert.That(MathF.Round(vertical ? measured.Height : measured.Width)).IsEqualTo(end - start);
     }
 
-    // The vertical kern subtable of VerticalAdvanceKern.ttf makes U+4E00 U+4E8C 200 units closer and U+4E8C U+4E09 300
-    // units apart. HarfBuzz applies no kern subtable to vertical text (the reference row of these glyphs has the advances
-    // of the font), so this is not checked against it. A positive value moves the glyphs apart, as the OpenType kern table
-    // says, which is the way a positive GPOS y advance moves them, and the kerning changes the space between the two
-    // glyphs of the pair, so the first one takes it.
+    // HarfBuzz has no vertical mixed text. There a run of rotated glyphs is laid out as HarfBuzz shapes it in horizontal
+    // text, and a run of upright glyphs as HarfBuzz shapes it in vertical text, each run on its own. The horizontal kern
+    // subtable of VerticalAdvanceKern.ttf kerns A V, which are rotated, and U+4E00 U+002D U+4E00, in which U+002D is
+    // rotated and the ideographs are upright, so only A V is a pair within one run.
     [Test]
-    public async Task AVerticalKernSubtableMovesTheGlyphsApartForAPositiveValue()
+    [Arguments(LayoutMode.VerticalMixedLeftRight, "AV:ltr")]
+    [Arguments(LayoutMode.VerticalMixedRightLeft, "AV:ltr")]
+    [Arguments(LayoutMode.VerticalMixedLeftRight, "一:ttb -:ltr 一:ttb")]
+    [Arguments(LayoutMode.VerticalMixedRightLeft, "一:ttb -:ltr 一:ttb")]
+    public async Task VerticalMixedTextKernsEachRunOfOneOrientationAsHarfBuzzDoes(LayoutMode layoutMode, string runs)
     {
-        TextOptions options = new(GetFont("VerticalAdvanceKern.ttf")) { Dpi = 1, LayoutMode = LayoutMode.VerticalLeftRight };
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout("一二三".AsSpan(), options);
-        string[] actual = layout
-            .Select(g => FormattableString.Invariant(
-                $"{MathF.Round(g.PenLocation.Y - layout[0].PenLocation.Y)} advances {g.Glyph.GlyphMetrics.AdvanceWidth} {g.Glyph.GlyphMetrics.AdvanceHeight}"))
-            .ToArray();
+        List<string> expected = [];
+        int pen = 0;
+        string text = string.Empty;
+        foreach (string[] run in runs.Split(' ').Select(r => r.Split(':')))
+        {
+            AddHarfBuzzGlyphs(expected, GetVerticalAdvanceRow("VerticalAdvanceKern.ttf", run[0], run[1], string.Empty), run[1] == "ttb", ref pen);
+            text += run[0];
+        }
 
-        await Assert.That(string.Join(", ", actual)).IsEqualTo("0 advances 900 800, 800 advances 900 1300, 2100 advances 900 1000");
+        TextOptions options = new(GetFont("VerticalAdvanceKern.ttf")) { Dpi = 1, LayoutMode = layoutMode };
+
+        await Assert.That(string.Join(", ", GetGlyphs(text, options, vertical: true))).IsEqualTo(string.Join(", ", expected));
+        await Assert.That(MathF.Round(TextMeasurer.MeasureAdvance(text, options).Height)).IsEqualTo(pen);
     }
 
     // A side bearing is the space between the ink and the end of the advance, so it follows the advance that positioning
@@ -154,13 +144,47 @@ public class SignedAdvanceLayoutTests
         await Assert.That(string.Join(", ", actual)).IsEqualTo(string.Join(", ", expected));
     }
 
-    private static JsonElement GetVerticalAdvanceRow(string fontName, string text, string direction)
+    // Adds each glyph of the row, at the place of the pen along the line and with its advances across and down it, and
+    // returns the start and the end of the space that the pen covers.
+    private static (int Start, int End) AddHarfBuzzGlyphs(List<string> expected, JsonElement row, bool vertical, ref int pen)
+    {
+        int[][] glyphs = ToArrays(row.GetProperty("glyphs"));
+        int[][] fontAdvances = ToArrays(row.GetProperty("advances"));
+        int start = pen;
+        int end = pen;
+        for (int i = 0; i < glyphs.Length; i++)
+        {
+            // HarfBuzz gives the advance of vertical text in font space, where y goes up and the line goes down.
+            int advance = vertical ? -glyphs[i][2] : glyphs[i][1];
+            int advanceWidth = vertical ? fontAdvances[i][0] : advance;
+            int advanceHeight = vertical ? advance : fontAdvances[i][1];
+            expected.Add($"{glyphs[i][0]} at {pen} advances {advanceWidth} {advanceHeight}");
+            start = Math.Min(start, pen);
+            pen += advance;
+            end = Math.Max(end, pen);
+        }
+
+        return (start, end);
+    }
+
+    private static string[] GetGlyphs(string text, TextOptions options, bool vertical)
+    {
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        return layout
+            .Select(g => FormattableString.Invariant(
+                $"{g.Glyph.GlyphMetrics.GlyphId} at {MathF.Round(vertical ? g.PenLocation.Y - layout[0].PenLocation.Y : g.PenLocation.X - layout[0].PenLocation.X)} advances {g.Glyph.GlyphMetrics.AdvanceWidth} {g.Glyph.GlyphMetrics.AdvanceHeight}"))
+            .ToArray();
+    }
+
+    // A row with no features has none, and the features of the others are one tag here.
+    private static JsonElement GetVerticalAdvanceRow(string fontName, string text, string direction, string features)
     {
         using JsonDocument document = JsonDocument.Parse(File.ReadAllText(TestFonts.GetPath("VerticalAdvance.harfbuzz.json")));
         return document.RootElement.GetProperty("rows").EnumerateArray().Single(r =>
             r.GetProperty("font").GetString() == fontName
             && r.GetProperty("text").GetString() == text
-            && r.GetProperty("direction").GetString() == direction).Clone();
+            && r.GetProperty("direction").GetString() == direction
+            && (r.TryGetProperty("features", out JsonElement f) ? string.Join(' ', f.EnumerateArray().Select(t => t.GetString())) : string.Empty) == features).Clone();
     }
 
     private static int[][] ToArrays(JsonElement rows)
