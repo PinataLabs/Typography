@@ -14,8 +14,8 @@ internal sealed class OS2Table : Table
     private readonly short familyClass;
     private readonly short heightX;
     private readonly string tag;
-    private readonly ushort codePageRange1;
-    private readonly ushort codePageRange2;
+    private readonly uint codePageRange1;
+    private readonly uint codePageRange2;
     private readonly uint unicodeRange1;
     private readonly uint unicodeRange2;
     private readonly uint unicodeRange3;
@@ -97,8 +97,8 @@ internal sealed class OS2Table : Table
 
     public OS2Table(
         OS2Table version0Table,
-        ushort codePageRange1,
-        ushort codePageRange2,
+        uint codePageRange1,
+        uint codePageRange2,
         short heightX,
         short capHeight,
         ushort defaultChar,
@@ -370,8 +370,8 @@ internal sealed class OS2Table : Table
         ushort breakChar = 0;
         ushort maxContext = 0;
 
-        ushort codePageRange1 = reader.ReadUInt16(); // Bits 0–31
-        ushort codePageRange2 = reader.ReadUInt16(); // Bits 32–63
+        uint codePageRange1 = reader.ReadUInt32(); // Bits 0–31
+        uint codePageRange2 = reader.ReadUInt32(); // Bits 32–63
 
         // fields exist only in > v1 https://docs.microsoft.com/en-us/typography/opentype/spec/os2
         if (version > 1)
