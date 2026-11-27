@@ -33,6 +33,14 @@ Unicode conformance suites to that version.
 
 ### Added
 
+- **`GlyphNameEncodings`, the PDF standard encodings in `PinataLabs.Typography.Unicode`.** `GetGlyphName(encoding,
+  code)` gives the glyph name that a character code selects in a `SimpleFontEncoding`: `Standard`, `WinAnsi`,
+  `MacRoman` and `MacExpert` of ISO 32000-1 Annex D, and the built-in encodings of `Symbol` and `ZapfDingbats`.
+  `TryGetCode(encoding, glyphName, out code)` is the other way, and gives the lowest code when more than one has the
+  name. The tables follow the notes of Annex D: in `WinAnsi` every unused code above 0x20 is `bullet` and 0xA0 and
+  0xAD are `space` and `hyphen`, and in `MacRoman` 0xCA is `space`. `MacRoman` also keeps the 15 symbols of Mac OS
+  Roman that Annex D leaves out, such as `notequal`, because PDF readers resolve them. Every name has text in
+  `AdobeGlyphList`. (#158)
 - **`AdobeGlyphList`, the Adobe Glyph List in `PinataLabs.Typography.Unicode`.** `TryGetUnicode(glyphName, out text)`
   maps a glyph name to text as the Adobe Glyph List Specification says: the part after the first period is dropped,
   the name is split at underscores into components, and each component is a name of the list (4,281 names, several of

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests.Unicode;
 
@@ -23,6 +24,50 @@ internal static class GlyphNameData
 
     /// <summary>Gets the entries of aglfn.txt, code point to name.</summary>
     public static Dictionary<int, string> Aglfn { get; } = ReadAglfn();
+
+    /// <summary>Reads the code to glyph name table of an encoding from its source file.</summary>
+    public static Dictionary<int, string> ReadEncoding(SimpleFontEncoding encoding)
+    {
+        Dictionary<int, string> table = [];
+        switch (encoding)
+        {
+            case SimpleFontEncoding.Standard:
+            case SimpleFontEncoding.Symbol:
+            case SimpleFontEncoding.ZapfDingbats:
+                string afm = encoding == SimpleFontEncoding.Standard ? "Times-Roman.afm" : encoding + ".afm";
+                foreach (string line in File.ReadLines(Path.Combine(Directory, afm)))
+                {
+                    // C 32 ; WX 250 ; N space ; B 0 0 0 0 ;
+                    string[] fields = line.Split(';');
+                    string[] code = fields[0].Split(' ');
+                    if (code[0] == "C" && int.Parse(code[1], CultureInfo.InvariantCulture) >= 0)
+                    {
+                        table.Add(int.Parse(code[1], CultureInfo.InvariantCulture), fields[2].Trim().Substring(2));
+                    }
+                }
+
+                break;
+            default:
+                bool inSection = false;
+                foreach (string line in File.ReadLines(Path.Combine(Directory, "pdf-latin-encodings.txt")))
+                {
+                    string content = line.Split('#')[0].Trim();
+                    if (content.StartsWith('['))
+                    {
+                        inSection = content == $"[{encoding}]";
+                    }
+                    else if (inSection && content.Length > 0)
+                    {
+                        string[] fields = content.Split(' ');
+                        table.Add(int.Parse(fields[0], CultureInfo.InvariantCulture), fields[1]);
+                    }
+                }
+
+                break;
+        }
+
+        return table;
+    }
 
     private static Dictionary<string, string> ReadList(string fileName)
     {

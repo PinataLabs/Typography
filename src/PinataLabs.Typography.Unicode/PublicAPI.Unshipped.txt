@@ -40,3 +40,13 @@ PinataLabs.Typography.Unicode.AdobeGlyphList
 static PinataLabs.Typography.Unicode.AdobeGlyphList.GetGlyphName(int codePoint) -> string!
 static PinataLabs.Typography.Unicode.AdobeGlyphList.TryGetUnicode(System.ReadOnlySpan<char> glyphName, out string! text) -> bool
 static PinataLabs.Typography.Unicode.AdobeGlyphList.TryGetZapfDingbatsUnicode(System.ReadOnlySpan<char> glyphName, out string! text) -> bool
+PinataLabs.Typography.Unicode.GlyphNameEncodings
+PinataLabs.Typography.Unicode.SimpleFontEncoding
+PinataLabs.Typography.Unicode.SimpleFontEncoding.MacExpert = 3 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
+PinataLabs.Typography.Unicode.SimpleFontEncoding.MacRoman = 2 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
+PinataLabs.Typography.Unicode.SimpleFontEncoding.Standard = 0 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
+PinataLabs.Typography.Unicode.SimpleFontEncoding.Symbol = 4 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
+PinataLabs.Typography.Unicode.SimpleFontEncoding.WinAnsi = 1 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
+PinataLabs.Typography.Unicode.SimpleFontEncoding.ZapfDingbats = 5 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
+static PinataLabs.Typography.Unicode.GlyphNameEncodings.GetGlyphName(PinataLabs.Typography.Unicode.SimpleFontEncoding encoding, byte code) -> string?
+static PinataLabs.Typography.Unicode.GlyphNameEncodings.TryGetCode(PinataLabs.Typography.Unicode.SimpleFontEncoding encoding, System.ReadOnlySpan<char> glyphName, out byte code) -> bool
