@@ -493,10 +493,8 @@ internal sealed class IndicShaper : DefaultShaper
             // For old-style Indic script tags, move the first post-base Halant after
             // last consonant.
             //
-            // Reports suggest that in some scripts Uniscribe does this only if there
-            // is *not* a Halant after last consonant already (eg. Kannada), while it
-            // does it unconditionally in other scripts (eg. Malayalam).  We don't
-            // currently know about other scripts, so we single out Malayalam for now.
+            // As in HarfBuzz, Kannada does this only if there is *not* a Halant after
+            // the last consonant already, and every other script does it unconditionally.
             //
             // Kannada test case:
             // U+0C9A,U+0CCD,U+0C9A,U+0CCD
@@ -508,7 +506,7 @@ internal sealed class IndicShaper : DefaultShaper
             // With lohit-ttf-20121122/Lohit-Malayalam.ttf
             if (this.isOldSpec)
             {
-                bool disallowDoubleHalants = this.ScriptClass != ScriptClass.Malayalam;
+                bool disallowDoubleHalants = this.ScriptClass == ScriptClass.Kannada;
                 for (int i = basePosition + 1; i < end; i++)
                 {
                     if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.H)

@@ -497,6 +497,9 @@ Unicode conformance suites to that version.
   without glyph classes and which a lookup that ignores marks skips, and before the Sinhala virama it sorts with the
   marks. A font without U+25CC gives `.notdef` in its place. The Khmer and Myanmar shapers of HarfBuzz insert no such
   circle, and neither do they here. (#113)
+- For an old-spec script tag such as `beng`, the Indic shaper moves the first virama after the base to after the
+  last consonant in every script but Kannada, as HarfBuzz 15.0.0 does. It moved it in Malayalam only, so in a syllable
+  that ends in a virama, such as ka, virama, ya, virama, the virama after ka stayed before ya. (#175)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
