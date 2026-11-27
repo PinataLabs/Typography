@@ -1,0 +1,5829 @@
+{
+ "fontTools": "4.69.1",
+ "faces": {
+  "AliceFrancesHMK-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1000,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -397,
+    -623,
+    1926,
+    1179
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Carter_One/CarterOne.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 2264,
+   "ascentSource": "HheaAscender",
+   "descent": -890,
+   "descentSource": "HheaDescender",
+   "capHeight": 1481,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 473,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -284,
+    -891,
+    3103,
+    2264
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 40,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "CentralBaselineTest.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1100,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 1100,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    100,
+    -200,
+    900,
+    1100
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ChainBacktrack.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ClustersBalinese.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ClustersDevanagari.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ClustersMalayalam.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ClustersMasaramGondi.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "DefaultIgnorables.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "DefaultIgnorablesNoSpace.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "DejaVuSans.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1901,
+   "ascentSource": "HheaAscender",
+   "descent": -483,
+   "descentSource": "HheaDescender",
+   "capHeight": 1493,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 1120,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -2090,
+    -948,
+    3673,
+    2524
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "DfltLangSysRecord.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Dubai-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1129,
+   "ascentSource": "HheaAscender",
+   "descent": -559,
+   "descentSource": "HheaDescender",
+   "capHeight": 648,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 438,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -650,
+    -507,
+    1330,
+    1097
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "EBGaramond-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1007,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -298,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 650,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 400,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -290,
+    -324,
+    2500,
+    985
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FDArrayTest257.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1160,
+   "ascentSource": "HheaAscender",
+   "descent": -320,
+   "descentSource": "HheaDescender",
+   "capHeight": 733,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 543,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    34,
+    -120,
+    966,
+    880
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Font-Version1.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1759,
+   "ascentSource": "HheaAscender",
+   "descent": -410,
+   "descentSource": "HheaDescender",
+   "capHeight": 1618,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 1544,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    -410,
+    2742,
+    1759
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 5,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/HeadFallback.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 700,
+   "ascentSource": "HeadYMax",
+   "descent": -150,
+   "descentSource": "HeadYMin",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": false,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/PanoseScript.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 104,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/PanoseSerif.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 690,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 480,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/SymbolScript.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": -12.5,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 77,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/TypoSerifClass.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 750,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -250,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 260,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": true,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/Win.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 900,
+   "ascentSource": "Os2WinAscent",
+   "descent": -300,
+   "descentSource": "Os2WinDescent",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 770,
+    "usage": "Restricted",
+    "noSubsetting": true,
+    "bitmapEmbeddingOnly": true
+   }
+  },
+  "FontPrograms/cff-cid-top-identity.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    400,
+    600
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-cid-upem2048.otf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    400,
+    600
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-encoding-format0.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    104,
+    200
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-encoding-format1.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    112,
+    200
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-expert.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    1750,
+    265
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-expertsubset.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    960,
+    186
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-isoadobe.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    490,
+    139
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-paint-outline.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    100,
+    0,
+    500,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-paint-stroked-real.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    100,
+    0,
+    500,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-paint-stroked.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    100,
+    0,
+    500,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-seac-missing.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    750,
+    930
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-seac.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    600,
+    920
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/cff-type2.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -90,
+    -180,
+    1189,
+    1443
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/tt-cmap.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1600,
+   "ascentSource": "HheaAscender",
+   "descent": -400,
+   "descentSource": "HheaDescender",
+   "capHeight": 1600,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    10,
+    0,
+    610,
+    500
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/tt-composite.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1600,
+   "ascentSource": "HheaAscender",
+   "descent": -400,
+   "descentSource": "HheaDescender",
+   "capHeight": 1600,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -760,
+    -162,
+    1250,
+    2380
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontPrograms/tt-names.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1600,
+   "ascentSource": "HheaAscender",
+   "descent": -400,
+   "descentSource": "HheaDescender",
+   "capHeight": 1600,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    10,
+    0,
+    570,
+    500
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 4,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FormalScript.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 764,
+   "ascentSource": "HheaAscender",
+   "descent": -336,
+   "descentSource": "HheaDescender",
+   "capHeight": 625,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 311,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -368,
+    -336,
+    1729,
+    764
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 40,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupOrder.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType1Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType1Format2.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType2Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType3Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType4Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType5Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType6Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType7Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType7Format2.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType7Format3.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType8Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType8Format2.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposLookupType8Format3.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GposTestFont.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1900,
+   "ascentSource": "HheaAscender",
+   "descent": -500,
+   "descentSource": "HheaDescender",
+   "capHeight": 1456,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1082,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -69,
+    -555,
+    2007,
+    2163
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubLookupOrder.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    630,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubLookupType5Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    331,
+    -88,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubLookupType5Format2.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    331,
+    -88,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubLookupType5Format3.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubLookupType6Format1.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubLookupType6Format2.ttf#0": {
+   "unitsPerEm": 1250,
+   "ascent": 2500,
+   "ascentSource": "Os2TypoAscender",
+   "descent": 0,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 2500,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 2500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    313,
+    -114,
+    1374,
+    699
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 35,
+   "embedding": {
+    "isStated": true,
+    "fsType": 12,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubTestFont1.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1900,
+   "ascentSource": "HheaAscender",
+   "descent": -500,
+   "descentSource": "HheaDescender",
+   "capHeight": 1456,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1082,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -69,
+    -555,
+    2007,
+    2163
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "GsubTestFont2.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1900,
+   "ascentSource": "HheaAscender",
+   "descent": -500,
+   "descentSource": "HheaDescender",
+   "capHeight": 1456,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1082,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -69,
+    -470,
+    1879,
+    1937
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "HebrewKernMark.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Helvetica.ttc#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1577,
+   "ascentSource": "HheaAscender",
+   "descent": -471,
+   "descentSource": "HheaDescender",
+   "capHeight": 1469,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1071,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1947,
+    -985,
+    2961,
+    2297
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Helvetica.ttc#1": {
+   "unitsPerEm": 2048,
+   "ascent": 1577,
+   "ascentSource": "HheaAscender",
+   "descent": -471,
+   "descentSource": "HheaDescender",
+   "capHeight": 1474,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1090,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -2084,
+    -985,
+    2942,
+    2374
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Helvetica.ttc#2": {
+   "unitsPerEm": 2048,
+   "ascent": 1577,
+   "ascentSource": "HheaAscender",
+   "descent": -471,
+   "descentSource": "HheaDescender",
+   "capHeight": 1469,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1071,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": -12.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1910,
+    -985,
+    3218,
+    2331
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Helvetica.ttc#3": {
+   "unitsPerEm": 2048,
+   "ascent": 1577,
+   "ascentSource": "HheaAscender",
+   "descent": -471,
+   "descentSource": "HheaDescender",
+   "capHeight": 1474,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1105,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": -12.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -2050,
+    -985,
+    3255,
+    2407
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Helvetica.ttc#4": {
+   "unitsPerEm": 1000,
+   "ascent": 770,
+   "ascentSource": "HheaAscender",
+   "descent": -230,
+   "descentSource": "HheaDescender",
+   "capHeight": 718,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 524,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -453,
+    -355,
+    1345,
+    1206
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Helvetica.ttc#5": {
+   "unitsPerEm": 1000,
+   "ascent": 770,
+   "ascentSource": "HheaAscender",
+   "descent": -230,
+   "descentSource": "HheaDescender",
+   "capHeight": 718,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 524,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -468,
+    -379,
+    1493,
+    1206
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Issues/StyleScript.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1000,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -520,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 434,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -931,
+    -799,
+    4464,
+    1113
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Joiners.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "LookupFlags.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Black.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    630,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Bold.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    610,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-BoldItalic.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": -12.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    660,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Condensed.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    700,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-CondensedBold.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    710,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Expanded.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    720,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-ExtraBold.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    620,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-ExtraCondensed.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    690,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-ExtraExpanded.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    730,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-ExtraLight.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    560,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Italic.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": -12.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    650,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Light.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    570,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-LightItalic.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": -12.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    640,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Medium.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    590,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Oblique.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": -10.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    670,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    580,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-SemiBold.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    600,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-SteepOblique.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": -20.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    680,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Matching/MatchingSans-Thin.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "MongolianLookups.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NoOs2-BoldCondensedItalic.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    650,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 96,
+   "embedding": {
+    "isStated": false,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NoOs2-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    750,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": false,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Normalization.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationArabicFallback.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationArabicFallbackInit.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationArabicFallbackRlig.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationArabicFallbackWithoutMedial.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationArabicForms.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationBase.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationBaseKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationDevanagari.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationDivesAkuru.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationDivesAkuruWithoutAa.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationDivesAkuruWithoutE.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHangul.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHangulGsub.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHangulJamo.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHangulLead.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrew.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrewGposDflt.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrewGposHebr.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrewGposLatn.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrewKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrewMark.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationHebrewRequiredMark.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationLigature.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    1000,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationLigatureGdef.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    1000,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationLigatureGdefBase.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    1000,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationMarks.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationMarksBothKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationMarksGdef.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationMarksGdefKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationMarksKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationMarksLegacyKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 700,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationParts.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationScan.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationScripts.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationScriptsKern.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationSpace.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationSpaceBare.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationSpaceLigature.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationSpaceSingle.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationThai.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NormalizationThaiWithoutParts.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Noto/NotoSansOgham-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1069,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -293,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 695,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 536,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -493,
+    -241,
+    960,
+    995
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Noto/NotoSansRunic-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1069,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -293,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 714,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 536,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -493,
+    -241,
+    960,
+    995
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansBalinese-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 2189,
+   "ascentSource": "HheaAscender",
+   "descent": -1486,
+   "descentSource": "HheaDescender",
+   "capHeight": 1274,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1274,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -2850,
+    -1486,
+    3575,
+    2189
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansBengali-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1878,
+   "ascentSource": "HheaAscender",
+   "descent": -836,
+   "descentSource": "HheaDescender",
+   "capHeight": 1274,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1274,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1433,
+    -806,
+    3124,
+    1878
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansDevanagari-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1836,
+   "ascentSource": "HheaAscender",
+   "descent": -836,
+   "descentSource": "HheaDescender",
+   "capHeight": 1274,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1274,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1242,
+    -806,
+    2882,
+    2759
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansGujarati-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1836,
+   "ascentSource": "HheaAscender",
+   "descent": -836,
+   "descentSource": "HheaDescender",
+   "capHeight": 1213,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1213,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1270,
+    -806,
+    2670,
+    1836
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansGurmukhi-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1836,
+   "ascentSource": "HheaAscender",
+   "descent": -836,
+   "descentSource": "HheaDescender",
+   "capHeight": 1274,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1274,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1083,
+    -806,
+    3137,
+    1836
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansKR-Regular.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1160,
+   "ascentSource": "HheaAscender",
+   "descent": -288,
+   "descentSource": "HheaDescender",
+   "capHeight": 733,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 543,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1002,
+    -1048,
+    2928,
+    1808
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansKannada-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1656,
+   "ascentSource": "HheaAscender",
+   "descent": -1105,
+   "descentSource": "HheaDescender",
+   "capHeight": 1414,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1130,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -942,
+    -1087,
+    3487,
+    1656
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansKhmer-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1907,
+   "ascentSource": "HheaAscender",
+   "descent": -800,
+   "descentSource": "HheaDescender",
+   "capHeight": 1462,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1098,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -2338,
+    -800,
+    4100,
+    2370
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansMalayalam-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1782,
+   "ascentSource": "HheaAscender",
+   "descent": -784,
+   "descentSource": "HheaDescender",
+   "capHeight": 1463,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1134,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1655,
+    -784,
+    4778,
+    1727
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansMyanmar/NotoSansMyanmar-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1324,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -860,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 714,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 536,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -861,
+    -690,
+    2385,
+    1252
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansOriya-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1878,
+   "ascentSource": "HheaAscender",
+   "descent": -990,
+   "descentSource": "HheaDescender",
+   "capHeight": 1346,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1346,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1409,
+    -979,
+    2030,
+    1878
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansSC-Thin.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 806,
+   "ascentSource": "HheaAscender",
+   "descent": -256,
+   "descentSource": "HheaDescender",
+   "capHeight": 806,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    33,
+    -256,
+    951,
+    806
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansTamil-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1782,
+   "ascentSource": "HheaAscender",
+   "descent": -758,
+   "descentSource": "HheaDescender",
+   "capHeight": 1134,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1134,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -882,
+    -658,
+    4481,
+    1726
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSansTelugu-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1780,
+   "ascentSource": "HheaAscender",
+   "descent": -989,
+   "descentSource": "HheaDescender",
+   "capHeight": 1269,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1023,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -2633,
+    -959,
+    3583,
+    1780
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "NotoSerifKannada-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1953,
+   "ascentSource": "HheaAscender",
+   "descent": -1468,
+   "descentSource": "HheaDescender",
+   "capHeight": 1414,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1130,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1444,
+    -1455,
+    3175,
+    1898
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "OpenSans-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 2189,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -600,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 1462,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1096,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1124,
+    -557,
+    2460,
+    2146
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "PMINGLIU.ttf#0": {
+   "unitsPerEm": 1024,
+   "ascent": 820,
+   "ascentSource": "HheaAscender",
+   "descent": -204,
+   "descentSource": "HheaDescender",
+   "capHeight": 820,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 820,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    -204,
+    1024,
+    820
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "RequiredFeature.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Roboto-Regular.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1900,
+   "ascentSource": "HheaAscender",
+   "descent": -500,
+   "descentSource": "HheaDescender",
+   "capHeight": 1456,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1082,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1509,
+    -555,
+    2352,
+    2163
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Sample.ttc#0": {
+   "unitsPerEm": 1024,
+   "ascent": 860,
+   "ascentSource": "HheaAscender",
+   "descent": -276,
+   "descentSource": "HheaDescender",
+   "capHeight": 860,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 573,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    51,
+    532,
+    686
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Sample.ttc#1": {
+   "unitsPerEm": 2048,
+   "ascent": 2189,
+   "ascentSource": "HheaAscender",
+   "descent": -600,
+   "descentSource": "HheaDescender",
+   "capHeight": 1462,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1096,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1126,
+    -555,
+    2466,
+    2146
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ScriptFallbackDFLT.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ScriptFallbackLatn.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ScriptFallbackLowercaseDflt.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ScriptFallbackNone.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ScriptTags.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ScriptTagsKannadaVersion3.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1656,
+   "ascentSource": "HheaAscender",
+   "descent": -1105,
+   "descentSource": "HheaDescender",
+   "capHeight": 1414,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1130,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -942,
+    -1087,
+    3487,
+    1656
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Segoeui.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 2210,
+   "ascentSource": "HheaAscender",
+   "descent": -514,
+   "descentSource": "HheaDescender",
+   "capHeight": 1434,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1024,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1173,
+    -842,
+    4094,
+    2659
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceDFLT.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceLatn.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceLowercaseDflt.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceNone.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoicePositioning.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceTag1.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceTag2.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShaperChoiceTag3.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -250,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ShortMetrics.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "SixLaborsSampleAB.ttf#0": {
+   "unitsPerEm": 1024,
+   "ascent": 860,
+   "ascentSource": "HheaAscender",
+   "descent": -276,
+   "descentSource": "HheaDescender",
+   "capHeight": 860,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 573,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    51,
+    532,
+    686
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "SourceSans3/SourceSans3VF-Upright.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1000,
+   "ascentSource": "HheaAscender",
+   "descent": -326,
+   "descentSource": "HheaDescender",
+   "capHeight": 660,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 478,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -590,
+    -288,
+    2160,
+    934
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "SourceSansPro-Regular.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 984,
+   "ascentSource": "HheaAscender",
+   "descent": -273,
+   "descentSource": "HheaDescender",
+   "capHeight": 660,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 480,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -454,
+    -293,
+    2159,
+    968
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Sumana-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1922,
+   "ascentSource": "HheaAscender",
+   "descent": -1005,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -463,
+    -493,
+    2088,
+    961
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Sunflower-Medium.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 782,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -218,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 680,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -41,
+    -232,
+    939,
+    805
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "SyllablesBalinese.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "SyllablesInvalid.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Teko/Teko-Variable.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 958,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -475,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 622,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 485,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -353,
+    -373,
+    1523,
+    833
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "TestGSUBThree.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 1000,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    30,
+    -28,
+    800,
+    760
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "TestShapeEthi.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 2189,
+   "ascentSource": "HheaAscender",
+   "descent": -600,
+   "descentSource": "HheaDescender",
+   "capHeight": 2189,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -592,
+    -164,
+    1368,
+    1935
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ThaiPua.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ThaiPuaGsub.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "ThaiPuaMac.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "TimesNewRoman.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1825,
+   "ascentSource": "HheaAscender",
+   "descent": -443,
+   "descentSource": "HheaDescender",
+   "capHeight": 1356,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 916,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -1164,
+    -628,
+    4190,
+    2129
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Twemoji Mozilla.ttf#0": {
+   "unitsPerEm": 512,
+   "ascent": 448,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -64,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 448,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -27,
+    -91,
+    541,
+    477
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 33,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "UniversalForms.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "UniversalShaperJoining.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/FeatureVariations.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/GposAnchorVariations.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/HintedVariable.ttf#0": {
+   "unitsPerEm": 1024,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 640,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    64,
+    0,
+    896,
+    704
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/HintedVariableMetricsTables.ttf#0": {
+   "unitsPerEm": 1024,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 640,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    64,
+    0,
+    896,
+    704
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationAxes.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationCff2Vertical.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationCff2VerticalTsb.otf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    450,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationMetrics.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -250,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    460,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationMetricsGvar.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -250,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    460,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationMetricsTypo.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 780,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -230,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 700,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 500,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    0,
+    460,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Variations/VariationSlant.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 800,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    0,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "Wendy_One/WendyOne-Regular.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 819,
+   "ascentSource": "HheaAscender",
+   "descent": -236,
+   "descentSource": "HheaDescender",
+   "capHeight": 606,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 474,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -30,
+    -236,
+    1054,
+    819
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "kaiu.ttf#0": {
+   "unitsPerEm": 1024,
+   "ascent": 820,
+   "ascentSource": "HheaAscender",
+   "descent": -204,
+   "descentSource": "HheaDescender",
+   "capHeight": 716,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 468,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    0,
+    -204,
+    1024,
+    820
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 41,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "me_quran_volt_newmet.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 3080,
+   "ascentSource": "HheaAscender",
+   "descent": -1400,
+   "descentSource": "HheaDescender",
+   "capHeight": 3080,
+   "capHeightSource": "FallbackAscent",
+   "xHeight": 0,
+   "xHeightSource": "None",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -335,
+    -1400,
+    3501,
+    3080
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "seguiemj-win11.ttf#0": {
+   "unitsPerEm": 2048,
+   "ascent": 1491,
+   "ascentSource": "HheaAscender",
+   "descent": -431,
+   "descentSource": "HheaDescender",
+   "capHeight": 1434,
+   "capHeightSource": "Os2CapHeight",
+   "xHeight": 1024,
+   "xHeightSource": "Os2XHeight",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -717,
+    -501,
+    2564,
+    2300
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 8,
+    "usage": "Editable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "whitney-book.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 939,
+   "ascentSource": "Os2TypoAscender",
+   "descent": -200,
+   "descentSource": "Os2TypoDescender",
+   "capHeight": 690,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 481,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    -76,
+    -200,
+    980,
+    939
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 0,
+    "usage": "Installable",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  }
+ }
+}

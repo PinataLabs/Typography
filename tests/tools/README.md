@@ -957,3 +957,25 @@ python tests/tools/generate_missing_os2_fonts.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Font descriptor reference
+
+`generate_font_descriptor_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/FontDescriptor.fonttools.json`,
+the fontTools reference for `FontMetrics.DescriptorMetrics` and `FontMetrics.EmbeddingPermissions` (issue #157).
+For every face of every `.ttf`, `.otf` and `.ttc` file under `Fonts` that has outlines, it reads the tables with fontTools
+and applies the precedence of `docs/specs/003-font-descriptor.md`. The reference holds the ascent, descent, cap height,
+x-height, italic angle, bounding box and PDF flags, each with the name of the table field that gave it, and the `fsType`
+permissions.
+
+The script also builds six fonts in `Fonts/FontDescriptor` for the cases that the other faces lack: `Win.ttf` (win
+metrics, and an `fsType` that restricts embedding, forbids subsetting and allows bitmaps only), `HeadFallback.ttf`
+(no `OS/2` table and an empty `hhea`), `SymbolScript.ttf` (a (3, 0) symbol `cmap`), `TypoSerifClass.ttf`,
+`PanoseSerif.ttf` and `PanoseScript.ttf`. `FontDescriptorMetricsReferenceTests` compares every value.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_font_descriptor_reference.py
+```
+
+The output is deterministic for one fontTools version. The reference records the version that wrote it.
