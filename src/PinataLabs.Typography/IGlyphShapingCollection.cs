@@ -35,6 +35,13 @@ internal interface IGlyphShapingCollection
     int RunEnd { get; }
 
     /// <summary>
+    /// Gets or sets how many nested lookups of context lookups are being applied, one inside the other. HarfBuzz keeps
+    /// the same count and applies no nested lookup past <see cref="AdvancedTypographicUtils.MaxNestingLevel"/>, so a
+    /// font whose lookups name themselves does not recurse without end.
+    /// </summary>
+    int NestingLevel { get; set; }
+
+    /// <summary>
     /// Gets the glyph shaping data at the specified index.
     /// </summary>
     /// <param name="index">The zero-based index of the elements to get.</param>

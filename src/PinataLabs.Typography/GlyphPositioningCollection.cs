@@ -47,6 +47,9 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public int RunEnd => this.glyphs.Count - this.glyphsAfterRun;
 
     /// <inheritdoc />
+    public int NestingLevel { get; set; }
+
+    /// <inheritdoc />
     public GlyphShapingData this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

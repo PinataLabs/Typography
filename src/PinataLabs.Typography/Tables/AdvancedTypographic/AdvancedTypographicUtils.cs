@@ -16,6 +16,9 @@ internal static class AdvancedTypographicUtils
     // by maliciously crafted fonts.
     // Based on HarfBuzz hb-buffer.hh
     public const int MaxContextLength = 64;
+
+    // HB_MAX_NESTING_LEVEL of hb-limits.hh: how deep the nested lookups of context lookups apply.
+    public const int MaxNestingLevel = 64;
     private const int MaxLengthFactor = 64;
     private const int MaxLengthMinimum = 16384;
     private const int MaxOperationsFactor = 1024;
@@ -61,7 +64,7 @@ internal static class AdvancedTypographicUtils
     /// <summary>
     /// Applies the nested lookups of a context rule at the input glyphs that it matched, as HarfBuzz does in apply_lookup.
     /// A record whose sequence index is past the input, or past the run, is skipped. A nested lookup that adds or removes
-    /// glyphs moves the input glyphs after it.
+    /// glyphs moves the input glyphs after it. As in HarfBuzz, no record applies past <see cref="MaxNestingLevel"/>.
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <param name="table">The GSUB table.</param>
@@ -79,6 +82,12 @@ internal static class AdvancedTypographicUtils
         Span<int> positions,
         int count)
     {
+        if (collection.NestingLevel == MaxNestingLevel)
+        {
+            return;
+        }
+
+        collection.NestingLevel++;
         int end = positions[count - 1] + 1;
         foreach (SequenceLookupRecord lookupRecord in records)
         {
@@ -141,11 +150,14 @@ internal static class AdvancedTypographicUtils
                 positions[next] += delta;
             }
         }
+
+        collection.NestingLevel--;
     }
 
     /// <summary>
     /// Applies the nested lookups of a context rule at the input glyphs that it matched, as HarfBuzz does. A record
-    /// whose sequence index is past the input is skipped. Positioning neither adds nor removes glyphs.
+    /// whose sequence index is past the input is skipped. Positioning neither adds nor removes glyphs. As in HarfBuzz,
+    /// no record applies past <see cref="MaxNestingLevel"/>.
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <param name="table">The GPOS table.</param>
@@ -163,6 +175,12 @@ internal static class AdvancedTypographicUtils
         ReadOnlySpan<int> positions,
         int count)
     {
+        if (collection.NestingLevel == MaxNestingLevel)
+        {
+            return;
+        }
+
+        collection.NestingLevel++;
         foreach (SequenceLookupRecord lookupRecord in records)
         {
             if (lookupRecord.SequenceIndex >= count)
@@ -174,6 +192,8 @@ internal static class AdvancedTypographicUtils
             LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
             lookup.TryUpdatePosition(fontMetrics, table, collection, features, position, collection.RunEnd - position);
         }
+
+        collection.NestingLevel--;
     }
 
     /// <summary>
