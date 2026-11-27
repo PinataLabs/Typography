@@ -120,7 +120,7 @@ internal partial class StreamFontMetrics
         HeadTable head = reader.GetTable<HeadTable>();
         HorizontalHeadTable hhea = reader.GetTable<HorizontalHeadTable>();
         MaximumProfileTable maxp = reader.GetTable<MaximumProfileTable>();
-        OS2Table os2 = reader.GetTable<OS2Table>();
+        OS2Table? os2 = reader.TryGetTable<OS2Table>();
         HorizontalMetricsTable htmx = reader.GetTable<HorizontalMetricsTable>();
         CMapTable cmap = reader.GetTable<CMapTable>();
         FpgmTable? fpgm = reader.TryGetTable<FpgmTable>();

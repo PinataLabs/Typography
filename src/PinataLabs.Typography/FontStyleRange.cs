@@ -210,9 +210,19 @@ public sealed class FontStyleRange
         }
         else if (head != null)
         {
+            // With no OS/2 table, HarfBuzz hb_style_get_value takes the weight and the width from macStyle too.
             if (head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Bold))
             {
                 weight = FontWeight.Bold;
+            }
+
+            if (head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Condensed))
+            {
+                width = FontWidth.Condensed;
+            }
+            else if (head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Extended))
+            {
+                width = FontWidth.Expanded;
             }
 
             if (head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Italic))

@@ -935,3 +935,25 @@ python tests/tools/generate_short_metrics_font.py
 ```
 
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
+
+## Fonts with no OS/2 table
+
+`generate_missing_os2_fonts.py` builds two fonts with no `OS/2` table for issue #148, as AppleGothic and AppleMyungjo
+on macOS have none. Both are in the family "NoOs2" in `tests/PinataLabs.Typography.Tests/Fonts`:
+
+- `NoOs2-Regular.ttf` has TrueType outlines and `head.macStyle` 0.
+- `NoOs2-BoldCondensedItalic.otf` has CFF outlines and `head.macStyle` Bold, Italic and Condensed.
+
+The script writes what HarfBuzz gives for each font to `NoOs2.harfbuzz.json`: the weight, width and italic values of
+`hb_style_get_value`, the metrics of `hb_ot_metrics_get_position_with_fallback`, and the glyphs and advance of each
+shaped text. `MissingOs2TableTests` checks that each font loads, matches its style, has the same metrics and lays out
+the texts as HarfBuzz shapes them.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz 0.57.0 or later, and run this
+from the repository root:
+
+```
+python tests/tools/generate_missing_os2_fonts.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

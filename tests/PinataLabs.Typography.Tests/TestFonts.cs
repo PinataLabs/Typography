@@ -48,6 +48,12 @@ public static class TestFonts
 
     public static string ShortMetricsFontToolsReference => GetFullPath("ShortMetrics.fonttools.json");
 
+    // Built by tests/tools/generate_missing_os2_fonts.py, which also writes the HarfBuzz reference.
+    // The face is the file name without "NoOs2-", such as "Regular.ttf".
+    public static string NoOs2File(string face) => GetFullPath($"NoOs2-{face}");
+
+    public static string NoOs2HarfBuzzReference => GetFullPath("NoOs2.harfbuzz.json");
+
     // Built by tests/tools/generate_gpos_lookup_order_font.py, which also writes the HarfBuzz reference.
     public static string GposLookupOrderFile => GetFullPath("GposLookupOrder.ttf");
 

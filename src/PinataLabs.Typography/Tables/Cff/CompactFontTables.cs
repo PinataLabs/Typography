@@ -21,7 +21,7 @@ internal sealed class CompactFontTables : IFontTables
         HorizontalMetricsTable htmx,
         MaximumProfileTable maxp,
         NameTable name,
-        OS2Table os2,
+        OS2Table? os2,
         PostTable post,
         ICffTable cff)
     {
@@ -48,7 +48,7 @@ internal sealed class CompactFontTables : IFontTables
 
     public NameTable Name { get; set; }
 
-    public OS2Table Os2 { get; set; }
+    public OS2Table? Os2 { get; set; }
 
     public PostTable Post { get; set; }
 

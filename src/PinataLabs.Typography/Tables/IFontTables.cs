@@ -51,7 +51,7 @@ internal interface IFontTables
 
     NameTable Name { get; set; }
 
-    OS2Table Os2 { get; set; }
+    OS2Table? Os2 { get; set; }
 
     PostTable Post { get; set; }
 

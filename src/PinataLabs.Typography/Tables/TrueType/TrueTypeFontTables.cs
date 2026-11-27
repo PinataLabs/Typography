@@ -23,7 +23,7 @@ internal sealed class TrueTypeFontTables : IFontTables
         HorizontalMetricsTable htmx,
         MaximumProfileTable maxp,
         NameTable name,
-        OS2Table os2,
+        OS2Table? os2,
         PostTable post,
         GlyphTable glyph)
     {
@@ -50,7 +50,7 @@ internal sealed class TrueTypeFontTables : IFontTables
 
     public NameTable Name { get; set; }
 
-    public OS2Table Os2 { get; set; }
+    public OS2Table? Os2 { get; set; }
 
     public PostTable Post { get; set; }
 
