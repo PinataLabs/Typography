@@ -507,10 +507,11 @@ Unicode conformance suites to that version.
   does: the glyphs of nonspacing marks that are not default ignorable. They took any mark, so a lookup that ignores
   marks skipped a spacing mark such as U+1D165 and the combining grapheme joiner U+034F, and formed the ligature of b
   and b in b, U+1D165, b. (#113)
-- In a font without glyph classes, a ligature of components that are not all marks is a ligature glyph, as in
-  HarfBuzz 15.0.0, even when its first component is a nonspacing mark. It was a mark, so the ligature of an acute and a
-  lost its advance and no mark attached to it. A glyph of more than one character that is not such a ligature, such
-  as a composed character, is a base glyph for `IgnoreLigatures`, as in HarfBuzz. (#113)
+- In a font without glyph classes, a ligature of components that are not all marks is a ligature glyph, as in HarfBuzz
+  15.0.0, even when its first component is a nonspacing mark. It was a mark, so the ligature of an acute and a lost its
+  advance and no mark attached to it. In a font without GPOS mark lookups, with or without glyph classes, fallback mark
+  positioning places the marks after such a ligature on it. A glyph of more than one character that is not such a
+  ligature, such as a composed character, is a base glyph for `IgnoreLigatures`, as in HarfBuzz. (#113)
 - A lookup skips the combining grapheme joiner U+034F as any other default-ignorable character when the joiner keeps
   no mark from moving past another, as HarfBuzz 15.0.0 does. A joiner between an acute and a letter blocked the
   ligature of the two. GPOS alone skips a joiner that keeps a mark in place. (#113)
