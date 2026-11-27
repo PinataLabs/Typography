@@ -1651,8 +1651,9 @@ public class TextLayoutTests
     }
 
     // A joiner that starts a wrapped line has no character before it on the line. TextLayout draws it in the run of the
-    // character after it, as BidiParagraph.GetVisualRuns does, not at the level it takes from the space that ends the
-    // line before.
+    // character after it, as BidiParagraph.GetVisualRuns does, not at the level it takes from the space before it. The
+    // line is just wider than the text after the space, and the space overflows it. A wrapped line does not start with a
+    // space, so the next line starts with the joiner.
     [Test]
     [Arguments("\u0627\u0628 \u200Dcd", TextDirection.RightToLeft)]
     [Arguments("ab \u200D\u0627\u0628", TextDirection.LeftToRight)]
@@ -1661,7 +1662,7 @@ public class TextLayoutTests
     {
         Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
         TextOptions options = new(font) { TextDirection = direction };
-        options.WrappingLength = TextMeasurer.MeasureAdvance(text.AsSpan(0, 3), options).Width + 1;
+        options.WrappingLength = TextMeasurer.MeasureAdvance(text.AsSpan(3), options).Width + 1;
 
         GlyphLayout[][] lines = GetLines(text, options);
 
@@ -1756,6 +1757,20 @@ public class TextLayoutTests
         options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
 
         await Assert.That(Visual(GetLines(text, options))).IsEqualTo("aaaa|b");
+    }
+
+    // U+FE0F and U+0301 extend the grapheme of the space before them, and the line break opportunity after the space is
+    // inside that grapheme. A line wraps only between graphemes, so the line wraps after the grapheme, before the b.
+    [Test]
+    [Arguments("a \uFE0F\u0301bbbb")]
+    [Arguments("a \u0301bbbb")]
+    public async Task BreakInsideAGrapheme_IsTakenAtTheNextGrapheme(string text)
+    {
+        Font font = CreateFont(text, 12);
+        TextOptions options = new(font);
+        options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
+
+        await Assert.That(Visual(GetLines(text, options))).IsEqualTo("a \u0301|bbbb");
     }
 
     // The font ligates the line feed and the b after it, so the b, at the mandatory break after the line feed, has no
