@@ -494,7 +494,13 @@ Unicode conformance suites to that version.
   substitution of the acute between a and b put it on the last component of their ligature, and a multiple substitution
   of the grave put the first of its glyphs there, where HarfBuzz puts them on the first. (#186)
 - In a font without glyph classes, the glyphs that a multiple substitution makes of a ligature are bases, as in
-  HarfBuzz 15.0.0, so a lookup that ignores ligatures applies to them. They kept the ligature class. (#186)
+  HarfBuzz 15.0.0, so a lookup that ignores ligatures applies to them. They kept the ligature class. In any font they
+  keep the general category Lo of a ligature of components that are not all marks, so fallback mark positioning still
+  takes them for no marks. (#186)
+- A multiple substitution whose sequence has one glyph is a single substitution, as in HarfBuzz 15.0.0: the glyph keeps
+  its ligature id, its component and its class, and is not decomposed. In `LigatureProperties.ttf`, a, circumflex, b
+  put the circumflex that such a substitution changed on the last component of the ligature of a and b, where HarfBuzz
+  puts it on the first. (#191)
 - The Indic shaper takes a ligature that did not multiply for a reph or a pre-base form, as HarfBuzz 15.0.0 does. It
   took a ligature of a glyph of a one-glyph sequence substitution for one that multiplied, so such a reph stayed first.
   It also finds the base again after a pre-base-reordering consonant whose `pref` ligature did not form, as HarfBuzz
@@ -503,7 +509,9 @@ Unicode conformance suites to that version.
 - Fallback mark placement goes on past a default-ignorable glyph and takes no advance from it, as HarfBuzz 15.0.0 does.
   In `TextShaperHangulColr.ttf`, U+AC00 U+FE00 U+302E put the tone mark and its dotted circle at x offset -900,
   where HarfBuzz gives -300, because the 600 wide `.notdef` of the hidden U+FE00 moved them back. U+034F did the same,
-  and after a ZWJ the marks went on the ZWJ, not on the syllable. (#184)
+  and after a ZWJ the marks went on the ZWJ, not on the syllable. A default-ignorable glyph that a fallback font draws
+  stops no placement either: with `MarksWithoutGlyphClassesFallback.ttf`, which lacks U+034F, and the fallback
+  `MarksWithoutGlyphClasses.ttf`, a, grave, U+034F, acute left both accents unplaced. (#184)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the
@@ -513,7 +521,19 @@ Unicode conformance suites to that version.
   only one of the fonts makes a pre-base form of virama and ra. Each glyph now keeps the offset of its character when
   it moves, and a fallback font replaces a glyph with its own glyphs of the same character, and an inserted dotted
   circle with its own circle. A run of marks that holds a mark the font lacks is now sorted as HarfBuzz sorts it,
-  where it kept the order of the text. (#183)
+  where it kept the order of the text. When the fallback font does not draw the missing parts of a character alone, as
+  when it keeps whole a vowel sign that the font split, or makes one glyph of a sign and of the dotted circle that the
+  font drew, it draws the whole character in the place of the last missing part, and the parts that the font drew go.
+  With `FontFallbackParts.ttf` and the fallback `FontFallbackPartsWhole.ttf`, U+0941 drew two dotted circles. (#183)
+- A fallback font makes a ligature only of characters that no earlier font draws, as it composes only those. When the
+  font of the text drew f and lacked i, the ligature of f and i in the fallback font took the place of f and i was lost,
+  and when the font lacked g and drew h, the ligature of g and h was drawn next to h. In `SyllablesInvalid.ttf` with
+  the fallback `NotoSansDevanagari-Regular.ttf`, ra, virama, ka, i now gives i the form that the fallback font gives it
+  without a reph, as the font draws ra and virama. (#191)
+- The Indic and Khmer shapers keep a two- or three-part vowel sign whole when the font has it and lacks one of its
+  parts, as HarfBuzz 15.0.0 does. They split it with a `.notdef` for each missing part, so a font that has Bengali o and
+  lacks aa gave e, ka, `.notdef`, where HarfBuzz gives ka, o. A sign that the font lacks is still split, where HarfBuzz
+  keeps one `.notdef`, so that a fallback font draws the part in front of the base there. (#183)
 - The dotted circle of an Indic broken cluster appears once with a fallback font. A sign that the font lacks took
   every glyph that the fallback font gave at its place, the circle of the fallback font among them, so U+0946 in
   `IndicReordering.ttf` with the fallback `SyllablesInvalid.ttf` gave two circles. (#178)
