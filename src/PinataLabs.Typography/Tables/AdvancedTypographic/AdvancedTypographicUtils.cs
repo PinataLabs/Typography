@@ -270,24 +270,26 @@ internal static class AdvancedTypographicUtils
         }
         else
         {
-            isMark = GetSynthesizedGlyphClass(shapingData) == GlyphClassDef.MarkGlyph;
-            isBase = !isMark;
-            isLigature = shapingData.CodePointCount > 1;
+            GlyphClassDef synthesized = GetSynthesizedGlyphClass(shapingData);
+            isMark = synthesized == GlyphClassDef.MarkGlyph;
+            isBase = synthesized == GlyphClassDef.BaseGlyph;
+            isLigature = synthesized == GlyphClassDef.LigatureGlyph;
         }
 
         return new GlyphShapingClass(isMark, isBase, isLigature, markAttachmentType);
     }
 
     /// <summary>
-    /// Gets the class that HarfBuzz gives a glyph in a font without glyph classes (hb_synthesize_glyph_classes): the
-    /// glyph of a nonspacing mark that is not default ignorable is a mark, and any other glyph is a base. So a spacing
-    /// or enclosing mark, and the combining grapheme joiner, are bases.
+    /// Gets the class that HarfBuzz gives a glyph in a font without glyph classes. It is the class that GSUB gave the
+    /// glyph, if any. Otherwise, as in hb_synthesize_glyph_classes, the glyph of a nonspacing mark that is not default
+    /// ignorable is a mark, and any other glyph is a base. So a spacing or enclosing mark, and the combining grapheme
+    /// joiner, are bases.
     /// </summary>
     private static GlyphClassDef GetSynthesizedGlyphClass(GlyphShapingData shapingData)
-        => CodePoint.GetGeneralCategory(shapingData.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark
+        => shapingData.SubstitutedGlyphClass ?? (CodePoint.GetGeneralCategory(shapingData.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark
             && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)shapingData.UnicodePropertiesCodePoint.Value)
             ? GlyphClassDef.MarkGlyph
-            : GlyphClassDef.BaseGlyph;
+            : GlyphClassDef.BaseGlyph);
 
     private static bool MatchGlyph(ushort component, GlyphShapingData data) => component == data.GlyphId;
 

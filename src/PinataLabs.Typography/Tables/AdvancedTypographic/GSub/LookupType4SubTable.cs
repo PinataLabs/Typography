@@ -258,6 +258,10 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             {
                 collection[index].LigatureComponent = firstComponent;
             }
+            else if (isLigature)
+            {
+                collection[index].SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
+            }
 
             return true;
         }

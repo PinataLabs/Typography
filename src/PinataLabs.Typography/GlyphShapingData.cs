@@ -35,6 +35,7 @@ internal class GlyphShapingData
         this.GlyphId = data.GlyphId;
         this.CodePoint = data.CodePoint;
         this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
+        this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
         this.CodePointCount = data.CodePointCount;
         this.Cluster = data.Cluster;
         this.Direction = data.Direction;
@@ -108,6 +109,13 @@ internal class GlyphShapingData
     /// invalid vowel sequence. As in HarfBuzz, that circle has the properties of the character after it.
     /// </summary>
     public CodePoint UnicodePropertiesCodePoint { get; set; }
+
+    /// <summary>
+    /// Gets or sets the class that GSUB gave the glyph, which a font without glyph classes takes in place of the class of
+    /// its character. As in HarfBuzz, a ligature of components that are not all marks is a ligature glyph, even when its
+    /// first component is a mark.
+    /// </summary>
+    public GlyphClassDef? SubstitutedGlyphClass { get; set; }
 
     /// <summary>
     /// Gets or sets the codepoint count represented by this glyph.
