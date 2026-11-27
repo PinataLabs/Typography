@@ -177,6 +177,162 @@ internal static class AdvancedTypographicUtils
     }
 
     /// <summary>
+    /// Finds the first rule of a sequence context format 1 subtable that matches at the glyph. The rule's input glyphs
+    /// are written to <paramref name="positions"/>.
+    /// </summary>
+    public static SequenceRuleTable? FindSequenceRule(
+        FontMetrics fontMetrics,
+        IGlyphShapingCollection collection,
+        LookupFlags lookupFlags,
+        LookupFeatures features,
+        CoverageTable coverageTable,
+        SequenceRuleSetTable[] ruleSetTables,
+        int index,
+        int count,
+        Span<int> positions)
+    {
+        ushort glyphId = collection[index].GlyphId;
+        if (glyphId == 0)
+        {
+            return null;
+        }
+
+        int offset = coverageTable.CoverageIndexOf(glyphId);
+        if (offset <= -1)
+        {
+            return null;
+        }
+
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
+        foreach (SequenceRuleTable rule in ruleSetTables[offset].SequenceRuleTables)
+        {
+            if (rule.InputSequence.Length <= count - 1 && MatchSequence(iterator, features, rule.InputSequence, positions))
+            {
+                return rule;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Finds the first rule of a sequence context format 2 subtable that matches at the glyph. The rule's input glyphs
+    /// are written to <paramref name="positions"/>.
+    /// </summary>
+    public static ClassSequenceRuleTable? FindClassSequenceRule(
+        FontMetrics fontMetrics,
+        IGlyphShapingCollection collection,
+        LookupFlags lookupFlags,
+        LookupFeatures features,
+        CoverageTable coverageTable,
+        ClassDefinitionTable classDefinitionTable,
+        ClassSequenceRuleSetTable[] ruleSetTables,
+        int index,
+        int count,
+        Span<int> positions)
+    {
+        ushort glyphId = collection[index].GlyphId;
+        if (glyphId == 0 || coverageTable.CoverageIndexOf(glyphId) <= -1)
+        {
+            return null;
+        }
+
+        int offset = classDefinitionTable.ClassIndexOf(glyphId);
+        if (offset < 0)
+        {
+            return null;
+        }
+
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
+        foreach (ClassSequenceRuleTable rule in ruleSetTables[offset].SequenceRuleTables)
+        {
+            if (rule.InputSequence.Length <= count - 1
+                && MatchClassSequence(iterator, features, rule.InputSequence, classDefinitionTable, positions))
+            {
+                return rule;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Matches the coverages of a sequence context format 3 subtable at the glyph. The input glyphs are written to
+    /// <paramref name="positions"/>.
+    /// </summary>
+    public static bool MatchCoverageContext(
+        FontMetrics fontMetrics,
+        IGlyphShapingCollection collection,
+        LookupFlags lookupFlags,
+        LookupFeatures features,
+        CoverageTable[] coverageTables,
+        int index,
+        Span<int> positions)
+    {
+        if (collection[index].GlyphId == 0)
+        {
+            return false;
+        }
+
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
+        return MatchCoverageSequence(iterator, features, coverageTables, positions);
+    }
+
+    /// <summary>
+    /// Searches back from a mark in its run for the glyph that it attaches to, past the joiners that the lookup skips.
+    /// </summary>
+    /// <param name="fontMetrics">The font.</param>
+    /// <param name="collection">The glyphs.</param>
+    /// <param name="features">The features of the lookup.</param>
+    /// <param name="index">The index of the mark.</param>
+    /// <param name="baseCoverage">
+    /// The base coverage of a mark to base subtable. As in HarfBuzz, a glyph that the mark does not attach to is then
+    /// skipped too, unless the lookup covers it. A mark to ligature subtable passes <see langword="null"/>.
+    /// </param>
+    /// <returns>The index of the base glyph, or -1 when the run has none.</returns>
+    public static int FindMarkBaseIndex(
+        FontMetrics fontMetrics,
+        GlyphPositioningCollection collection,
+        LookupFeatures features,
+        int index,
+        CoverageTable? baseCoverage)
+    {
+        int baseGlyphIndex = index;
+        while (--baseGlyphIndex >= collection.RunStart)
+        {
+            GlyphShapingData data = collection[baseGlyphIndex];
+            if (!IsMarkGlyph(fontMetrics, data)
+                && !SkippingGlyphIterator.MaySkip(data, features.InputIgnorables)
+                && (baseCoverage is null || AttachesMarks(fontMetrics, collection, baseGlyphIndex) || baseCoverage.CoverageIndexOf(data.GlyphId) >= 0))
+            {
+                return baseGlyphIndex;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether a mark attaches to the glyph. As in HarfBuzz, it does not attach to a glyph
+    /// that a multiple substitution made, other than the first, right after the glyph that the substitution made
+    /// before it. So of those glyphs, a mark attaches to the first, or to one after a mark.
+    /// </summary>
+    private static bool AttachesMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index)
+    {
+        GlyphShapingData data = collection[index];
+        if (!data.IsMultiplied || data.LigatureComponent <= 0 || index == collection.RunStart)
+        {
+            return true;
+        }
+
+        GlyphShapingData previous = collection[index - 1];
+        return IsMarkGlyph(fontMetrics, previous)
+            || !previous.IsMultiplied
+            || data.LigatureId != previous.LigatureId
+            || data.LigatureComponent != previous.LigatureComponent + 1;
+    }
+
+    /// <summary>
     /// Matches the components of a ligature after its first glyph. Each glyph must have a feature of the lookup enabled.
     /// </summary>
     public static bool MatchInputSequence(SkippingGlyphIterator iterator, LookupFeatures features, ushort[] sequence, Span<int> matches)

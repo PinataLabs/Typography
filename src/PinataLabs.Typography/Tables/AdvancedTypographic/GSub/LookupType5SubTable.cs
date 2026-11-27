@@ -56,51 +56,16 @@ internal sealed class LookupType5Format1SubTable : LookupSubTable
         int index,
         int count)
     {
-        ushort glyphId = collection[index].GlyphId;
-        if (glyphId == 0)
-        {
-            return false;
-        }
-
-        int offset = this.coverageTable.CoverageIndexOf(glyphId);
-        if (offset <= -1)
-        {
-            return false;
-        }
-
-        // TODO: Check this.
-        // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#example-7-contextual-substitution-format-1
-        SequenceRuleSetTable ruleSetTable = this.seqRuleSetTables[offset];
-        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
         Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
-        foreach (SequenceRuleTable ruleTable in ruleSetTable.SequenceRuleTables)
+        SequenceRuleTable? rule = AdvancedTypographicUtils.FindSequenceRule(fontMetrics, collection, this.LookupFlags, features, this.coverageTable, this.seqRuleSetTables, index, count, positions);
+        if (rule is null)
         {
-            int remaining = count - 1;
-            int seqLength = ruleTable.InputSequence.Length;
-            if (seqLength > remaining)
-            {
-                continue;
-            }
-
-            if (!AdvancedTypographicUtils.MatchSequence(iterator, features, ruleTable.InputSequence, positions))
-            {
-                continue;
-            }
-
-            // It's a match. Perform the substitutions. The subtable has applied whether or not they change a glyph.
-            AdvancedTypographicUtils.ApplyLookupList(
-                fontMetrics,
-                table,
-                features,
-                ruleTable.SequenceLookupRecords,
-                collection,
-                positions,
-                ruleTable.InputSequence.Length + 1);
-
-            return true;
+            return false;
         }
 
-        return false;
+        // It's a match. The subtable has applied whether or not the nested lookups change anything.
+        AdvancedTypographicUtils.ApplyLookupList(fontMetrics, table, features, rule.SequenceLookupRecords, collection, positions, rule.InputSequence.Length + 1);
+        return true;
     }
 }
 
@@ -137,56 +102,15 @@ internal sealed class LookupType5Format2SubTable : LookupSubTable
         int index,
         int count)
     {
-        ushort glyphId = collection[index].GlyphId;
-        if (glyphId == 0)
-        {
-            return false;
-        }
-
-        if (this.coverageTable.CoverageIndexOf(glyphId) <= -1)
-        {
-            return false;
-        }
-
-        // TODO: Check this.
-        // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#52-context-substitution-format-2-class-based-glyph-contexts
-        int offset = this.classDefinitionTable.ClassIndexOf(glyphId);
-        if (offset < 0)
-        {
-            return false;
-        }
-
-        ClassSequenceRuleSetTable ruleSetTable = this.sequenceRuleSetTables[offset];
-        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
         Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
-        foreach (ClassSequenceRuleTable ruleTable in ruleSetTable.SequenceRuleTables)
+        ClassSequenceRuleTable? rule = AdvancedTypographicUtils.FindClassSequenceRule(fontMetrics, collection, this.LookupFlags, features, this.coverageTable, this.classDefinitionTable, this.sequenceRuleSetTables, index, count, positions);
+        if (rule is null)
         {
-            int remaining = count - 1;
-            int seqLength = ruleTable.InputSequence.Length;
-            if (seqLength > remaining)
-            {
-                continue;
-            }
-
-            if (!AdvancedTypographicUtils.MatchClassSequence(iterator, features, ruleTable.InputSequence, this.classDefinitionTable, positions))
-            {
-                continue;
-            }
-
-            // It's a match. Perform the substitutions. The subtable has applied whether or not they change a glyph.
-            AdvancedTypographicUtils.ApplyLookupList(
-                fontMetrics,
-                table,
-                features,
-                ruleTable.SequenceLookupRecords,
-                collection,
-                positions,
-                ruleTable.InputSequence.Length + 1);
-
-            return true;
+            return false;
         }
 
-        return false;
+        AdvancedTypographicUtils.ApplyLookupList(fontMetrics, table, features, rule.SequenceLookupRecords, collection, positions, rule.InputSequence.Length + 1);
+        return true;
     }
 }
 
@@ -217,30 +141,13 @@ internal sealed class LookupType5Format3SubTable : LookupSubTable
         int index,
         int count)
     {
-        ushort glyphId = collection[index].GlyphId;
-        if (glyphId == 0)
-        {
-            return false;
-        }
-
-        // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#53-context-substitution-format-3-coverage-based-glyph-contexts
-        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
         Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
-        if (!AdvancedTypographicUtils.MatchCoverageSequence(iterator, features, this.coverageTables, positions))
+        if (!AdvancedTypographicUtils.MatchCoverageContext(fontMetrics, collection, this.LookupFlags, features, this.coverageTables, index, positions))
         {
             return false;
         }
 
-        // It's a match. Perform the substitutions. The subtable has applied whether or not they change a glyph.
-        AdvancedTypographicUtils.ApplyLookupList(
-            fontMetrics,
-            table,
-            features,
-            this.sequenceLookupRecords,
-            collection,
-            positions,
-            this.coverageTables.Length);
-
+        AdvancedTypographicUtils.ApplyLookupList(fontMetrics, table, features, this.sequenceLookupRecords, collection, positions, this.coverageTables.Length);
         return true;
     }
 }
