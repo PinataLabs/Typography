@@ -546,7 +546,11 @@ Unicode conformance suites to that version.
   direction. In `"ab"` + U+00AD + `"cd ef"` in a right-to-left paragraph, wrapped after the soft hyphen, the soft hyphen
   was drawn after the b, not at the left end of the line. A space at the end of a wrapped line moves the same way when
   the line keeps it, as with `WordBreaking.BreakAll`. Each line now has the levels that `BidiParagraph.GetVisualRuns`
-  gives it. Shaping still takes the levels of the whole text, so no glyph takes another form. (#171)
+  gives it. Shaping still takes the levels of the whole text, so no glyph takes another form. A character that rule X9
+  removes at the start of a line, such as a ZWJ after the space where the line wraps, is drawn in the run of the
+  character after it, where `BidiParagraph.GetVisualRuns` puts a joiner. It kept the level of the character before it
+  in the text, which ends the line before, so in `"اب "` + ZWJ + `"cd"` in a right-to-left paragraph, wrapped after
+  the space, the ZWJ was drawn after the d, not before the c. (#171)
 - `TextJustification` gives no padding to the whitespace at the end of a wrapped line, or to the last glyph before it,
   in either paragraph direction. It padded every glyph but the one drawn last. In a right-to-left paragraph, rule L1
   draws a space that the line keeps at its end, as with `WordBreaking.BreakAll`, at the left end of the line, so that

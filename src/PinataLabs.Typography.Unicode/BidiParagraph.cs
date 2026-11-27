@@ -19,7 +19,9 @@ namespace PinataLabs.Typography.Unicode;
 /// <para>
 /// Rule X9 removes explicit embedding and override controls and every character of class BN from the ordering. Each
 /// still has a level, which is that of the code unit before it after rule L1, or the paragraph level at the start of
-/// the text. <c>TextLayout</c> of PinataLabs.Typography gives the same levels.
+/// the text. <c>TextLayout</c> of PinataLabs.Typography applies rule L1 to each line as <see cref="GetVisualRuns"/>
+/// does, and draws a removed character at the start of a line in the run of the character after it, where
+/// <see cref="GetVisualRuns"/> puts a joiner.
 /// </para>
 /// <para>
 /// U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER are kept in a run, because they decide how the letters

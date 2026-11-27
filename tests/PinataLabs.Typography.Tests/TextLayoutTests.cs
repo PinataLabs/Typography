@@ -1650,6 +1650,34 @@ public class TextLayoutTests
         await Assert.That(Math.Round(justified.Sum(x => x.AdvanceX) * options.Dpi, 3)).IsEqualTo(Math.Round(options.WrappingLength, 3));
     }
 
+    // A joiner that starts a wrapped line has no character before it on the line. TextLayout draws it in the run of the
+    // character after it, as BidiParagraph.GetVisualRuns does, not at the level it takes from the space that ends the
+    // line before.
+    [Test]
+    [Arguments("\u0627\u0628 \u200Dcd", TextDirection.RightToLeft)]
+    [Arguments("ab \u200D\u0627\u0628", TextDirection.LeftToRight)]
+    [Arguments("ab \u200Dcd", TextDirection.RightToLeft)]
+    public async Task RuleL1_JoinerThatStartsAWrappedLine_IsDrawnAsGetVisualRunsDrawsIt(string text, TextDirection direction)
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = direction };
+        options.WrappingLength = TextMeasurer.MeasureAdvance(text.AsSpan(0, 3), options).Width + 1;
+
+        GlyphLayout[][] lines = GetLines(text, options);
+
+        BidiParagraph paragraph = BidiParagraph.Resolve(
+            text,
+            direction == TextDirection.RightToLeft ? BidiParagraphDirection.RightToLeft : BidiParagraphDirection.LeftToRight);
+        string expected = string.Concat(paragraph.GetVisualRuns(3, text.Length - 3).Select(run =>
+        {
+            string characters = text.Substring(run.Start, run.Length);
+            return run.IsRightToLeft ? string.Concat(characters.Reverse()) : characters;
+        }));
+
+        await Assert.That(lines.Length).IsEqualTo(2);
+        await Assert.That(Visual([lines[1]])).IsEqualTo(expected);
+    }
+
     private static readonly string Shy = ((char)0xAD).ToString();
 
     // The glyphs of each line, in the order the layout draws them, which is left to right.

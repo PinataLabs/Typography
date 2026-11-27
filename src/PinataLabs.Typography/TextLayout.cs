@@ -1456,7 +1456,22 @@ internal static class TextLayout
             int lineLength = this.data[^1].Offset + 1 - lineStart;
             sbyte[] lineLevels = new sbyte[lineLength];
             Array.Copy(bidiLevels.Levels, lineStart, lineLevels, 0, lineLength);
-            BidiAlgorithm.ResetWhitespaceLevels(bidiLevels.Types.Slice(lineStart, lineLength), lineLevels, bidiLevels.ParagraphLevel);
+            ReadOnlyArraySlice<BidiCharacterType> lineTypes = bidiLevels.Types.Slice(lineStart, lineLength);
+            BidiAlgorithm.ResetWhitespaceLevels(lineTypes, lineLevels, bidiLevels.ParagraphLevel);
+
+            // A character that rule X9 removes at the start of the line has no character before it on the line, and
+            // keeps the level of the one before it in the paragraph, which ends the line before. It takes the level of
+            // the character after it, so it is drawn in that run, as BidiParagraph.GetVisualRuns draws a joiner there.
+            int first = 0;
+            while (first < lineLength && BidiAlgorithm.IsRemovedByX9(lineTypes[first]))
+            {
+                first++;
+            }
+
+            if (first < lineLength)
+            {
+                Array.Fill(lineLevels, lineLevels[first], 0, first);
+            }
 
             // Build up the collection of ordered runs.
             OrderedBidiRun orderedRun = new(lineLevels[0]);
