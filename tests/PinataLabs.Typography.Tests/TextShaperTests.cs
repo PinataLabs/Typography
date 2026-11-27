@@ -78,7 +78,7 @@ public class TextShaperTests
         // so the glyph of the last character is the first.
         ShapedGlyph[] glyphs = TextShaper.Shape(font, "\u0644\u0627 \u0628", new() { Direction = TextDirection.RightToLeft });
 
-        await Assert.That(glyphs.Select(g => g.Cluster)).IsEquivalentTo(new[] { 3, 2, 0 });
+        await Assert.That(glyphs.Select(g => g.Cluster)).IsEquivalentTo(new[] { 3, 2, 0 }, CollectionOrdering.Matching);
     }
 
     [Test]
