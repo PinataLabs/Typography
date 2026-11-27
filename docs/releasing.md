@@ -24,7 +24,7 @@ release ships both.
 |---|---|---|
 | Release | `release-prepare.yml` | Stable release. Rolls the changelog, ships the public API, tags `vX.Y.Z`, then publishes. |
 | Pre-release | `release-prerelease.yml` | Publishes an `alpha`, `beta` or `rc` package from the current commit. No tag, no GitHub Release. |
-| Release Publish | `release-publish.yml` | Called by the two above. Builds, tests, packs and pushes to NuGet. You do not run it directly. |
+| Release Publish | `release-publish.yml` | Called by the two above. Builds, tests, packs, adds the SBOMs and pushes to NuGet. You do not run it directly. |
 
 Both buttons have **dry-run** on by default. Run a dry run first, read the job log and the
 summary, then run again with dry-run off.
@@ -45,7 +45,8 @@ summary, then run again with dry-run off.
    - builds and tests the tag, packs both projects, checks that both packages have the
      version of the tag,
    - pushes the packages and symbols to NuGet, the Unicode package first,
-   - publishes the drafted GitHub Release and attaches the packages.
+   - publishes the drafted GitHub Release and attaches the packages and their
+     [CycloneDX files](#software-bill-of-materials).
 
 If a stable release fails after the tag is pushed, do not run **Release** again: the tag
 already exists, so it stops. Open the failed run and use **Re-run failed jobs**. That runs
@@ -65,6 +66,42 @@ package that is already there, so running **Pre-release** again publishes the mi
 
 From a branch other than `main`, a dry run works but publishing does not. The `nuget`
 environment allows deployments from `main` only.
+
+## Software bill of materials
+
+Every release carries a software bill of materials (SBOM) in two forms.
+
+**SPDX, inside each package.** Each `.nupkg`, stable or pre-release, holds an SPDX 2.2
+manifest at `_manifest/spdx_2.2/manifest.spdx.json`, with its hash beside it. Read it with
+`unzip -p PinataLabs.Typography.<version>.nupkg _manifest/spdx_2.2/manifest.spdx.json`.
+The `GenerateSBOM` property turns it on, and it is off by default, so a PR build does not
+restore or run the generator. Only the **Pack** step of `release-publish.yml` sets it. The
+`Microsoft.Sbom.Targets` package that does the work is a reference in `Directory.Build.targets`,
+with its version in `Directory.Packages.props`. The step after **Pack** fails the run if a
+package has no manifest.
+
+To make a package with the manifest on your machine, restore and pack with the property:
+
+```shell
+dotnet restore src/PinataLabs.Typography/PinataLabs.Typography.csproj -p:GenerateSBOM=true
+dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release -p:GenerateSBOM=true
+```
+
+**CycloneDX, next to the package.** `.github/scripts/generate-sbom.sh` writes one
+`PinataLabs.Typography.<version>.cdx.json` and one `PinataLabs.Typography.Unicode.<version>.cdx.json`
+into the `packages` folder. A stable release attaches them to the GitHub Release beside the
+`.nupkg` files. A pre-release has no GitHub Release, but the workflow still writes the files,
+so a pre-release dry run is the way to check the script before a stable release: a stable run
+cannot be dry run past the tag. The files are in the `packages` artifact of the run. They list
+each package's dependencies, and the build-only packages with the scope `excluded`.
+
+The CycloneDX tool is pinned in `.config/dotnet-tools.json`, and Dependabot's `nuget` entry
+keeps it up to date. Run the script from the repository root, after packing:
+
+```shell
+dotnet tool restore
+bash .github/scripts/generate-sbom.sh ./packages
+```
 
 ## Unicode version
 
