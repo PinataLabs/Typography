@@ -123,7 +123,8 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
             return false;
         }
 
-        // The context glyphs skip the glyphs that the lookup flags ignore, and the lookahead starts after the glyph.
+        // The context glyphs skip the glyphs that the lookup flags ignore, and the lookahead starts after the glyph. The
+        // input is the one glyph.
         if (!AdvancedTypographicUtils.CheckAllCoverages(
             fontMetrics,
             this.LookupFlags,
@@ -133,7 +134,8 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
             count,
             this.inputCoverageTables,
             this.backtrackCoverageTables,
-            this.lookaheadCoverageTables))
+            this.lookaheadCoverageTables,
+            stackalloc int[1]))
         {
             return false;
         }

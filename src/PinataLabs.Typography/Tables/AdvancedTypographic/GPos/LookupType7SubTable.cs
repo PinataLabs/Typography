@@ -2,6 +2,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.IO;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GPos;
@@ -71,6 +72,7 @@ internal static class LookupType7SubTable
             // https://docs.microsoft.com/en-us/typography/opentype/spec/gsub#example-7-contextual-substitution-format-1
             SequenceRuleSetTable ruleSetTable = this.seqRuleSetTables[offset];
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
+            Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
             foreach (SequenceRuleTable ruleTable in ruleSetTable.SequenceRuleTables)
             {
                 int remaining = count - 1;
@@ -80,7 +82,7 @@ internal static class LookupType7SubTable
                     continue;
                 }
 
-                if (!AdvancedTypographicUtils.MatchSequence(iterator, features, ruleTable.InputSequence))
+                if (!AdvancedTypographicUtils.MatchSequence(iterator, features, ruleTable.InputSequence, positions))
                 {
                     continue;
                 }
@@ -90,11 +92,10 @@ internal static class LookupType7SubTable
                     fontMetrics,
                     table,
                     features,
-                    this.LookupFlags,
                     ruleTable.SequenceLookupRecords,
                     collection,
-                    index,
-                    count);
+                    positions,
+                    ruleTable.InputSequence.Length + 1);
 
                 return true;
             }
@@ -155,6 +156,7 @@ internal static class LookupType7SubTable
 
             ClassSequenceRuleSetTable ruleSetTable = this.sequenceRuleSetTables[offset];
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
+            Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
             foreach (ClassSequenceRuleTable ruleTable in ruleSetTable.SequenceRuleTables)
             {
                 int remaining = count - 1;
@@ -164,7 +166,7 @@ internal static class LookupType7SubTable
                     continue;
                 }
 
-                if (!AdvancedTypographicUtils.MatchClassSequence(iterator, features, ruleTable.InputSequence, this.classDefinitionTable))
+                if (!AdvancedTypographicUtils.MatchClassSequence(iterator, features, ruleTable.InputSequence, this.classDefinitionTable, positions))
                 {
                     continue;
                 }
@@ -174,11 +176,10 @@ internal static class LookupType7SubTable
                     fontMetrics,
                     table,
                     features,
-                    this.LookupFlags,
                     ruleTable.SequenceLookupRecords,
                     collection,
-                    index,
-                    count);
+                    positions,
+                    ruleTable.InputSequence.Length + 1);
 
                 return true;
             }
@@ -221,7 +222,8 @@ internal static class LookupType7SubTable
             }
 
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
-            if (!AdvancedTypographicUtils.MatchCoverageSequence(iterator, features, this.coverageTables))
+            Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
+            if (!AdvancedTypographicUtils.MatchCoverageSequence(iterator, features, this.coverageTables, positions))
             {
                 return false;
             }
@@ -230,11 +232,10 @@ internal static class LookupType7SubTable
                 fontMetrics,
                 table,
                 features,
-                this.LookupFlags,
                 this.sequenceLookupRecords,
                 collection,
-                index,
-                count);
+                positions,
+                this.coverageTables.Length);
 
             return true;
         }

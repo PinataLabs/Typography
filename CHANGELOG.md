@@ -481,10 +481,18 @@ Unicode conformance suites to that version.
   lookup gave Devanagari ka its alternate after Brahmi A, in U+11005 U+0915, and before it, in U+0915 U+11005, and a
   Cyrillic titlo after a Latin `i` took its place on the `i`. HarfBuzz leaves these glyphs as they are, and the
   library now does too. Han, Hiragana and Katakana are scripts of their own, so a lookup no longer matches across
-  U+6F22 U+3042 or U+30A2 U+5B57. A character of the Common script, such as `!` or U+30FC, joins the run before it.
-  So a lookup still matches `d!` and U+5B57 U+30FC, as in HarfBuzz when its caller splits the text into these runs.
-  A caller of `TextShaper.Shape` who wants a lookup to match across scripts sets `ShapingOptions.Script`, which makes
-  the text one run. (#194)
+  U+6F22 U+3042 or U+30A2 U+5B57. Japanese text now shapes Han and kana as separate runs, so a font's `kern` or `calt`
+  between a kanji and a kana no longer applies, as in HarfBuzz with one buffer for each script run. A character of the
+  Common script, such as `!` or U+30FC, joins the run before it. So a lookup still matches `d!` and U+5B57 U+30FC, as
+  in HarfBuzz when its caller splits the text into these runs. A caller of `TextShaper.Shape` who wants a lookup to
+  match across scripts sets `ShapingOptions.Script`, which makes the text one run. (#194)
+- A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
+  does. It found the glyph of each nested lookup by walking the glyphs again from the first. After a nested ligature
+  took the second glyph of the input, a nested lookup at that glyph changed the glyph after the input, which can be
+  the first glyph of the next script run, or threw `ArgumentOutOfRangeException` at the end of the text. HarfBuzz skips
+  a nested lookup whose glyph a ligature took, and the library now does too. The walk also passed a ZWJ or other
+  default-ignorable glyph that the input names, so a nested lookup after it changed the glyph after its own. (#194,
+  #203)
 - The bidi algorithm splits the text into paragraphs after each paragraph separator, as UAX #9 rule P1 says, and
   resolves each paragraph on its own. LF, CR, U+0085, U+2029 and U+001C to U+001E end a paragraph, and CR LF is one
   separator. It took the whole text as one paragraph, so rules W2 and N1 read across a line feed: in a left-to-right

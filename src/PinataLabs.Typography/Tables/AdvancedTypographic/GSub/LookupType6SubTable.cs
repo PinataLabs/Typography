@@ -2,6 +2,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.IO;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
@@ -76,12 +77,13 @@ internal sealed class LookupType6Format1SubTable : LookupSubTable
 
         // Apply ruleset for the given glyph id.
         SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
+        Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
         ChainedSequenceRuleSetTable seqRuleSet = this.seqRuleSetTables[offset];
         ChainedSequenceRuleTable[] rules = seqRuleSet.SequenceRuleTables;
         for (int i = 0; i < rules.Length; i++)
         {
             ChainedSequenceRuleTable ruleTable = rules[i];
-            if (!AdvancedTypographicUtils.ApplyChainedSequenceRule(iterator, features, ruleTable))
+            if (!AdvancedTypographicUtils.ApplyChainedSequenceRule(iterator, features, ruleTable, positions))
             {
                 continue;
             }
@@ -90,11 +92,10 @@ internal sealed class LookupType6Format1SubTable : LookupSubTable
                 fontMetrics,
                 table,
                 features,
-                this.LookupFlags,
                 ruleTable.SequenceLookupRecords,
                 collection,
-                index,
-                count);
+                positions,
+                ruleTable.InputSequence.Length + 1);
 
             return true;
         }
@@ -173,10 +174,11 @@ internal sealed class LookupType6Format2SubTable : LookupSubTable
 
         // Apply ruleset for the given glyph class id.
         SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags);
+        Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
         for (int lookupIndex = 0; lookupIndex < rules.Length; lookupIndex++)
         {
             ChainedClassSequenceRuleTable ruleTable = rules[lookupIndex];
-            if (!AdvancedTypographicUtils.ApplyChainedClassSequenceRule(iterator, features, ruleTable, this.inputClassDefinitionTable, this.backtrackClassDefinitionTable, this.lookaheadClassDefinitionTable))
+            if (!AdvancedTypographicUtils.ApplyChainedClassSequenceRule(iterator, features, ruleTable, this.inputClassDefinitionTable, this.backtrackClassDefinitionTable, this.lookaheadClassDefinitionTable, positions))
             {
                 continue;
             }
@@ -185,11 +187,10 @@ internal sealed class LookupType6Format2SubTable : LookupSubTable
                 fontMetrics,
                 table,
                 features,
-                this.LookupFlags,
                 ruleTable.SequenceLookupRecords,
                 collection,
-                index,
-                count);
+                positions,
+                ruleTable.InputSequence.Length + 1);
 
             return true;
         }
@@ -245,6 +246,7 @@ internal sealed class LookupType6Format3SubTable : LookupSubTable
             return false;
         }
 
+        Span<int> positions = stackalloc int[AdvancedTypographicUtils.MaxContextLength];
         if (!AdvancedTypographicUtils.CheckAllCoverages(
             fontMetrics,
             this.LookupFlags,
@@ -254,7 +256,8 @@ internal sealed class LookupType6Format3SubTable : LookupSubTable
             count,
             this.inputCoverageTables,
             this.backtrackCoverageTables,
-            this.lookaheadCoverageTables))
+            this.lookaheadCoverageTables,
+            positions))
         {
             return false;
         }
@@ -264,11 +267,10 @@ internal sealed class LookupType6Format3SubTable : LookupSubTable
             fontMetrics,
             table,
             features,
-            this.LookupFlags,
             this.sequenceLookupRecords,
             collection,
-            index,
-            count);
+            positions,
+            this.inputCoverageTables.Length);
 
         return true;
     }
