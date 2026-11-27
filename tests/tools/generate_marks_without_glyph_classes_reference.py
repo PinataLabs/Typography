@@ -41,6 +41,12 @@ the .notdef of the joiner and places both accents over a, as the marks of a base
 MarksWithoutGlyphClassesTests checks that the library places them there too when MarksWithoutGlyphClasses.ttf, which
 has U+034F, is a fallback font.
 
+MarksWithoutGlyphClassesBase.ttf has a, f and the grave, and MarksWithoutGlyphClassesLarge.ttf has an em of 2000 units
+and the acute and U+0316, each 600 units wide. Neither has a GSUB, GPOS or GDEF table. Each lacks a glyph that another
+font of this script draws, so a cluster of the text takes its base from one font and its marks from another. Each font
+alone places the .notdef of a mark where the other font places its glyph. MarksWithoutGlyphClassesTests checks that a
+mark of a fallback font goes to the same place on a base of the font, and stacks on a mark of the font.
+
 The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the line, as
 HarfBuzz gives them. MarksWithoutGlyphClassesTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -117,13 +123,21 @@ def build_font_without_gdef(file_name, code_points, features, extra_glyphs):
     return load_font(path)
 
 
+MIXED_TEXTS = ["f̀", "f̀́", "f̖́"]
+
+
 def main():
     rows = []
     for file_name, code_points, features, extra_glyphs, texts in [
             (FONT, CODE_POINTS, FEATURES, ["acute_a", "a_b", "b_b"], TEXTS),
-            (FALLBACK_FONT, FALLBACK_CODE_POINTS, FALLBACK_FEATURES, ["acute_a"], FALLBACK_TEXTS)]:
+            (FALLBACK_FONT, FALLBACK_CODE_POINTS, FALLBACK_FEATURES, ["acute_a"], FALLBACK_TEXTS + MIXED_TEXTS)]:
         hb_font = build_font_without_gdef(file_name, code_points, features, extra_glyphs)
         rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in texts)
+    for file_name, code_points, units_per_em in [
+            ("MarksWithoutGlyphClassesBase.ttf", [0x61, 0x66, 0x0300], 1000),
+            ("MarksWithoutGlyphClassesLarge.ttf", [0x0301, 0x0316], 2000)]:
+        hb_font = load_font(build_font(file_name, code_points, units_per_em=units_per_em))
+        rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in MIXED_TEXTS)
     write_reference(REFERENCE, rows)
 
 

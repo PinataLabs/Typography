@@ -25,6 +25,15 @@
     ["MarksWithoutGlyphClassesFallback.ttf","b\ud834\udd65",[[2,0,0],[5,600,0]]],
     ["MarksWithoutGlyphClassesFallback.ttf","b\u20dd",[[2,0,0],[6,600,0]]],
     ["MarksWithoutGlyphClassesFallback.ttf","b\u20dd\u0300",[[2,0,0],[6,600,0],[3,300,62]]],
-    ["MarksWithoutGlyphClassesFallback.ttf","a\u0300\u034f\u0301",[[1,0,0],[3,300,62],[4,300,124]]]
+    ["MarksWithoutGlyphClassesFallback.ttf","a\u0300\u034f\u0301",[[1,0,0],[3,300,62],[4,300,124]]],
+    ["MarksWithoutGlyphClassesFallback.ttf","f\u0300",[[0,0,0],[3,300,62]]],
+    ["MarksWithoutGlyphClassesFallback.ttf","f\u0300\u0301",[[0,0,0],[3,300,62],[4,300,124]]],
+    ["MarksWithoutGlyphClassesFallback.ttf","f\u0301\u0316",[[0,0,0],[0,300,-62],[4,300,62]]],
+    ["MarksWithoutGlyphClassesBase.ttf","f\u0300",[[2,0,0],[3,300,62]]],
+    ["MarksWithoutGlyphClassesBase.ttf","f\u0300\u0301",[[2,0,0],[3,300,62],[0,300,124]]],
+    ["MarksWithoutGlyphClassesBase.ttf","f\u0301\u0316",[[2,0,0],[0,300,-62],[0,300,62]]],
+    ["MarksWithoutGlyphClassesLarge.ttf","f\u0300",[[0,0,0],[0,300,125]]],
+    ["MarksWithoutGlyphClassesLarge.ttf","f\u0300\u0301",[[0,0,0],[0,300,125],[1,300,250]]],
+    ["MarksWithoutGlyphClassesLarge.ttf","f\u0301\u0316",[[0,0,0],[2,300,-125],[1,300,125]]]
   ]
 }
