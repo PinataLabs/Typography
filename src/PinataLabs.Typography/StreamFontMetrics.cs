@@ -511,39 +511,58 @@ internal partial class StreamFontMetrics : FontMetrics
         HeadTable head = tables.Head;
         HorizontalHeadTable hhea = tables.Hhea;
         VerticalHeadTable? vhea = tables.Vhea;
-        OS2Table os2 = tables.Os2;
+        OS2Table? os2 = tables.Os2;
         PostTable post = tables.Post;
 
         this.HeadFlags = head.Flags;
         this.unitsPerEm = head.UnitsPerEm;
         this.scaleFactor = this.unitsPerEm * 72F; // 72 * UnitsPerEm means 1pt = 1px
-        this.subscriptXSize = mvar.Apply(MvarVariation.SubscriptXSize, os2.SubscriptXSize);
-        this.subscriptYSize = mvar.Apply(MvarVariation.SubscriptYSize, os2.SubscriptYSize);
-        this.subscriptXOffset = mvar.Apply(MvarVariation.SubscriptXOffset, os2.SubscriptXOffset);
-        this.subscriptYOffset = mvar.Apply(MvarVariation.SubscriptYOffset, os2.SubscriptYOffset);
-        this.superscriptXSize = mvar.Apply(MvarVariation.SuperscriptXSize, os2.SuperscriptXSize);
-        this.superscriptYSize = mvar.Apply(MvarVariation.SuperscriptYSize, os2.SuperscriptYSize);
-        this.superscriptXOffset = mvar.Apply(MvarVariation.SuperscriptXOffset, os2.SuperscriptXOffset);
-        this.superscriptYOffset = mvar.Apply(MvarVariation.SuperscriptYOffset, os2.SuperscriptYOffset);
-        this.strikeoutSize = mvar.Apply(MvarVariation.StrikeoutSize, os2.StrikeoutSize);
-        this.strikeoutPosition = mvar.Apply(MvarVariation.StrikeoutPosition, os2.StrikeoutPosition);
         this.underlinePosition = mvar.Apply(MvarVariation.UnderlinePosition, post.UnderlinePosition);
         this.underlineThickness = mvar.Apply(MvarVariation.UnderlineThickness, post.UnderlineThickness);
         this.italicAngle = post.ItalicAngle;
 
         HorizontalMetrics horizontalMetrics = InitializeHorizontalMetrics(hhea, vhea, os2, mvar);
         VerticalMetrics verticalMetrics = InitializeVerticalMetrics(horizontalMetrics, vhea, mvar);
+
+        if (os2 is null)
+        {
+            // A TrueType font of Apple need not have an OS/2 table. These are the values that HarfBuzz
+            // hb_ot_metrics_get_position_with_fallback synthesizes for one, which MVAR cannot vary.
+            int em = this.unitsPerEm;
+            this.subscriptXSize = this.superscriptXSize = (short)(em * 10 / 12);
+            this.subscriptYSize = this.superscriptYSize = (short)(em * 10 / 12);
+            this.subscriptXOffset = this.superscriptXOffset = 0;
+            this.subscriptYOffset = this.superscriptYOffset = (short)(em / 5);
+            this.strikeoutSize = (short)(em / 18);
+            this.strikeoutPosition = (short)(horizontalMetrics.Ascender / 2);
+        }
+        else
+        {
+            this.subscriptXSize = mvar.Apply(MvarVariation.SubscriptXSize, os2.SubscriptXSize);
+            this.subscriptYSize = mvar.Apply(MvarVariation.SubscriptYSize, os2.SubscriptYSize);
+            this.subscriptXOffset = mvar.Apply(MvarVariation.SubscriptXOffset, os2.SubscriptXOffset);
+            this.subscriptYOffset = mvar.Apply(MvarVariation.SubscriptYOffset, os2.SubscriptYOffset);
+            this.superscriptXSize = mvar.Apply(MvarVariation.SuperscriptXSize, os2.SuperscriptXSize);
+            this.superscriptYSize = mvar.Apply(MvarVariation.SuperscriptYSize, os2.SuperscriptYSize);
+            this.superscriptXOffset = mvar.Apply(MvarVariation.SuperscriptXOffset, os2.SuperscriptXOffset);
+            this.superscriptYOffset = mvar.Apply(MvarVariation.SuperscriptYOffset, os2.SuperscriptYOffset);
+            this.strikeoutSize = mvar.Apply(MvarVariation.StrikeoutSize, os2.StrikeoutSize);
+            this.strikeoutPosition = mvar.Apply(MvarVariation.StrikeoutPosition, os2.StrikeoutPosition);
+        }
+
         return (horizontalMetrics, verticalMetrics);
     }
 
-    private static HorizontalMetrics InitializeHorizontalMetrics(HorizontalHeadTable hhea, VerticalHeadTable? vhea, OS2Table os2, in MvarVariation mvar)
+    private static HorizontalMetrics InitializeHorizontalMetrics(HorizontalHeadTable hhea, VerticalHeadTable? vhea, OS2Table? os2, in MvarVariation mvar)
     {
         short ascender;
         short descender;
         short lineGap;
         short advanceWidthMax;
         short advanceHeightMax;
-        bool useWinMetrics = false;
+
+        // The OS/2 table whose win metrics give the ascender and the descender, when the rules below choose them.
+        OS2Table? winMetrics = null;
 
         // https://www.microsoft.com/typography/otspec/recom.htm#tad
         // We use the same approach as FreeType for calculating the the global  ascender, descender,  and
@@ -555,8 +574,7 @@ internal partial class StreamFontMetrics : FontMetrics
         // 3.If they are zero and the OS/ 2 table exists,
         //    - Use the OS/ 2 table's sTypo* metrics if they are non-zero.
         //    - Otherwise, use the OS / 2 table's usWin* metrics.
-        bool useTypoMetrics = os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.USE_TYPO_METRICS);
-        if (useTypoMetrics)
+        if (os2 is not null && os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.USE_TYPO_METRICS))
         {
             ascender = os2.TypoAscender;
             descender = os2.TypoDescender;
@@ -569,7 +587,7 @@ internal partial class StreamFontMetrics : FontMetrics
             lineGap = hhea.LineGap;
         }
 
-        if (ascender == 0 || descender == 0)
+        if (os2 is not null && (ascender == 0 || descender == 0))
         {
             if (os2.TypoAscender != 0 || os2.TypoDescender != 0)
             {
@@ -579,19 +597,19 @@ internal partial class StreamFontMetrics : FontMetrics
             }
             else
             {
-                useWinMetrics = true;
+                winMetrics = os2;
             }
         }
 
         // MVAR varies the metrics that the rules above chose. The rules look at the values of the font, not at the varied ones.
         lineGap = mvar.Apply(MvarVariation.HorizontalLineGap, lineGap);
         short lineHeight;
-        if (useWinMetrics)
+        if (winMetrics is not null)
         {
             // The win metrics are unsigned and the descent is a distance below the baseline, so the arithmetic is in int and
             // the clamp to short comes once at the end.
-            int winAscent = mvar.ApplyWide(MvarVariation.HorizontalClippingAscent, os2.WinAscent);
-            int winDescent = mvar.ApplyWide(MvarVariation.HorizontalClippingDescent, os2.WinDescent);
+            int winAscent = mvar.ApplyWide(MvarVariation.HorizontalClippingAscent, winMetrics.WinAscent);
+            int winDescent = mvar.ApplyWide(MvarVariation.HorizontalClippingDescent, winMetrics.WinDescent);
             ascender = VariationRounding.ToInt16(winAscent);
             descender = VariationRounding.ToInt16(-(double)winDescent);
             lineHeight = VariationRounding.ToInt16((double)winAscent + winDescent);

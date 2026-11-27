@@ -298,6 +298,11 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- A TrueType or CFF font with no `OS/2` table loads. On macOS these are AppleGothic and AppleMyungjo, which threw
+  `MissingFontTableException` for `OS/2` on first use. As in HarfBuzz 15.0.0, the ascender, descender and line gap come
+  from `hhea`, and `head.macStyle` gives the weight (400 or bold 700), the width (100%, condensed 75% or expanded
+  125%) and the slope. The subscript and superscript sizes are 10/12 em, their y offsets 1/5 em, the strikeout
+  thickness 1/18 em and the strikeout position half the ascender (#148).
 - GSUB and GPOS lookups apply where HarfBuzz 15.0.0 applies them. A lookup starts at the first glyph that its flags
   do not skip, where it used to apply to a first glyph that its flags or mark filtering set skip (#120). A chained
   context positioning lookup counts the sequence index of a nested lookup over the glyphs that are not skipped (#118).
