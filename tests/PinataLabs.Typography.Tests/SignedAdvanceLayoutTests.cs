@@ -107,6 +107,24 @@ public class SignedAdvanceLayoutTests
         await Assert.That(MathF.Round(vertical ? measured.Height : measured.Width)).IsEqualTo(end - start);
     }
 
+    // The vertical kern subtable of VerticalAdvanceKern.ttf makes U+4E00 U+4E8C 200 units closer and U+4E8C U+4E09 300
+    // units apart. HarfBuzz applies no kern subtable to vertical text (the reference row of these glyphs has the advances
+    // of the font), so this is not checked against it. A positive value moves the glyphs apart, as the OpenType kern table
+    // says, which is the way a positive GPOS y advance moves them, and the kerning changes the space between the two
+    // glyphs of the pair, so the first one takes it.
+    [Test]
+    public async Task AVerticalKernSubtableMovesTheGlyphsApartForAPositiveValue()
+    {
+        TextOptions options = new(GetFont("VerticalAdvanceKern.ttf")) { Dpi = 1, LayoutMode = LayoutMode.VerticalLeftRight };
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout("一二三".AsSpan(), options);
+        string[] actual = layout
+            .Select(g => FormattableString.Invariant(
+                $"{MathF.Round(g.PenLocation.Y - layout[0].PenLocation.Y)} advances {g.Glyph.GlyphMetrics.AdvanceWidth} {g.Glyph.GlyphMetrics.AdvanceHeight}"))
+            .ToArray();
+
+        await Assert.That(string.Join(", ", actual)).IsEqualTo("0 advances 900 800, 800 advances 900 1300, 2100 advances 900 1000");
+    }
+
     private static JsonElement GetVerticalAdvanceRow(string fontName, string text, string direction)
     {
         using JsonDocument document = JsonDocument.Parse(File.ReadAllText(TestFonts.GetPath("VerticalAdvance.harfbuzz.json")));
