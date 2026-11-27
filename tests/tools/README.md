@@ -800,9 +800,11 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 
 `generate_marks_without_glyph_classes_reference.py` builds
 `tests/PinataLabs.Typography.Tests/Fonts/MarksWithoutGlyphClasses.ttf` and writes `MarksWithoutGlyphClasses.harfbuzz.json`
-next to it. The font has no GDEF table, so HarfBuzz takes the glyph of a nonspacing mark for a mark. Its mark and mkmk
-lookups attach two combining accents after a letter. The reference holds the glyph ID and the place of each glyph that
-HarfBuzz gives.
+next to it. The font has no GDEF table, so HarfBuzz gives each glyph the class of its character: a nonspacing mark that
+is not default ignorable is a mark, any other character is a base, and a ligature of components that are not all marks
+is a ligature. Its texts attach accents with mark, mkmk and mark-to-ligature lookups, form ligatures next to a spacing
+mark and a combining grapheme joiner, and attach an accent after the glyphs of a multiple substitution. The script says
+what each text tests. The reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
 
 `MarksWithoutGlyphClassesTests` checks that the library puts the same glyphs in the same places.
 

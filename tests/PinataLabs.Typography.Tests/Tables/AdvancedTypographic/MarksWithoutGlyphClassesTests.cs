@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -10,10 +11,10 @@ using PinataLabs.Typography.Tests.Tables.AdvancedTypographic.GPos;
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
-/// MarksWithoutGlyphClasses.ttf has no GDEF table. As in HarfBuzz, the glyph of a nonspacing mark is then a mark, so
-/// mark-to-mark attaches an accent to the accent before it, and mark-to-base attaches an accent to the letter past
-/// another accent. tests/tools/generate_marks_without_glyph_classes_reference.py writes the font and the glyphs that
-/// HarfBuzz gives.
+/// MarksWithoutGlyphClasses.ttf has no GDEF table. As in HarfBuzz, a glyph then has the class of its character: a
+/// nonspacing mark that is not default ignorable is a mark, any other character is a base, and a ligature of components
+/// that are not all marks is a ligature. tests/tools/generate_marks_without_glyph_classes_reference.py writes the font
+/// and the glyphs that HarfBuzz gives, and says what each text tests.
 /// </summary>
 public class MarksWithoutGlyphClassesTests
 {
@@ -23,21 +24,28 @@ public class MarksWithoutGlyphClassesTests
         File.ReadAllText(TestFonts.GetPath("MarksWithoutGlyphClasses.harfbuzz.json")),
         Options)!;
 
+    // Each row is a text and the glyph ID and place of each glyph, in font units.
     [Test]
-    [Arguments("á̀")]
-    [Arguments("à́")]
-    public async Task GlyphsAreWhereHarfBuzzPutsThem(string text)
+    public async Task GlyphsAreWhereHarfBuzzPutsThem()
     {
-        JsonElement[] row = HarfBuzz.Rows.Single(r => r[0].GetString() == text);
-        string expected = string.Join(' ', row[1].EnumerateArray().Select(g => $"{g[0]}@{g[1]},{g[2]}"));
-
         FontFamily family = new FontCollection().Add(TestFonts.GetPath("MarksWithoutGlyphClasses.ttf"));
 
         // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
         Font font = family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm);
-        string actual = string.Join(' ', GposVariationReference.Shape(font, text).Select(g => $"{g.Id}@{g.X},{g.Y}"));
+        List<string> different = [];
+        foreach (JsonElement[] row in HarfBuzz.Rows)
+        {
+            string text = row[0].GetString()!;
+            string expected = string.Join(' ', row[1].EnumerateArray().Select(g => $"{g[0]}@{g[1]},{g[2]}"));
+            string actual = string.Join(' ', GposVariationReference.Shape(font, text).Select(g => $"{g.Id}@{g.X},{g.Y}"));
+            if (actual != expected)
+            {
+                string codePoints = string.Join(' ', text.EnumerateRunes().Select(r => r.Value.ToString("X4")));
+                different.Add($"[{codePoints}] expected [{expected}] actual [{actual}]");
+            }
+        }
 
-        await Assert.That(actual).IsEqualTo(expected);
+        await Assert.That(different).IsEmpty();
     }
 
     private sealed class Reference
