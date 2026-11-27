@@ -21,7 +21,8 @@ namespace PinataLabs.Typography.Unicode;
 /// <para>
 /// The opportunities come in order, and the last is at the end of the text (LB3), so a text that is not empty
 /// gives at least one. A <see cref="LineBreak.Required"/> opportunity is a mandatory break. The text is read as a
-/// whole: its start is the start of the text for LB2 and its end the end for LB3.
+/// whole: its start is the start of the text for LB2 and its end the end for LB3. To ask about the boundary between
+/// two pieces of a text instead, see <see cref="LineBreakAlgorithm.IsBreakAllowedBetween"/>.
 /// </para>
 /// </remarks>
 public ref struct LineBreakEnumerator

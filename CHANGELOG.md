@@ -58,7 +58,11 @@ Unicode conformance suites to that version.
   treats the letters of class SA (Thai, Lao, Khmer, Myanmar) as ideographs, so a break is allowed between them, and the SA
   marks stay combining marks. `HangulAsAlphabetic` treats Hangul syllables and jamo as letters, so Korean breaks at its
   spaces. `LineBreakTailoring.None`, the default, is the algorithm as published, which passes `LineBreakTest.txt`.
-  (#153)
+  `LineBreakAlgorithm.IsBreakAllowedBetween(before, after, tailoring)` answers whether a line may break where `before`
+  ends and `after` begins, for a layout engine that holds text in runs. It runs the enumerator over the two spans as one
+  text, so every rule that reaches across the boundary applies, and it gives the answer of the enumerator at that
+  position for every boundary of every case of `LineBreakTest.txt`. A window of 32 code units each side is enough unless
+  a row of spaces, digits, marks or regional indicators longer than that runs across the boundary. (#153)
 - **The `PinataLabs.Typography.Unicode` package.** The Unicode algorithms and character properties that were in the
   `PinataLabs.Typography.Unicode` namespace of `PinataLabs.Typography` are now a package of their own, with no font code,
   for the same target frameworks. A caller that needs character properties, code point and grapheme enumeration and no

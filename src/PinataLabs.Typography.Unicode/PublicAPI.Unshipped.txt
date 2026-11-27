@@ -65,3 +65,5 @@ PinataLabs.Typography.Unicode.LineBreakTailoring
 PinataLabs.Typography.Unicode.LineBreakTailoring.HangulAsAlphabetic = 2 -> PinataLabs.Typography.Unicode.LineBreakTailoring
 PinataLabs.Typography.Unicode.LineBreakTailoring.None = 0 -> PinataLabs.Typography.Unicode.LineBreakTailoring
 PinataLabs.Typography.Unicode.LineBreakTailoring.SouthEastAsianAsIdeographs = 1 -> PinataLabs.Typography.Unicode.LineBreakTailoring
+PinataLabs.Typography.Unicode.LineBreakAlgorithm
+static PinataLabs.Typography.Unicode.LineBreakAlgorithm.IsBreakAllowedBetween(System.ReadOnlySpan<char> before, System.ReadOnlySpan<char> after, PinataLabs.Typography.Unicode.LineBreakTailoring tailoring = PinataLabs.Typography.Unicode.LineBreakTailoring.None) -> bool

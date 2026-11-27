@@ -4,20 +4,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using TUnit.Core.Interfaces;
 
 namespace PinataLabs.Typography.Tests.Unicode;
 
 public class LineBreakEnumeratorTests
 {
-    private ITestOutput Output => TestContext.Current!.Output;
-
     [Test]
     public async Task BasicLatinTest()
     {
@@ -141,144 +135,29 @@ public class LineBreakEnumeratorTests
         await Assert.That(breaks.ToArray()).IsEquivalentTo(expected);
     }
 
+    // Contains 19,346 tests at Unicode 18.0.0
+    // https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/LineBreakTest.html
     [Test]
-    public async Task ICUTests()
+    public async Task LineBreakTestSuitePasses()
     {
-        await Assert.That(this.ICUTestsImpl()).IsTrue();
-    }
+        List<LineBreakTestCase> cases = LineBreakTestCase.Read();
+        await Assert.That(cases.Count).IsGreaterThan(19000);
 
-    // Contains over 7000 tests
-    // https://www.unicode.org/Public/13.0.0/ucd/auxiliary/LineBreakTest.html
-    private bool ICUTestsImpl()
-    {
-        this.Output.WriteLine("Line Breaker Tests");
-        this.Output.WriteLine("------------------");
-
-        // Read the test file
-        string[] lines = File.ReadAllLines(Path.Combine(TestEnvironment.UnicodeTestDataFullPath, "LineBreakTest.txt"));
-
-        // Process each line
-        var tests = new List<Test>();
-        for (int lineNumber = 1; lineNumber < lines.Length + 1; lineNumber++)
+        List<string> failures = [];
+        foreach (LineBreakTestCase test in cases)
         {
-            // Get the line, remove comments
-            string line = lines[lineNumber - 1].Split('#')[0].Trim();
-
-            // Ignore blank/comment only lines
-            if (string.IsNullOrWhiteSpace(line))
+            List<int> found = [];
+            foreach (LineBreak lineBreak in new LineBreakEnumerator(test.Text.AsSpan()))
             {
-                continue;
+                found.Add(lineBreak.PositionWrap);
             }
 
-            var codePoints = new List<uint>();
-            var breakPoints = new List<int>();
-
-            // Parse the test
-            int p = 0;
-            while (p < line.Length)
+            if (!found.SequenceEqual(test.BreakPoints))
             {
-                // Ignore white space
-                if (char.IsWhiteSpace(line[p]))
-                {
-                    p++;
-                    continue;
-                }
-
-                if (line[p] == '×')
-                {
-                    p++;
-                    continue;
-                }
-
-                if (line[p] == '÷')
-                {
-                    breakPoints.Add(codePoints.Count);
-                    p++;
-                    continue;
-                }
-
-                int codePointPos = p;
-                while (p < line.Length && IsHexDigit(line[p]))
-                {
-                    p++;
-                }
-
-                string codePointStr = line.Substring(codePointPos, p - codePointPos);
-                uint codePoint = Convert.ToUInt32(codePointStr, 16);
-                codePoints.Add(codePoint);
-            }
-
-            // Create test
-            var test = new Test(lineNumber, codePoints.ToArray(), breakPoints.ToArray());
-            tests.Add(test);
-        }
-
-        var foundBreaks = new List<int>();
-
-        for (int testNumber = 0; testNumber < tests.Count; testNumber++)
-        {
-            Test t = tests[testNumber];
-
-            foundBreaks.Clear();
-
-            // Run the line breaker and build a list of break points
-            string text = Encoding.UTF32.GetString(MemoryMarshal.Cast<uint, byte>(t.CodePoints).ToArray());
-
-            var enumerator = new LineBreakEnumerator(text.AsSpan());
-            while (enumerator.MoveNext())
-            {
-                foundBreaks.Add(enumerator.Current.PositionWrap);
-            }
-
-            // Check the same
-            bool pass = true;
-            if (foundBreaks.Count != t.BreakPoints.Length)
-            {
-                pass = false;
-            }
-            else
-            {
-                for (int i = 0; i < foundBreaks.Count; i++)
-                {
-                    if (foundBreaks[i] != t.BreakPoints[i])
-                    {
-                        pass = false;
-                    }
-                }
-            }
-
-            if (!pass)
-            {
-                LineBreakClass[] classes = t.CodePoints.Select(x => UnicodeData.GetLineBreakClass(x)).ToArray();
-
-                this.Output.WriteLine($"Failed test on line {t.LineNumber}");
-                this.Output.WriteLine($"    Code Points: {string.Join(" ", t.CodePoints)}");
-                this.Output.WriteLine($"Expected Breaks: {string.Join(" ", t.BreakPoints)}");
-                this.Output.WriteLine($"  Actual Breaks: {string.Join(" ", foundBreaks)}");
-                this.Output.WriteLine($"     Char Props: {string.Join(" ", classes)}");
-
-                return false;
+                failures.Add($"line {test.LineNumber}: expected {string.Join(" ", test.BreakPoints)}, found {string.Join(" ", found)}");
             }
         }
 
-        return true;
-    }
-
-    private static bool IsHexDigit(char ch) => char.IsDigit(ch) || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f');
-
-    private readonly struct Test
-    {
-        public Test(int lineNumber, uint[] codePoints, int[] breakPoints)
-        {
-            this.LineNumber = lineNumber;
-            this.CodePoints = codePoints;
-            this.BreakPoints = breakPoints;
-        }
-
-        public int LineNumber { get; }
-
-        public uint[] CodePoints { get; }
-
-        public int[] BreakPoints { get; }
+        await Assert.That(failures.Take(10)).IsEmpty();
     }
 }
