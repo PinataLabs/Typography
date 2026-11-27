@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -61,8 +60,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     internal FontMetrics? FontMetrics { get; set; }
 
     /// <summary>
-    /// Gets or sets, for a fallback font, the offsets of the characters that no earlier font has a glyph for.
-    /// <see langword="null"/> for the font of the text run.
+    /// Gets or sets, for a fallback font, the <see cref="GlyphShapingData.SourceOffset"/> of each character that no earlier
+    /// font has a glyph for. <see langword="null"/> for the font of the text run.
     /// </summary>
     internal HashSet<int>? UnresolvedOffsets { get; set; }
 
@@ -126,8 +125,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <summary>
     /// Gets a value indicating whether the glyphs in the range may become other glyphs. A fallback font replaces glyphs
-    /// offset by offset, so it may compose or decompose only characters that no earlier font has a glyph for. Otherwise
-    /// a glyph of an earlier font would lose the characters that the fallback font folded into it.
+    /// character by character, so it may compose, ligate or decompose only characters that no earlier font has a glyph
+    /// for. Otherwise a glyph of an earlier font would lose the characters that the fallback font folded into it.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph.</param>
     /// <param name="end">The zero-based index after the last glyph.</param>
@@ -141,7 +140,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
         for (int i = start; i < end; i++)
         {
-            if (!this.UnresolvedOffsets.Contains(this.glyphs[i].Offset))
+            if (!this.UnresolvedOffsets.Contains(this.glyphs[i].Data.SourceOffset))
             {
                 return false;
             }
@@ -215,6 +214,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             Direction = direction,
             GlyphId = glyphId,
             Cluster = cluster,
+            SourceOffset = offset,
         }));
     }
 
@@ -237,6 +237,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             GlyphId = glyphId,
             CodePoint = codePoint,
             CodePointCount = 0,
+            HoldsInsertedGlyph = true,
             IsSubstituted = true,
             IsLigated = false,
             LigatureId = 0,
@@ -417,40 +418,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Gets the specified glyph ids matching the given codepoint offset.
-    /// </summary>
-    /// <param name="offset">The zero-based index within the input codepoint collection.</param>
-    /// <param name="data">
-    /// When this method returns, contains the shaping data associated with the specified offset,
-    /// if the value is found; otherwise, the default value for the type of the data parameter.
-    /// This parameter is passed uninitialized.
-    /// </param>
-    /// <returns>
-    /// <see langword="true"/> if the <see cref="GlyphSubstitutionCollection"/> contains glyph ids
-    /// for the specified offset; otherwise, <see langword="false"/>.
-    /// </returns>
-    public bool TryGetGlyphShapingDataAtOffset(int offset, [NotNullWhen(true)] out IReadOnlyList<GlyphShapingData>? data)
-    {
-        List<GlyphShapingData> match = [];
-        for (int i = 0; i < this.glyphs.Count; i++)
-        {
-            if (this.glyphs[i].Offset == offset)
-            {
-                match.Add(this.glyphs[i].Data);
-            }
-            else if (match.Count > 0)
-            {
-                // Offsets, though non-sequential, are sorted, so we can stop searching.
-                break;
-            }
-        }
-
-        data = match;
-        return match.Count > 0;
-    }
-
-    /// <summary>
-    /// Performs a 1:1 replacement of a glyph id at the given position.
+    /// Performs a 1:1 replacement of a glyph id at the given position. As in HarfBuzz, the glyph keeps its ligature id and
+    /// component, so a mark that a ligature skipped still attaches to its component.
     /// </summary>
     /// <param name="index">The zero-based index of the element to replace.</param>
     /// <param name="glyphId">The replacement glyph id.</param>
@@ -458,8 +427,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     {
         GlyphShapingData current = this.glyphs[index].Data;
         current.GlyphId = glyphId;
-        current.LigatureId = 0;
-        current.LigatureComponent = -1;
         current.MarkAttachment = -1;
         current.CursiveAttachment = 0;
         current.IsSubstituted = true;
@@ -482,16 +449,19 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
         // Remove the glyphs at each index.
         int codePointCount = 0;
+        bool holdsInsertedGlyph = false;
         for (int i = removalIndices.Length - 1; i >= 0; i--)
         {
             int match = removalIndices[i];
             codePointCount += this.glyphs[match].Data.CodePointCount;
+            holdsInsertedGlyph |= this.glyphs[match].Data.HoldsInsertedGlyph;
             this.glyphs.RemoveAt(match);
         }
 
         // Assign our new id at the index.
         GlyphShapingData current = this.glyphs[index].Data;
         current.CodePointCount += codePointCount;
+        current.HoldsInsertedGlyph |= holdsInsertedGlyph;
         current.GlyphId = glyphId;
         current.LigatureId = ligatureId;
         current.IsLigated = true;
@@ -533,37 +503,50 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Replaces a single glyph id with a collection of glyph ids.
+    /// Replaces a single glyph id with a collection of glyph ids. As in HarfBuzz, each glyph is a component of the glyph it
+    /// replaces, unless that glyph has a ligature id, as a ligature or a mark that a ligature skipped has: then each glyph
+    /// keeps the id and the component. A ligature gives glyphs of the base class. One glyph id is a single substitution.
     /// </summary>
     /// <param name="index">The zero-based index of the element to replace.</param>
     /// <param name="glyphIds">The collection of replacement glyph ids.</param>
     public void Replace(int index, ReadOnlySpan<ushort> glyphIds)
     {
-        if (glyphIds.Length > 0)
+        if (glyphIds.Length == 1)
+        {
+            this.Replace(index, glyphIds[0]);
+        }
+        else if (glyphIds.Length > 0)
         {
             OffsetGlyphDataPair pair = this.glyphs[index];
             GlyphShapingData current = pair.Data;
+            bool isComponent = current.LigatureId == 0;
+            if (current.SubstitutedGlyphClass == GlyphClassDef.LigatureGlyph)
+            {
+                current.SubstitutedGlyphClass = GlyphClassDef.BaseGlyph;
+            }
+
             current.GlyphId = glyphIds[0];
-            current.LigatureComponent = 0;
+            if (isComponent)
+            {
+                current.LigatureComponent = 0;
+            }
+
             current.MarkAttachment = -1;
             current.CursiveAttachment = 0;
             current.IsSubstituted = true;
             current.IsDecomposed = true;
 
             // Add additional glyphs from the rest of the sequence.
-            if (glyphIds.Length > 1)
+            glyphIds = glyphIds.Slice(1);
+            for (int i = 0; i < glyphIds.Length; i++)
             {
-                glyphIds = glyphIds.Slice(1);
-                for (int i = 0; i < glyphIds.Length; i++)
+                GlyphShapingData data = new(current, false)
                 {
-                    GlyphShapingData data = new(current, false)
-                    {
-                        GlyphId = glyphIds[i],
-                        LigatureComponent = i + 1
-                    };
+                    GlyphId = glyphIds[i],
+                    LigatureComponent = isComponent ? i + 1 : current.LigatureComponent
+                };
 
-                    this.glyphs.Insert(++index, new(pair.Offset, data));
-                }
+                this.glyphs.Insert(++index, new(pair.Offset, data));
             }
         }
         else

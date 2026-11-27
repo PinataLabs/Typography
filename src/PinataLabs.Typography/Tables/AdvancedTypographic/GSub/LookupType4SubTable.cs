@@ -3,7 +3,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Globalization;
 using System.IO;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
 
@@ -151,6 +153,12 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                 continue;
             }
 
+            Span<int> matches = matchBuffer.Slice(0, Math.Min(ligatureTable.ComponentGlyphs.Length, matchBuffer.Length));
+            if (!IsUnresolved(collection, index, matches))
+            {
+                continue;
+            }
+
             // From Harfbuzz:
             // - If it *is* a mark ligature, we don't allocate a new ligature id, and leave
             //   the ligature to keep its old ligature id.  This will allow it to attach to
@@ -179,8 +187,6 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             GlyphShapingClass shapingClass = AdvancedTypographicUtils.GetGlyphShapingClass(fontMetrics, glyphId, data);
             bool isBaseLigature = shapingClass.IsBase;
             bool isMarkLigature = shapingClass.IsMark;
-
-            Span<int> matches = matchBuffer.Slice(0, Math.Min(ligatureTable.ComponentGlyphs.Length, matchBuffer.Length));
             for (int j = 0; j < matches.Length; j++)
             {
                 GlyphShapingData match = collection[matches[j]];
@@ -260,13 +266,35 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             }
             else if (isLigature)
             {
-                collection[index].SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
+                GlyphShapingData ligature = collection[index];
+                ligature.SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
+                ligature.IsOtherLetter |= CodePoint.GetGeneralCategory(ligature.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark;
             }
 
             return true;
         }
 
         return false;
+    }
+
+    // A fallback font draws only the characters that no earlier font has a glyph for. A ligature that took in a character
+    // that an earlier font drew would draw that character twice, or lose the one that the fallback font draws.
+    private static bool IsUnresolved(GlyphSubstitutionCollection collection, int index, ReadOnlySpan<int> matches)
+    {
+        if (!collection.IsUnresolved(index, index + 1))
+        {
+            return false;
+        }
+
+        foreach (int match in matches)
+        {
+            if (!collection.IsUnresolved(match, match + 1))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public readonly struct LigatureSetTable

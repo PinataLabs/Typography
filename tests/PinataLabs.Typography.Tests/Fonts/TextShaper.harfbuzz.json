@@ -1315,6 +1315,9 @@
     {"name":"HangShaper","font":"TextShaperHangul.ttf","text":"\u302f\u0301","script":"Hang","direction":"ltr","glyphs":[[8,0,600,0,0],[11,0,0,0,0],[9,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangul.ttf","text":"\u1100\u302e\u0301","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[10,0,600,0,0],[8,0,600,0,0],[9,0,600,-300,100]]},
     {"name":"HangShaper","font":"TextShaperHangul.ttf","text":"\uac00\ufe00","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0]]},
+    {"name":"HangShaper","font":"TextShaperHangul.ttf","text":"\uac00\ufe00\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[10,0,600,0,0],[8,0,600,0,0]]},
+    {"name":"HangShaper","font":"TextShaperHangul.ttf","text":"\uac00\u034f\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[10,0,600,0,0],[8,0,600,0,0]]},
+    {"name":"HangShaper","font":"TextShaperHangul.ttf","text":"\uac00\u200d\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[10,0,600,0,0],[8,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\uac00","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\u1100\u1161","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\uac00\u11a8","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[4,0,600,0,0]]},
@@ -1335,6 +1338,9 @@
     {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\u302f\u0301","script":"Hang","direction":"ltr","glyphs":[[0,0,0,0,0],[8,0,600,0,0],[0,0,0,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\u1100\u302e\u0301","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[0,0,0,-300,0],[8,0,0,-300,0],[0,0,0,-300,62]]},
     {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\uac00\ufe00","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\uac00\ufe00\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[0,0,0,-300,0],[8,0,0,-300,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\uac00\u034f\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[0,0,0,-300,0],[8,0,0,-300,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulNotdef.ttf","text":"\uac00\u200d\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[0,0,0,-300,0],[8,0,0,-300,0]]},
     {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\uac00","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\u1100\u1161","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\uac00\u11a8","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[4,0,600,0,0]]},
@@ -1355,6 +1361,9 @@
     {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\u302f\u0301","script":"Hang","direction":"ltr","glyphs":[[0,0,600,0,0],[8,0,600,0,0],[0,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\u1100\u302e\u0301","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[9,0,0,-300,0],[8,0,0,-300,0],[0,0,0,-300,62]]},
     {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\uac00\ufe00","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\uac00\ufe00\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[9,0,0,-300,0],[8,0,0,-300,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\uac00\u034f\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[9,0,0,-300,0],[8,0,0,-300,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulColr.ttf","text":"\uac00\u200d\u302e","script":"Hang","direction":"ltr","glyphs":[[6,0,600,0,0],[1,0,0,0,0],[9,0,0,-300,0],[8,0,0,-300,0]]},
     {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\u1100\u1161","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00\u11a8","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[4,1,600,0,0]]},
@@ -1374,6 +1383,9 @@
     {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\u302e\u0301","script":"Hang","direction":"ltr","glyphs":[[8,0,600,0,0],[7,0,600,0,0],[0,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\u302f\u0301","script":"Hang","direction":"ltr","glyphs":[[0,0,600,0,0],[7,0,600,0,0],[0,0,600,0,0]]},
     {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\u1100\u302e\u0301","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[8,0,0,-300,0],[7,0,0,-300,0],[0,0,0,-300,62]]},
-    {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00\ufe00","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[1,0,0,0,0]]}
+    {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00\ufe00","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[1,0,0,0,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00\ufe00\u302e","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[1,0,0,0,0],[8,0,0,-300,0],[7,0,0,-300,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00\u034f\u302e","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[1,0,0,0,0],[8,0,0,-300,0],[7,0,0,-300,0]]},
+    {"name":"HangShaper","font":"TextShaperHangulUvs.ttf","text":"\uac00\u200d\u302e","script":"Hang","direction":"ltr","glyphs":[[2,0,600,0,0],[3,0,600,0,0],[1,0,0,0,0],[8,0,0,-300,0],[7,0,0,-300,0]]}
   ]
 }

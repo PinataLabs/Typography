@@ -54,8 +54,6 @@ internal ref struct GlyphNormalizer
 
     private readonly GlyphSubstitutionCollection collection;
 
-    private readonly bool hasFallbackFonts;
-
     // The run of glyphs that one shaper shapes. HarfBuzz normalizes each such run as one buffer.
     private NormalizationProfile profile = NormalizationProfile.Default;
 
@@ -67,11 +65,10 @@ internal ref struct GlyphNormalizer
 
     private bool composesPresentationForms;
 
-    private GlyphNormalizer(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts)
+    private GlyphNormalizer(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
     {
         this.fontMetrics = fontMetrics;
         this.collection = collection;
-        this.hasFallbackFonts = hasFallbackFonts;
     }
 
     /// <summary>
@@ -79,12 +76,8 @@ internal ref struct GlyphNormalizer
     /// </summary>
     /// <param name="fontMetrics">The font that shapes the run.</param>
     /// <param name="collection">The glyphs of the run.</param>
-    /// <param name="hasFallbackFonts">
-    /// Whether a fallback font can replace the glyphs that this font lacks. A fallback font replaces glyphs offset
-    /// by offset. So a mark that this font lacks must keep its offset, and its run of marks is not sorted.
-    /// </param>
-    public static void Normalize(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, bool hasFallbackFonts)
-        => new GlyphNormalizer(fontMetrics, collection, hasFallbackFonts).NormalizeRuns();
+    public static void Normalize(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
+        => new GlyphNormalizer(fontMetrics, collection).NormalizeRuns();
 
     private void NormalizeRuns()
     {
@@ -103,7 +96,7 @@ internal ref struct GlyphNormalizer
             // As in HarfBuzz, this comes before the text is normalized.
             if (ShaperFactory.BreaksInvalidVowelSequences(script, scriptTag))
             {
-                this.runEnd += VowelConstraints.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd, script, this.hasFallbackFonts);
+                this.runEnd += VowelConstraints.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd, script);
             }
 
             if (this.profile.SplitsVowels)
@@ -398,14 +391,12 @@ internal ref struct GlyphNormalizer
             }
 
             int end = i;
-            bool canMove = true;
             while (end < items.Length && items[end].Order != 0)
             {
-                canMove &= !this.hasFallbackFonts || items[end].GlyphId != 0;
                 end++;
             }
 
-            if (canMove && end - i <= MaxSortedMarks)
+            if (end - i <= MaxSortedMarks)
             {
                 Span<Item> run = items.Slice(i, end - i);
                 changed |= SortByOrder(run);

@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using System.Globalization;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -104,11 +103,9 @@ internal static class FallbackMarkPositioner
         }
     }
 
-    // As in HarfBuzz, a ligature of components that are not all marks has the general category Lo where it was Mn.
+    // As in HarfBuzz, a dotted circle that a shaper inserted has the Unicode properties that it copied.
     private static bool IsUnicodeMark(GlyphShapingData data)
-        => CodePoint.IsMark(data.CodePoint)
-            && !(data.SubstitutedGlyphClass == GlyphClassDef.LigatureGlyph
-                && CodePoint.GetGeneralCategory(data.CodePoint) == UnicodeCategory.NonSpacingMark);
+        => !data.IsOtherLetter && CodePoint.IsMark(data.UnicodePropertiesCodePoint);
 
     private static void PlaceMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
     {
@@ -121,11 +118,13 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
+            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph. Such a glyph takes no advance and no
+            // place, so it may come from another font.
             int marksEnd = index + 1;
             bool canPlace = collection.ShouldProcess(fontMetrics, index) && IsPlaceable(collection, collection[index]);
-            while (marksEnd < end && IsUnicodeMark(collection[marksEnd]))
+            while (marksEnd < end && (IsUnicodeMark(collection[marksEnd]) || collection[marksEnd].IsDefaultIgnorable))
             {
-                canPlace &= collection.ShouldProcess(fontMetrics, marksEnd);
+                canPlace &= collection[marksEnd].IsDefaultIgnorable || collection.ShouldProcess(fontMetrics, marksEnd);
                 marksEnd++;
             }
 
@@ -162,12 +161,17 @@ internal static class FallbackMarkPositioner
         for (int i = baseIndex + 1; i < end; i++)
         {
             GlyphShapingData data = collection[i];
-            uint placement = UnicodeData.GetCombiningClassData((uint)data.CodePoint.Value);
+            uint placement = UnicodeData.GetCombiningClassData((uint)data.UnicodePropertiesCodePoint.Value);
             MarkAlignment alignment = (MarkAlignment)((placement >> CanonicalMappingData.MarkAlignmentShift) & CanonicalMappingData.MarkPlacementMask);
             MarkSide side = (MarkSide)((placement >> CanonicalMappingData.MarkSideShift) & CanonicalMappingData.MarkPlacementMask);
             if (alignment == MarkAlignment.None)
             {
-                penOffset += isForward ? -GetAdvance(collection, i) : GetAdvance(collection, i);
+                // HarfBuzz has taken the advance of a default-ignorable glyph away by now, and the layout does so later.
+                if (!data.IsDefaultIgnorable)
+                {
+                    penOffset += isForward ? -GetAdvance(collection, i) : GetAdvance(collection, i);
+                }
+
                 continue;
             }
 

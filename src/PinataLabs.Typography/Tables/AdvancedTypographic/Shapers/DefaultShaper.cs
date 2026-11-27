@@ -268,6 +268,53 @@ internal class DefaultShaper : BaseShaper
     }
 
     /// <summary>
+    /// Replaces each vowel sign of the range that has parts with the glyphs of its parts, as HarfBuzz decomposes such a
+    /// sign when it normalizes the text. As there, a sign stays whole when the font lacks one of its parts. With fallback
+    /// fonts, a sign that the font lacks is split all the same, where HarfBuzz keeps one .notdef, so that a fallback font
+    /// draws each part where the shaper puts it, the part in front of the base before the base.
+    /// </summary>
+    /// <param name="collection">The glyphs of the text.</param>
+    /// <param name="index">The zero-based index of the first glyph of the range.</param>
+    /// <param name="count">The number of glyphs in the range.</param>
+    /// <param name="decompositions">The parts of each vowel sign, the part in front of the base first.</param>
+    protected static void SplitVowelSigns(IGlyphShapingCollection collection, int index, int count, Dictionary<int, int[]> decompositions)
+    {
+        if (collection is not GlyphSubstitutionCollection substitutionCollection)
+        {
+            return;
+        }
+
+        bool hasFallbackFonts = substitutionCollection.TextOptions.FallbackFontFamilies?.Count > 0;
+        Span<ushort> ids = stackalloc ushort[16];
+        for (int i = index + count - 1; i >= index; i--)
+        {
+            GlyphShapingData data = substitutionCollection[i];
+            if (!decompositions.TryGetValue(data.CodePoint.Value, out int[]? parts))
+            {
+                continue;
+            }
+
+            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
+            bool hasParts = true;
+            for (int j = 0; j < parts.Length; j++)
+            {
+                hasParts &= fontMetrics.TryGetGlyphId(new CodePoint(parts[j]), out ids[j]) && ids[j] != 0;
+            }
+
+            if (!hasParts && (data.GlyphId != 0 || !hasFallbackFonts))
+            {
+                continue;
+            }
+
+            substitutionCollection.Replace(i, ids.Slice(0, parts.Length));
+            for (int j = 0; j < parts.Length; j++)
+            {
+                substitutionCollection[i + j].CodePoint = new(parts[j]);
+            }
+        }
+    }
+
+    /// <summary>
     /// Plans a feature in the open stage and assigns it to the glyphs that are not upright in vertical text, as
     /// HarfBuzz applies <c>dist</c> to horizontal text only.
     /// </summary>

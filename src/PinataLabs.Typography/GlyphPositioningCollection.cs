@@ -129,7 +129,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Gets the offsets of the codepoints that no font so far has a glyph for.
+    /// Gets the <see cref="GlyphShapingData.SourceOffset"/> of each character that no font so far has a glyph for.
     /// </summary>
     /// <returns>The offsets within the input codepoint collection.</returns>
     public HashSet<int> GetUnresolvedOffsets()
@@ -137,9 +137,9 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         HashSet<int> offsets = [];
         foreach (GlyphPositioningData glyph in this.glyphs)
         {
-            if (glyph.Metrics[0].GlyphType == GlyphType.Fallback)
+            if (glyph.Metrics[0].GlyphType == GlyphType.Fallback && !glyph.Data.IsInserted)
             {
-                offsets.Add(glyph.Offset);
+                offsets.Add(glyph.Data.SourceOffset);
             }
         }
 
@@ -147,95 +147,216 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Updates the collection of glyph ids to the metrics collection to overwrite any glyphs that have been previously
-    /// identified as fallbacks.
+    /// Replaces the glyphs that no font so far has with the glyphs that a fallback font gives the same character. The font
+    /// of the text decided which glyphs the text has and in what order, so the new glyphs take the place of the glyphs
+    /// they replace, wherever the shaper of that font put them.
     /// </summary>
-    /// <param name="font">The font face with metrics.</param>
-    /// <param name="collection">The glyph substitution collection.</param>
+    /// <param name="font">The fallback font.</param>
+    /// <param name="collection">The glyphs of the whole text, shaped with the fallback font.</param>
     /// <returns><see langword="true"/> if the metrics collection does not contain any fallbacks; otherwise <see langword="false"/>.</returns>
     public bool TryUpdate(Font font, GlyphSubstitutionCollection collection)
     {
-        FontMetrics fontMetrics = font.FontMetrics;
-        LayoutMode layoutMode = this.TextOptions.LayoutMode;
-        ColorFontSupport colorFontSupport = this.TextOptions.ColorFontSupport;
-        bool hasFallBacks = false;
-        List<int> orphans = [];
+        Dictionary<int, Character> characters = [];
         for (int i = 0; i < this.glyphs.Count; i++)
         {
-            GlyphPositioningData current = this.glyphs[i];
-            if (current.Metrics[0].GlyphType != GlyphType.Fallback)
+            if (IsMissing(this.glyphs[i]) && !characters.ContainsKey(this.glyphs[i].Data.SourceOffset))
             {
-                // We've already got the correct glyph.
-                continue;
+                characters.Add(this.glyphs[i].Data.SourceOffset, new Character());
             }
+        }
 
-            int offset = current.Offset;
-            float pointSize = current.PointSize;
-            if (collection.TryGetGlyphShapingDataAtOffset(offset, out IReadOnlyList<GlyphShapingData>? data))
+        for (int i = 0; i < this.glyphs.Count; i++)
+        {
+            if (characters.TryGetValue(this.glyphs[i].Data.SourceOffset, out Character? character))
             {
-                int replacementCount = 0;
-                for (int j = 0; j < data.Count; j++)
-                {
-                    GlyphShapingData shape = data[j];
-                    ushort id = shape.GlyphId;
-                    CodePoint codePoint = shape.CodePoint;
+                character.Indices.Add(i);
+            }
+        }
 
-                    // Perform a semi-deep clone (FontMetrics is not cloned) so we can continue to
-                    // cache the original in the font metrics and only update our collection.
-                    var metrics = new List<GlyphMetrics>(data.Count);
-                    TextAttributes textAttributes = shape.TextRun.TextAttributes;
-                    TextDecorations textDecorations = shape.TextRun.TextDecorations;
-                    foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport, shape.HasVerticalForm))
-                    {
-                        if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint))
-                        {
-                            // If the glyphs are fallbacks we don't want them as
-                            // we've already captured them on the first run.
-                            hasFallBacks = true;
-                            break;
-                        }
+        for (int i = 0; i < collection.Count; i++)
+        {
+            if (characters.TryGetValue(collection[i].SourceOffset, out Character? character))
+            {
+                character.Fallback.Add(collection[i]);
+            }
+        }
 
-                        metrics.Add(gm.CloneForRendering(shape.TextRun, codePoint));
-                    }
+        bool hasFallBacks = false;
+        Dictionary<int, GlyphPositioningData[]> replacements = [];
+        foreach (Character character in characters.Values)
+        {
+            hasFallBacks |= !this.TryReplaceCharacter(font.FontMetrics, character, replacements);
+        }
 
-                    if (metrics.Count > 0)
-                    {
-                        SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm));
-                        if (j == 0)
-                        {
-                            // There should only be a single fallback glyph at this position from the previous collection.
-                            this.glyphs.RemoveAt(i);
-                        }
-
-                        // Track the number of inserted glyphs at the offset so we can correctly increment our position.
-                        int maxAdvancedWidth = 0;
-                        int maxAdvancedHeight = 0;
-                        for (int k = 0; k < metrics.Count; k++)
-                        {
-                            maxAdvancedWidth = Math.Max(maxAdvancedWidth, metrics[k].AdvanceWidth);
-                            maxAdvancedHeight = Math.Max(maxAdvancedHeight, metrics[k].AdvanceHeight);
-                        }
-
-                        this.glyphs.Insert(i += replacementCount, new(offset, new(shape, true) { Bounds = new(0, 0, maxAdvancedWidth, maxAdvancedHeight) }, pointSize, metrics.ToArray()));
-                        replacementCount++;
-                    }
-                }
+        List<GlyphPositioningData> updated = new(this.glyphs.Count);
+        for (int i = 0; i < this.glyphs.Count; i++)
+        {
+            if (replacements.TryGetValue(i, out GlyphPositioningData[]? replacement))
+            {
+                updated.AddRange(replacement);
             }
             else
             {
-                // If a font had glyphs but a follow up font also has them and can substitute. e.g ligatures
-                // then we end up with orphaned fallbacks. We need to remove them.
-                orphans.Add(i);
+                updated.Add(this.glyphs[i]);
             }
         }
 
-        // Remove any orphans.
-        for (int i = orphans.Count - 1; i >= 0; i--)
+        this.glyphs.Clear();
+        this.glyphs.AddRange(updated);
+        return !hasFallBacks;
+    }
+
+    private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
+
+    // Two glyphs of a character draw the same part when a shaper inserted both or neither, as it inserts a dotted circle,
+    // and they have the same code point, as each part of a vowel sign that a shaper split has its own.
+    private static bool IsSamePart(GlyphShapingData glyph, GlyphShapingData other)
+        => glyph.IsInserted == other.IsInserted && glyph.CodePoint == other.CodePoint;
+
+    /// <summary>
+    /// Plans the glyphs that replace the glyphs of one character. Each missing glyph takes the glyphs of the fallback font
+    /// that draw the same part. The fallback font draws the whole character instead when it does not draw the missing
+    /// parts alone, as when it keeps whole a vowel sign that the font split, or makes one glyph of a sign and of the dotted
+    /// circle that the font drew. So it does when the font drew none of the character and the fallback font has glyphs of
+    /// it left, as when it splits a sign that the font kept whole. Its glyphs then take the place of the last missing
+    /// glyph, where a shaper puts a sign that it keeps whole, and the other glyphs of the character go. A dotted circle
+    /// that the font drew stays, unless the fallback font draws its own, alone or in a ligature.
+    /// </summary>
+    /// <param name="fontMetrics">The fallback font.</param>
+    /// <param name="character">The glyphs of the character here and in the fallback font.</param>
+    /// <param name="replacements">The glyphs that replace each glyph, by index. An empty array removes the glyph.</param>
+    /// <returns><see langword="false"/> if the fallback font lacks a glyph too, which is left for the next fallback font.</returns>
+    private bool TryReplaceCharacter(FontMetrics fontMetrics, Character character, Dictionary<int, GlyphPositioningData[]> replacements)
+    {
+        // The font of the text decided whether the character has an inserted glyph, such as a dotted circle.
+        List<int> indices = character.Indices;
+        bool hasInserted = indices.Exists(i => this.glyphs[i].Data.IsInserted);
+        bool hasOwn = indices.Exists(i => !this.glyphs[i].Data.IsInserted);
+        List<GlyphShapingData> fallback = character.Fallback.FindAll(g => g.IsInserted ? hasInserted : hasOwn);
+        List<GlyphShapingData> untaken = [.. fallback];
+        Dictionary<int, List<GlyphShapingData>> parts = [];
+        bool isWhole = false;
+        foreach (int i in indices)
         {
-            this.glyphs.RemoveAt(orphans[i]);
+            if (!IsMissing(this.glyphs[i]))
+            {
+                continue;
+            }
+
+            GlyphShapingData missing = this.glyphs[i].Data;
+
+            // When the font drew another glyph of the same code point, as of a sign that a substitution split, the code
+            // point does not tell which part is missing.
+            List<GlyphShapingData> part = indices.Exists(j => !IsMissing(this.glyphs[j]) && IsSamePart(this.glyphs[j].Data, missing))
+                ? []
+                : untaken.FindAll(g => IsSamePart(g, missing));
+
+            if (part.Count == 0)
+            {
+                isWhole = true;
+                break;
+            }
+
+            untaken.RemoveAll(part.Contains);
+            parts.Add(i, part);
         }
 
-        return !hasFallBacks;
+        isWhole |= untaken.Count > 0 && indices.TrueForAll(i => IsMissing(this.glyphs[i]));
+        if (isWhole)
+        {
+            int last = indices.FindLast(i => IsMissing(this.glyphs[i]));
+            if (!this.TryCreateGlyphs(fontMetrics, fallback, this.glyphs[last], out GlyphPositioningData[] whole))
+            {
+                return false;
+            }
+
+            bool hasFallbackInserted = fallback.Exists(g => g.HoldsInsertedGlyph);
+            foreach (int i in indices)
+            {
+                if (i == last)
+                {
+                    replacements.Add(i, whole);
+                }
+                else if (hasFallbackInserted || !this.glyphs[i].Data.IsInserted || IsMissing(this.glyphs[i]))
+                {
+                    replacements.Add(i, []);
+                }
+            }
+
+            return true;
+        }
+
+        bool isComplete = true;
+        foreach (KeyValuePair<int, List<GlyphShapingData>> part in parts)
+        {
+            if (this.TryCreateGlyphs(fontMetrics, part.Value, this.glyphs[part.Key], out GlyphPositioningData[] glyphs))
+            {
+                replacements.Add(part.Key, glyphs);
+            }
+            else
+            {
+                isComplete = false;
+            }
+        }
+
+        return isComplete;
+    }
+
+    /// <summary>
+    /// Makes the glyphs of a fallback font that take the place of a glyph.
+    /// </summary>
+    /// <param name="fontMetrics">The fallback font.</param>
+    /// <param name="shapes">The glyphs of the fallback font, in its order.</param>
+    /// <param name="place">The glyph whose place they take.</param>
+    /// <param name="glyphs">The new glyphs.</param>
+    /// <returns><see langword="false"/> if the fallback font lacks one of the glyphs too.</returns>
+    private bool TryCreateGlyphs(FontMetrics fontMetrics, List<GlyphShapingData> shapes, GlyphPositioningData place, out GlyphPositioningData[] glyphs)
+    {
+        LayoutMode layoutMode = this.TextOptions.LayoutMode;
+        ColorFontSupport colorFontSupport = this.TextOptions.ColorFontSupport;
+        glyphs = new GlyphPositioningData[shapes.Count];
+        for (int i = 0; i < shapes.Count; i++)
+        {
+            GlyphShapingData shape = shapes[i];
+            ushort id = shape.GlyphId;
+            CodePoint codePoint = shape.CodePoint;
+
+            // Perform a semi-deep clone (FontMetrics is not cloned) so we can continue to
+            // cache the original in the font metrics and only update our collection.
+            List<GlyphMetrics> metrics = [];
+            TextAttributes textAttributes = shape.TextRun.TextAttributes;
+            TextDecorations textDecorations = shape.TextRun.TextDecorations;
+            foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport, shape.HasVerticalForm))
+            {
+                if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint))
+                {
+                    return false;
+                }
+
+                metrics.Add(gm.CloneForRendering(shape.TextRun, codePoint));
+            }
+
+            SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm));
+            int maxAdvancedWidth = 0;
+            int maxAdvancedHeight = 0;
+            for (int k = 0; k < metrics.Count; k++)
+            {
+                maxAdvancedWidth = Math.Max(maxAdvancedWidth, metrics[k].AdvanceWidth);
+                maxAdvancedHeight = Math.Max(maxAdvancedHeight, metrics[k].AdvanceHeight);
+            }
+
+            // The glyphs at an offset each take an advance only when one of them is decomposed. So a new glyph keeps that
+            // of the glyph whose place it takes, which a shaper may have put at the offset of another glyph.
+            GlyphShapingData data = new(shape, true)
+            {
+                Bounds = new(0, 0, maxAdvancedWidth, maxAdvancedHeight),
+                IsDecomposed = shape.IsDecomposed || place.Data.IsDecomposed,
+            };
+
+            glyphs[i] = new(place.Offset, data, place.PointSize, metrics.ToArray());
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -417,6 +538,17 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <returns><see langword="true"/> if the element should be processed; otherwise, <see langword="false"/>.</returns>
     public bool ShouldProcess(FontMetrics fontMetrics, int index)
         => this.glyphs[index].Metrics[0].FontMetrics == fontMetrics;
+
+    /// <summary>
+    /// The glyphs of a character that a glyph is missing for: the indices of its glyphs in this collection, in order, and
+    /// its glyphs in the run of a fallback font.
+    /// </summary>
+    private sealed class Character
+    {
+        public List<int> Indices { get; } = [];
+
+        public List<GlyphShapingData> Fallback { get; } = [];
+    }
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     private class GlyphPositioningData

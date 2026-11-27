@@ -36,7 +36,10 @@ internal class GlyphShapingData
         this.CodePoint = data.CodePoint;
         this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
         this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
+        this.IsOtherLetter = data.IsOtherLetter;
         this.CodePointCount = data.CodePointCount;
+        this.HoldsInsertedGlyph = data.HoldsInsertedGlyph;
+        this.SourceOffset = data.SourceOffset;
         this.Cluster = data.Cluster;
         this.Direction = data.Direction;
         this.TextRun = data.TextRun;
@@ -114,14 +117,40 @@ internal class GlyphShapingData
     /// <summary>
     /// Gets or sets the class that GSUB gave the glyph, which a font without glyph classes takes in place of the class of
     /// its character. As in HarfBuzz, a ligature of components that are not all marks is a ligature glyph, even when its
-    /// first component is a mark, and in any font its general category is Lo where it was Mn.
+    /// first component is a mark.
     /// </summary>
     public GlyphClassDef? SubstitutedGlyphClass { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph has the general category Lo where the character whose properties
+    /// it has is Mn. As in HarfBuzz, a ligature of components that are not all marks takes it in any font, and the glyphs
+    /// that a substitution makes of the ligature keep it, whatever class they get.
+    /// </summary>
+    public bool IsOtherLetter { get; set; }
 
     /// <summary>
     /// Gets or sets the codepoint count represented by this glyph.
     /// </summary>
     public int CodePointCount { get; set; } = 1;
+
+    /// <summary>
+    /// Gets a value indicating whether a shaper inserted the glyph, as a dotted circle, so that it stands for no
+    /// character of the text.
+    /// </summary>
+    public bool IsInserted => this.CodePointCount == 0;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is one that a shaper inserted or a ligature that took one in, as a
+    /// font can make one glyph of a dotted circle and a sign.
+    /// </summary>
+    public bool HoldsInsertedGlyph { get; set; }
+
+    /// <summary>
+    /// Gets or sets the offset, within the input codepoint collection, of the character that the glyph comes from. It
+    /// moves with the glyph when a shaper reorders the glyphs, and a glyph that is made from another keeps it. So a
+    /// fallback font finds its own glyphs of the character, wherever the shaper put the glyph.
+    /// </summary>
+    public int SourceOffset { get; set; }
 
     /// <summary>
     /// Gets or sets the cluster of the glyph, as HarfBuzz keeps it at its default cluster level: the UTF-16 index in

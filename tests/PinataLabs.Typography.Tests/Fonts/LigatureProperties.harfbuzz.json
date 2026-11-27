@@ -1,0 +1,21 @@
+{
+  "harfbuzz": "15.0.0",
+  "rows": [
+    ["LigatureProperties.ttf","a\u0301b",[[7,0,0],[8,110,600]]],
+    ["LigatureProperties.ttf","a\u0300b",[[7,0,0],[9,110,600],[10,110,600]]],
+    ["LigatureProperties.ttf","a\u0302b",[[7,0,0],[11,110,600]]],
+    ["LigatureProperties.ttf","ab\u0301",[[7,0,0],[8,710,600]]],
+    ["LigatureProperties.ttf","c\u0301",[[3,0,0],[8,300,500]]],
+    ["LigatureProperties.ttf","c\u0300",[[3,0,0],[9,300,500],[10,300,500]]],
+    ["LigaturePropertiesWithoutGlyphClasses.ttf","ab",[[9,0,0],[4,600,0]]],
+    ["LigaturePropertiesWithoutGlyphClasses.ttf","bd",[[3,0,0]]],
+    ["LigaturePropertiesWithoutGlyphClasses.ttf","d\u0301a",[[4,0,0],[2,600,0],[2,1200,0]]],
+    ["LigaturePropertiesWithoutGlyphClasses.ttf","c",[[9,0,0]]],
+    ["LigaturePropertiesWithoutGlyphClasses.ttf","d\u0301",[[4,0,0],[5,300,62]]],
+    ["LigaturePropertiesIndic.ttf","\u0930\u094d\u0915",[[1,0,0],[9,600,0]]],
+    ["LigaturePropertiesIndic.ttf","\u0915\u094d\u0924\u093f",[[1,0,0],[7,600,0],[6,1200,0],[10,1800,0]]],
+    ["LigaturePropertiesIndic.ttf","\u092a\u094d\u0924\u093f",[[6,0,0],[11,600,0],[4,1200,0]]],
+    ["LigaturePropertiesIndic.ttf","\u0915\u094d\u0924",[[1,0,0],[7,600,0],[10,1200,0]]],
+    ["LigaturePropertiesIndic.ttf","\u092a\u094d\u0924",[[11,0,0],[4,600,0]]]
+  ]
+}
