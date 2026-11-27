@@ -57,6 +57,13 @@ dotnet add reference path/to/Typography/src/PinataLabs.Typography/PinataLabs.Typ
 
    A local build has the version `0.0.1`. Official builds take their version from the Git tag.
 
+## Software bill of materials
+
+Each released package contains an SPDX software bill of materials at
+`_manifest/spdx_2.2/manifest.spdx.json` inside the `.nupkg`. Each GitHub release also has a CycloneDX
+file (`.cdx.json`) for each package. Both list the package and its NuGet dependencies. A package that
+you build yourself has no bill of materials.
+
 ## Check the installation
 
 Add this code to a console application. It lists the font families installed on the machine:

@@ -19,7 +19,7 @@ The build fails if the public API differs from them, so they are always up to da
 | --- | --- |
 | `PinataLabs.Typography` | Fonts, collections, layout options, measurement, rendering and metrics. Most code needs only this namespace. |
 | `PinataLabs.Typography.Tables.AdvancedTypographic` | `Tag` and `FeatureTags`, to turn on [OpenType features](../text/opentype-features.md). |
-| `PinataLabs.Typography.Unicode` | `CodePoint`, grapheme and code-point enumeration, and Unicode properties. |
+| `PinataLabs.Typography.Unicode` | `CodePoint`, grapheme and code-point enumeration, Unicode properties, line breaking, bidi, script itemization, and glyph names and PDF encodings. |
 | `PinataLabs.Typography.WellKnownIds` | `KnownNameIds`, the IDs of the strings in a font's `name` table. |
 
 ## Types by task
@@ -27,15 +27,16 @@ The build fails if the public API differs from them, so they are always up to da
 | Task | Types |
 | --- | --- |
 | Load and find fonts | [`FontCollection`, `SystemFonts`, `FontFamily`, `FontDescription`](./font-collections.md) |
-| Make a font | [`Font`, `FontStyle`, `FontStyleRange`](./font.md) |
+| Make a font | [`Font`, `FontStyle`, `FontStyleRange`, `FontVariation`, `FontVariationAxis`, `FontNamedInstance`](./font.md) |
 | Set up a layout | [`TextOptions`, `TextRun`](./text-options.md) |
 | Measure text | [`TextMeasurer`, `GlyphBounds`](./text-measurer.md) |
 | Shape text into glyphs and clusters | [`TextShaper`, `ShapedGlyph`, `ShapingOptions`, `ShapingFeature`](./text-shaper.md) |
+| Read a font program for PDF, and subset it | [`FontProgram`, `FontProgramOptions`, `FontSubsetter`, `FontSubsetOptions`](./font-program.md) |
 | Get glyph outlines | [`TextRenderer`, `IGlyphRenderer`, `IColorGlyphRenderer`, `GlyphRendererParameters`](./text-renderer.md) |
-| Read metrics | [`FontMetrics`, `HorizontalMetrics`, `VerticalMetrics`, `Glyph`, `GlyphMetrics`](./metrics.md) |
+| Read metrics | [`FontMetrics`, `HorizontalMetrics`, `VerticalMetrics`, `Glyph`, `GlyphMetrics`, `FontDescriptorMetrics`, `FontEmbeddingPermissions`](./metrics.md) |
 | Rectangles and colors | [`FontRectangle`, `GlyphColor`](./geometry.md) |
 | Options | [Enumerations](./enumerations.md) |
-| Unicode | [`CodePoint` and related types](./unicode.md) |
+| Unicode, line breaking, bidi and scripts | [`CodePoint`, `LineBreakEnumerator`, `BidiParagraph`, `TextItemizer` and related types](./unicode.md) |
 | Errors | [Exceptions](./exceptions.md) |
 
 ## Conventions

@@ -16,11 +16,19 @@ Read the [documentation](https://pinatalabs.github.io/Typography/) for guides, t
 - Load TrueType fonts and TrueType collections (`.ttc`).
 - Load [WOFF](https://www.w3.org/Submission/WOFF/) and [WOFF2](https://www.w3.org/TR/WOFF2) fonts.
 - Load all compatible fonts installed on the machine (Windows, Linux and macOS).
+- Choose a face by weight, width and slope with CSS font matching.
+- Variable fonts at any instance: `fvar`, `avar`, `gvar`, `cvar`, CFF2 blends, `HVAR`, `VVAR`, `MVAR`, and GPOS and feature variations.
 - Line breaking based on [UAX #14](https://www.unicode.org/reports/tr14/).
 - The Unicode algorithms and character properties are also published without any font code, as `PinataLabs.Typography.Unicode`. It reports the Unicode version of its data as `UnicodeInfo.Version`.
 - Left-to-right, right-to-left and bidirectional text.
 - Ligatures, and the OpenType glyph substitution ([GSUB](https://learn.microsoft.com/typography/opentype/spec/gsub)) and glyph positioning ([GPOS](https://learn.microsoft.com/typography/opentype/spec/gpos)) features.
 - Measure the size, advance and bounds of laid-out text.
+- Shape a run into glyph IDs with clusters, advances and offsets, matching HarfBuzz 15.
+- Line breaking, bidi paragraphs (UAX #9) and script and direction itemization as public APIs.
+- Read TrueType, CFF and Type 1 font programs by glyph ID, and subset CFF and TrueType fonts with their glyph IDs kept.
+- Read PDF font descriptor metrics and OS/2 embedding permissions.
+- Map glyph names to Unicode with the Adobe Glyph List and the PDF standard encodings.
+- Trimmable and Native AOT compatible on `net8.0` and later.
 
 ## Requirements
 

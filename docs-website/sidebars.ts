@@ -14,7 +14,16 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Fonts',
       collapsed: false,
-      items: ['fonts/loading-fonts', 'fonts/system-fonts', 'fonts/font-descriptions', 'fonts/font-metrics'],
+      items: [
+        'fonts/loading-fonts',
+        'fonts/system-fonts',
+        'fonts/font-matching',
+        'fonts/variable-fonts',
+        'fonts/font-descriptions',
+        'fonts/font-metrics',
+        'fonts/font-programs',
+        'fonts/subsetting',
+      ],
     },
     {
       type: 'category',
@@ -28,6 +37,7 @@ const sidebars: SidebarsConfig = {
         'text/fallback-fonts',
         'text/vertical-text',
         'text/opentype-features',
+        'text/shaping-text',
       ],
     },
     {
@@ -40,7 +50,12 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Unicode',
       collapsed: false,
-      items: ['unicode/code-points-and-graphemes'],
+      items: [
+        'unicode/code-points-and-graphemes',
+        'unicode/line-breaking',
+        'unicode/bidi-and-scripts',
+        'unicode/glyph-names-and-encodings',
+      ],
     },
     {
       type: 'category',
@@ -58,6 +73,7 @@ const sidebars: SidebarsConfig = {
             'api/text-measurer',
             'api/text-shaper',
             'api/text-renderer',
+            'api/font-program',
             'api/metrics',
             'api/geometry',
             'api/enumerations',
