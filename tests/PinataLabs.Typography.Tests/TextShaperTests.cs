@@ -262,6 +262,20 @@ public class TextShaperTests
     }
 
     [Test]
+    public async Task LeftMatraAfterARunOfAnotherScriptStartsAWord()
+    {
+        Font font = GetFont("NotoSansBengali-Regular.ttf");
+
+        // Ka and the vowel sign e, which goes before ka and has the init form 446 at the start of a word. A Latin letter
+        // before them is a run of its own, which HarfBuzz shapes in a buffer of its own, so the sign still starts a word.
+        ShapedGlyph[] syllable = TextShaper.Shape(font, "কে", new() { Script = ScriptClass.Bengali });
+        ShapedGlyph[] afterLetter = TextShaper.Shape(font, "aকে");
+
+        await Assert.That(syllable.Select(g => g.GlyphId).SequenceEqual(new ushort[] { 446, 19 })).IsTrue();
+        await Assert.That(afterLetter.Skip(1).Select(g => g.GlyphId).SequenceEqual(new ushort[] { 446, 19 })).IsTrue();
+    }
+
+    [Test]
     public async Task KnownDifferencesAreStillDifferences()
     {
         // A run that starts to match HarfBuzz leaves the list.

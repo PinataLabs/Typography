@@ -1388,9 +1388,10 @@ internal sealed class IndicShaper : DefaultShaper
                 }
             }
 
-            // Apply 'init' to the Left Matra if it's a word start.
+            // Apply 'init' to the Left Matra if it's a word start: as in HarfBuzz, at the start of the run, which HarfBuzz
+            // shapes in a buffer of its own, or after a character that does not continue a word.
             if (substitutionCollection[start].IndicShapingEngineInfo?.Position == Positions.Pre_M &&
-                (start == 0 || CodePoint.GetGeneralCategory(substitutionCollection[start - 1].CodePoint) is not UnicodeCategory.NonSpacingMark and not UnicodeCategory.Format))
+                (start == index || !ContinuesWord(substitutionCollection[start - 1].CodePoint)))
             {
                 substitutionCollection.EnableShapingFeature(start, InitTag);
             }
@@ -1399,4 +1400,13 @@ internal sealed class IndicShaper : DefaultShaper
             end = NextSyllable(substitutionCollection, start, max);
         }
     }
+
+    // A letter, a mark, a format character, and an unassigned, private use or surrogate code point: the general categories
+    // that HarfBuzz checks as the range from Cf to Mn of its enumeration.
+    private static bool ContinuesWord(CodePoint codePoint)
+        => CodePoint.GetGeneralCategory(codePoint) is UnicodeCategory.Format or UnicodeCategory.OtherNotAssigned
+            or UnicodeCategory.PrivateUse or UnicodeCategory.Surrogate or UnicodeCategory.LowercaseLetter
+            or UnicodeCategory.ModifierLetter or UnicodeCategory.OtherLetter or UnicodeCategory.TitlecaseLetter
+            or UnicodeCategory.UppercaseLetter or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark
+            or UnicodeCategory.NonSpacingMark;
 }

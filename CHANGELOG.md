@@ -465,6 +465,11 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- The Indic shaper applies `init` to a vowel sign that goes before its consonant only at the start of a word, as
+  HarfBuzz 15.0.0 does: at the start of the run, or after a character that is not a letter, a mark, a format character,
+  or an unassigned, private use or surrogate code point. It applied `init` after any character but a non-spacing mark or
+  a format character, so in Noto Sans Bengali the e and ai of a syllable after a letter or a spacing mark took their
+  initial forms. (#163)
 - In an Indic syllable with two or more vowel signs that go before the base, the Indic shaper writes them in the
   reverse order of the text, each with the marks after it, as HarfBuzz 15.0.0 does. It kept the order of the text, so
   Bengali dha, i, e gave i, e, dha where HarfBuzz gives e, i, dha, and Tamil sha, ee, au put ee before the e of au.
