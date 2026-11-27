@@ -28,7 +28,7 @@ English word `abc` stays `abc`, and it is placed at the right. The base directio
 
 - The order of the runs of each direction.
 - The direction of numbers and punctuation between runs.
-- The edge for `TextAlignment.Start`.
+- The edge for `TextAlignment.Start`, for each line by the direction of its paragraph.
 
 ```csharp
 using PinataLabs.Typography;

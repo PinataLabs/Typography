@@ -37,7 +37,7 @@ All three apply the Unicode Bidirectional Algorithm, so each run of text keeps i
 
 | Value | Description |
 | --- | --- |
-| `Start` | At the start of the line: left for left-to-right text, right for right-to-left text. |
+| `Start` | At the start of the line: left for a line of a left-to-right paragraph, right for one of a right-to-left paragraph. |
 | `End` | At the end of the line. |
 | `Center` | In the centre of the line. |
 

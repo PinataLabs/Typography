@@ -51,7 +51,7 @@ the longest line when wrapping is off.
 | `End` | Right | Left |
 | `Center` | Centre | Centre |
 
-`Start` and `End` follow the direction of the text, so the same options work for English and Arabic.
+`Start` and `End` follow the direction of the paragraph of each line, so the same options work for English and Arabic.
 
 ## Justify lines
 
@@ -128,7 +128,7 @@ options.TabWidth = 4;
 ## Text direction
 
 `TextDirection` sets the base direction of the text, as the CSS `direction` property does. The
-default, `Auto`, finds it from the first strong character. Mixed English and Arabic text comes out
+default, `Auto`, finds the direction of each paragraph from its first strong character. Mixed English and Arabic text comes out
 in the right order with all three values. `TextAlignment.Start` and `TextAlignment.End` follow the
-base direction. See
+base direction of the paragraph of each line. See
 [International text](./international-text.md#right-to-left-and-bidirectional-text).

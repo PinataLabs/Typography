@@ -136,10 +136,6 @@ internal static class TextLayout
         bidi.Process(bidiData, resetWhitespace: false);
         BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), [.. bidi.Paragraphs]);
 
-        TextDirection paragraphDirection = (bidiLevels.Paragraphs[0].Level & 1) == 0
-            ? TextDirection.LeftToRight
-            : TextDirection.RightToLeft;
-
         // Shaping takes the directional runs of the levels with rule L1 applied to each paragraph as one line.
         // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
         BidiAlgorithm.ResetWhitespaceLevels(bidiData.Types, bidi.ResolvedLevels, bidiLevels.Paragraphs, 0, bidiData.Length);
@@ -229,7 +225,7 @@ internal static class TextLayout
             }
         }
 
-        return BreakLines(text, options, paragraphDirection, bidiLevels, positionings, layoutMode);
+        return BreakLines(text, options, bidiLevels, positionings, layoutMode);
     }
 
     private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options, Vector2 origin)
@@ -240,12 +236,11 @@ internal static class TextLayout
         Vector2 boxLocation = origin / options.Dpi;
         Vector2 penLocation = boxLocation;
 
-        TextDirection direction = textBox.TextDirection();
-
         // If a wrapping length is specified that should be used to determine the
         // box size to align text within. Only left-to-right text aligned to Start can skip it;
-        // for right-to-left text, Start is the far edge of the box.
-        bool isLeftToRightStart = options.TextAlignment == TextAlignment.Start && direction == TextDirection.LeftToRight;
+        // for a right-to-left line, Start is the far edge of the box.
+        bool isLeftToRightStart = options.TextAlignment == TextAlignment.Start
+            && textBox.TextLines.All(line => line.Direction == TextDirection.LeftToRight);
         float maxScaledAdvance = textBox.ScaledMaxAdvance();
         if (!isLeftToRightStart && options.WrappingLength > 0)
         {
@@ -259,7 +254,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineHorizontal(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     i,
@@ -275,7 +269,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineHorizontal(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     index++,
@@ -290,7 +283,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVertical(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     i,
@@ -306,7 +298,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVertical(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     index++,
@@ -321,7 +312,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVerticalMixed(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     i,
@@ -337,7 +327,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVerticalMixed(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     index++,
@@ -352,7 +341,6 @@ internal static class TextLayout
     private static IEnumerable<GlyphLayout> LayoutLineHorizontal(
         TextBox textBox,
         TextLine textLine,
-        TextDirection direction,
         float maxScaledAdvance,
         TextOptions options,
         int index,
@@ -405,7 +393,7 @@ internal static class TextLayout
         }
 
         // Set the alignment of lines within the text.
-        if (direction == TextDirection.LeftToRight)
+        if (textLine.Direction == TextDirection.LeftToRight)
         {
             switch (options.TextAlignment)
             {
@@ -479,7 +467,6 @@ internal static class TextLayout
     private static IEnumerable<GlyphLayout> LayoutLineVertical(
         TextBox textBox,
         TextLine textLine,
-        TextDirection direction,
         float maxScaledAdvance,
         TextOptions options,
         int index,
@@ -510,7 +497,7 @@ internal static class TextLayout
         }
 
         // Set the alignment of lines within the text.
-        if (direction == TextDirection.LeftToRight)
+        if (textLine.Direction == TextDirection.LeftToRight)
         {
             switch (options.TextAlignment)
             {
@@ -613,7 +600,6 @@ internal static class TextLayout
     private static IEnumerable<GlyphLayout> LayoutLineVerticalMixed(
         TextBox textBox,
         TextLine textLine,
-        TextDirection direction,
         float maxScaledAdvance,
         TextOptions options,
         int index,
@@ -644,7 +630,7 @@ internal static class TextLayout
         }
 
         // Set the alignment of lines within the text.
-        if (direction == TextDirection.LeftToRight)
+        if (textLine.Direction == TextDirection.LeftToRight)
         {
             switch (options.TextAlignment)
             {
@@ -775,7 +761,6 @@ internal static class TextLayout
     private static TextBox BreakLines(
         ReadOnlySpan<char> text,
         TextOptions options,
-        TextDirection paragraphDirection,
         BidiLevels bidiLevels,
         GlyphPositioningCollection positionings,
         LayoutMode layoutMode)
@@ -1194,6 +1179,14 @@ internal static class TextLayout
             textLines.Add(textLine);
         }
 
+        // Each line aligns in the direction of its paragraph (UAX #9 P2 and P3 under Auto). Its glyphs are still in
+        // logical order, so the first holds its first codepoint.
+        foreach (TextLine line in textLines)
+        {
+            int paragraph = BidiAlgorithm.FindParagraph(bidiLevels.Paragraphs, line[0].Offset);
+            line.Direction = (bidiLevels.Paragraphs[paragraph].Level & 1) == 0 ? TextDirection.LeftToRight : TextDirection.RightToLeft;
+        }
+
         // When every level is 0, rule L1 changes none and no line has a run to reverse.
         if (!bidiLevels.IsLeftToRight)
         {
@@ -1203,7 +1196,7 @@ internal static class TextLayout
             }
         }
 
-        return new TextBox(options, paragraphDirection, textLines);
+        return new TextBox(options, textLines);
     }
 
     /// <summary>
@@ -1223,11 +1216,8 @@ internal static class TextLayout
 
     internal sealed class TextBox
     {
-        private readonly TextDirection paragraphDirection;
-
-        public TextBox(TextOptions options, TextDirection paragraphDirection, IReadOnlyList<TextLine> textLines)
+        public TextBox(TextOptions options, IReadOnlyList<TextLine> textLines)
         {
-            this.paragraphDirection = paragraphDirection;
             this.TextLines = textLines;
             for (int i = 0; i < this.TextLines.Count - 1; i++)
             {
@@ -1243,8 +1233,6 @@ internal static class TextLayout
         /// <returns>The advance.</returns>
         public float ScaledMaxAdvance()
             => this.TextLines.Count == 0 ? 0 : this.TextLines.Max(x => x.ScaledLineAdvance);
-
-        public TextDirection TextDirection() => this.paragraphDirection;
     }
 
     internal sealed class TextLine
@@ -1252,6 +1240,12 @@ internal static class TextLayout
         private readonly List<GlyphLayoutData> data = [];
 
         public int Count => this.data.Count;
+
+        /// <summary>
+        /// Gets or sets the direction of the paragraph that the line is in, which sets the edge that
+        /// <see cref="TextAlignment.Start"/> aligns it to.
+        /// </summary>
+        public TextDirection Direction { get; set; }
 
         public float ScaledLineAdvance { get; private set; } = 0;
 
