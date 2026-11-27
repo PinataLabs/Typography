@@ -345,8 +345,19 @@ internal sealed class HangulShaper : DefaultShaper
             // Either the T was non-combining, or the LVT glyph wasn't supported.
             // Decompose the glyph again and apply OT features.
             data = collection[index - 1];
-            this.DecomposeGlyph(collection, data, index - 1);
+            if (this.DecomposeGlyph(collection, data, index - 1) != index - 1)
+            {
+                // As in HarfBuzz, the jamo of the syllable and the T after it are one cluster.
+                collection.MergeClusters(index - 1, index + 2);
+            }
+
             return index + 1;
+        }
+
+        // As in HarfBuzz, the jamo of a syllable that does not compose are one cluster.
+        if (ljmo >= 0)
+        {
+            collection.MergeClusters(ljmo, index + 1);
         }
 
         return index;

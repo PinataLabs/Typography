@@ -469,6 +469,10 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- The Hangul shaper puts the jamo of a syllable that does not compose in one cluster, as HarfBuzz 15.0.0 does: a lead,
+  a vowel and an optional trail that have no precomposed glyph, and a precomposed LV syllable that it takes apart because
+  the trail after it does not compose, with that trail. It kept one cluster for each jamo, so `TextShaper` split the
+  syllable, and in Noto Sans KR U+AC00 U+11C3 gave the trail cluster 1 where HarfBuzz gives 0. (#174)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
