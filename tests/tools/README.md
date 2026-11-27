@@ -1018,3 +1018,24 @@ python tests/tools/verify_font_subsets.py <directory> --selftest
 
 The font programs are the CFF and TrueType test fonts. PDF/A validation of a PDF that embeds a subset, such as veraPDF in the PdfPinata corpus,
 is not part of this repository.
+## Text shaper reference
+
+`generate_text_shaper_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextShaper.harfbuzz.json`, what
+HarfBuzz gives for a run of text, for issue #156: the glyph ID, the cluster, the advance and the x and y offset of each
+glyph in visual order, in font units. A cluster is the UTF-16 index of the first character of the glyph. The script
+builds `TextShaper.ttf` next to the reference. Its features show a ligature, a ligature that skips marks, a feature of one
+script, a feature of one language, a feature that is off unless the caller turns it on, kerning, and marks that attach
+and stack. The other cases are real faces of the test project: runs of marks on letters, words with conjuncts and
+reordered signs, variable fonts at three weights, emoji sequences, and characters that a face has no glyph for.
+
+Each row holds the inputs that its case sets (a script, a language, a direction, features, variations) and the glyphs.
+`TextShaperTests` checks that `TextShaper.Shape` gives the same glyph IDs, clusters, advances and offsets.
+
+To write the file again, install fontTools 4.68 or later and uharfbuzz 0.57.0 or later, and run this from the repository
+root:
+
+```
+python tests/tools/generate_text_shaper_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
