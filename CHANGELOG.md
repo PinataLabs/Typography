@@ -506,13 +506,16 @@ Unicode conformance suites to that version.
 - GPOS positioning in a layout changes the advance of a glyph along the line only, as in HarfBuzz 15.0.0. It set both
   `AdvanceWidth` and `AdvanceHeight` from the shaping bounds, which hold 0 across the line, so a glyph kerned in
   horizontal text reported an `AdvanceHeight` of 0, and one kerned in vertical text an `AdvanceWidth` of 0, or the GPOS
-  x advance, which HarfBuzz leaves out. The `kern` table no longer adds a horizontal kerning value to the
-  `AdvanceWidth` of a glyph in vertical text either. A test font checks the places down the line against HarfBuzz,
-  among them an advance below zero. (#170)
-- A vertical `kern` subtable moves the pair apart for a positive value, as the OpenType `kern` table says, and
-  as a positive GPOS y advance does. It pulled the pair together, and it changed the advance of the second glyph of
-  the pair, which moved the glyph after the pair instead. HarfBuzz does not kern vertical text with the `kern` table,
-  so this is not checked against it. (#170)
+  x advance, which HarfBuzz leaves out. A mark whose advance GPOS or the fallback mark positioning sets to 0 now keeps
+  the advance of the font across the line too, as every other glyph does: HarfBuzz gives no glyph an advance across
+  the line, so the mark of "é" in horizontal text has an `AdvanceWidth` of 0 and the `AdvanceHeight` of the font, where
+  it had 0 for both. A test font checks the places down the line against HarfBuzz, among them an advance below
+  zero. (#170)
+- Vertical text no longer applies the `kern` table, as HarfBuzz 15.0.0, even with `vkrn` turned on. The table changed
+  the advance of the second glyph of a vertical pair, and a positive value pulled the glyphs together. In vertical mixed
+  text a pair of a rotated and an upright glyph, such as U+002D between two ideographs, no longer kerns either, as
+  HarfBuzz shapes each run of one orientation on its own: the rotated glyph took the horizontal kerning along the line,
+  and a base with a GPOS mark moved without the mark. A pair of rotated glyphs still kerns as in horizontal text. (#170)
 - TrueType hinting places the phantom points from the advances of `hmtx` and `vmtx`, as FreeType does. It used the
   advance that kerning in the layout gave the glyph, so a hinting program that aligns the outline to the end of the
   advance drew a kerned glyph narrower or wider than the same glyph unkerned. (#170)
