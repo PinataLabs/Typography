@@ -485,6 +485,9 @@ Unicode conformance suites to that version.
 - `TextLayout` wraps a line at a line break opportunity right before the codepoint that overflows it. The line kept
   that codepoint and overflowed the wrapping length when no glyph on it was at or after the opportunity, as after a
   space: with `WordBreaking.Standard`, `aaaa b` was one line in a width that fits `aaaaa`. (#181)
+- `TextLayout` keeps a grapheme on one line. A line break opportunity inside a grapheme, such as after a space that
+  a combining mark extends, moves to the end of the grapheme: `a` U+0020 U+0301 `bbbb` wrapped after the space, and
+  the next line began with the acute on its own. (#181)
 - The Hangul shaper puts the jamo of a syllable that does not compose in one cluster, as HarfBuzz 15.0.0 does: a lead,
   a vowel and an optional trail that have no precomposed glyph, and a precomposed LV syllable that it takes apart because
   the trail after it does not compose, with that trail. It kept one cluster for each jamo, so `TextShaper` split the

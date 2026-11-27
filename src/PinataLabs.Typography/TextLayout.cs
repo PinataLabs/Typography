@@ -787,12 +787,33 @@ internal static class TextLayout
         bool isHorizontalLayout = layoutMode.IsHorizontal();
         bool isVerticalMixedLayout = layoutMode.IsVerticalMixed();
 
-        // Calculate the position of potential line breaks.
+        // Calculate the position of potential line breaks. A line breaks only between graphemes, so a break inside a
+        // grapheme moves to the start of the next grapheme. When another break is at that start, the later one is kept.
         var lineBreakEnumerator = new LineBreakEnumerator(text);
+        var breakGraphemeEnumerator = new SpanGraphemeEnumerator(text);
+        int graphemeEnd = 0;
         List<LineBreak> lineBreaks = [];
         while (lineBreakEnumerator.MoveNext())
         {
-            lineBreaks.Add(lineBreakEnumerator.Current);
+            LineBreak lineBreak = lineBreakEnumerator.Current;
+            while (graphemeEnd < lineBreak.PositionWrap && breakGraphemeEnumerator.MoveNext())
+            {
+                graphemeEnd += CodePoint.GetCodePointCount(breakGraphemeEnumerator.Current);
+            }
+
+            if (graphemeEnd > lineBreak.PositionWrap)
+            {
+                lineBreak = new(lineBreak.PositionMeasure, graphemeEnd, lineBreak.Required);
+            }
+
+            if (lineBreaks.Count > 0 && lineBreaks[^1].PositionWrap == lineBreak.PositionWrap)
+            {
+                lineBreaks[^1] = lineBreak;
+            }
+            else
+            {
+                lineBreaks.Add(lineBreak);
+            }
         }
 
         int lineBreakIndex = 0;
