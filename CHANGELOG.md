@@ -298,6 +298,9 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- A cursive attachment joins a glyph to the next glyph that the lookup flags and the mark filtering set do not skip,
+  as HarfBuzz 15.0.0 does. Before, it joined only the glyph right after it, so a mark between two Arabic letters
+  broke the cursive chain in a lookup with IgnoreMarks. (#147)
 - GSUB and GPOS lookups match their glyphs across ZWJ, ZWNJ and the other default-ignorable characters where HarfBuzz
   15.0.0 does. Such a character between the matched glyphs is skipped unless the lookup matches it there. GSUB skips
   ZWNJ only in the backtrack and the lookahead, GPOS always skips it, and both skip ZWJ unless the feature keeps it in
