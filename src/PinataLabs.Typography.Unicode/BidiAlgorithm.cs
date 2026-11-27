@@ -49,7 +49,7 @@ internal sealed class BidiAlgorithm
     private bool hasBrackets;
 
     /// <summary>
-    /// True if the incoming data is known to contain embedding runs
+    /// True if the incoming data is known to contain characters that rule X9 removes
     /// </summary>
     private bool hasEmbeddings;
 

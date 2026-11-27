@@ -155,6 +155,19 @@ public class BidiAlgorithmTests
         await Assert.That(this.ICUTestsImpl()).IsTrue();
     }
 
+    [Test]
+    public async Task BoundaryNeutralIsRemovedWhenTheTextHasNoEmbeddingControls()
+    {
+        // The mark takes no type from the soft hyphen before it, so it follows the right to left paragraph.
+        var data = new BidiData();
+        data.Init("\U000000AD\U00000300", 1);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data);
+
+        await Assert.That((int)bidi.ResolvedLevels[1]).IsEqualTo(1);
+    }
+
     private bool ICUTestsImpl()
     {
         this.Output.WriteLine("Bidi Class Tests");

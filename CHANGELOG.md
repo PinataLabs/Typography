@@ -372,6 +372,9 @@ Unicode conformance suites to that version.
   `usUpperOpticalPointSize` of a version 2 or later table were read 4 bytes off. Nothing used them until the font
   descriptor metrics. It also skips the fields that the length of a truncated table does not cover, where it read the
   bytes of the next table. (#157)
+- The bidi algorithm removes the characters of class BN, such as U+00AD, U+200C and U+200D, in text that has no
+  embedding or isolate controls. Before, it removed them only when such a control was present, so a mark after a BN
+  character was typed from the BN character and could resolve to the wrong level. (#152)
 - A TrueType or CFF font with no `OS/2` table loads. On macOS these are AppleGothic and AppleMyungjo, which threw
   `MissingFontTableException` for `OS/2` on first use. As in HarfBuzz 15.0.0, the ascender, descender and line gap come
   from `hhea`, and `head.macStyle` gives the weight (400 or bold 700), the width (100%, condensed 75% or expanded
