@@ -1056,7 +1056,11 @@ caller turns off (Hebrew points without `mark`, the reph without `rphf`, Arabic 
 language system lacks features, runs with no direction, variable fonts at three weights, emoji sequences, and characters
 that a face has no glyph for. The script also writes two subsets of Noto Sans KR into `NotoSansKRSubsets`, one without
 the syllables U+AC00 and U+AC01 and one without the leading consonant U+1100, for the Hangul syllables that HarfBuzz can
-neither compose nor take apart. The folder has the SIL Open Font License of Noto Sans KR.
+neither compose nor take apart. The folder has the SIL Open Font License of Noto Sans KR. It builds four fonts of empty
+glyphs for the Hangul shaper: `TextShaperHangul.ttf`, whose GPOS table changes the advance of a glyph by its jamo feature
+and attaches U+0301 to a tone mark and to the dotted circle, `TextShaperHangulNotdef.ttf`, which lacks the tone marks and
+has a .notdef 0 wide, `TextShaperHangulColr.ttf`, whose tone mark has a COLR layer 0 wide, and `TextShaperHangulUvs.ttf`,
+which maps U+AC00 only with a variation selector.
 
 Each row holds the inputs that its case sets (a script, a language, a direction, features, variations) and the glyphs. A
 row with `auto` set no direction, so HarfBuzz guessed it from the script and the text, and `direction` is its guess.

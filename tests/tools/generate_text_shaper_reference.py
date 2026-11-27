@@ -54,6 +54,8 @@ Other cases:
 * Two subsets of Noto Sans KR that the script writes into NotoSansKRSubsets, one without the syllables U+AC00 and
   U+AC01 and one without the leading consonant U+1100, so that HarfBuzz can neither compose nor take apart some
   syllables. The folder has the SIL Open Font License of Noto Sans KR, which lets a modified version be shared.
+* Four fonts of empty glyphs for the Hangul shaper, with jamo features in GPOS, tone marks 0 wide, a .notdef 0 wide, a
+  tone mark with a COLR layer 0 wide, and a syllable that the font maps only with a variation selector.
 
 The cases leave out a run in a direction that is not the one of its script, such as Latin text from right to left. HarfBuzz
 shapes such a run in the native direction and then reverses it, so a lookup that matches "f i" does not match it. The
@@ -73,7 +75,9 @@ import unicodedata
 import harfbuzz_reference as ref
 import uharfbuzz as hb
 from fontTools import subset
+from fontTools.colorLib.builder import buildCOLR, buildCPAL
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0
 
 REFERENCE = os.path.join(ref.FONTS, "TextShaper.harfbuzz.json")
@@ -341,6 +345,34 @@ HANGUL_SUBSET_TEXTS = [
     U("AC00 11C3 302E 302E"),
 ]
 
+# Fonts of empty glyphs for the Hangul shaper, which build_hangul_fonts writes. Each has the jamo U+1100, U+1161, U+11A8
+# and U+11C3, the syllables U+AC00 and U+B098 and the dotted circle, and lacks U+1102, U+AC01 and U+B099.
+# * TextShaperHangul.ttf has the tone marks, the second of them 0 wide. Its GPOS table adds 100 to the advance of a
+#   glyph with `ljmo`, 10 with `vjmo` and 1 with `tjmo`, so the advance shows which jamo features HarfBuzz gives each
+#   glyph. The lookups cover the syllables too. Its `mark` feature attaches U+0301 to a tone mark and to the dotted circle.
+# * TextShaperHangulNotdef.ttf lacks the tone marks, and its .notdef is 0 wide.
+# * In TextShaperHangulColr.ttf, U+302E is 600 wide and its COLR layer is 0 wide.
+# * TextShaperHangulUvs.ttf maps U+AC00 only with the variation selector U+FE00.
+HANGUL_SHAPER_CODE_POINTS = [0x20, 0x1100, 0x1161, 0x11A8, 0x11C3, 0xAC00, 0xB098, 0x25CC]
+HANGUL_SHAPER_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem hang dflt;
+feature ljmo { pos [u1100 uAC00 uB098] <0 0 100 0>; } ljmo;
+feature vjmo { pos [u1161 uAC00 uB098] <0 0 10 0>; } vjmo;
+feature tjmo { pos [u11A8 u11C3 uAC00 uB098] <0 0 1 0>; } tjmo;
+markClass u0301 <anchor 0 600> @ABOVE;
+feature mark {
+    pos base u25CC <anchor 300 700> mark @ABOVE;
+    pos base u302E <anchor 100 700> mark @ABOVE;
+} mark;
+"""
+HANGUL_SHAPER_TEXTS = [
+    U("AC00"), U("1100 1161"), U("AC00 11A8"), U("AC00 11C3"), U("1100 1161 11C3"), U("11A8"), U("1100 11A8"), U("B099"),
+    U("B099 11A8"), U("AC00 302E"), U("AC00 302F"), U("1100 1161 11C3 302E"), U("302E"), U("302F"), U("1100 302E"),
+    U("1100 302F"), U("302E 0301"), U("302F 0301"), U("1100 302E 0301"), U("AC00 FE00"),
+]
+
+
 # Words of each script with the marks that are in use: vowel points, conjuncts, reordered vowel signs, ligatures.
 ARABIC_WORDS = ["بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ", "مُحَمَّد", "السَّلَامُ عَلَيْكُمْ", "لا إله إلا الله", "لَأَ لِإ"]
 HEBREW_WORDS = ["בְּרֵאשִׁית בָּרָא אֱלֹהִים", "שָׁלוֹם", "אֲנִי", "וַיְהִי"]
@@ -572,6 +604,42 @@ def build_subset(source, path, characters):
     font.save(path)
 
 
+def build_hangul_fonts():
+    """Builds the fonts of empty glyphs for the Hangul shaper and gives their file names."""
+    names = []
+    path = ref.build_font("TextShaperHangul.ttf", HANGUL_SHAPER_CODE_POINTS + [0x0301, 0x302E, 0x302F],
+                          HANGUL_SHAPER_FEATURES, advances={0x302F: 0})
+    names.append(os.path.basename(path))
+
+    path = ref.build_font("TextShaperHangulNotdef.ttf", HANGUL_SHAPER_CODE_POINTS)
+    font = TTFont(path)
+    font["hmtx"][".notdef"] = (0, 0)
+    font.save(path)
+    names.append(os.path.basename(path))
+
+    path = ref.build_font("TextShaperHangulColr.ttf", HANGUL_SHAPER_CODE_POINTS + [0x302E], extra_glyphs=["layer"])
+    font = TTFont(path)
+    # The font keeps no glyph names, so the extra glyph is the last one.
+    layer = font.getGlyphOrder()[-1]
+    font["hmtx"][layer] = (0, 0)
+    font["COLR"] = buildCOLR({font.getBestCmap()[0x302E]: [(layer, 0)]}, version=0)
+    font["CPAL"] = buildCPAL([[(1.0, 0.0, 0.0, 1.0)]])
+    font.save(path)
+    names.append(os.path.basename(path))
+
+    path = ref.build_font("TextShaperHangulUvs.ttf", [c for c in HANGUL_SHAPER_CODE_POINTS if c != 0xAC00] + [0x302E],
+                          extra_glyphs=["uAC00.vs"])
+    font = TTFont(path)
+    uvs = CmapSubtable.newSubtable(14)
+    uvs.platformID, uvs.platEncID, uvs.language = 0, 5, 0xFF
+    uvs.cmap = {}
+    uvs.uvsDict = {0xFE00: [(0xAC00, font.getGlyphOrder()[-1])]}
+    font["cmap"].tables.append(uvs)
+    font.save(path)
+    names.append(os.path.basename(path))
+    return names
+
+
 def main():
     rows = []
 
@@ -662,6 +730,11 @@ def main():
         hb_font = ref.load_font(path)
         for text in HANGUL_SUBSET_TEXTS:
             rows.append(row("HangSubset", font_name, hb_font, text, script="Hang", direction="ltr"))
+
+    for font_name in build_hangul_fonts():
+        hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
+        for text in HANGUL_SHAPER_TEXTS:
+            rows.append(row("HangShaper", font_name, hb_font, text, script="Hang", direction="ltr"))
 
     ref.write_reference(REFERENCE, rows)
 
