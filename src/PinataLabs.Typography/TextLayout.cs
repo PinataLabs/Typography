@@ -1209,8 +1209,12 @@ internal static class TextLayout
 
         public IReadOnlyList<TextLine> TextLines { get; }
 
+        /// <summary>
+        /// Gets the advance of the longest line, or 0 when no codepoint of the text has a glyph to lay out.
+        /// </summary>
+        /// <returns>The advance.</returns>
         public float ScaledMaxAdvance()
-            => this.TextLines.Max(x => x.ScaledLineAdvance);
+            => this.TextLines.Count == 0 ? 0 : this.TextLines.Max(x => x.ScaledLineAdvance);
 
         public TextDirection TextDirection() => this.paragraphDirection;
     }
