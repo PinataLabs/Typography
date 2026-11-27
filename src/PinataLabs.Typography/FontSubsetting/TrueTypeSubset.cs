@@ -31,9 +31,20 @@ internal sealed class TrueTypeSubset
         this.alignment = glyphs.HasLongOffsets ? 4 : 2;
 
         long glyfLength = 0;
+        long dataLength = 0;
         for (int i = 0; i < kept.Length; i++)
         {
             glyfLength += this.GetPaddedLength(i);
+            dataLength += this.GetLength(i);
+        }
+
+        // The glyphs of a font have consecutive ranges of 'glyf', but the range of a glyph that is dropped is never read, so
+        // 'loca' can send many kept glyphs to the same bytes. 'loca' cannot do that for the subset, where every glyph starts where
+        // the one before it ends. Kept glyphs that need more bytes than the table has share them, and copying each would
+        // make a small font large.
+        if (dataLength > glyphs.GlyfLength)
+        {
+            throw new InvalidFontFileException("The kept glyphs of the font share data in 'glyf', and 'loca' of a subset cannot share it.");
         }
 
         // A short 'loca' holds the offset divided by two in 16 bits. A font that has short offsets cannot have more glyf data than that.
@@ -137,11 +148,13 @@ internal sealed class TrueTypeSubset
         }
     }
 
+    // The length of a kept glyph, and 0 for a dropped glyph.
+    private int GetLength(int glyphId)
+        => this.kept[glyphId] && this.glyphs.TryGetGlyphData(glyphId, out ReadOnlyMemory<byte> data) ? data.Length : 0;
+
     // The length of a kept glyph rounded up to the alignment, and 0 for a dropped glyph.
     private int GetPaddedLength(int glyphId)
-        => this.kept[glyphId] && this.glyphs.TryGetGlyphData(glyphId, out ReadOnlyMemory<byte> data)
-            ? (data.Length + this.alignment - 1) & -this.alignment
-            : 0;
+        => (this.GetLength(glyphId) + this.alignment - 1) & -this.alignment;
 
     private void WriteGlyf(Span<byte> destination)
     {

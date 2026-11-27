@@ -156,6 +156,30 @@ public class FontSubsetterTrueTypeTests
         await Assert.That(subset.Length).IsLessThan(font.Length / 2);
     }
 
+    [Test]
+    public async Task GlyphsThatShareTheDataOfOneGlyphAreRefusedAndNotCopiedForEach()
+    {
+        // 'loca' sends every even glyph to the same 100,000 bytes, and the odd glyphs, which end before they start, are never read.
+        // A subset starts each glyph where the one before it ends, so a copy for each of the 1,000 kept glyphs would be 100 MB.
+        byte[] glyph = [.. Simple(), .. new byte[100_000 - Simple().Length]];
+        byte[] font = TrueTypeBuilder.Build([glyph, .. Enumerable.Repeat(Simple(), 1999)]);
+        byte[] loca = new byte[2001 * 4];
+        for (int i = 0; i <= 2000; i++)
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(loca.AsSpan(i * 4), i % 2 == 1 ? 100_000U : 0U);
+        }
+
+        byte[] shared = SfntRewriter.Replace(font, "loca", loca);
+        ushort[] requested = [.. Enumerable.Range(0, 1000).Select(i => (ushort)(2 * i))];
+
+        InvalidFontFileException exception = (await Assert.That(() => FontSubsetter.Subset(shared, requested)).Throws<InvalidFontFileException>())!;
+
+        await Assert.That(exception.Message).Contains("share");
+
+        // A few of them fit, because the copies do not pass the size of the table.
+        await Assert.That(FontSubsetter.Subset(shared, [0]).Length).IsGreaterThan(0);
+    }
+
     private static byte[] Simple()
         => TrueTypeBuilder.SimpleGlyph(new (short X, short Y, bool OnCurve)[] { (0, 0, true), (100, 0, true), (100, 100, true) });
 
