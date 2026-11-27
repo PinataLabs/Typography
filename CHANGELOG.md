@@ -505,8 +505,8 @@ Unicode conformance suites to that version.
   put it. (#113)
 - In a font without glyph classes, lookup flags take the same glyphs for marks as mark positioning, as HarfBuzz 15.0.0
   does: the glyphs of nonspacing marks that are not default ignorable. They took any mark, so a lookup that ignores
-  marks skipped a spacing mark such as U+1D165 and the combining grapheme joiner U+034F, and formed the ligature of b
-  and b in b, U+1D165, b. (#113)
+  marks skipped a spacing mark such as U+1D165, an enclosing mark such as U+20DD and the combining grapheme joiner
+  U+034F, and formed the ligature of b and b in b, U+1D165, b. (#113, #178)
 - In a font without glyph classes, a ligature of components that are not all marks is a ligature glyph, as in HarfBuzz
   15.0.0, even when its first component is a nonspacing mark. It was a mark, so the ligature of an acute and a lost its
   advance and no mark attached to it. In a font without GPOS mark lookups, with or without glyph classes, fallback mark
