@@ -101,7 +101,7 @@ internal ref struct GlyphNormalizer
             // As in HarfBuzz, this comes before the text is normalized.
             if (ShaperFactory.BreaksInvalidVowelSequences(script, scriptTag))
             {
-                this.runEnd += VowelConstraints.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd, script);
+                this.runEnd += VowelConstraints.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd, script, this.hasFallbackFonts);
             }
 
             if (this.profile.SplitsVowels)

@@ -24,8 +24,9 @@ internal static class VowelConstraints
     /// <param name="start">The index of the first glyph of the run.</param>
     /// <param name="end">The index after the last glyph of the run.</param>
     /// <param name="script">The script of the run.</param>
+    /// <param name="hasFallbackFonts">Whether a fallback font can replace the glyphs that this font lacks.</param>
     /// <returns>The number of dotted circles inserted.</returns>
-    public static int Apply(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, int start, int end, ScriptClass script)
+    public static int Apply(FontMetrics fontMetrics, GlyphSubstitutionCollection collection, int start, int end, ScriptClass script, bool hasFallbackFonts)
     {
         VowelConstraint[] constraints = VowelConstraintData.GetConstraints(script);
         if (constraints.Length == 0)
@@ -33,8 +34,13 @@ internal static class VowelConstraints
             return 0;
         }
 
-        // As in HarfBuzz, a font without the dotted circle gets its .notdef glyph.
-        fontMetrics.TryGetGlyphId(new CodePoint(DottedCircle), out ushort glyphId);
+        // As in HarfBuzz, a font without the dotted circle gets its .notdef glyph. A fallback font replaces each glyph
+        // that this font lacks with every glyph it gives at the offset of that glyph, and the circle shares the offset of
+        // the sign after it. So with fallback fonts the circle is left out, or the sign would be there twice.
+        if (!fontMetrics.TryGetGlyphId(new CodePoint(DottedCircle), out ushort glyphId) && hasFallbackFonts)
+        {
+            return 0;
+        }
 
         int inserted = 0;
         for (int i = start; i + 1 < end;)
