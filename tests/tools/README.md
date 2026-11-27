@@ -1054,7 +1054,9 @@ units to the em and glyphs 2.5 em wide, for advances and offsets that pass the r
 are real faces of the test project: runs of marks on letters, words with conjuncts and reordered signs, features that the
 caller turns off (Hebrew points without `mark`, the reph without `rphf`, Arabic without a joining form), languages whose
 language system lacks features, runs with no direction, variable fonts at three weights, emoji sequences, and characters
-that a face has no glyph for.
+that a face has no glyph for. The script also writes two subsets of Noto Sans KR into `NotoSansKRSubsets`, one without
+the syllables U+AC00 and U+AC01 and one without the leading consonant U+1100, for the Hangul syllables that HarfBuzz can
+neither compose nor take apart. The folder has the SIL Open Font License of Noto Sans KR.
 
 Each row holds the inputs that its case sets (a script, a language, a direction, features, variations) and the glyphs. A
 row with `auto` set no direction, so HarfBuzz guessed it from the script and the text, and `direction` is its guess.

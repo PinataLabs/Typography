@@ -51,6 +51,9 @@ Other cases:
 * Emoji with a variation selector, a skin tone, a joiner, a tag sequence and regional indicators.
 * Characters that a face has no glyph for, to show which of them HarfBuzz keeps in the cluster before them, among them the
   halfwidth katakana sound marks and the other characters of the grapheme cluster class Extend.
+* Two subsets of Noto Sans KR that the script writes into NotoSansKRSubsets, one without the syllables U+AC00 and
+  U+AC01 and one without the leading consonant U+1100, so that HarfBuzz can neither compose nor take apart some
+  syllables. The folder has the SIL Open Font License of Noto Sans KR, which lets a modified version be shared.
 
 The cases leave out a run in a direction that is not the one of its script, such as Latin text from right to left. HarfBuzz
 shapes such a run in the native direction and then reverses it, so a lookup that matches "f i" does not match it. The
@@ -69,6 +72,7 @@ import unicodedata
 
 import harfbuzz_reference as ref
 import uharfbuzz as hb
+from fontTools import subset
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0
 
@@ -316,6 +320,27 @@ HANGUL_CLUSTER_TEXTS = [
     U("A960 D7B0 D7CB 302E"), U("AC00 11C3 302F"), U("1100 302E"), U("302E"),
 ]
 
+# Subsets of Noto Sans KR that lack glyphs of the full face, so that HarfBuzz cannot compose or take apart a syllable as it
+# does in the full face, as (file, the characters that the subset keeps). The script writes them into the folder, which
+# has the SIL Open Font License of Noto Sans KR.
+HANGUL_SUBSET_FOLDER = "NotoSansKRSubsets"
+HANGUL_SUBSETS = [
+    # The jamo, and the syllable U+AC04 but not U+AC00 or U+AC01: HarfBuzz takes U+AC00 apart, and a trailing consonant
+    # after it joins the syllable only when the two compose to U+AC04.
+    ("NotoSansKR-NoAC00AC01.otf", U("0020 1100 1102 1161 1165 11A8 11AB 11C3 A960 D7B0 D7CB AC04 302E 302F 25CC")),
+    # The syllables U+AC00 and U+AC04 but not U+AC01 or the leading consonant U+1100: HarfBuzz cannot take a syllable apart.
+    ("NotoSansKR-No1100.otf", U("0020 AC00 AC04 1161 11A8 11AB 11C3 302E 302F 25CC")),
+]
+
+# Syllables, jamo and tone marks for the subsets: a syllable the subset lacks, a trailing consonant after it that composes
+# with it, does not compose with it, or composes to a syllable that the subset lacks, and each with a tone mark.
+HANGUL_SUBSET_TEXTS = [
+    U("AC00"), U("AC00 11A8"), U("AC00 11C3"), U("AC00 11AB"), U("AC00 11A8 302E"), U("AC00 11C3 302E"), U("AC00 302E"),
+    U("AC00 11A8 11A8"), U("AC01"), U("AC01 302E"), U("1100 1161"), U("1100 1161 302E"), U("1100 1161 11A8"),
+    U("1100 1161 11A8 302E"), U("1100 302E"), U("A960 D7B0 D7CB"), U("AC00 0020 AC00 11C3 302F"), U("AC00 11C3 11C3 302E"),
+    U("AC00 11C3 302E 302E"),
+]
+
 # Words of each script with the marks that are in use: vowel points, conjuncts, reordered vowel signs, ligatures.
 ARABIC_WORDS = ["بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ", "مُحَمَّد", "السَّلَامُ عَلَيْكُمْ", "لا إله إلا الله", "لَأَ لِإ"]
 HEBREW_WORDS = ["בְּרֵאשִׁית בָּרָא אֱלֹהִים", "שָׁלוֹם", "אֲנִי", "וַיְהִי"]
@@ -532,6 +557,21 @@ def hangul_texts(leading, vowels, trailing):
     return list(dict.fromkeys(texts))
 
 
+def build_subset(source, path, characters):
+    """Saves the subset of the font that has the glyphs of the characters, the glyphs that its layout features give them,
+    and its names."""
+    options = subset.Options()
+    options.layout_features = ["*"]
+    options.name_IDs = ["*"]
+    options.name_languages = ["*"]
+    options.notdef_outline = True
+    font = TTFont(source)
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord(c) for c in characters])
+    subsetter.subset(font)
+    font.save(path)
+
+
 def main():
     rows = []
 
@@ -614,6 +654,14 @@ def main():
         hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
         for text in hangul_texts(leading, vowels, trailing) + ["한국어 조선글", "각 힣"] + HANGUL_CLUSTER_TEXTS:
             rows.append(row("Hang", font_name, hb_font, text, script="Hang", direction="ltr"))
+
+    for file_name, characters in HANGUL_SUBSETS:
+        font_name = HANGUL_SUBSET_FOLDER + "/" + file_name
+        path = os.path.join(ref.FONTS, HANGUL_SUBSET_FOLDER, file_name)
+        build_subset(os.path.join(ref.FONTS, "NotoSansKR-Regular.otf"), path, characters)
+        hb_font = ref.load_font(path)
+        for text in HANGUL_SUBSET_TEXTS:
+            rows.append(row("HangSubset", font_name, hb_font, text, script="Hang", direction="ltr"))
 
     ref.write_reference(REFERENCE, rows)
 
