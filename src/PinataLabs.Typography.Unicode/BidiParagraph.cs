@@ -17,11 +17,11 @@ namespace PinataLabs.Typography.Unicode;
 /// All indices are UTF-16 code unit indices into that text. The two code units of a surrogate pair share a level.
 /// </para>
 /// <para>
-/// Rule X9 removes explicit embedding and override controls and every character of class BN from the
-/// ordering. They still have a level, which is that of the code unit before them (the paragraph level at the start
-/// of the text), so that they do not split a run. U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER are
-/// the exception to the removal that a shaper needs: they decide how the letters on either side join, so they stay
-/// inside the run around them. Every other removed character is in no run, and ends the run before it.
+/// Rule X9 removes explicit embedding and override controls and every character of class BN from the ordering. Each
+/// still has a level, which is that of the code unit before it, the paragraph level at the start of the text, or the
+/// paragraph level where rule L1 resets it. U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER are kept in the
+/// run around them, because they decide how the letters on either side join and a shaper has to see them. Every other
+/// removed character is in no run, and ends the run before it.
 /// </para>
 /// </remarks>
 public sealed class BidiParagraph
