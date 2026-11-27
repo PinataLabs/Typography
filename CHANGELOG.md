@@ -562,6 +562,12 @@ Unicode conformance suites to that version.
   does. It took such a glyph for a mark on the first component and moved it too. In
   `LigaturePropertiesComponents.ttf`, which substitutes the ligature x_y by p1 and the mark p2 and then ligates z and p1,
   z, x, y put p2 on the second component of z_p1, where HarfBuzz puts it on the last. (#191, #196)
+- A mark of a fallback font goes on the component of a ligature that the font of the text gave its place. With
+  `MarksWithoutGlyphClassesLigature.ttf`, which ligates a and b, skipping marks, and lacks the acute, and the fallback
+  `MarksWithoutGlyphClassesFallback.ttf`, a, acute, b put the acute on the last component of a_b, where the font alone
+  puts the `.notdef` of the acute on the first. Each font numbers its ligatures from one, so the ligatures of a fallback
+  font now take ids that those of the font do not have, and a mark of one font cannot take a ligature of the other
+  for its own. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

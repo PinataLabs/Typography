@@ -197,6 +197,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             hasFallBacks |= !this.TryReplaceCharacter(font.FontMetrics, character, replacements);
         }
 
+        this.TakeLigatureProperties(replacements);
+
         List<GlyphPositioningData> updated = new(this.glyphs.Count);
         for (int i = 0; i < this.glyphs.Count; i++)
         {
@@ -216,6 +218,39 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
+
+    /// <summary>
+    /// Gives the glyphs of a fallback font ligature ids that no glyph here has, as each font numbers its own ligatures. A
+    /// glyph that no ligature of the fallback font skipped takes the ligature id and the component of the glyph whose
+    /// place it takes, if a ligature of the font skipped that glyph: a mark then goes on the component of that ligature.
+    /// </summary>
+    /// <param name="replacements">The glyphs that replace each glyph, by index.</param>
+    private void TakeLigatureProperties(Dictionary<int, GlyphPositioningData[]> replacements)
+    {
+        int lastLigatureId = 0;
+        foreach (GlyphPositioningData glyph in this.glyphs)
+        {
+            lastLigatureId = Math.Max(lastLigatureId, glyph.Data.LigatureId);
+        }
+
+        foreach (KeyValuePair<int, GlyphPositioningData[]> replacement in replacements)
+        {
+            GlyphShapingData place = this.glyphs[replacement.Key].Data;
+            foreach (GlyphPositioningData glyph in replacement.Value)
+            {
+                GlyphShapingData data = glyph.Data;
+                if (data.LigatureId > 0)
+                {
+                    data.LigatureId += lastLigatureId;
+                }
+                else if (data.LigatureComponent == -1 && place.LigatureId > 0 && place.LigatureComponent > 0)
+                {
+                    data.LigatureId = place.LigatureId;
+                    data.LigatureComponent = place.LigatureComponent;
+                }
+            }
+        }
+    }
 
     // Two glyphs of a character draw the same part when a shaper inserted both or neither, as it inserts a dotted circle,
     // split both or neither from a vowel sign, and they have the same code point, as each part of a split sign has its own.
