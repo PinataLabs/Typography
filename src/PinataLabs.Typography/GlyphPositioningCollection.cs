@@ -336,7 +336,15 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                 maxAdvancedHeight = Math.Max(maxAdvancedHeight, metrics[k].AdvanceHeight);
             }
 
-            glyphs[i] = new(place.Offset, new(shape, true) { Bounds = new(0, 0, maxAdvancedWidth, maxAdvancedHeight) }, place.PointSize, metrics.ToArray());
+            // The glyphs at an offset each take an advance only when one of them is decomposed. So a new glyph keeps that
+            // of the glyph whose place it takes, which a shaper may have put at the offset of another glyph.
+            GlyphShapingData data = new(shape, true)
+            {
+                Bounds = new(0, 0, maxAdvancedWidth, maxAdvancedHeight),
+                IsDecomposed = shape.IsDecomposed || place.Data.IsDecomposed,
+            };
+
+            glyphs[i] = new(place.Offset, data, place.PointSize, metrics.ToArray());
         }
 
         return true;
