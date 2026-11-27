@@ -141,9 +141,8 @@ internal static class TextLayout
 
         // Shaping takes the directional runs of the levels with rule L1 applied to the whole text as one line.
         // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
-        sbyte[] shapingLevels = (sbyte[])bidiLevels.Levels.Clone();
-        BidiAlgorithm.ResetWhitespaceLevels(bidiLevels.Types, shapingLevels, bidiLevels.ParagraphLevel);
-        BidiRun[] bidiRuns = BidiRun.CoalesceLevels(shapingLevels).ToArray();
+        BidiAlgorithm.ResetWhitespaceLevels(bidiData.Types, bidi.ResolvedLevels, bidiLevels.ParagraphLevel);
+        BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
 
         // Incrementally build out collection of glyphs.
         IReadOnlyList<TextRun> textRuns = BuildTextRuns(text, options);
@@ -1162,21 +1161,32 @@ internal static class TextLayout
             textLines.Add(textLine);
         }
 
-        foreach (TextLine line in textLines)
+        // When every level is 0, rule L1 changes none and no line has a run to reverse.
+        if (!bidiLevels.IsLeftToRight)
         {
-            line.OrderVisually(bidiLevels);
+            foreach (TextLine line in textLines)
+            {
+                line.OrderVisually(bidiLevels);
+            }
         }
 
         return new TextBox(options, paragraphDirection, textLines);
     }
 
     /// <summary>
-    /// The bidi types and resolved levels of the codepoints of the text, before rule L1, which applies to each line.
+    /// The bidi types and resolved levels of the codepoints of the text. Rule L1 applies to each line, and
+    /// <see cref="TextLine.OrderVisually"/> applies it to the levels of the line in place.
     /// </summary>
     /// <param name="Types">The bidi type of each codepoint.</param>
-    /// <param name="Levels">The level of each codepoint, before rule L1.</param>
+    /// <param name="Levels">The level of each codepoint, before rule L1 until its line is ordered.</param>
     /// <param name="ParagraphLevel">The embedding level of the paragraph.</param>
-    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, sbyte ParagraphLevel);
+    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, sbyte ParagraphLevel)
+    {
+        /// <summary>
+        /// Gets a value indicating whether the paragraph level and the level of every codepoint are 0.
+        /// </summary>
+        public bool IsLeftToRight { get; } = ParagraphLevel == 0 && Array.TrueForAll(Levels, level => level == 0);
+    }
 
     internal sealed class TextBox
     {
@@ -1445,17 +1455,17 @@ internal static class TextLayout
         }
 
         /// <summary>
-        /// Orders the glyphs of the line visually. Rule L1 is applied to the codepoints of the line, then rule L2 orders
-        /// the glyphs by the levels it gives.
+        /// Orders the glyphs of the line visually. Rule L1 is applied in place to the levels of the codepoints of the
+        /// line, then rule L2 orders the glyphs by the levels it gives. It changes only the levels of the whitespace and
+        /// of the characters that rule X9 removes, and no two lines hold the same one of those.
         /// </summary>
-        /// <param name="bidiLevels">The bidi types and levels of the text, before rule L1.</param>
+        /// <param name="bidiLevels">The bidi types and levels of the text, before rule L1 for this line.</param>
         public void OrderVisually(BidiLevels bidiLevels)
         {
             // The glyphs are in logical order, so the line holds the codepoints from the first glyph to the last.
             int lineStart = this.data[0].Offset;
             int lineLength = this.data[^1].Offset + 1 - lineStart;
-            sbyte[] lineLevels = new sbyte[lineLength];
-            Array.Copy(bidiLevels.Levels, lineStart, lineLevels, 0, lineLength);
+            ArraySlice<sbyte> lineLevels = new(bidiLevels.Levels, lineStart, lineLength);
             ReadOnlyArraySlice<BidiCharacterType> lineTypes = bidiLevels.Types.Slice(lineStart, lineLength);
             BidiAlgorithm.ResetWhitespaceLevels(lineTypes, lineLevels, bidiLevels.ParagraphLevel);
 
@@ -1470,7 +1480,7 @@ internal static class TextLayout
 
             if (first < lineLength)
             {
-                Array.Fill(lineLevels, lineLevels[first], 0, first);
+                lineLevels.Span.Slice(0, first).Fill(lineLevels[first]);
             }
 
             // Build up the collection of ordered runs.
