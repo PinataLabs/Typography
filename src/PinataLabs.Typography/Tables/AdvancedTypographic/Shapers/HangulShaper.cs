@@ -333,20 +333,9 @@ internal sealed class HangulShaper : DefaultShaper
             return index;
         }
 
-        // If the tone mark is zero width, insert the dotted circle before, otherwise after
-        Span<ushort> glyphs = stackalloc ushort[2];
-        if (IsZeroWidth(collection, data))
-        {
-            glyphs[1] = data.GlyphId;
-            glyphs[0] = id;
-        }
-        else
-        {
-            glyphs[1] = id;
-            glyphs[0] = data.GlyphId;
-        }
-
-        collection.Replace(index, glyphs);
+        // The dotted circle goes before a tone mark that is zero width and after any other. HarfBuzz makes it from a copy
+        // of the tone mark, so it keeps the character of the tone mark, and the layout places it as it places the mark.
+        collection.InsertGlyph(IsZeroWidth(collection, data) ? index : index + 1, index, id, data.CodePoint);
         return index + 1;
     }
 
