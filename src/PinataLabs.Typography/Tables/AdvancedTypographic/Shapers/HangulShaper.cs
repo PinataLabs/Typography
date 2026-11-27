@@ -3,15 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using System.Collections.Generic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 /// <summary>
-/// This is a shaper for the Hangul script, used by the Korean language.
-/// The shaping state machine was ported from fontkit.
-/// <see href="https://github.com/foliojs/fontkit/blob/master/src/opentype/shapers/HangulShaper.js"/>
+/// This is a shaper for the Hangul script, used by the Korean language. It composes and decomposes syllables, sets the
+/// jamo features and moves tone marks as <c>preprocess_text_hangul</c> of HarfBuzz 15.0.0 does.
 /// </summary>
 internal sealed class HangulShaper : DefaultShaper
 {
@@ -28,6 +26,7 @@ internal sealed class HangulShaper : DefaultShaper
     private const int LCount = 19;
     private const int VCount = 21;
     private const int TCount = 28;
+    private const int NCount = VCount * TCount;
     private const int LEnd = LBase + LCount - 1;
     private const int VEnd = VBase + VCount - 1;
     private const int TEnd = TBase + TCount - 1;
@@ -41,31 +40,6 @@ internal sealed class HangulShaper : DefaultShaper
     private const byte LV = 4; // Composed <LV> syllable
     private const byte LVT = 5; // Composed <LVT> syllable
     private const byte M = 6; // Tone mark
-
-    // State machine actions
-    private const byte None = 0;
-    private const byte Decompose = 1;
-    private const byte Compose = 2;
-    private const byte ToneMark = 4;
-    private const byte Invalid = 5;
-
-    // Build a state machine that accepts valid syllables, and applies actions along the way.
-    // The logic this is implementing is documented at the top of the file.
-    private static readonly byte[,][] StateTable =
-    {
-        // #             X                       L                       V                       T                       LV                           LVT                          M
-        // State 0: start state
-        { new byte[] { None, 0 }, new byte[] { None, 1 }, new byte[] { None, 0 }, new byte[] { None, 0 }, new byte[] { Decompose, 2 }, new byte[] { Decompose, 3 }, new byte[] { Invalid, 0 } },
-
-        // State 1: <L>
-        { new byte[] { None, 0 }, new byte[] { None, 1 }, new byte[] { Compose, 2 }, new byte[] { None, 0 }, new byte[] { Decompose, 2 }, new byte[] { Decompose, 3 }, new byte[] { Invalid, 0 } },
-
-        // State 2: <L,V> or <LV>
-        { new byte[] { None, 0 }, new byte[] { None, 1 }, new byte[] { None, 0 }, new byte[] { Compose, 3 }, new byte[] { Decompose, 2 }, new byte[] { Decompose, 3 }, new byte[] { ToneMark, 0 } },
-
-        // State 3: <L,V,T> or <LVT>
-        { new byte[] { None, 0 }, new byte[] { None, 1 }, new byte[] { None, 0 }, new byte[] { None, 0 }, new byte[] { Decompose, 2 }, new byte[] { Decompose, 3 }, new byte[] { ToneMark, 0 } },
-    };
 
     public HangulShaper(ScriptClass script, TextOptions textOptions)
         : base(script, MarkZeroingMode.None, textOptions)
@@ -83,100 +57,230 @@ internal sealed class HangulShaper : DefaultShaper
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
     {
-        // Apply the state machine to map glyphs to features.
-        if (collection is GlyphSubstitutionCollection substitutionCollection)
+        // The GSUB pass shapes the syllables and gives each jamo of a syllable left in jamo its jamo feature. Each glyph
+        // keeps that feature for GPOS, as the mask of a glyph in HarfBuzz serves both.
+        int end = collection is GlyphSubstitutionCollection substitutionCollection
+            ? ShapeSyllables(substitutionCollection, index, index + count)
+            : index + count;
+
+        for (int i = index; i < end; i++)
         {
-            // GSub
-            int state = 0;
-            int end = index + count;
-            for (int i = index; i < end; i++)
+            GlyphShapingData data = collection[i];
+            if (data.JamoFeature is Tag feature)
             {
-                GlyphShapingData data = substitutionCollection[i];
-                CodePoint codePoint = data.CodePoint;
-                int type = GetSyllableType(codePoint);
-                byte[] actionsWithState = StateTable[state, type];
-                byte action = actionsWithState[0];
-                state = actionsWithState[1];
-                int collectionCount = substitutionCollection.Count;
-                switch (action)
-                {
-                    case Decompose:
-
-                        // Decompose the composed syllable if it is not supported by the font.
-                        if (data.GlyphId == 0)
-                        {
-                            i = this.DecomposeGlyph(substitutionCollection, data, i);
-                        }
-
-                        break;
-
-                    case Compose:
-
-                        // Found a decomposed syllable. Try to compose if supported by the font.
-                        i = this.ComposeGlyph(substitutionCollection, data, i, type);
-                        break;
-
-                    case ToneMark:
-
-                        // Got a valid syllable, followed by a tone mark. Move the tone mark to the beginning of the syllable.
-                        this.ReOrderToneMark(substitutionCollection, data, i);
-                        break;
-
-                    case Invalid:
-
-                        // Tone mark has no valid syllable to attach to, so insert a dotted circle.
-                        i = this.InsertDottedCircle(substitutionCollection, data, i);
-                        break;
-                }
-
-                // An action can add or remove glyphs, and the run ends that many glyphs later.
-                end += substitutionCollection.Count - collectionCount;
+                collection.EnableShapingFeature(i, feature);
             }
 
-            // As in HarfBuzz, calt stays on for the run but not for the jamo that the state machine leaves, because some
+            // As in HarfBuzz, calt stays on for the run but not for the jamo that the shaper leaves, because some
             // fonts (Noto Sans CJK, Source Han Sans) put their jamo lookups in calt. A syllable keeps it.
-            for (int i = index; i < end; i++)
+            if (GetSyllableType(data.CodePoint) is L or V or T)
             {
-                if (GetSyllableType(substitutionCollection[i].CodePoint) is L or V or T)
-                {
-                    substitutionCollection.DisableShapingFeature(i, CaltTag);
-                }
+                collection.DisableShapingFeature(i, CaltTag);
             }
         }
-        else
+    }
+
+    /// <summary>
+    /// Composes each syllable that the font has a glyph for and takes apart each one that it lacks into jamo with the
+    /// jamo features, in one cluster. A tone mark right after a syllable moves before it, and any other tone mark gets
+    /// a dotted circle.
+    /// </summary>
+    /// <returns>The end of the run, which composition and decomposition move.</returns>
+    private static int ShapeSyllables(GlyphSubstitutionCollection collection, int index, int end)
+    {
+        // The glyphs after the run stay as they are, so the run ends this many glyphs before the end of the collection.
+        int after = collection.Count - end;
+
+        // The glyphs of the last syllable, if start < syllableEnd.
+        int start = index;
+        int syllableEnd = index;
+        int i = index;
+        while (i < collection.Count - after)
         {
-            // GPos
-            // Simply loop and enable based on type.
-            // Glyph substitution has handled [de]composition.
-            for (int i = index; i < index + count; i++)
+            end = collection.Count - after;
+            GlyphShapingData data = collection[i];
+            CodePoint u = data.CodePoint;
+            int type = GetSyllableType(u);
+            FontMetrics metrics = collection.GetFontMetrics(data);
+
+            if (type == M)
             {
-                GlyphShapingData data = collection[i];
-                CodePoint codePoint = data.CodePoint;
-                switch (GetSyllableType(codePoint))
+                if (start < syllableEnd && syllableEnd == i)
                 {
-                    case L:
-                        collection.EnableShapingFeature(i, LjmoTag);
-                        break;
-                    case V:
-                        collection.EnableShapingFeature(i, VjmoTag);
-                        break;
-                    case T:
-                        collection.EnableShapingFeature(i, TjmoTag);
-                        break;
-                    case LV:
-                        collection.EnableShapingFeature(i, LjmoTag);
-                        collection.EnableShapingFeature(i, VjmoTag);
-                        break;
-                    case LVT:
-                        collection.EnableShapingFeature(i, LjmoTag);
-                        collection.EnableShapingFeature(i, VjmoTag);
-                        collection.EnableShapingFeature(i, TjmoTag);
-                        break;
-                    default:
-                        break;
+                    // The tone mark follows a syllable. It moves before it, unless it is zero width.
+                    if (!IsZeroWidth(collection, data))
+                    {
+                        collection.MoveGlyph(i, start);
+                    }
+
+                    i++;
+                }
+                else
+                {
+                    i = InsertDottedCircle(collection, data, i) + 1;
+                }
+
+                start = syllableEnd = i;
+                continue;
+            }
+
+            start = i;
+            if (type == L && i + 1 < end)
+            {
+                if (GetSyllableType(collection[i + 1].CodePoint) == V)
+                {
+                    // <L,V> or <L,V,T>: compose it if the font has the syllable, or set the jamo features.
+                    CodePoint v = collection[i + 1].CodePoint;
+                    bool hasT = i + 2 < end && GetSyllableType(collection[i + 2].CodePoint) == T;
+                    int length = hasT ? 3 : 2;
+                    if (IsCombiningL(u) && IsCombiningV(v) && (!hasT || IsCombiningT(collection[i + 2].CodePoint)))
+                    {
+                        int tIndex = hasT ? collection[i + 2].CodePoint.Value - TBase : 0;
+                        CodePoint s = new(HangulBase + ((u.Value - LBase) * NCount) + ((v.Value - VBase) * TCount) + tIndex);
+                        if (collection.IsUnresolved(i, i + length) && metrics.TryGetGlyphId(s, out ushort id))
+                        {
+                            collection.Replace(i, length - 1, id);
+                            collection[i].CodePoint = s;
+                            syllableEnd = ++i;
+                            continue;
+                        }
+                    }
+
+                    syllableEnd = SetJamoFeatures(collection, i, length);
+                    i = syllableEnd;
+                    continue;
                 }
             }
+            else if (type is LV or LVT)
+            {
+                // <LV>, <LVT> or <LV,T>.
+                bool hasGlyph = data.GlyphId != 0;
+                int sIndex = u.Value - HangulBase;
+                int tIndex = sIndex % TCount;
+                bool tFollows = tIndex == 0 && i + 1 < end && GetSyllableType(collection[i + 1].CodePoint) == T;
+                if (tFollows && IsCombiningT(collection[i + 1].CodePoint))
+                {
+                    // <LV,T>: compose it if the font has the syllable.
+                    CodePoint s = new(u.Value + collection[i + 1].CodePoint.Value - TBase);
+                    if (collection.IsUnresolved(i, i + 2) && metrics.TryGetGlyphId(s, out ushort id))
+                    {
+                        collection.Replace(i, 1, id);
+                        collection[i].CodePoint = s;
+                        syllableEnd = ++i;
+                        continue;
+                    }
+                }
+
+                // Take the syllable apart if the font lacks it, or if a trailing consonant that does not compose with it
+                // follows. That consonant joins the syllable, which a consonant after a syllable the font lacks does not.
+                if ((!hasGlyph || tFollows) && collection.IsUnresolved(i, hasGlyph ? i + 2 : i + 1))
+                {
+                    int jamo = Decompose(collection, metrics, i);
+                    if (jamo > 0)
+                    {
+                        syllableEnd = SetJamoFeatures(collection, i, hasGlyph ? 3 : jamo);
+                        i = syllableEnd;
+                        continue;
+                    }
+
+                    if (!hasGlyph && tIndex != 0)
+                    {
+                        // HarfBuzz normalizes the text after this pass, and so gives an <LVT> it cannot take apart
+                        // into jamo the glyphs of its <LV> and <T>, which are not a syllable.
+                        i = DecomposeTrailingConsonant(collection, metrics, i) + 1;
+                        continue;
+                    }
+                }
+
+                if (hasGlyph)
+                {
+                    syllableEnd = i + 1;
+                }
+            }
+
+            i++;
         }
+
+        return collection.Count - after;
+    }
+
+    /// <summary>
+    /// Sets the jamo features of the glyphs of a syllable that is not composed, and gives them one cluster.
+    /// </summary>
+    /// <returns>The end of the syllable.</returns>
+    private static int SetJamoFeatures(GlyphSubstitutionCollection collection, int index, int length)
+    {
+        collection[index].JamoFeature = LjmoTag;
+        collection[index + 1].JamoFeature = VjmoTag;
+        if (length == 3)
+        {
+            collection[index + 2].JamoFeature = TjmoTag;
+        }
+
+        collection.MergeClusters(index, index + length);
+        return index + length;
+    }
+
+    /// <summary>
+    /// Replaces the glyph of a syllable with the glyphs of its jamo, if the font has all of them.
+    /// </summary>
+    /// <returns>The number of jamo, or 0 if the font lacks one.</returns>
+    private static int Decompose(GlyphSubstitutionCollection collection, FontMetrics metrics, int index)
+    {
+        int s = collection[index].CodePoint.Value - HangulBase;
+        CodePoint l = new(LBase + (s / NCount));
+        CodePoint v = new(VBase + ((s % NCount) / TCount));
+        CodePoint t = new(TBase + (s % TCount));
+        bool hasT = t.Value != TBase;
+        ushort tGlyph = 0;
+        if (!metrics.TryGetGlyphId(l, out ushort lGlyph)
+            || !metrics.TryGetGlyphId(v, out ushort vGlyph)
+            || (hasT && !metrics.TryGetGlyphId(t, out tGlyph)))
+        {
+            return 0;
+        }
+
+        Span<ushort> glyphs = stackalloc ushort[hasT ? 3 : 2];
+        glyphs[0] = lGlyph;
+        glyphs[1] = vGlyph;
+        if (hasT)
+        {
+            glyphs[2] = tGlyph;
+        }
+
+        collection.Replace(index, glyphs);
+        collection[index].CodePoint = l;
+        collection[index + 1].CodePoint = v;
+        if (hasT)
+        {
+            collection[index + 2].CodePoint = t;
+        }
+
+        return glyphs.Length;
+    }
+
+    /// <summary>
+    /// Replaces the glyph of an <c>LVT</c> syllable with the glyphs of its <c>LV</c> syllable and its trailing consonant,
+    /// as the canonical decomposition of the syllable gives them, if the font has both.
+    /// </summary>
+    /// <returns>The index of the last glyph.</returns>
+    private static int DecomposeTrailingConsonant(GlyphSubstitutionCollection collection, FontMetrics metrics, int index)
+    {
+        int s = collection[index].CodePoint.Value - HangulBase;
+        CodePoint lv = new(HangulBase + (s - (s % TCount)));
+        CodePoint t = new(TBase + (s % TCount));
+        if (!metrics.TryGetGlyphId(lv, out ushort lvGlyph) || !metrics.TryGetGlyphId(t, out ushort tGlyph))
+        {
+            return index;
+        }
+
+        Span<ushort> glyphs = stackalloc ushort[2];
+        glyphs[0] = lvGlyph;
+        glyphs[1] = tGlyph;
+        collection.Replace(index, glyphs);
+        collection[index].CodePoint = lv;
+        collection[index + 1].CodePoint = t;
+        return index + 1;
     }
 
     private static int GetSyllableType(CodePoint codePoint)
@@ -198,231 +302,33 @@ internal sealed class HangulShaper : DefaultShaper
         };
     }
 
-    private static int GetSyllableLength(CodePoint codePoint)
-        => GetSyllableType(codePoint) switch
-        {
-            LV or LVT => 1,
-            V => 2,
-            T => 3,
-            _ => 0,
-        };
-
-    private int DecomposeGlyph(GlyphSubstitutionCollection collection, GlyphShapingData data, int index)
+    // As in HarfBuzz, a tone mark is zero width when the font has a glyph for it and the horizontal advance of that glyph
+    // is 0. The .notdef glyph of a tone mark that the font lacks is not, whatever its advance.
+    private static bool IsZeroWidth(GlyphSubstitutionCollection collection, GlyphShapingData data)
     {
-        // Decompose the syllable into a sequence of glyphs.
-        int s = data.CodePoint.Value - HangulBase;
-        int t = TBase + (s % TCount);
-        s = (s / TCount) | 0;
-        int l = (LBase + (s / VCount)) | 0;
-        int v = VBase + (s % VCount);
+        FontMetrics fontMetrics = collection.GetFontMetrics(data);
+        return fontMetrics.TryGetGlyphId(data.CodePoint, out ushort id)
+            && fontMetrics.GetGlyphMetrics(
+                data.CodePoint,
+                id,
+                TextAttributes.None,
+                TextDecorations.None,
+                LayoutMode.HorizontalTopBottom,
+                ColorFontSupport.None)[0].AdvanceWidth == 0;
+    }
 
-        FontMetrics metrics = collection.GetFontMetrics(data);
-
-        // Don't decompose if all of the components are not available
-        if (!metrics.TryGetGlyphId(new(l), out ushort ljmo) ||
-            !metrics.TryGetGlyphId(new(v), out ushort vjmo) ||
-            (!metrics.TryGetGlyphId(new(t), out ushort tjmo) && t != TBase))
+    private static int InsertDottedCircle(GlyphSubstitutionCollection collection, GlyphShapingData data, int index)
+    {
+        FontMetrics fontMetrics = collection.GetFontMetrics(data);
+        if (!fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
         {
             return index;
         }
 
-        // Replace the current glyph with decomposed L, V, and T glyphs,
-        // and apply the proper OpenType features to each component.
-        if (t <= TBase)
-        {
-            Span<ushort> ii = stackalloc ushort[2];
-            ii[0] = ljmo;
-            ii[1] = vjmo;
-
-            collection.Replace(index, ii);
-            collection[index].CodePoint = new(l);
-            collection[index + 1].CodePoint = new(v);
-            collection.EnableShapingFeature(index, LjmoTag);
-            collection.EnableShapingFeature(index + 1, VjmoTag);
-            return index + 1;
-        }
-
-        Span<ushort> iii = stackalloc ushort[3];
-        iii[2] = tjmo;
-        iii[1] = vjmo;
-        iii[0] = ljmo;
-
-        collection.Replace(index, iii);
-        collection[index].CodePoint = new(l);
-        collection[index + 1].CodePoint = new(v);
-        collection[index + 2].CodePoint = new(t);
-        collection.EnableShapingFeature(index, LjmoTag);
-        collection.EnableShapingFeature(index + 1, VjmoTag);
-        collection.EnableShapingFeature(index + 2, TjmoTag);
-        return index + 2;
-    }
-
-    private int ComposeGlyph(GlyphSubstitutionCollection collection, GlyphShapingData data, int index, int type)
-    {
-        if (index == 0)
-        {
-            return index;
-        }
-
-        GlyphShapingData prev = collection[index - 1];
-        CodePoint prevCodePoint = prev.CodePoint;
-        int prevType = GetSyllableType(prevCodePoint);
-
-        // Figure out what type of syllable we're dealing with
-        CodePoint lv = default;
-        int ljmo = -1, vjmo = -1, tjmo = -1;
-
-        if (prevType == LV && type == T)
-        {
-            // <LV,T>
-            lv = prevCodePoint;
-            tjmo = index;
-        }
-        else
-        {
-            if (type == V)
-            {
-                // <L,V>
-                ljmo = index - 1;
-                vjmo = index;
-            }
-            else
-            {
-                // <L,V,T>
-                ljmo = index - 2;
-                vjmo = index - 1;
-                tjmo = index;
-            }
-
-            CodePoint l = collection[ljmo].CodePoint;
-            CodePoint v = collection[vjmo].CodePoint;
-
-            // Make sure L and V are combining characters
-            if (IsCombiningL(l) && IsCombiningV(v))
-            {
-                lv = new CodePoint(HangulBase + ((((l.Value - LBase) * VCount) + (v.Value - VBase)) * TCount));
-            }
-        }
-
-        CodePoint t = tjmo >= 0 ? collection[tjmo].CodePoint : new CodePoint(TBase);
-        bool canCompose = collection.IsUnresolved(index - (prevType == V ? 2 : 1), index + 1);
-        if (canCompose && (lv != default) && (t.Value == TBase || IsCombiningT(t)))
-        {
-            CodePoint s = new(lv.Value + (t.Value - TBase));
-
-            // Replace with a composed glyph if supported by the font,
-            // otherwise apply the proper OpenType features to each component.
-            FontMetrics metrics = collection.GetFontMetrics(data);
-            if (metrics.TryGetGlyphId(s, out ushort id))
-            {
-                int del = prevType == V ? 3 : 2;
-                int idx = index - del + 1;
-                collection.Replace(idx, del - 1, id);
-                collection[idx].CodePoint = s;
-                return idx;
-            }
-        }
-
-        // Didn't compose (either a non-combining component or unsupported by font).
-        if (ljmo >= 0)
-        {
-            collection.EnableShapingFeature(ljmo, LjmoTag);
-        }
-
-        if (vjmo >= 0)
-        {
-            collection.EnableShapingFeature(vjmo, VjmoTag);
-        }
-
-        if (tjmo >= 0)
-        {
-            collection.EnableShapingFeature(tjmo, TjmoTag);
-        }
-
-        if (prevType == LV && canCompose)
-        {
-            // Sequence was originally <L,V>, which got combined earlier.
-            // Either the T was non-combining, or the LVT glyph wasn't supported.
-            // Decompose the glyph again and apply OT features.
-            data = collection[index - 1];
-            this.DecomposeGlyph(collection, data, index - 1);
-            return index + 1;
-        }
-
-        return index;
-    }
-
-    private void ReOrderToneMark(GlyphSubstitutionCollection collection, GlyphShapingData data, int index)
-    {
-        if (index == 0)
-        {
-            return;
-        }
-
-        // Move tone mark to the beginning of the previous syllable, unless it is zero width
-        // We don't have access to the glyphs metrics as an array when substituting so we have to loop.
-        FontMetrics fontMetrics = collection.GetFontMetrics(data);
-        TextAttributes textAttributes = data.TextRun.TextAttributes;
-        TextDecorations textDecorations = data.TextRun.TextDecorations;
-        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        ColorFontSupport colorFontSupport = collection.TextOptions.ColorFontSupport;
-        if (fontMetrics.TryGetGlyphMetrics(data.CodePoint, textAttributes, textDecorations, layoutMode, colorFontSupport, out IReadOnlyList<GlyphMetrics>? metrics))
-        {
-            foreach (GlyphMetrics gm in metrics)
-            {
-                if (gm.AdvanceWidth == 0)
-                {
-                    return;
-                }
-            }
-        }
-
-        GlyphShapingData prev = collection[index - 1];
-        int len = GetSyllableLength(prev.CodePoint);
-        collection.MoveGlyph(index, index - len);
-    }
-
-    private int InsertDottedCircle(GlyphSubstitutionCollection collection, GlyphShapingData data, int index)
-    {
-        bool after = false;
-        FontMetrics fontMetrics = collection.GetFontMetrics(data);
-
-        if (fontMetrics.TryGetGlyphId(new(DottedCircle), out ushort id))
-        {
-            TextAttributes textAttributes = data.TextRun.TextAttributes;
-            TextDecorations textDecorations = data.TextRun.TextDecorations;
-            LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-            ColorFontSupport colorFontSupport = collection.TextOptions.ColorFontSupport;
-            if (fontMetrics.TryGetGlyphMetrics(data.CodePoint, textAttributes, textDecorations, layoutMode, colorFontSupport, out IReadOnlyList<GlyphMetrics>? metrics))
-            {
-                foreach (GlyphMetrics gm in metrics)
-                {
-                    if (gm.AdvanceWidth != 0)
-                    {
-                        after = true;
-                        break;
-                    }
-                }
-            }
-
-            // If the tone mark is zero width, insert the dotted circle before, otherwise after
-            Span<ushort> glyphs = stackalloc ushort[2];
-            if (after)
-            {
-                glyphs[1] = id;
-                glyphs[0] = data.GlyphId;
-            }
-            else
-            {
-                glyphs[1] = data.GlyphId;
-                glyphs[0] = id;
-            }
-
-            collection.Replace(index, glyphs);
-            return index + 1;
-        }
-
-        return index;
+        // The dotted circle goes before a tone mark that is zero width and after any other. HarfBuzz makes it from a copy
+        // of the tone mark, so it keeps the character of the tone mark, and the layout places it as it places the mark.
+        collection.InsertGlyph(IsZeroWidth(collection, data) ? index : index + 1, index, id, data.CodePoint);
+        return index + 1;
     }
 
     private static bool IsCombiningL(CodePoint code) => UnicodeUtility.IsInRangeInclusive((uint)code.Value, LBase, LEnd);

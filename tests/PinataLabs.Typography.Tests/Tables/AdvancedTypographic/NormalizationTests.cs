@@ -27,6 +27,9 @@ public class NormalizationTests
 
     private const string HangulLeadFont = "NormalizationHangulLead";
 
+    // TextShaperHangulNotdef.ttf has U+AC00 and lacks the tone marks, and its .notdef glyph is 0 wide.
+    private const string HangulNotdefFont = "TextShaperHangulNotdef";
+
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
     private static readonly Reference HarfBuzz = JsonSerializer.Deserialize<Reference>(
@@ -172,6 +175,24 @@ public class NormalizationTests
         (int CodePoint, string Font)[] glyphs = ShapeWithFallback("\u1100\u1161", HangulLeadFont, HangulFont);
 
         await Assert.That(glyphs).IsEquivalentTo([(0x1100, HangulLeadFont), (0x1161, HangulFont)], CollectionOrdering.Matching);
+    }
+
+    // The Hangul shaper of each font moves a tone mark that the primary font lacks before its syllable, so the glyph
+    // that the fallback font gives the tone mark takes the place that the primary font gave it.
+    [Test]
+    public async Task ToneMarkThatThePrimaryFontLacksGoesBeforeTheSyllable()
+    {
+        (int CodePoint, string Font)[] glyphs = ShapeWithFallback("\uAC00\u302E", HangulNotdefFont, HangulFont);
+
+        await Assert.That(glyphs).IsEquivalentTo([(0x302E, HangulFont), (0xAC00, HangulNotdefFont)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task ToneMarkGoesBeforeJamoThatTwoFontsDraw()
+    {
+        (int CodePoint, string Font)[] glyphs = ShapeWithFallback("\u1100\u1161\u302E", HangulLeadFont, HangulFont);
+
+        await Assert.That(glyphs).IsEquivalentTo([(0x302E, HangulFont), (0x1100, HangulLeadFont), (0x1161, HangulFont)], CollectionOrdering.Matching);
     }
 
     [Test]
