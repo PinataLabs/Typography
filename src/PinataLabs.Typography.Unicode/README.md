@@ -1,6 +1,6 @@
 # PinataLabs.Typography.Unicode
 
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/PinataLabs/Typography/blob/main/LICENSE)
+[![License: Apache 2.0 and BSD-3-Clause](https://img.shields.io/badge/license-Apache%202.0%20%2B%20BSD--3--Clause-blue.svg)](https://github.com/PinataLabs/Typography/blob/main/NOTICE)
 [![Documentation](https://img.shields.io/badge/docs-pinatalabs.github.io-blue.svg)](https://pinatalabs.github.io/Typography/)
 
 PinataLabs.Typography.Unicode is a .NET library of Unicode character properties. It contains no font code. It is the Unicode half of [PinataLabs.Typography](https://www.nuget.org/packages/PinataLabs.Typography). The bidirectional text, line-breaking, script and grapheme algorithms that back its layout live here, and public APIs for them will follow.
@@ -12,6 +12,8 @@ Use this package on its own when you need the character properties, code point a
 - `CodePoint`: a Unicode scalar value with its general category and its bidi class, line-break class, grapheme-cluster class and vertical orientation.
 - Enumerate the code points and grapheme clusters of a span of text.
 - `UnicodeInfo.Version`: the Unicode version of the property data.
+- `GlyphNameEncodings`: the PDF Standard, WinAnsi, MacRoman and MacExpert encodings and the Symbol and ZapfDingbats built-in encodings, as code to glyph name.
+- `AdobeGlyphList`: glyph name to Unicode by the Adobe Glyph List specification, and Unicode to glyph name.
 - The property data behind them, built from the [Unicode Character Database](https://www.unicode.org/ucd/).
 
 ## Install
