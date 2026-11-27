@@ -37,6 +37,7 @@ internal class GlyphShapingData
         this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
         this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
         this.CodePointCount = data.CodePointCount;
+        this.SourceOffset = data.SourceOffset;
         this.Cluster = data.Cluster;
         this.Direction = data.Direction;
         this.TextRun = data.TextRun;
@@ -122,6 +123,19 @@ internal class GlyphShapingData
     /// Gets or sets the codepoint count represented by this glyph.
     /// </summary>
     public int CodePointCount { get; set; } = 1;
+
+    /// <summary>
+    /// Gets a value indicating whether a shaper inserted the glyph, as a dotted circle, so that it stands for no
+    /// character of the text.
+    /// </summary>
+    public bool IsInserted => this.CodePointCount == 0;
+
+    /// <summary>
+    /// Gets or sets the offset, within the input codepoint collection, of the character that the glyph comes from. It
+    /// moves with the glyph when a shaper reorders the glyphs, and a glyph that is made from another keeps it. So a
+    /// fallback font finds its own glyphs of the character, wherever the shaper put the glyph.
+    /// </summary>
+    public int SourceOffset { get; set; }
 
     /// <summary>
     /// Gets or sets the cluster of the glyph, as HarfBuzz keeps it at its default cluster level: the UTF-16 index in

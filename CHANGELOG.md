@@ -488,6 +488,19 @@ Unicode conformance suites to that version.
 - `TextLayout` keeps a grapheme on one line. A line break opportunity inside a grapheme, such as after a space that
   a combining mark extends, moves to the end of the grapheme: `a` U+0020 U+0301 `bbbb` wrapped after the space, and
   the next line began with the acute on its own. (#181)
+- A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
+  put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
+  glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the
+  two fonts reordered or inserted glyphs differently, glyphs were drawn twice or not at all. With
+  `TextShaperHangulNotdef.ttf` and the fallback `TextShaperHangul.ttf`, U+1100 U+302E gave two dotted circles, and
+  U+AC00 U+11C3 U+302E drew the syllable twice and no tone mark. Devanagari ka, virama, ra, i swapped ka and i when
+  only one of the fonts makes a pre-base form of virama and ra. Each glyph now keeps the offset of its character when
+  it moves, and a fallback font replaces a glyph with its own glyphs of the same character, and an inserted dotted
+  circle with its own circle. A run of marks that holds a mark the font lacks is now sorted as HarfBuzz sorts it,
+  where it kept the order of the text. (#183)
+- The dotted circle of an Indic broken cluster appears once with a fallback font. A sign that the font lacks took
+  every glyph that the fallback font gave at its place, the circle of the fallback font among them, so U+0946 in
+  `IndicReordering.ttf` with the fallback `SyllablesInvalid.ttf` gave two circles. (#178)
 - The Hangul shaper puts the jamo of a syllable that does not compose in one cluster, as HarfBuzz 15.0.0 does: a lead,
   a vowel and an optional trail that have no precomposed glyph, and a precomposed LV syllable that it takes apart because
   the trail after it does not compose, with that trail. It kept one cluster for each jamo, so `TextShaper` split the
@@ -515,9 +528,8 @@ Unicode conformance suites to that version.
   Unicode properties of the sign after it. So before a nonspacing mark it is a mark, which loses its advance in a font
   without glyph classes, which mark positioning attaches past, and which a lookup that ignores marks skips, and before
   the Sinhala virama it sorts with the marks. Before a vowel sign it continues a word, so a pre-base vowel sign after
-  it takes no `init`. A font without U+25CC gives `.notdef` in its place, unless `FallbackFontFamilies` is set: then
-  it gets no circle, as a fallback font would replace the `.notdef` together with the sign and give the sign twice.
-  The Khmer and Myanmar shapers of HarfBuzz insert no such circle, and neither do they here. (#113)
+  it takes no `init`. A font without U+25CC gives `.notdef` in its place, which a fallback font draws. The Khmer and
+  Myanmar shapers of HarfBuzz insert no such circle, and neither do they here. (#113, #183)
 - In a font without glyph classes, mark positioning takes the glyph of a nonspacing mark for a mark, as HarfBuzz
   15.0.0 does. Mark-to-base and mark-to-ligature attach a mark past such a glyph, and mark-to-mark attaches a mark to
   it. The library took no glyph of such a font for a mark there, so a second accent on a letter stayed where the pen

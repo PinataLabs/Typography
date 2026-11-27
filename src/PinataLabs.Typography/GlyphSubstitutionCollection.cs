@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -61,8 +60,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     internal FontMetrics? FontMetrics { get; set; }
 
     /// <summary>
-    /// Gets or sets, for a fallback font, the offsets of the characters that no earlier font has a glyph for.
-    /// <see langword="null"/> for the font of the text run.
+    /// Gets or sets, for a fallback font, the <see cref="GlyphShapingData.SourceOffset"/> of each character that no earlier
+    /// font has a glyph for. <see langword="null"/> for the font of the text run.
     /// </summary>
     internal HashSet<int>? UnresolvedOffsets { get; set; }
 
@@ -126,8 +125,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <summary>
     /// Gets a value indicating whether the glyphs in the range may become other glyphs. A fallback font replaces glyphs
-    /// offset by offset, so it may compose or decompose only characters that no earlier font has a glyph for. Otherwise
-    /// a glyph of an earlier font would lose the characters that the fallback font folded into it.
+    /// character by character, so it may compose or decompose only characters that no earlier font has a glyph for.
+    /// Otherwise a glyph of an earlier font would lose the characters that the fallback font folded into it.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph.</param>
     /// <param name="end">The zero-based index after the last glyph.</param>
@@ -141,7 +140,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
         for (int i = start; i < end; i++)
         {
-            if (!this.UnresolvedOffsets.Contains(this.glyphs[i].Offset))
+            if (!this.UnresolvedOffsets.Contains(this.glyphs[i].Data.SourceOffset))
             {
                 return false;
             }
@@ -215,6 +214,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             Direction = direction,
             GlyphId = glyphId,
             Cluster = cluster,
+            SourceOffset = offset,
         }));
     }
 
@@ -414,39 +414,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         {
             this.PostContext.Add(codePoints.Current);
         }
-    }
-
-    /// <summary>
-    /// Gets the specified glyph ids matching the given codepoint offset.
-    /// </summary>
-    /// <param name="offset">The zero-based index within the input codepoint collection.</param>
-    /// <param name="data">
-    /// When this method returns, contains the shaping data associated with the specified offset,
-    /// if the value is found; otherwise, the default value for the type of the data parameter.
-    /// This parameter is passed uninitialized.
-    /// </param>
-    /// <returns>
-    /// <see langword="true"/> if the <see cref="GlyphSubstitutionCollection"/> contains glyph ids
-    /// for the specified offset; otherwise, <see langword="false"/>.
-    /// </returns>
-    public bool TryGetGlyphShapingDataAtOffset(int offset, [NotNullWhen(true)] out IReadOnlyList<GlyphShapingData>? data)
-    {
-        List<GlyphShapingData> match = [];
-        for (int i = 0; i < this.glyphs.Count; i++)
-        {
-            if (this.glyphs[i].Offset == offset)
-            {
-                match.Add(this.glyphs[i].Data);
-            }
-            else if (match.Count > 0)
-            {
-                // Offsets, though non-sequential, are sorted, so we can stop searching.
-                break;
-            }
-        }
-
-        data = match;
-        return match.Count > 0;
     }
 
     /// <summary>

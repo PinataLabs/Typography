@@ -133,10 +133,7 @@ internal static class FontRunShaper
         }
 
         // Apply the simple and complex substitutions.
-        GlyphNormalizer.Normalize(
-            font.FontMetrics,
-            substitutions,
-            substitutions.TextOptions.FallbackFontFamilies?.Count > 0);
+        GlyphNormalizer.Normalize(font.FontMetrics, substitutions);
         SubstituteBidiMirrors(font.FontMetrics, substitutions);
         SubstituteVerticalForms(font.FontMetrics, substitutions);
         font.FontMetrics.ApplySubstitution(substitutions);
