@@ -8,8 +8,8 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/PinataLabs/Typography</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
-    <PackageTags>unicode;bidi;uax9;line-break;uax14;script;uax24;grapheme;uax29</PackageTags>
-    <Description>Unicode text algorithms and character properties for .NET, with no font code: bidirectional text, line breaking, scripts and the property data they read</Description>
+    <PackageTags>unicode;code-point;grapheme;uax29;script;uax24</PackageTags>
+    <Description>Unicode character properties for .NET, with no font code: code points, code point and grapheme cluster enumeration, and the Unicode version of the data</Description>
     <TargetFrameworks>netstandard2.1;net8.0;net10.0;net11.0</TargetFrameworks>
     <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
   </PropertyGroup>

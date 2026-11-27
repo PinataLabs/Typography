@@ -35,10 +35,11 @@ Unicode conformance suites to that version.
 
 - **The `PinataLabs.Typography.Unicode` package.** The Unicode algorithms and character properties that were in the
   `PinataLabs.Typography.Unicode` namespace of `PinataLabs.Typography` are now a package of their own, with no font code,
-  for the same target frameworks. A caller that needs bidi classes, line-break classes, scripts or grapheme clusters
-  and no fonts can depend on it alone. The namespace is the same, so source code needs no change.
+  for the same target frameworks. A caller that needs character properties, code point and grapheme enumeration and no
+  fonts can depend on it alone. The bidi and line-break algorithms stay internal and back the layout of
+  `PinataLabs.Typography`; public APIs for them are to follow. The namespace is the same, so source code needs no change.
   `UnicodeInfo.Version` is the new public member: it reports the Unicode version of the property data, which is
-  18.0.0. The generator reads it from the rule files, so the data and the version cannot differ. (#151)
+  18.0.0. The generator reads it from the rule files and fails when their headers name different versions. `UnicodeData.txt` has no header, so the generator cannot check that file. (#151)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
