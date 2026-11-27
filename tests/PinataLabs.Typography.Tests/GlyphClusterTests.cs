@@ -28,6 +28,14 @@ public class GlyphClusterTests
         => await Assert.That(Clusters("a\u200Db\u200Cc")).IsEquivalentTo(new[] { 0, 0, 2, 3, 4 });
 
     [Test]
+    public async Task HalfwidthKatakanaSoundMarkShareTheClusterOfTheCharacterBeforeThem()
+        => await Assert.That(Clusters("ｶﾞﾊﾟa")).IsEquivalentTo(new[] { 0, 0, 2, 2, 4 });
+
+    [Test]
+    public async Task SpacingMarkThatUnicodeKeepsForCanonicalEquivalenceSharesTheClusterOfTheCharacterBeforeIt()
+        => await Assert.That(Clusters("一াa")).IsEquivalentTo(new[] { 0, 0, 2 });
+
+    [Test]
     public async Task EmojiModifierAndTagShareTheClusterOfTheirBase()
         => await Assert.That(Clusters("\U0001F44D\U0001F3FDa\U0001F3F4\U000E0067")).IsEquivalentTo(new[] { 0, 0, 4, 5, 5 });
 

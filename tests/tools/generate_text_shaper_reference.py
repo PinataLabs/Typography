@@ -317,6 +317,13 @@ CLUSTER_FACES = [
         U("1F1E9 1F1EA"), U("1F1E9 1F1EA 1F1EB 1F1F7"), U("1F1E9 1F1EA 1F1EB"), "a" + U("1F1E9") + "b",
         U("1F1E9 1F1E9 1F1E9 1F1E9 1F1E9"), U("2764 FE0F 200D 1F525"), U("1F44D 1F3FD") + "a" + U("1F44D 1F3FD"),
         "1" + U("FE0F 20E3") + "a", U("1F3F4 E0067 E0062") + "a", "a" + U("200C") + "b", "a" + U("034F") + "b",
+        # What continues a cluster follows the grapheme cluster class Extend, and not a list of characters: the halfwidth
+        # katakana sound marks (letters, with Grapheme_Extend), an emoji modifier and a tag after a character that is no
+        # emoji, a spacing mark that Unicode keeps for canonical equivalence, and a spacing mark, an enclosing mark and a
+        # tone mark. The zero width non-joiner is Extend too, and ends a cluster.
+        U("FF76 FF9E FF8A FF9F"), U("30AB FF9E 30AB"), U("4E00 FF9F 4E00"), U("4E00 1F3FB 4E00"), U("4E00 E0020 E007F 4E00"),
+        U("4E00 09BE 4E00"), U("4E00 0903 4E00"), U("4E00 20DD 4E00"), U("4E00 302E 4E00"), U("4E00 200C 4E00"),
+        U("4E00 200D 4E00"), U("4E00 200D 1F468"),
     ]),
 ]
 

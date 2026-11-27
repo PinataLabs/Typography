@@ -23,6 +23,10 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// </summary>
     private readonly List<OffsetGlyphDataPair> glyphs = [];
 
+    private const int ZeroWidthNonJoiner = 0x200C;
+
+    private const int ZeroWidthJoiner = 0x200D;
+
     // The number of regional indicators in a row at the end of the characters added so far. The second of each pair joins
     // the cluster of the first.
     private int regionalIndicators;
@@ -263,14 +267,16 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         }
     }
 
-    // As HarfBuzz does at its default cluster level, a mark, a zero width joiner, an emoji modifier, a tag character, the
-    // second of a pair of regional indicators, and an emoji after a joiner share the cluster of the character before them.
-    // The count of regional indicators in a row tells which of a pair a character is, so call this once for each character
-    // that is added.
+    // As HarfBuzz does at its default cluster level, a character shares the cluster of the character before it when it is
+    // a mark, or has the grapheme cluster class Extend: Grapheme_Extend and the emoji modifiers, which are the tag
+    // characters, the halfwidth katakana sound marks and a few signs that Unicode keeps for canonical equivalence. The
+    // zero width non-joiner is Extend too, but it ends a cluster. A zero width joiner, the second of a pair of regional
+    // indicators, and an emoji after a joiner share it as well. The count of regional indicators in a row tells which
+    // of a pair a character is, so call this once for each character that is added.
     private bool ContinuesCluster(CodePoint codePoint)
     {
-        int value = codePoint.Value;
-        bool isRegionalIndicator = value is >= 0x1F1E6 and <= 0x1F1FF;
+        GraphemeClusterClass graphemeClass = CodePoint.GetGraphemeClusterClass(codePoint);
+        bool isRegionalIndicator = graphemeClass == GraphemeClusterClass.RegionalIndicator;
         this.regionalIndicators = isRegionalIndicator ? this.regionalIndicators + 1 : 0;
         if (this.glyphs.Count == 0)
         {
@@ -278,11 +284,10 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         }
 
         return CodePoint.IsMark(codePoint)
-            || value == 0x200D
-            || value is >= 0x1F3FB and <= 0x1F3FF
-            || value is >= 0xE0020 and <= 0xE007F
+            || (graphemeClass == GraphemeClusterClass.Extend && codePoint.Value != ZeroWidthNonJoiner)
+            || graphemeClass == GraphemeClusterClass.ZeroWidthJoiner
             || (isRegionalIndicator && (this.regionalIndicators & 1) == 0)
-            || (this.glyphs[^1].Data.CodePoint.Value == 0x200D && CodePoint.GetGraphemeClusterClass(codePoint) == GraphemeClusterClass.ExtendedPictographic);
+            || (this.glyphs[^1].Data.CodePoint.Value == ZeroWidthJoiner && graphemeClass == GraphemeClusterClass.ExtendedPictographic);
     }
 
     /// <summary>
