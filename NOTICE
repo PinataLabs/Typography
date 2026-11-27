@@ -30,3 +30,48 @@ licensed under the Apache License, Version 2.0, at commit
                                             (removed; DebugGuard.cs is now part of the library project)
 
 The full text of the Apache License, Version 2.0 is in the LICENSE file.
+
+The glyph names and encodings in PinataLabs.Typography.Unicode (AdobeGlyphList, GlyphNameEncodings) are generated
+from these data files, kept in tests/tools/glyph_names:
+
+  glyphlist.txt, zapfdingbats.txt, aglfn.txt
+      The Adobe Glyph List, the ITC Zapf Dingbats glyph list and the Adobe Glyph List for New Fonts, from
+      https://github.com/adobe-type-tools/agl-aglfn, Copyright 2002-2019 Adobe (http://www.adobe.com/),
+      under the BSD 3-Clause License that follows.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are
+  met:
+
+  Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+
+  Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+
+  Neither the name of Adobe nor the names of its contributors may be
+  used to endorse or promote products derived from this software without
+  specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+  Times-Roman.afm, Symbol.afm, ZapfDingbats.afm
+      Adobe Font Metrics files of the PostScript core fonts, Copyright (c) 1985-1997 Adobe Systems Incorporated.
+      All Rights Reserved. Their copyright notices are kept. The Standard, Symbol and ZapfDingbats encodings are
+      read from them.
+
+  pdf-latin-encodings.txt
+      The WinAnsi, MacRoman and MacExpert encodings, taken from src/core/encodings.js of Mozilla pdf.js,
+      Copyright 2012 Mozilla Foundation, licensed under the Apache License, Version 2.0, and checked against
+      the encodings of Apache PDFBox, licensed under the Apache License, Version 2.0.
