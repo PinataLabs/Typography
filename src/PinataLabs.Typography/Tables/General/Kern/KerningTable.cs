@@ -125,21 +125,13 @@ internal sealed class KerningTable : Table
             return false;
         }
 
+        // HarfBuzz does not kern vertical text with this table. In vertical mixed text a run of rotated glyphs is
+        // horizontal text, which HarfBuzz shapes apart from the upright glyphs around it, so a pair kerns only when
+        // both of its glyphs are rotated.
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
         if (AdvancedTypographicUtils.IsVerticalGlyph(leftData.CodePoint, layoutMode, leftData.HasVerticalForm)
-            || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm))
-        {
-            // HarfBuzz does not kern vertical text with this table. Here the first glyph of the pair takes the whole
-            // kerning, so that the space between the two changes, and a positive value moves them apart.
-            if (this.TryGetKerningOffset(leftData.GlyphId, rightData.GlyphId, out Vector2 vertical))
-            {
-                collection.Advance(fontMetrics, left, leftData.GlyphId, (short)vertical.X, (short)vertical.Y);
-            }
-
-            return false;
-        }
-
-        if (leftData.Direction != rightData.Direction)
+            || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm)
+            || leftData.Direction != rightData.Direction)
         {
             return false;
         }
@@ -155,8 +147,8 @@ internal sealed class KerningTable : Table
         // place within its advance.
         int firstHalf = (int)kerning.X >> 1;
         short secondHalf = (short)((int)kerning.X - firstHalf);
-        collection.Advance(fontMetrics, first, collection[first].GlyphId, (short)firstHalf, 0);
-        collection.Advance(fontMetrics, second, collection[second].GlyphId, secondHalf, 0);
+        collection.Advance(fontMetrics, first, collection[first].GlyphId, (short)firstHalf);
+        collection.Advance(fontMetrics, second, collection[second].GlyphId, secondHalf);
         collection.Offset(fontMetrics, second, collection[second].GlyphId, secondHalf, 0);
         advances[first - left] += firstHalf;
         advances[second - left] += secondHalf;

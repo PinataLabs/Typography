@@ -337,24 +337,19 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Updates the advanced metrics of the glyphs at the given index and id, adding dx to the advance of a glyph of
-    /// horizontal text and dy to the advance of a glyph of vertical text.
+    /// Adds dx to the advance width of the glyphs at the given index and id, which are glyphs of horizontal text.
     /// </summary>
     /// <param name="fontMetrics">The font face with metrics.</param>
     /// <param name="index">The zero-based index of the element.</param>
     /// <param name="glyphId">The id of the glyph to offset.</param>
     /// <param name="dx">The delta x-advance.</param>
-    /// <param name="dy">The delta y-advance.</param>
-    public void Advance(FontMetrics fontMetrics, int index, ushort glyphId, short dx, short dy)
+    public void Advance(FontMetrics fontMetrics, int index, ushort glyphId, short dx)
     {
-        LayoutMode layoutMode = this.TextOptions.LayoutMode;
-        bool hasVerticalForm = this.glyphs[index].Data.HasVerticalForm;
         foreach (GlyphMetrics m in this.glyphs[index].Metrics)
         {
             if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
             {
-                bool isVertical = AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode, hasVerticalForm);
-                m.ApplyAdvance(isVertical ? (short)0 : dx, isVertical ? dy : (short)0);
+                m.ApplyAdvance(dx);
             }
         }
     }
