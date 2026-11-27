@@ -69,6 +69,11 @@ public static class TestFonts
 
     public static string IndicReorderingHarfBuzzReference => GetFullPath("IndicReordering.harfbuzz.json");
 
+    // Built by tests/tools/generate_indic_old_spec_reference.py, which also writes the HarfBuzz reference.
+    public static string IndicOldSpecFile => GetFullPath("IndicOldSpec.ttf");
+
+    public static string IndicOldSpecHarfBuzzReference => GetFullPath("IndicOldSpec.harfbuzz.json");
+
     // Built by tests/tools/generate_lookup_flags_reference.py, which also writes the HarfBuzz reference.
     public static string LookupFlagsFile => GetFullPath("LookupFlags.ttf");
 
