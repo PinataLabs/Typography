@@ -202,7 +202,11 @@ internal sealed class BidiAlgorithm
     /// Process data from a BidiData instance
     /// </summary>
     /// <param name="data">The Bidi Unicode data.</param>
-    public void Process(BidiData data)
+    /// <param name="resetWhitespace">
+    /// <see langword="true"/> to apply rule L1 to all of the data as one line; <see langword="false"/> to leave it to the caller,
+    /// which applies it to each line with <see cref="ResetWhitespaceLevels"/>.
+    /// </param>
+    public void Process(BidiData data, bool resetWhitespace = true)
         => this.Process(
             data.Types,
             data.PairedBracketTypes,
@@ -211,7 +215,8 @@ internal sealed class BidiAlgorithm
             data.HasBrackets,
             data.HasEmbeddings,
             data.HasIsolates,
-            null);
+            null,
+            resetWhitespace);
 
     /// <summary>
     /// Processes Bidi Data
@@ -224,7 +229,8 @@ internal sealed class BidiAlgorithm
         bool? hasBrackets,
         bool? hasEmbeddings,
         bool? hasIsolates,
-        ArraySlice<sbyte>? outLevels)
+        ArraySlice<sbyte>? outLevels,
+        bool resetWhitespace = true)
     {
         // Reset state
         this.isolatePairs.Clear();
@@ -283,8 +289,11 @@ internal sealed class BidiAlgorithm
         // Process all isolated run sequences
         this.ProcessIsolatedRunSequences();
 
-        // Reset whitespace levels
-        this.ResetWhitespaceLevels();
+        // Reset whitespace levels, treating all of the data as one line
+        if (resetWhitespace)
+        {
+            ResetWhitespaceLevels(this.originalTypes, this.ResolvedLevels, this.paragraphEmbeddingLevel);
+        }
 
         // Clean up
         this.AssignLevelsToCodePointsRemovedByX9();
@@ -1355,23 +1364,29 @@ internal sealed class BidiAlgorithm
     /// <summary>
     /// Resets whitespace levels. Implements rule L1
     /// </summary>
-    private void ResetWhitespaceLevels()
+    /// <param name="types">The bidi types of the line.</param>
+    /// <param name="levels">The resolved levels of the line, which this resets in place.</param>
+    /// <param name="paragraphEmbeddingLevel">The embedding level of the paragraph that the line belongs to.</param>
+    internal static void ResetWhitespaceLevels(
+        ReadOnlyArraySlice<BidiCharacterType> types,
+        ArraySlice<sbyte> levels,
+        sbyte paragraphEmbeddingLevel)
     {
-        for (int i = 0; i < this.ResolvedLevels.Length; i++)
+        for (int i = 0; i < levels.Length; i++)
         {
-            BidiCharacterType t = this.originalTypes[i];
+            BidiCharacterType t = types[i];
             if (t is BidiCharacterType.ParagraphSeparator or BidiCharacterType.SegmentSeparator)
             {
                 // Rule L1, clauses one and two.
-                this.ResolvedLevels[i] = this.paragraphEmbeddingLevel;
+                levels[i] = paragraphEmbeddingLevel;
 
                 // Rule L1, clause three.
                 for (int j = i - 1; j >= 0; --j)
                 {
-                    if (IsWhitespace(this.originalTypes[j]))
+                    if (IsWhitespace(types[j]))
                     {
                         // including format codes
-                        this.ResolvedLevels[j] = this.paragraphEmbeddingLevel;
+                        levels[j] = paragraphEmbeddingLevel;
                     }
                     else
                     {
@@ -1382,11 +1397,11 @@ internal sealed class BidiAlgorithm
         }
 
         // Rule L1, clause four.
-        for (int j = this.ResolvedLevels.Length - 1; j >= 0; j--)
+        for (int j = levels.Length - 1; j >= 0; j--)
         {
-            if (IsWhitespace(this.originalTypes[j]))
+            if (IsWhitespace(types[j]))
             { // including format codes
-                this.ResolvedLevels[j] = this.paragraphEmbeddingLevel;
+                levels[j] = paragraphEmbeddingLevel;
             }
             else
             {
