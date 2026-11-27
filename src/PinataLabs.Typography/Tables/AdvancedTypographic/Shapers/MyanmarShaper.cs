@@ -196,12 +196,10 @@ internal sealed class MyanmarShaper : DefaultShaper
             start = end;
         }
 
-        // No syllable of another run has one of these numbers.
-        int firstSyllable = substitutionCollection.TakeSyllableNumbers(count) + 1;
         for (int s = syllables.Count - 1; s >= 0; s--)
         {
             (int start, int end, string type) = syllables[s];
-            int syllable = firstSyllable + s;
+            int syllable = s + 1;
             for (int i = start; i < end; i++)
             {
                 substitutionCollection[index + i].MyanmarShapingEngineInfo = new(categories[i], Positions.Start, type, syllable);
