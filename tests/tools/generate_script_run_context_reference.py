@@ -30,6 +30,8 @@ the start of the text. Each case of the font has a lookup that applies only when
   them with its first nested lookup, and gives p or Greek omega an alternate with its second, at the second glyph of
   the input. The ligature leaves an input of one glyph, so HarfBuzz skips the second, at the end of the text and before
   the Greek run.
+* GrownInput: a context lookup whose input is Latin v and w splits v into v and a tail with its first nested lookup,
+  and gives the glyph at index 1 an alternate with its second. HarfBuzz takes the tail for index 1.
 * JoinerInput and JoinerPosition: the input of a context lookup names ZWJ, Latin q, ZWJ and r in GSUB and s, ZWJ and t
   in GPOS, and a nested lookup changes the glyph after ZWJ. HarfBuzz changes the first r or t, where the input
   matched, not the one after it (issue #203).
@@ -73,6 +75,7 @@ CASES = [
     ("Cursive", [0x006D, 0x03B7], "Latn"),
     ("ShrunkInputAtEnd", [0x03C9, 0x0075, 0x006F, 0x0070], None),
     ("ShrunkInputBeforeRun", [0x0075, 0x006F, 0x0070, 0x03C9], "Latn"),
+    ("GrownInput", [0x0076, 0x0077], None),
     ("JoinerInput", [0x0071, 0x200D, 0x0072, 0x0072], None),
     ("JoinerPosition", [0x0073, 0x200D, 0x0074, 0x0074], None),
 ]
@@ -108,6 +111,14 @@ lookup LIGATE_OP {
 lookup P_ALT {
     sub [u0070 u03C9] by [u0070.alt u03C9.alt];
 } P_ALT;
+
+lookup V_SPLIT {
+    sub u0076 by u0076 u0076.tail;
+} V_SPLIT;
+
+lookup W_ALT {
+    sub [u0077 u0076.tail] by [u0077.alt u0076.tail.alt];
+} W_ALT;
 
 lookup R_ALT {
     sub u0072 by u0072.alt;
@@ -154,6 +165,10 @@ feature calt {
     lookup SHRUNK_INPUT {
         sub u0075 u006F' lookup LIGATE_OP u0070' lookup P_ALT;
     } SHRUNK_INPUT;
+
+    lookup GROWN_INPUT {
+        sub u0076' lookup V_SPLIT u0077' lookup W_ALT;
+    } GROWN_INPUT;
 
     lookup JOINER_INPUT {
         sub u0071' u200D' u0072' lookup R_ALT;
@@ -211,6 +226,7 @@ feature curs {
 EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
     "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u006F_u0070", "u0070.alt", "u03C9.alt", "u0072.alt",
+    "u0076.tail", "u0077.alt", "u0076.tail.alt",
 ]
 
 
@@ -256,10 +272,10 @@ def main():
     path = build_font(FILE_NAME, code_points, FEATURES, extra_glyphs=EXTRA_GLYPHS)
 
     # Check that the lookups have the types that the cases test.
-    # The lookups of type 1 are B_ALT, P_ALT, R_ALT, N_MOVE, T_MOVE and those of the inline substitutions and positions.
+    # The lookups of type 1 are B_ALT, P_ALT, W_ALT, R_ALT, N_MOVE, T_MOVE and those of the inline substitutions and positions.
     font = TTFont(path)
     types = [lookup.LookupType for lookup in font["GSUB"].table.LookupList.Lookup]
-    assert types == [1, 4, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5], types
+    assert types == [1, 4, 1, 2, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5, 5], types
     types = [lookup.LookupType for lookup in font["GPOS"].table.LookupList.Lookup]
     assert types == [1, 1, 2, 8, 1, 8, 8, 4, 5, 6, 3], types
 
