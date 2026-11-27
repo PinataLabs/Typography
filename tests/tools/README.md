@@ -1088,3 +1088,19 @@ python tests/tools/generate_vertical_advance_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Phantom point font
+
+`generate_phantom_point_font.py` builds `tests/PinataLabs.Typography.Tests/Fonts/PhantomPoints.ttf` for issue #170. Its
+glyphs R and T are those of `HintedVariableMetricsTables.ttf`, whose hinting programs move the outline to the phantom
+points: R ends at the second, and T spans the third and the fourth. Its GPOS table kerns R R with `kern` and T T with
+`vkrn`. FreeType places the phantom points from the advances of `hmtx` and `vmtx`, so `PhantomPointKerningTests` checks
+that a kerned glyph hints to the same size as the glyph on its own.
+
+To write the font again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+python tests/tools/generate_phantom_point_font.py
+```
+
+The output is deterministic for one fontTools version.
