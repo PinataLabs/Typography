@@ -12,23 +12,34 @@ HarfBuzz gives each glyph a ligature id and a component. A ligature takes a new 
 id and the component that the mark follows. Mark-to-ligature attaches a mark of the same id to that component, and any
 other mark to the last component.
 
-LigatureProperties.ttf ligates a and b, skipping marks, then substitutes the acute by acute.alt (a single substitution)
-and the grave by grave.a and grave.b (a multiple substitution). Mark-to-ligature has an anchor at x 110 on the first
-component of a_b and at x 710 on the second.
+LigatureProperties.ttf first substitutes the circumflex by the sequence of one glyph circumflex.alt. It then ligates a
+and b, skipping marks, then substitutes the acute by acute.alt (a single substitution) and the grave by grave.a and
+grave.b (a multiple substitution). Mark-to-ligature has an anchor at x 110 on the first component of a_b and at x 710 on
+the second.
 
 * a, acute, b: a single substitution keeps the id and the component of the acute, so acute.alt goes on the first
   component.
 * a, grave, b: a multiple substitution of a glyph that has an id keeps the id and the component on each glyph
   (Sequence.hh), so grave.a and grave.b both go on the first component.
+* a, circumflex, b: HarfBuzz takes a sequence of one glyph for a single substitution, which leaves the circumflex no
+  component (Sequence.hh). So the ligature gives circumflex.alt the first component, as it gives a mark that no lookup
+  changed.
 * a, b, acute and c, acute, c, grave: the acute after the ligature goes on the last component, and on c the marks
   attach to their base.
 
-LigaturePropertiesWithoutGlyphClasses.ttf has no GDEF table. It ligates a and b, which makes a_b a ligature, then
-substitutes a_b by c and d, then, ignoring ligatures, c by c.alt.
+LigaturePropertiesWithoutGlyphClasses.ttf has no GDEF table and no GPOS table. It ligates a and b into a_b, b and d
+into b_d, and acute and a into acute_a, which are all ligatures. It then substitutes a_b by c and d, b_d by the sequence
+of one glyph c, and acute_a by b and b, then, ignoring ligatures, c by c.alt.
 
 * a, b: a multiple substitution of a ligature gives each glyph the base class (Sequence.hh), so the lookup that ignores
   ligatures changes c.
-* c: that lookup changes c, which no substitution made.
+* b, d: a sequence of one glyph is a single substitution, which keeps the ligature class. So the lookup that ignores
+  ligatures skips the c that b_d becomes.
+* d, acute, a: the ligature of acute and a has the general category Lo where the acute has Mn (ligate_input). The
+  glyphs that the multiple substitution makes of it copy that category, so they are no marks, and HarfBuzz places no
+  mark on d. They keep their advance.
+* c: the lookup that ignores ligatures changes c, which no substitution made. d, acute: the acute is a mark, and
+  HarfBuzz places it on d.
 
 LigaturePropertiesIndic.ttf is a Devanagari font with the dev2 script. In ccmp, a multiple substitution lookup
 substitutes ra by the sequence of one glyph ra.alt, and na by two na. rphf ligates ra.alt and virama into reph. In pref,
@@ -57,33 +68,34 @@ from harfbuzz_reference import FONTS, build_font, load_font, shape_line, write_r
 REFERENCE = os.path.join(FONTS, "LigatureProperties.harfbuzz.json")
 
 FONT = "LigatureProperties.ttf"
-CODE_POINTS = [0x61, 0x62, 0x63, 0x0300, 0x0301]
-EXTRA_GLYPHS = ["a_b", "acute.alt", "grave.a", "grave.b"]
+CODE_POINTS = [0x61, 0x62, 0x63, 0x0300, 0x0301, 0x0302]
+EXTRA_GLYPHS = ["a_b", "acute.alt", "grave.a", "grave.b", "circumflex.alt"]
 FEATURES = """
 languagesystem DFLT dflt; languagesystem latn dflt;
-markClass [u0301 u0300 acute.alt grave.a grave.b] <anchor 0 0> @Accent;
+markClass [u0301 u0300 u0302 acute.alt grave.a grave.b circumflex.alt] <anchor 0 0> @Accent;
+lookup Sequence { sub u0302 by circumflex.alt; sub circumflex.alt by u0302 u0302; } Sequence;
 lookup Ligate { lookupflag IgnoreMarks; sub u0061 u0062 by a_b; } Ligate;
 lookup Single { sub u0301 by acute.alt; } Single;
 lookup Multiple { sub u0300 by grave.a grave.b; } Multiple;
-feature liga { lookup Ligate; lookup Single; lookup Multiple; } liga;
+feature liga { lookup Sequence; lookup Ligate; lookup Single; lookup Multiple; } liga;
 feature mark {
     pos base u0063 <anchor 300 500> mark @Accent;
     pos ligature a_b <anchor 110 600> mark @Accent ligComponent <anchor 710 600> mark @Accent;
 } mark;
 """
-TEXTS = ["áb", "àb", "ab́", "ć", "c̀"]
+TEXTS = ["áb", "àb", "âb", "ab́", "ć", "c̀"]
 
 FONT_WITHOUT_GLYPH_CLASSES = "LigaturePropertiesWithoutGlyphClasses.ttf"
-CODE_POINTS_WITHOUT_GLYPH_CLASSES = [0x61, 0x62, 0x63, 0x64]
-EXTRA_GLYPHS_WITHOUT_GLYPH_CLASSES = ["a_b", "c.alt"]
+CODE_POINTS_WITHOUT_GLYPH_CLASSES = [0x61, 0x62, 0x63, 0x64, 0x0301]
+EXTRA_GLYPHS_WITHOUT_GLYPH_CLASSES = ["a_b", "b_d", "acute_a", "c.alt"]
 FEATURES_WITHOUT_GLYPH_CLASSES = """
 languagesystem DFLT dflt; languagesystem latn dflt;
-lookup Ligate { sub u0061 u0062 by a_b; } Ligate;
-lookup Multiple { sub a_b by u0063 u0064; } Multiple;
+lookup Ligate { sub u0061 u0062 by a_b; sub u0062 u0064 by b_d; sub u0301 u0061 by acute_a; } Ligate;
+lookup Multiple { sub a_b by u0063 u0064; sub b_d by u0063; sub acute_a by u0062 u0062; } Multiple;
 lookup SkipLigatures { lookupflag IgnoreLigatures; sub u0063 by c.alt; } SkipLigatures;
 feature liga { lookup Ligate; lookup Multiple; lookup SkipLigatures; } liga;
 """
-TEXTS_WITHOUT_GLYPH_CLASSES = ["ab", "c"]
+TEXTS_WITHOUT_GLYPH_CLASSES = ["ab", "bd", "d́a", "c", "d́"]
 
 INDIC_FONT = "LigaturePropertiesIndic.ttf"
 INDIC_CODE_POINTS = [0x0915, 0x0924, 0x0928, 0x092A, 0x0930, 0x093F, 0x094D]

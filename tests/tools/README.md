@@ -825,11 +825,12 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 and `LigaturePropertiesIndic.ttf` in `tests/PinataLabs.Typography.Tests/Fonts` and writes
 `LigatureProperties.harfbuzz.json` next to them. Its texts show what a substitution does to the ligature id, the
 component and the class of a glyph in HarfBuzz: a single substitution and a multiple substitution of a mark that a
-ligature skipped keep its id and component, so mark-to-ligature attaches the new glyphs to the same component; a multiple
-substitution of a ligature gives its glyphs the base class in a font without GDEF, so a lookup that ignores ligatures
-changes them; and in Devanagari, a reph ligated from a glyph of a one-glyph sequence substitution moves after the base,
-and a pre-base-reordering consonant whose pref ligature does not form makes HarfBuzz find the base again. The script says
-what each text tests. The reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
+ligature skipped keep its id and component, so mark-to-ligature attaches the new glyphs to the same component; a sequence
+of one glyph is a single substitution, which keeps the component and the class; a multiple substitution of a ligature
+gives its glyphs the base class in a font without GDEF, so a lookup that ignores ligatures changes them, and keeps the
+general category Lo of the ligature, so fallback mark positioning takes them for no marks; and in Devanagari, a reph
+ligated from a glyph of a one-glyph sequence substitution moves after the base, and a pre-base-reordering consonant whose
+pref ligature does not form makes HarfBuzz find the base again. The script says what each text tests. The reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
 
 `LigaturePropertiesTests` checks that the library puts the same glyphs in the same places.
 
