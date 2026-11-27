@@ -163,8 +163,9 @@ internal static class FallbackMarkPositioner
 
     /// <summary>
     /// Places the marks that follow a base, as HarfBuzz places them in a font without GPOS. A mark whose font positions it
-    /// with GPOS, or does not place marks, stays where it is, and the marks after it stack on it there. The places are in
-    /// units of the font of the base until each mark takes its own.
+    /// with GPOS, or does not place marks, stays where it is, and the marks after it stack on it there. A mark that the GPOS
+    /// of its font attached to a mark that moves goes with it. The places are in units of the font of the base until each
+    /// mark takes its own.
     /// </summary>
     private static void PlaceAroundBase(GlyphPositioningCollection collection, ScriptClass script, int baseIndex, int end)
     {
@@ -228,7 +229,7 @@ internal static class FallbackMarkPositioner
 
             Box mark = Box.Of(collection.GetMetrics(i)).Scale(scale);
             FontMetrics markFont = collection.GetMetrics(i).FontMetrics;
-            if (!PlacesAroundBase(markFont, baseFont, script, data))
+            if (!PlacesAroundBase(collection, script, baseIndex, i))
             {
                 // The mark keeps any advance that its font left it, which moves the pen as for a glyph that is not placed.
                 mark.Top += Scale(data.Bounds.Y, scale.Y);
@@ -237,23 +238,72 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
-            int x = penOffset + Align(stack, mark, alignment, isForward);
-            int y = Stack(ref stack, mark, side, gap);
-            data.Bounds.X = Scale(x, 1 / scale.X);
-            data.Bounds.Y = Scale(y, 1 / scale.Y);
+            int x = Scale(penOffset + Align(stack, mark, alignment, isForward), 1 / scale.X);
+            int y = Scale(Stack(ref stack, mark, side, gap), 1 / scale.Y);
+            int dx = x - data.Bounds.X;
+            int dy = y - data.Bounds.Y;
+            data.Bounds.X = x;
+            data.Bounds.Y = y;
             data.Bounds.Width = 0;
             data.Bounds.Height = 0;
             collection.UpdatePosition(markFont, i);
+            MoveAttachedMarks(collection, i, end, dx, dy);
         }
     }
 
-    // A font places its marks around a base, unless its shaper does not or its GPOS positions them. Its GPOS cannot attach
-    // them to a base of another font, so it places those, if they are marks to it: a glyph that its GDEF calls a base
-    // keeps its advance and its place.
-    private static bool PlacesAroundBase(FontMetrics markFont, FontMetrics baseFont, ScriptClass script, GlyphShapingData mark)
-        => ShaperFactory.HasFallbackPositioning(script, markFont.GetGSubTable().GetScriptTag(script))
-            && (markFont.GetGPosTable()?.PositionsScript(script) != true
-                || (markFont != baseFont && AdvancedTypographicUtils.IsMarkGlyph(markFont, mark)));
+    /// <summary>
+    /// Gets a value indicating whether a mark goes around its base as in a font without GPOS. A font places its marks so,
+    /// unless its shaper does not or its GPOS positions them. Its GPOS can attach a mark only to a glyph of the font, so
+    /// a mark that it calls one and that has no glyph of its font before it in the cluster goes around the base too. A
+    /// glyph that its GDEF calls a base keeps its advance and its place.
+    /// </summary>
+    private static bool PlacesAroundBase(GlyphPositioningCollection collection, ScriptClass script, int baseIndex, int index)
+    {
+        FontMetrics markFont = collection.GetMetrics(index).FontMetrics;
+        if (!ShaperFactory.HasFallbackPositioning(script, markFont.GetGSubTable().GetScriptTag(script)))
+        {
+            return false;
+        }
+
+        if (markFont.GetGPosTable()?.PositionsScript(script) != true)
+        {
+            return true;
+        }
+
+        if (!AdvancedTypographicUtils.IsMarkGlyph(markFont, collection[index]))
+        {
+            return false;
+        }
+
+        for (int i = baseIndex; i < index; i++)
+        {
+            if (!collection[i].IsDefaultIgnorable && collection.GetMetrics(i).FontMetrics == markFont)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Moves the marks that the GPOS of their font attached to a mark that moved, directly or through another mark, with it.
+    /// </summary>
+    private static void MoveAttachedMarks(GlyphPositioningCollection collection, int parent, int end, int dx, int dy)
+    {
+        FontMetrics font = collection.GetMetrics(parent).FontMetrics;
+        for (int i = parent + 1; i < end; i++)
+        {
+            GlyphShapingData data = collection[i];
+            if (data.MarkAttachment == parent && collection.GetMetrics(i).FontMetrics == font)
+            {
+                data.Bounds.X += dx;
+                data.Bounds.Y += dy;
+                collection.UpdatePosition(font, i);
+                MoveAttachedMarks(collection, i, end, dx, dy);
+            }
+        }
+    }
 
     // Gets how far the pen offset of the marks after a glyph that keeps its advance moves, in units of the font of the base:
     // back in text that runs forward, as the pen moved forward past the glyph.
