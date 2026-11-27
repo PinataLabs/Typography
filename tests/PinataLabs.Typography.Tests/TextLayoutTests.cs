@@ -1700,6 +1700,19 @@ public class TextLayoutTests
         await Assert.That(lines[1][0].PenLocation.Y - lines[0][0].PenLocation.Y).IsEqualTo(lineHeight / options.Dpi).Within(0.0001F);
     }
 
+    // A line feed ends every isolate (UAX #9 BD9 and X8), so the isolate ends at the line feed and the PDI after it
+    // matches no isolate initiator.
+    [Test]
+    [Arguments("\u2068\n\u2069")]
+    [Arguments("\u2066a\n\u2069")]
+    [Arguments("\u2067a\n\u2069")]
+    public async Task IsolateThatHoldsALineFeed_EndsAtTheLineFeed(string text)
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
+
+        await Assert.That(TextMeasurer.CountLines(text, new TextOptions(font))).IsEqualTo(2);
+    }
+
     // The layout lays out no variation selector on its own, so text that is only variation selectors has no line, as
     // empty text has none.
     [Test]
