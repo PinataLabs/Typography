@@ -212,7 +212,7 @@ internal class GPosTable : Table
             bool withRequiredFeature = collection.TextOptions.KerningMode != KerningMode.None
                 || !this.RequiredFeatureIsKerning(current, collection.TextOptions.Language);
 
-            IReadOnlyList<PlannedFeature> enabledFeatures = LookupFeatures.WithoutDisabled(features, collection.TextOptions.DisabledFeatureTags);
+            IReadOnlyList<PlannedFeature> enabledFeatures = LookupFeatures.WithoutDisabled(features, shaper.DisabledFeatureTags);
             if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, enabledFeatures, current, collection.TextOptions.Language, withRequiredFeature, positioning: true, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);

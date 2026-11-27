@@ -505,8 +505,8 @@ Unicode conformance suites to that version.
   put it. (#113)
 - In a font without glyph classes, lookup flags take the same glyphs for marks as mark positioning, as HarfBuzz 15.0.0
   does: the glyphs of nonspacing marks that are not default ignorable. They took any mark, so a lookup that ignores
-  marks skipped a spacing mark such as U+1D165 and the combining grapheme joiner U+034F, and formed the ligature of b
-  and b in b, U+1D165, b. (#113)
+  marks skipped a spacing mark such as U+1D165, an enclosing mark such as U+20DD and the combining grapheme joiner
+  U+034F, and formed the ligature of b and b in b, U+1D165, b. (#113, #178)
 - In a font without glyph classes, a ligature of components that are not all marks is a ligature glyph, as in HarfBuzz
   15.0.0, even when its first component is a nonspacing mark. It was a mark, so the ligature of an acute and a lost its
   advance and no mark attached to it. In a font without GPOS mark lookups, with or without glyph classes, fallback mark
@@ -543,6 +543,13 @@ Unicode conformance suites to that version.
   numbered the syllables of a run from 1, so after a run of one syllable, a lookup of the first syllable of the next
   run matched its glyph as context: Devanagari ka after Brahmi A, or Bengali ka after Devanagari kha, took a `locl`
   form that the font gives after that letter. No two runs of a text now share a syllable number. (#175)
+- The Indic shaper turns `liga` off, and the Khmer shaper turns `clig` on and `liga` off, whatever the caller asks for,
+  as the override functions of HarfBuzz 15.0.0 do. Both shapers applied `liga`, so a `liga` lookup of a `dev2` font
+  made a ligature of ka and kha where HarfBuzz keeps the two letters. The Khmer shaper also left out `clig` when the
+  caller turned it off, and in vertical text, where HarfBuzz applies it. The Myanmar and universal shapers of
+  HarfBuzz override no feature, and neither do they here. (#178)
+- The Myanmar shaper applies `rphf` to every glyph, as HarfBuzz 15.0.0 does. It applied it to the kinzi only, so an
+  `rphf` lookup of a font did not change a lone ka. (#178)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

@@ -48,6 +48,9 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly HashSet<Tag> PerSyllableFeatures =
         [LoclTag, CcmpTag, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag];
 
+    // As override_features_indic of HarfBuzz, the shaper turns liga off.
+    private static readonly Dictionary<Tag, bool> FeatureOverrides = new() { [LigaTag] = false };
+
     private const int DottedCircle = 0x25cc;
 
     private readonly TextOptions textOptions;
@@ -55,7 +58,7 @@ internal sealed class IndicShaper : DefaultShaper
     private readonly bool isOldSpec;
 
     public IndicShaper(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
-        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures)
+        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures, FeatureOverrides)
     {
         this.textOptions = textOptions;
 
@@ -881,7 +884,7 @@ internal sealed class IndicShaper : DefaultShaper
     // As in HarfBuzz, the font has a feature for the run when the language system of its language lists it and the caller
     // left it on.
     private bool HasFeature(GSubTable gSubTable, in Tag featureTag, GlyphSubstitutionCollection collection)
-        => gSubTable.TryGetFeatureLookups(in featureTag, this.ScriptClass, collection.TextOptions.Language, collection.TextOptions.DisabledFeatureTags, out _);
+        => gSubTable.TryGetFeatureLookups(in featureTag, this.ScriptClass, collection.TextOptions.Language, this.DisabledFeatureTags, out _);
 
     private bool WouldSubstitute(GlyphSubstitutionCollection collection, in Tag featureTag, ReadOnlySpan<GlyphShapingData> buffer)
     {
@@ -912,6 +915,7 @@ internal sealed class IndicShaper : DefaultShaper
             collection,
             ref iterator,
             [this.Plan(featureTag)],
+            this.DisabledFeatureTags,
             false,
             this.ScriptClass,
             index,

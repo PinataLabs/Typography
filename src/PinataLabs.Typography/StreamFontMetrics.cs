@@ -399,7 +399,8 @@ internal partial class StreamFontMetrics : FontMetrics
 
     /// <inheritdoc/>
     internal override bool HasMarkPositioning(ScriptClass script, TextOptions options)
-        => this.positioning?.HasFeature(script, GPosTable.MarkTag, options.Language, options.DisabledFeatureTags) == true;
+        => this.positioning is GPosTable gpos
+        && gpos.HasFeature(script, GPosTable.MarkTag, options.Language, ShaperFactory.Create(script, this.substitution.GetScriptTag(script), options).DisabledFeatureTags);
 
     /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)

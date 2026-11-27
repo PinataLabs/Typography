@@ -44,6 +44,10 @@ internal sealed class KhmerShaper : DefaultShaper
     // As in HarfBuzz, the lookups of locl, ccmp and the basic features match within a syllable.
     private static readonly HashSet<Tag> PerSyllableFeatures = [LoclTag, CcmpTag, PrefTag, BlwfTag, AbvfTag, PstfTag, CfarTag];
 
+    // As override_features_khmer of HarfBuzz, the shaper turns clig on, which the Khmer specification requires, and
+    // liga off.
+    private static readonly Dictionary<Tag, bool> FeatureOverrides = new() { [CligTag] = true, [LigaTag] = false };
+
     // The two-part vowel signs that have no Unicode decomposition. The part in front of the base comes first.
     private static readonly Dictionary<int, int[]> Decompositions = new()
     {
@@ -55,7 +59,7 @@ internal sealed class KhmerShaper : DefaultShaper
     };
 
     public KhmerShaper(ScriptClass script, TextOptions textOptions)
-        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures)
+        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures, FeatureOverrides)
     {
     }
 

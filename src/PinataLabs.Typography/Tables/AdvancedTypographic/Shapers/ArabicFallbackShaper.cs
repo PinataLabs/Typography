@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
 using PinataLabs.Typography.Unicode;
 
@@ -24,7 +25,8 @@ internal static class ArabicFallbackShaper
     /// <param name="collection">The glyphs.</param>
     /// <param name="index">The index of the first glyph of the run.</param>
     /// <param name="count">The number of glyphs in the run.</param>
-    public static void Apply(IGlyphShapingCollection collection, int index, int count)
+    /// <param name="disabledFeatures">The features that the shaper turns off, as <see cref="BaseShaper.DisabledFeatureTags"/> gives them.</param>
+    public static void Apply(IGlyphShapingCollection collection, int index, int count, IReadOnlyList<Tag> disabledFeatures)
     {
         if (collection is not GlyphSubstitutionCollection substitution || substitution.FontMetrics is not FontMetrics fontMetrics)
         {
@@ -32,7 +34,7 @@ internal static class ArabicFallbackShaper
         }
 
         GSubTable gsub = fontMetrics.GetGSubTable();
-        if (!NeedsFallback(gsub, substitution.TextOptions))
+        if (!NeedsFallback(gsub, substitution.TextOptions, disabledFeatures))
         {
             return;
         }
@@ -58,17 +60,17 @@ internal static class ArabicFallbackShaper
     // As in HarfBuzz, a run falls back only when the font lacks every one of the four joining forms for the language of the
     // run. HarfBuzz plans a form for the fallback only while the caller leaves it on, so a form that the caller turned off
     // ends the fallback, and the letters keep their glyphs.
-    private static bool NeedsFallback(GSubTable gsub, TextOptions options)
+    private static bool NeedsFallback(GSubTable gsub, TextOptions options, IReadOnlyList<Tag> disabledFeatures)
     {
         foreach (Tag tag in FormTags)
         {
-            if (LookupFeatures.IsDisabled(options.DisabledFeatureTags, tag))
+            if (LookupFeatures.IsDisabled(disabledFeatures, tag))
             {
                 return false;
             }
         }
 
-        return !gsub.TryGetFeatureLookups(FormTags, ScriptClass.Arabic, options.Language, options.DisabledFeatureTags, out _);
+        return !gsub.TryGetFeatureLookups(FormTags, ScriptClass.Arabic, options.Language, disabledFeatures, out _);
     }
 
     private static int GetForm(GlyphShapingData data)

@@ -803,8 +803,9 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 next to it. The font has no GDEF table, so HarfBuzz gives each glyph the class of its character: a nonspacing mark that
 is not default ignorable is a mark, any other character is a base, and a ligature of components that are not all marks
 is a ligature. Its texts attach accents with mark, mkmk and mark-to-ligature lookups, form ligatures next to a spacing
-mark and a combining grapheme joiner, and attach an accent after the glyphs of a multiple substitution. It also builds
-`MarksWithoutGlyphClassesFallback.ttf`, which has no GPOS table, so HarfBuzz places an accent after a ligature itself.
+mark, an enclosing mark and a combining grapheme joiner, and attach an accent after the glyphs of a multiple
+substitution. It also builds `MarksWithoutGlyphClassesFallback.ttf`, which has no GPOS table, so HarfBuzz places an
+accent after a ligature itself, and a spacing or an enclosing mark keeps its advance.
 The script says what each text tests. The reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
 
 `MarksWithoutGlyphClassesTests` checks that the library puts the same glyphs in the same places.
@@ -918,6 +919,26 @@ To write the reference again, install uharfbuzz and run this from the repository
 
 ```
 python tests/tools/generate_khmer_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Shaper feature overrides reference
+
+`generate_shaper_feature_overrides_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ShaperFeatureOverrides.ttf`
+and writes `ShaperFeatureOverrides.harfbuzz.json` next to it. HarfBuzz lets the Indic shaper turn `liga` off and the
+Khmer shaper turn `clig` on and `liga` off after the features of the caller, and the Myanmar shaper applies `rphf` to
+every glyph. The font has `liga` and `clig` lookups for Devanagari, Khmer, Myanmar, Balinese and Latin, and `rphf`
+lookups for Myanmar. The reference holds the glyph IDs that HarfBuzz gives for each text with no features, with
+`liga` on and with `clig` off, and from top to bottom.
+
+`ShaperFeatureOverridesTests` checks that the library gives the same glyphs.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_shaper_feature_overrides_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

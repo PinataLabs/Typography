@@ -72,6 +72,8 @@ internal class DefaultShaper : BaseShaper
 
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> CommonManualJoiners = WithCommonManualJoiners();
 
+    private static readonly Dictionary<Tag, bool> NoFeatureOverrides = [];
+
     private readonly List<ShapingStage> shapingStages = [];
 
     private readonly HashSet<Tag> plannedFeatures = [];
@@ -83,6 +85,8 @@ internal class DefaultShaper : BaseShaper
     private readonly IReadOnlyList<Tag> featureTags;
 
     private readonly IReadOnlyDictionary<Tag, ManualJoiners> manualJoiners;
+
+    private readonly IReadOnlyDictionary<Tag, bool> featureOverrides;
 
     internal DefaultShaper(ScriptClass script, TextOptions textOptions)
         : this(script, MarkZeroingMode.PostGpos, textOptions)
@@ -104,14 +108,31 @@ internal class DefaultShaper : BaseShaper
     /// The joiners that the lookups of each feature do not skip, by the tag of the feature. A feature that it does not
     /// list skips them wherever HarfBuzz does by default. Make it with <see cref="WithCommonManualJoiners"/>.
     /// </param>
-    protected DefaultShaper(ScriptClass script, MarkZeroingMode markZeroingMode, TextOptions textOptions, IReadOnlyDictionary<Tag, ManualJoiners> manualJoiners)
+    /// <param name="featureOverrides">
+    /// The features that the shaper turns on (<see langword="true"/>) or off (<see langword="false"/>) whatever the
+    /// caller asks for, as the override_features function of a HarfBuzz shaper does. A feature turned on applies to
+    /// every glyph, in horizontal and in vertical text.
+    /// </param>
+    protected DefaultShaper(
+        ScriptClass script,
+        MarkZeroingMode markZeroingMode,
+        TextOptions textOptions,
+        IReadOnlyDictionary<Tag, ManualJoiners> manualJoiners,
+        IReadOnlyDictionary<Tag, bool>? featureOverrides = null)
     {
         this.ScriptClass = script;
         this.MarkZeroingMode = markZeroingMode;
         this.kerningMode = textOptions.KerningMode;
         this.featureTags = textOptions.FeatureTags;
         this.manualJoiners = manualJoiners;
+        this.featureOverrides = featureOverrides ?? NoFeatureOverrides;
+        this.DisabledFeatureTags = this.featureOverrides.Count == 0
+            ? textOptions.DisabledFeatureTags
+            : GetDisabledFeatureTags(textOptions.DisabledFeatureTags, this.featureOverrides);
     }
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<Tag> DisabledFeatureTags { get; }
 
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
     {
@@ -223,6 +244,14 @@ internal class DefaultShaper : BaseShaper
             }
 
             this.AddFeature(collection, index, count, feature);
+        }
+
+        foreach (KeyValuePair<Tag, bool> feature in this.featureOverrides)
+        {
+            if (feature.Value)
+            {
+                this.AddFeature(collection, index, count, feature.Key);
+            }
         }
     }
 
@@ -346,6 +375,29 @@ internal class DefaultShaper : BaseShaper
     }
 
     public override IReadOnlyList<ShapingStage> GetShapingStages() => this.shapingStages;
+
+    // HarfBuzz overrides the features after it adds those of the caller, so the overrides win.
+    private static List<Tag> GetDisabledFeatureTags(IReadOnlyList<Tag> disabledByCaller, IReadOnlyDictionary<Tag, bool> featureOverrides)
+    {
+        List<Tag> disabled = [];
+        foreach (Tag feature in disabledByCaller)
+        {
+            if (!featureOverrides.ContainsKey(feature))
+            {
+                disabled.Add(feature);
+            }
+        }
+
+        foreach (KeyValuePair<Tag, bool> feature in featureOverrides)
+        {
+            if (!feature.Value)
+            {
+                disabled.Add(feature.Key);
+            }
+        }
+
+        return disabled;
+    }
 
     private void AssignFractionalFeatures(IGlyphShapingCollection collection, int index, int count)
     {
