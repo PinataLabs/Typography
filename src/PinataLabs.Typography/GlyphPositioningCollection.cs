@@ -309,6 +309,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         }
 
         ushort glyphId = data.GlyphId;
+        LayoutMode layoutMode = this.TextOptions.LayoutMode;
         foreach (GlyphMetrics m in this.glyphs[index].Metrics)
         {
             if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
@@ -318,18 +319,26 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                     m.ApplyOffset(data.Bounds.X, data.Bounds.Y);
                 }
 
+                // As in HarfBuzz, positioning changes the advance along the line only. Across the line the glyph keeps
+                // the advance of the font, which the bounds do not hold.
                 if (isDirtyWH)
                 {
-                    m.SetAdvanceWidth(data.Bounds.Width);
-                    m.SetAdvanceHeight(data.Bounds.Height);
+                    if (AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode, data.HasVerticalForm))
+                    {
+                        m.SetAdvanceHeight(data.Bounds.Height);
+                    }
+                    else
+                    {
+                        m.SetAdvanceWidth(data.Bounds.Width);
+                    }
                 }
             }
         }
     }
 
     /// <summary>
-    /// Updates the advanced metrics of the glyphs at the given index and id,
-    /// adding dx and dy to the current advance.
+    /// Updates the advanced metrics of the glyphs at the given index and id, adding dx to the advance of a glyph of
+    /// horizontal text and dy to the advance of a glyph of vertical text.
     /// </summary>
     /// <param name="fontMetrics">The font face with metrics.</param>
     /// <param name="index">The zero-based index of the element.</param>
@@ -344,7 +353,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         {
             if (m.GlyphId == glyphId && fontMetrics == m.FontMetrics)
             {
-                m.ApplyAdvance(dx, AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode, hasVerticalForm) ? dy : (short)0);
+                bool isVertical = AdvancedTypographicUtils.IsVerticalGlyph(m.CodePoint, layoutMode, hasVerticalForm);
+                m.ApplyAdvance(isVertical ? (short)0 : dx, isVertical ? dy : (short)0);
             }
         }
     }
