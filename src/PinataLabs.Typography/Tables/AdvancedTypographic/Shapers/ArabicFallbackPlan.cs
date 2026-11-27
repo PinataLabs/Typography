@@ -12,7 +12,8 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 /// <summary>
 /// What <see cref="ArabicFallbackShaper"/> needs from one font: the glyphs of the presentation forms of
 /// <see cref="ArabicFallbackTable"/> that the font has, and the ligatures of those forms. It depends on the font
-/// alone and does not change, so a font builds it once and every run of Arabic text shares it.
+/// alone and does not change, so a font builds it once and every run of Arabic text shares it. Whether a run needs it
+/// depends on the language of the run and its features, which <see cref="ArabicFallbackShaper"/> decides.
 /// </summary>
 internal sealed class ArabicFallbackPlan
 {
@@ -23,13 +24,10 @@ internal sealed class ArabicFallbackPlan
     private const int Medial = 3;
 
     // The index in formGlyphs of the first form of a letter, by the glyph of the letter.
-    private readonly Dictionary<ushort, int>? letters;
+    private readonly Dictionary<ushort, int> letters;
 
     // The glyph of the isolated, final, initial and medial form of each letter, or 0 when the font has none.
     private readonly ushort[] formGlyphs;
-
-    private ArabicFallbackPlan()
-        => this.formGlyphs = [];
 
     private ArabicFallbackPlan(FontMetrics fontMetrics)
     {
@@ -57,12 +55,6 @@ internal sealed class ArabicFallbackPlan
     }
 
     /// <summary>
-    /// Gets a value indicating whether the font has none of the joining form features for Arabic, so that the
-    /// presentation forms stand in for them.
-    /// </summary>
-    public bool IsNeeded => this.letters is not null;
-
-    /// <summary>
     /// Gets the ligatures of two or three letters, or <see langword="null"/> when the font has none of them.
     /// </summary>
     public LookupType4Format1SubTable? LetterLigatures { get; }
@@ -77,15 +69,7 @@ internal sealed class ArabicFallbackPlan
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <returns>The plan.</returns>
-    public static ArabicFallbackPlan Create(FontMetrics fontMetrics)
-    {
-        Tag[] joiningForms =
-            [Tag.Parse("isol"), Tag.Parse("fina"), Tag.Parse("fin2"), Tag.Parse("fin3"), Tag.Parse("medi"), Tag.Parse("med2"), Tag.Parse("init")];
-
-        return fontMetrics.GetGSubTable().TryGetFeatureLookups(joiningForms, ScriptClass.Arabic, out _)
-            ? new ArabicFallbackPlan()
-            : new ArabicFallbackPlan(fontMetrics);
-    }
+    public static ArabicFallbackPlan Create(FontMetrics fontMetrics) => new(fontMetrics);
 
     /// <summary>
     /// Gets the glyph of a form of the letter that a glyph stands for.
@@ -96,7 +80,7 @@ internal sealed class ArabicFallbackPlan
     /// <returns><see langword="true"/> if the font has the form.</returns>
     public bool TryGetFormGlyph(ushort glyphId, int form, out ushort formGlyphId)
     {
-        if (this.letters is not null && this.letters.TryGetValue(glyphId, out int first))
+        if (this.letters.TryGetValue(glyphId, out int first))
         {
             formGlyphId = this.formGlyphs[first + form];
             return formGlyphId != 0;

@@ -246,7 +246,8 @@ internal class GSubTable : Table
 
         Tag vert = Tag.Parse("vert");
         PlannedFeature[] vertOnly = [new(vert)];
-        if (!table.TryGetFeatureLookups(vert, script, out _))
+        TextOptions options = collection.TextOptions;
+        if (!table.TryGetFeatureLookups(vert, script, options.Language, options.DisabledFeatureTags, out _))
         {
             return;
         }
@@ -350,15 +351,38 @@ internal class GSubTable : Table
         }
     }
 
+    /// <summary>
+    /// Gets the lookups that a feature references in the language system of the text, which tells whether the font has
+    /// the feature for the text. A feature that the caller turned off has none, as in HarfBuzz, which does not plan it.
+    /// </summary>
+    /// <param name="feature">The tag of the feature.</param>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <param name="value">The lookups, when the feature references any.</param>
+    /// <returns><see langword="true"/> when the feature is on and references a lookup.</returns>
     internal bool TryGetFeatureLookups(
         in Tag feature,
         ScriptClass script,
+        Tag? language,
+        IReadOnlyList<Tag> disabled,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
-        => this.TryGetFeatureLookups([feature], script, out value);
+        => this.TryGetFeatureLookups([feature], script, language, disabled, out value);
 
+    /// <summary>
+    /// Gets the lookups that any of the features references in the language system of the text.
+    /// </summary>
+    /// <param name="stageFeatures">The tags of the features.</param>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off, which have no lookups.</param>
+    /// <param name="value">The lookups, when a feature that is on references any.</param>
+    /// <returns><see langword="true"/> when a feature that is on references a lookup.</returns>
     internal bool TryGetFeatureLookups(
         IReadOnlyList<Tag> stageFeatures,
         ScriptClass script,
+        Tag? language,
+        IReadOnlyList<Tag> disabled,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
         PlannedFeature[] features = new PlannedFeature[stageFeatures.Count];
@@ -367,7 +391,7 @@ internal class GSubTable : Table
             features[i] = new(stageFeatures[i]);
         }
 
-        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, script, null, false, positioning: false, out value);
+        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, LookupFeatures.WithoutDisabled(features, disabled), script, language, false, positioning: false, out value);
     }
 
     /// <summary>

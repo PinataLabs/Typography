@@ -32,7 +32,7 @@ public class OutOfRangeIndexTests
     {
         GSubTable table = GSubTable.Load(CreateLayoutTable());
 
-        bool found = table.TryGetFeatureLookups(in Kern, ScriptClass.Latin, out var lookups);
+        bool found = table.TryGetFeatureLookups(in Kern, ScriptClass.Latin, null, [], out var lookups);
 
         await Assert.That(found).IsTrue();
         await Assert.That(lookups!.Count).IsEqualTo(1);

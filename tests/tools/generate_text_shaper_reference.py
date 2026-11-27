@@ -308,6 +308,26 @@ HEBREW_POINTS = ["שׁ", "שּׁ", "בּ", "וֹ", "בֿ", "יִ"]
 # Latin words in a font with a GPOS kern feature and a kern table, in a language whose language system has no kern feature.
 KERN_WORDS = ["AVATAR To", "Wa Yo", "Te AV", "To", "LT"]
 
+# Devanagari with the rphf feature on and off. Without it, a ra and a virama before a consonant do not form a reph.
+REPH_FACES = ["NotoSansDevanagari-Regular.ttf", "Sumana-Regular.ttf"]
+REPH_WORDS = [U("0930 094D 0915"), U("0915 0930 094D 092E"), U("0938 0930 094D 0935 0924")]
+
+# Sumana has no Indic features in the language systems of Marathi and Nepali, so the shaper finds no reph, half form or
+# conjunct there, and HarfBuzz takes the default language system for any other language. The words leave out a vowel
+# sign that goes before its consonant after a virama, as in ta, virama, ra, i: with no feature to join the glyphs, the
+# library gives the glyphs that the sign passes the lowest cluster of them, and HarfBuzz joins the clusters from the
+# sign to the base only.
+LANGUAGE_FACES = [("Sumana-Regular.ttf", "Deva", [("mr", "MAR "), ("ne", "NEP "), ("hi", "HIN ")],
+                   [U("0938 0902 0938 094D 0915 0943 0924 092E 094D"), U("0939 093F 0928 094D 0926 0940"), U("0915 0930 094D 092E"),
+                    U("0926 0941 0903 0916"), U("0936 094D 0930 0940")])]
+
+# Fonts with the Arabic presentation forms and no GSUB table, or a GSUB table with other features. HarfBuzz joins the
+# letters with the forms of the font when the font has none of isol, fina, medi and init, and only if all four are planned.
+ARABIC_FALLBACK_FONTS = ["NormalizationArabicFallback.ttf", "NormalizationArabicFallbackWithoutMedial.ttf",
+                         "NormalizationArabicFallbackInit.ttf"]
+ARABIC_FALLBACK_WORDS = [U("0622 0627 0628"), U("0628 0628 0628"), U("0644 0627 0020 0633 0644 0645")]
+JOINING_FEATURES = ["isol", "fina", "medi", "init"]
+
 BASES_PER_CASE = 8
 MARKS_PER_CASE = 10
 
@@ -462,6 +482,25 @@ def main():
     for text in KERN_WORDS:
         rows.append(row("KernTable", "Segoeui.ttf", hb_font, text, script="Latn", direction="ltr"))
         rows.append(row("KernTableLanguageWithoutKern", "Segoeui.ttf", hb_font, text, script="Latn", direction="ltr", language=("tr", "TRK ")))
+
+    for font_name in REPH_FACES:
+        hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
+        for text in REPH_WORDS:
+            rows.append(row("Reph", font_name, hb_font, text, script="Deva", direction="ltr"))
+            rows.append(row("RephOff", font_name, hb_font, text, script="Deva", direction="ltr", features={"rphf": False}))
+
+    for font_name, script, languages, texts in LANGUAGE_FACES:
+        hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
+        for language in languages:
+            for text in texts:
+                rows.append(row("IndicLanguage", font_name, hb_font, text, script=script, direction="ltr", language=language))
+
+    for font_name in ARABIC_FALLBACK_FONTS:
+        hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
+        for text in ARABIC_FALLBACK_WORDS:
+            rows.append(row("ArabicFallback", font_name, hb_font, text, script="Arab", direction="rtl"))
+            for feature in JOINING_FEATURES:
+                rows.append(row("ArabicFallbackOff", font_name, hb_font, text, script="Arab", direction="rtl", features={feature: False}))
 
     for font_name, leading, vowels, trailing in HANGUL_FACES:
         hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
