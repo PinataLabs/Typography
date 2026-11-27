@@ -819,6 +819,29 @@ python tests/tools/generate_marks_without_glyph_classes_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Ligature properties reference
+
+`generate_ligature_properties_reference.py` builds `LigatureProperties.ttf`, `LigaturePropertiesWithoutGlyphClasses.ttf`
+and `LigaturePropertiesIndic.ttf` in `tests/PinataLabs.Typography.Tests/Fonts` and writes
+`LigatureProperties.harfbuzz.json` next to them. Its texts show what a substitution does to the ligature id, the
+component and the class of a glyph in HarfBuzz: a single substitution and a multiple substitution of a mark that a
+ligature skipped keep its id and component, so mark-to-ligature attaches the new glyphs to the same component; a multiple
+substitution of a ligature gives its glyphs the base class in a font without GDEF, so a lookup that ignores ligatures
+changes them; and in Devanagari, a reph ligated from a glyph of a one-glyph sequence substitution moves after the base,
+and a pre-base-reordering consonant whose pref ligature does not form makes HarfBuzz find the base again. The script says
+what each text tests. The reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
+
+`LigaturePropertiesTests` checks that the library puts the same glyphs in the same places.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_ligature_properties_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Text run context reference
 
 `generate_text_run_context_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextRunContext.harfbuzz.json`.
