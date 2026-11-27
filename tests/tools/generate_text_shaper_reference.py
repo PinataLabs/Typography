@@ -370,6 +370,8 @@ HANGUL_SHAPER_TEXTS = [
     U("AC00"), U("1100 1161"), U("AC00 11A8"), U("AC00 11C3"), U("1100 1161 11C3"), U("11A8"), U("1100 11A8"), U("B099"),
     U("B099 11A8"), U("AC00 302E"), U("AC00 302F"), U("1100 1161 11C3 302E"), U("302E"), U("302F"), U("1100 302E"),
     U("1100 302F"), U("302E 0301"), U("302F 0301"), U("1100 302E 0301"), U("AC00 FE00"),
+    # A tone mark after a default-ignorable character gets a dotted circle, and both go over the syllable before it.
+    U("AC00 FE00 302E"), U("AC00 034F 302E"), U("AC00 200D 302E"),
 ]
 
 
