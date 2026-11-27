@@ -21,6 +21,18 @@ dotnet add package PinataLabs.Typography.Unicode
 
 Add `--prerelease` while only pre-release versions are published. The library targets `netstandard2.1`, `net8.0`, `net10.0` and `net11.0`.
 
+## Unicode version
+
+The property data is built from one version of the [Unicode Character Database](https://www.unicode.org/ucd/), which the library reports:
+
+```csharp
+using PinataLabs.Typography.Unicode;
+
+string unicodeVersion = UnicodeInfo.Version; // "18.0.0"
+```
+
+A release that changes the Unicode version says so in the [changelog](https://github.com/PinataLabs/Typography/blob/main/CHANGELOG.md). If you test against the Unicode conformance suites, pin them to this version.
+
 ## Versioning
 
 PinataLabs.Typography and PinataLabs.Typography.Unicode are released together with one version number. PinataLabs.Typography reads internals of this assembly, so a PinataLabs.Typography package depends on exactly the PinataLabs.Typography.Unicode package of the same version.

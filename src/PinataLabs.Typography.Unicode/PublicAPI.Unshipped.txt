@@ -34,3 +34,5 @@ PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownSeen = 112 -> PinataLabs.T
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownTah = 113 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.KashmiriYeh = 114 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.ThinNoon = 115 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.UnicodeInfo
+static PinataLabs.Typography.Unicode.UnicodeInfo.Version.get -> string!

@@ -20,3 +20,5 @@ To regenerate the files in `src/PinataLabs.Typography.Unicode/Resources`, run th
 ```
 dotnet run --project src/PinataLabs.Typography.UnicodeTrieGenerator
 ```
+
+The generator reads the Unicode version from the first line of each of these files (such as `# LineBreak-18.0.0.txt`) and fails when they differ. It writes the version to `UnicodeInfo.Generated.cs`, which is what `UnicodeInfo.Version` reports. To move to a new Unicode version, replace the files together with the conformance suites in `tests/UnicodeTestData`, regenerate, and say in `CHANGELOG.md` that the Unicode version changed.
