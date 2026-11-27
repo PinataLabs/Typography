@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) PinataLabs.
 # Licensed under the Apache License, Version 2.0.
-"""Builds five fonts and writes LigatureProperties.harfbuzz.json, how a substitution keeps or resets the ligature
+"""Builds six fonts and writes LigatureProperties.harfbuzz.json, how a substitution keeps or resets the ligature
 properties of a glyph in HarfBuzz.
 
 Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
@@ -51,6 +51,15 @@ a lookup substitutes ta by ta.alt after ka and virama, and then virama and ta li
   So HarfBuzz finds the base again at ta.alt, and moves the pre-base matra i from before ka to after the virama.
 * pa, virama, ta, i and pa, virama, ta: tapref forms and goes before the base pa, after the matra. ka, virama, ta: no
   tapref forms.
+
+LigaturePropertiesNested.ttf ligates a and b into a_b, and then, skipping marks, a_b and c into a_b_c, and d and c
+into d_c. Mark-to-ligature has an anchor at x 100, 700 and 1300 on the three components of a_b_c, and at x 100 and 700
+on the two of d_c.
+
+* a, b, acute, c: the acute that a_b_c skips follows a_b, so it goes on the last component that a_b gives, the second
+  (ligate_input).
+* d, acute, c: the acute follows d, which gives one component, so it goes on the first.
+* a, b, c, acute: the acute after the ligature goes on the last component.
 
 LigaturePropertiesCircle.ttf has no GDEF table and no GPOS table. It has U+25CC and a sign of the Indic, Khmer,
 Myanmar and universal shapers: Devanagari i and u, Khmer U+17BB, Myanmar U+102D and Balinese U+1B36. Each sign alone is
@@ -129,6 +138,24 @@ INDIC_TEXTS = ["र्क", "क्ति", "प्ति", "क्त",
                "प्त"]
 
 
+NESTED_FONT = "LigaturePropertiesNested.ttf"
+NESTED_CODE_POINTS = [0x61, 0x62, 0x63, 0x64, 0x0301]
+NESTED_EXTRA_GLYPHS = ["a_b", "a_b_c", "d_c"]
+NESTED_FEATURES = """
+languagesystem DFLT dflt; languagesystem latn dflt;
+markClass [u0301] <anchor 0 0> @Accent;
+lookup Pair { sub u0061 u0062 by a_b; } Pair;
+lookup Triple { lookupflag IgnoreMarks; sub a_b u0063 by a_b_c; sub u0064 u0063 by d_c; } Triple;
+feature liga { lookup Pair; lookup Triple; } liga;
+feature mark {
+    pos ligature a_b_c <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent
+        ligComponent <anchor 1300 500> mark @Accent;
+    pos ligature d_c <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent;
+} mark;
+table GDEF { GlyphClassDef [u0061 u0062 u0063 u0064], [a_b a_b_c d_c], [u0301], ; } GDEF;
+"""
+NESTED_TEXTS = ["ab́c", "d́c", "abć"]
+
 CIRCLE_FONT = "LigaturePropertiesCircle.ttf"
 CIRCLE_GDEF_FONT = "LigaturePropertiesCircleGdef.ttf"
 CIRCLE_CODE_POINTS = [0x0915, 0x093F, 0x0941, 0x1780, 0x17BB, 0x1000, 0x102D, 0x1B13, 0x1B36, 0x25CC]
@@ -168,6 +195,7 @@ def main():
             (FONT_WITHOUT_GLYPH_CLASSES, CODE_POINTS_WITHOUT_GLYPH_CLASSES, FEATURES_WITHOUT_GLYPH_CLASSES,
              EXTRA_GLYPHS_WITHOUT_GLYPH_CLASSES, True, TEXTS_WITHOUT_GLYPH_CLASSES),
             (INDIC_FONT, INDIC_CODE_POINTS, INDIC_FEATURES, INDIC_EXTRA_GLYPHS, False, INDIC_TEXTS),
+            (NESTED_FONT, NESTED_CODE_POINTS, NESTED_FEATURES, NESTED_EXTRA_GLYPHS, False, NESTED_TEXTS),
             (CIRCLE_FONT, CIRCLE_CODE_POINTS, CIRCLE_FEATURES, CIRCLE_EXTRA_GLYPHS, True, CIRCLE_TEXTS),
             (CIRCLE_GDEF_FONT, CIRCLE_CODE_POINTS, CIRCLE_FEATURES + CIRCLE_GDEF, CIRCLE_EXTRA_GLYPHS, False,
              CIRCLE_TEXTS)]:
