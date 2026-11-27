@@ -268,7 +268,10 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             else if (isLigature)
             {
                 GlyphShapingData ligature = collection[index];
-                ligature.LigatureComponentCount = currentComponentCount;
+
+                // HarfBuzz keeps the number in four bits (_hb_glyph_info_set_lig_props_for_ligature), so a ligature of
+                // sixteen components has none.
+                ligature.LigatureComponentCount = currentComponentCount & 0x0F;
                 ligature.SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
                 ligature.IsOtherLetter |= CodePoint.GetGeneralCategory(ligature.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark;
             }

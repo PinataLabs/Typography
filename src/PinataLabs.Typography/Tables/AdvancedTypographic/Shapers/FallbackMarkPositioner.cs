@@ -208,9 +208,10 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
-            // A mark of a ligature goes on its own component, an equal part of the ligature.
+            // A mark of a ligature goes on its own component, an equal part of the ligature. As in HarfBuzz, a glyph of one
+            // component or none is not split.
             int component = GetComponent(baseData, data, components);
-            if (component != lastComponent)
+            if (components > 1 && component != lastComponent)
             {
                 lastComponent = component;
                 componentBox = baseBox;
