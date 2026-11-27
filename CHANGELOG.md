@@ -524,16 +524,19 @@ Unicode conformance suites to that version.
   where it kept the order of the text. When the fallback font does not draw the missing parts of a character alone, as
   when it keeps whole a vowel sign that the font split, or makes one glyph of a sign and of the dotted circle that the
   font drew, it draws the whole character in the place of the last missing part, and the parts that the font drew go.
-  With `FontFallbackParts.ttf` and the fallback `FontFallbackPartsWhole.ttf`, U+0941 drew two dotted circles. (#183)
+  A dotted circle that the font drew stays unless the fallback font draws its own, alone or in a ligature. With
+  `FontFallbackParts.ttf` and the fallback `FontFallbackPartsWhole.ttf`, U+0941 drew two dotted circles. (#183)
 - A fallback font makes a ligature only of characters that no earlier font draws, as it composes only those. When the
   font of the text drew f and lacked i, the ligature of f and i in the fallback font took the place of f and i was lost,
   and when the font lacked g and drew h, the ligature of g and h was drawn next to h. In `SyllablesInvalid.ttf` with
   the fallback `NotoSansDevanagari-Regular.ttf`, ra, virama, ka, i now gives i the form that the fallback font gives it
   without a reph, as the font draws ra and virama. (#191)
-- The Indic and Khmer shapers keep a two- or three-part vowel sign whole when the font has it and lacks one of its
-  parts, as HarfBuzz 15.0.0 does. They split it with a `.notdef` for each missing part, so a font that has Bengali o and
-  lacks aa gave e, ka, `.notdef`, where HarfBuzz gives ka, o. A sign that the font lacks is still split, where HarfBuzz
-  keeps one `.notdef`, so that a fallback font draws the part in front of the base there. (#183)
+- The Indic and Khmer shapers keep a two- or three-part vowel sign whole when the font lacks one of its parts, as
+  HarfBuzz 15.0.0 does. They split it with a `.notdef` for each missing part, so a font that has Bengali o and lacks aa
+  gave e, ka, `.notdef`, where HarfBuzz gives ka, o, and a font that lacks o, e and aa gave `.notdef`, ka, `.notdef`,
+  where HarfBuzz gives ka, `.notdef`. Only when the text options have fallback font families do the Indic, Khmer and
+  Universal shapers split a sign that the font lacks, where HarfBuzz keeps one `.notdef`, so that a fallback font draws
+  the part in front of the base there. (#183)
 - The dotted circle of an Indic broken cluster appears once with a fallback font. A sign that the font lacks took
   every glyph that the fallback font gave at its place, the circle of the fallback font among them, so U+0946 in
   `IndicReordering.ttf` with the fallback `SyllablesInvalid.ttf` gave two circles. (#178)
