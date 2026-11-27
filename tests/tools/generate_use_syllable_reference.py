@@ -18,6 +18,13 @@ the order and the number of the glyphs:
   `invalid` rows hold each sequence of that file, which HarfBuzz breaks with a dotted circle. It shapes the text in
   the script of the first character: Devanagari and the other Indic scripts with its Indic shaper, and Brahmi,
   Khojki, Khudawadi, Tirhuta and Takri with its universal shaper.
+* SyllablesCircles.ttf and SyllablesNoCircle.ttf show what the dotted circle of such a sequence is. The `circles`
+  rows hold texts where it matters. HarfBuzz copies the character after the circle to make it, so the circle has
+  the Unicode properties of that character. Before the Sinhala virama, which has combining class 9, the circle
+  sorts after U+0334, which has class 1. Before the Brahmi vowel sign AA, a nonspacing mark, a lookup that ignores
+  marks skips the circle: the calt lookup of SyllablesCircles.ttf, under the scripts brah and sinh, changes KA to
+  the vowel sign AA after the letter A and the marks after it. SyllablesNoCircle.ttf has no dotted circle, and
+  HarfBuzz inserts .notdef in its place.
 
 The script shapes with the default buffer flags. HarfBuzz then draws each default-ignorable character with the glyph
 of the space and no advance, and so does the library (see issue #110).
@@ -37,6 +44,7 @@ import re
 os.environ["SOURCE_DATE_EPOCH"] = "0"
 
 import uharfbuzz as hb
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 
@@ -88,7 +96,7 @@ def read_invalid_clusters():
     return sequences
 
 
-def build(file_name, code_points, zero_advance=()):
+def build(file_name, code_points, zero_advance=(), features=None):
     names = [".notdef"] + ["u%04X" % c for c in code_points]
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(names)
@@ -99,6 +107,8 @@ def build(file_name, code_points, zero_advance=()):
     builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
     builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
     builder.setupPost(keepGlyphNames=False)
+    if features:
+        addOpenTypeFeaturesFromString(builder.font, features)
     path = os.path.join(FONTS, file_name)
     builder.font.save(path)
     with open(path, "rb") as file:
@@ -142,15 +152,33 @@ def main():
         text = "".join(map(chr, sequence))
         invalid.append([file_name, script, text, shape(font, script, text)])
 
+    circles = []
+    file_name = "SyllablesCircles.ttf"
+    features = (
+        "languagesystem DFLT dflt; languagesystem brah dflt; languagesystem sinh dflt;"
+        " lookup Ka { lookupflag IgnoreMarks; sub u11005 u11013' by u11038; } Ka;"
+        " feature calt { lookup Ka; } calt;")
+    code_points = [DOTTED_CIRCLE, 0x0334, 0x0D91, 0x0D9A, 0x0DCA, 0x11005, 0x11013, 0x11038]
+    font = build(file_name, code_points, features=features)
+    for script, text in (("Sinh", [0x0D91, 0x0DCA, 0x0334]), ("Sinh", [0x0D9A, 0x0DCA, 0x0334]),
+                         ("Brah", [0x11005, 0x11038, 0x11013]), ("Brah", [0x11005, 0x11013])):
+        text = "".join(map(chr, text))
+        circles.append([file_name, script, text, shape(font, script, text)])
+    file_name = "SyllablesNoCircle.ttf"
+    font = build(file_name, [0x0905, 0x0946])
+    text = "\u0905\u0946"
+    circles.append([file_name, "Deva", text, shape(font, "Deva", text)])
+
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
         file.write("{\n")
         file.write('  "harfbuzz": %s,\n' % json.dumps(hb.version_string()))
-        for name, rows in (("joiners", joiners), ("invalid", invalid)):
+        for name, rows in (("joiners", joiners), ("invalid", invalid), ("circles", circles)):
             file.write('  "%s": [\n' % name)
             file.write(",\n".join("    " + json.dumps(row, separators=(",", ":")) for row in rows))
-            file.write("\n  ]%s\n" % ("," if name == "joiners" else ""))
+            file.write("\n  ]%s\n" % ("" if name == "circles" else ","))
         file.write("}\n")
-    print(os.path.relpath(REFERENCE, ROOT), len(joiners), "joiner rows,", len(invalid), "invalid rows")
+    print(os.path.relpath(REFERENCE, ROOT), len(joiners), "joiner rows,", len(invalid), "invalid rows,",
+          len(circles), "circle rows")
 
 
 if __name__ == "__main__":
