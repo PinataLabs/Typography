@@ -107,12 +107,7 @@ public sealed class BidiParagraph
             unit += width;
         }
 
-        sbyte paragraphLevel = (sbyte)bidi.ResolvedParagraphEmbeddingLevel;
-        if (text.Length == 0)
-        {
-            paragraphLevel = (sbyte)(requestedLevel == 1 ? 1 : 0);
-        }
-
+        sbyte paragraphLevel = bidi.Paragraphs[0].Level;
         var paragraphLevels = (sbyte[])resolvedLevels.Clone();
         BidiAlgorithm.ResetWhitespaceLevels(types, paragraphLevels, paragraphLevel);
 

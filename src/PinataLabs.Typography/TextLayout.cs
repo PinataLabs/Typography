@@ -131,17 +131,18 @@ internal static class TextLayout
         var bidiData = new BidiData();
         bidiData.Init(text, (sbyte)options.TextDirection);
 
+        // Each paragraph separator ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its own level.
         // Rule L1 applies to each line, so BreakLines applies it once it knows the lines.
         bidi.Process(bidiData, resetWhitespace: false);
-        BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), (sbyte)bidi.ResolvedParagraphEmbeddingLevel);
+        BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), [.. bidi.Paragraphs]);
 
-        TextDirection paragraphDirection = (bidiLevels.ParagraphLevel & 1) == 0
+        TextDirection paragraphDirection = (bidiLevels.Paragraphs[0].Level & 1) == 0
             ? TextDirection.LeftToRight
             : TextDirection.RightToLeft;
 
-        // Shaping takes the directional runs of the levels with rule L1 applied to the whole text as one line.
+        // Shaping takes the directional runs of the levels with rule L1 applied to each paragraph as one line.
         // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
-        BidiAlgorithm.ResetWhitespaceLevels(bidiData.Types, bidi.ResolvedLevels, bidiLevels.ParagraphLevel);
+        BidiAlgorithm.ResetWhitespaceLevels(bidiData.Types, bidi.ResolvedLevels, bidiLevels.Paragraphs, 0, bidiData.Length);
         BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
 
         // Incrementally build out collection of glyphs.
@@ -1206,18 +1207,18 @@ internal static class TextLayout
     }
 
     /// <summary>
-    /// The bidi types and resolved levels of the codepoints of the text. Rule L1 applies to each line, and
-    /// <see cref="TextLine.OrderVisually"/> applies it to the levels of the line in place.
+    /// The bidi types and resolved levels of the codepoints of the text, and its paragraphs. Rule L1 applies to each line,
+    /// and <see cref="TextLine.OrderVisually"/> applies it to the levels of the line in place.
     /// </summary>
     /// <param name="Types">The bidi type of each codepoint.</param>
     /// <param name="Levels">The level of each codepoint, before rule L1 until its line is ordered.</param>
-    /// <param name="ParagraphLevel">The embedding level of the paragraph.</param>
-    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, sbyte ParagraphLevel)
+    /// <param name="Paragraphs">The paragraphs of the text, each with its embedding level (UAX #9 P1 to P3).</param>
+    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, BidiAlgorithm.Paragraph[] Paragraphs)
     {
         /// <summary>
-        /// Gets a value indicating whether the paragraph level and the level of every codepoint are 0.
+        /// Gets a value indicating whether the level of every paragraph and every codepoint is 0.
         /// </summary>
-        public bool IsLeftToRight { get; } = ParagraphLevel == 0 && Array.TrueForAll(Levels, level => level == 0);
+        public bool IsLeftToRight { get; } = Array.TrueForAll(Paragraphs, paragraph => paragraph.Level == 0) && Array.TrueForAll(Levels, level => level == 0);
     }
 
     internal sealed class TextBox
@@ -1500,7 +1501,7 @@ internal static class TextLayout
             int lineLength = this.data[^1].Offset + 1 - lineStart;
             ArraySlice<sbyte> lineLevels = new(bidiLevels.Levels, lineStart, lineLength);
             ReadOnlyArraySlice<BidiCharacterType> lineTypes = bidiLevels.Types.Slice(lineStart, lineLength);
-            BidiAlgorithm.ResetWhitespaceLevels(lineTypes, lineLevels, bidiLevels.ParagraphLevel);
+            BidiAlgorithm.ResetWhitespaceLevels(bidiLevels.Types, bidiLevels.Levels, bidiLevels.Paragraphs, lineStart, lineLength);
 
             // A character that rule X9 removes at the start of the line has no character before it on the line, and
             // keeps the level of the one before it in the paragraph, which ends the line before. It takes the level of

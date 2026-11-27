@@ -255,6 +255,30 @@ public class BidiAlgorithmTests
         await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
+    // Rule P1 keeps each separator with the paragraph before it: LF, CR LF as one, U+2029 and U+001C. A text that ends
+    // with a separator has no empty paragraph after it, and empty text is one empty paragraph at the level asked for, or
+    // at 0 with Auto. ICU 72 splits the first text into the same paragraphs, at the same levels.
+    [Test]
+    public async Task ParagraphsSplitAfterEachSeparator()
+    {
+        await Assert.That(Paragraphs("a\n\u05D0\r\n\u2029\u001Cb", 2))
+            .IsEquivalentTo(
+                [new BidiAlgorithm.Paragraph(0, 2, 0), new(2, 3, 1), new(5, 1, 0), new(6, 1, 0), new(7, 1, 0)],
+                TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(Paragraphs("a\n", 1)).IsEquivalentTo([new BidiAlgorithm.Paragraph(0, 2, 1)], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(Paragraphs(string.Empty, 1)).IsEquivalentTo([new BidiAlgorithm.Paragraph(0, 0, 1)], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(Paragraphs(string.Empty, 2)).IsEquivalentTo([new BidiAlgorithm.Paragraph(0, 0, 0)], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+
+        static BidiAlgorithm.Paragraph[] Paragraphs(string text, int paragraphEmbeddingLevel)
+        {
+            var data = new BidiData();
+            data.Init(text, (sbyte)paragraphEmbeddingLevel);
+            var bidi = new BidiAlgorithm();
+            bidi.Process(data);
+            return [.. bidi.Paragraphs];
+        }
+    }
+
     // Rule X5c reads the text of an FSI and rule P2 the text of the paragraph, and both skip each isolate pair in it. The
     // FSI holds the pair LRI a PDI, then an R, so it resolves right to left. With paragraph level 2, P2 skips the pair
     // and finds the R. Types that are a slice of a longer array resolve to the levels of the same types in an array of
@@ -275,7 +299,7 @@ public class BidiAlgorithmTests
         sbyte[] Resolve(ReadOnlyArraySlice<BidiCharacterType> slice)
         {
             var bidi = new BidiAlgorithm();
-            bidi.Process(slice, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, (sbyte)paragraphEmbeddingLevel, false, null, null, null);
+            bidi.Process(slice, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, (sbyte)paragraphEmbeddingLevel, false, null, null, [slice.Length]);
             return bidi.ResolvedLevels.ToArray();
         }
     }
@@ -389,7 +413,7 @@ public class BidiAlgorithmTests
                 false,
                 null,
                 null,
-                null);
+                [t.Types.Length]);
 
             resultLevels = bidi.ResolvedLevels;
 

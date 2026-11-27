@@ -17,9 +17,19 @@ internal class BidiData
     private ArrayBuilder<BidiPairedBracketType> pairedBracketTypes;
     private ArrayBuilder<int> pairedBracketValues;
     private ArrayBuilder<sbyte> tempLevelBuffer;
-    private readonly List<int> paragraphPositions = [];
+    private readonly List<int> paragraphEnds = [];
 
     public sbyte ParagraphEmbeddingLevel { get; private set; }
+
+    /// <summary>
+    /// Gets the end of each paragraph of the text, in order: the index of the code point after its paragraph separator,
+    /// or the length of the text for a last paragraph with no separator. Empty text is one empty paragraph.
+    /// </summary>
+    /// <remarks>
+    /// Rule P1 of UAX #9 splits the text after each paragraph separator. A CR followed by an LF is one separator, as the
+    /// newline guidelines of the Unicode Standard (section 5.8) have it and as rule LB5 of UAX #14 keeps them on one line.
+    /// </remarks>
+    public IReadOnlyList<int> ParagraphEnds => this.paragraphEnds;
 
     public bool HasBrackets { get; private set; }
 
@@ -72,7 +82,7 @@ internal class BidiData
         this.pairedBracketTypes.Length = length;
         this.pairedBracketValues.Length = length;
 
-        this.paragraphPositions.Clear();
+        this.paragraphEnds.Clear();
         this.ParagraphEmbeddingLevel = paragraphEmbeddingLevel;
 
         // Resolve the BidiCharacterType, paired bracket type and paired
@@ -82,6 +92,7 @@ internal class BidiData
         this.HasIsolates = false;
 
         int i = 0;
+        bool afterCarriageReturn = false;
         var codePointEnumerator = new SpanCodePointEnumerator(text);
         while (codePointEnumerator.MoveNext())
         {
@@ -94,6 +105,19 @@ internal class BidiData
 
             switch (dir)
             {
+                case BidiCharacterType.ParagraphSeparator:
+                    if (afterCarriageReturn && codePoint.Value == '\n')
+                    {
+                        // The LF ends the paragraph that the CR before it ended.
+                        this.paragraphEnds[^1] = i + 1;
+                    }
+                    else
+                    {
+                        this.paragraphEnds.Add(i + 1);
+                    }
+
+                    break;
+
                 case BidiCharacterType.LeftToRightEmbedding:
                 case BidiCharacterType.LeftToRightOverride:
                 case BidiCharacterType.RightToLeftEmbedding:
@@ -121,7 +145,14 @@ internal class BidiData
                 this.HasBrackets = true;
             }
 
+            afterCarriageReturn = codePoint.Value == '\r';
             i++;
+        }
+
+        // The text after the last separator, or empty text, is a paragraph too.
+        if (this.paragraphEnds.Count == 0 || this.paragraphEnds[^1] != length)
+        {
+            this.paragraphEnds.Add(length);
         }
 
         // Create slices on work buffers

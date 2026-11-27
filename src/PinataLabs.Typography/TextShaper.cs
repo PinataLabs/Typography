@@ -74,29 +74,32 @@ public static class TextShaper
         return glyphs;
     }
 
-    // The first strong character decides, as the Unicode Bidirectional Algorithm has it. A run with none, such as digits and
-    // brackets, has the direction that HarfBuzz gives a buffer of its script, and runs from left to right without a script.
+    // The run takes the direction of its first paragraph, as the Unicode Bidirectional Algorithm has it (rules P1 to P3):
+    // the first strong character before the first paragraph separator decides. A first paragraph with none, such as
+    // digits and brackets, has the direction that HarfBuzz gives a buffer of its script, and runs from left to right
+    // without a script.
     private static TextDirection GetAutoDirection(ReadOnlySpan<char> text, ScriptClass? script)
     {
         BidiAlgorithm bidi = BidiAlgorithm.Instance.Value!;
         BidiData bidiData = new();
         bidiData.Init(text, (sbyte)TextDirection.Auto);
         bidi.Process(bidiData);
-        if ((bidi.ResolvedParagraphEmbeddingLevel & 1) != 0)
+        BidiAlgorithm.Paragraph first = bidi.Paragraphs[0];
+        if ((first.Level & 1) != 0)
         {
             return TextDirection.RightToLeft;
         }
 
-        return script is ScriptClass named && IsRightToLeft(named) && !HasStrongCharacter(text)
+        return script is ScriptClass named && IsRightToLeft(named) && !HasStrongCharacter(bidiData.Types.Slice(0, first.Length))
             ? TextDirection.RightToLeft
             : TextDirection.LeftToRight;
     }
 
-    private static bool HasStrongCharacter(ReadOnlySpan<char> text)
+    private static bool HasStrongCharacter(ReadOnlyArraySlice<BidiCharacterType> types)
     {
-        foreach (CodePoint codePoint in new SpanCodePointEnumerator(text))
+        foreach (BidiCharacterType type in types)
         {
-            if (CodePoint.GetBidiClass(codePoint).CharacterType is BidiCharacterType.LeftToRight or BidiCharacterType.RightToLeft or BidiCharacterType.ArabicLetter)
+            if (type is BidiCharacterType.LeftToRight or BidiCharacterType.RightToLeft or BidiCharacterType.ArabicLetter)
             {
                 return true;
             }

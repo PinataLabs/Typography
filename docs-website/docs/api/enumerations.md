@@ -27,7 +27,7 @@ Default: `Auto`.
 
 | Value | Description |
 | --- | --- |
-| `Auto` | Find the base direction from the first strong character, as HTML `dir="auto"` does. |
+| `Auto` | Find the base direction of each paragraph from its first strong character, as CSS `unicode-bidi: plaintext` does. |
 | `LeftToRight` | Use a left-to-right base direction, as CSS `direction: ltr` does. |
 | `RightToLeft` | Use a right-to-left base direction, as CSS `direction: rtl` does. |
 

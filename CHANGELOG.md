@@ -469,6 +469,16 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- The bidi algorithm splits the text into paragraphs after each paragraph separator, as UAX #9 rule P1 says, and
+  resolves each paragraph on its own. LF, CR, U+0085, U+2029 and U+001C to U+001E end a paragraph, and CR LF is one
+  separator. It took the whole text as one paragraph, so rules W2 and N1 read across a line feed: in a left-to-right
+  paragraph, U+0627 LF `1` gave the `1` level 2, as if the Arabic letter before the line feed made it an Arabic number,
+  and it now stays a European number at level 0. With `TextDirection.Auto`, each paragraph takes its level from its own
+  first strong character (rules P2 and P3), where every paragraph took the level of the first, and rule L1 resets its
+  whitespace to that level. In `TextLayout`, the second line of `"كتب abc\nabc كتب"` now runs left to right, with
+  `abc` drawn first. `TextShaper.Shape` with `TextDirection.Auto` takes the direction of the first paragraph of the
+  run: a line feed followed by Hebrew runs left to right, and the script decides for a first paragraph with no strong
+  character, whatever follows the separator. ICU 72 gives the same levels. (#189)
 - Text that has no codepoint to lay out, such as text that is only U+FE0F, lays out as empty text: no glyph, no line,
   and the size of empty text. `TextLayout` threw `InvalidOperationException` ("Sequence contains no elements"),
   because a text with no line has no longest line. (#179)

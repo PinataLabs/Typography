@@ -20,7 +20,9 @@ public enum TextDirection
     RightToLeft = 1,
 
     /// <summary>
-    /// Automatically determined.
+    /// Automatically determined. In a layout, each paragraph takes the direction of its first strong character, or runs
+    /// left to right when it has none (rules P2 and P3 of the Unicode Bidirectional Algorithm), and a paragraph separator,
+    /// such as a line feed, ends a paragraph. <see cref="ShapingOptions.Direction"/> says how a shaped run takes it.
     /// </summary>
     Auto = 2,
 }
