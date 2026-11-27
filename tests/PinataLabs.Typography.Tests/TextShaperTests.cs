@@ -27,18 +27,16 @@ public class TextShaperTests
     private static readonly Dictionary<string, Font> Fonts = [];
 
     // The runs that the library shapes with other glyphs than HarfBuzz, whatever calls it: the layout gives the same glyphs.
-    // They are two vowel signs on one consonant of Bengali, Gurmukhi and Tamil, and a Gujarati ra with a virama and a
-    // letter after it. Each entry has the font and the code points of the run.
+    // They are Bengali vowel signs after a letter or a spacing mark, a Gurmukhi bindi before a vowel sign, and a Gujarati
+    // ra with a virama and a letter after it. Each entry has the font and the code points of the run.
     private static readonly HashSet<string> KnownDifferences =
     [
         "NotoSansGujarati-Regular.ttf 0A95 0AB0 0ACD 0AAE",
-        "NotoSansBengali-Regular.ttf 09A7 09BF 09C7",
         "NotoSansBengali-Regular.ttf 0995 0981 09C3 0999 0983 09C7 099E 09BE 09C8",
         "NotoSansBengali-Regular.ttf 099E 09BE 09C8 09A2 09BF 09CC 09A7 09C1 09D7",
         "NotoSansBengali-Regular.ttf 09B2 09C7 09B9 09C8 0995 09CC",
         "NotoSansBengali-Regular.ttf 09B2 09C7 0983 09B9 09C8 09BE 0995 09CC 09BF",
         "NotoSansGurmukhi-Regular.ttf 0A1E 0A02 0A40",
-        "NotoSansTamil-Regular.ttf 0BB6 0BC7 0BCC",
     ];
 
     private static readonly Dictionary<string, ScriptClass> Scripts = new()
