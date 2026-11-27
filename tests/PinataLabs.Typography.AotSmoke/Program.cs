@@ -22,6 +22,21 @@ foreach ((string resource, FontProgramFormat format) in new[]
     failures += ok ? 0 : 1;
 }
 
+// A subset keeps the outline of a kept glyph at its glyph ID, and drops the others.
+foreach (string resource in new[] { "OpenSans-Regular.ttf", "SourceSansPro-Regular.otf" })
+{
+    FontProgram font = FontProgram.Load(ReadResource(resource));
+    (ushort glyphId, int commands) = FirstOutline(font);
+    FontProgram subset = FontProgram.Load(FontSubsetter.Subset(ReadResource(resource), new[] { glyphId }));
+    CountingSink kept = default;
+    CountingSink dropped = default;
+    bool ok = subset.GlyphCount == font.GlyphCount
+        && subset.TryWriteOutline(glyphId, ref kept) && kept.Commands == commands
+        && subset.TryWriteOutline((ushort)(glyphId + 1), ref dropped) && dropped.Commands == 0;
+    Console.WriteLine($"FontSubsetter {resource}: glyph {glyphId} keeps {kept.Commands} of {commands} outline commands, the next glyph keeps {dropped.Commands}: {(ok ? "ok" : "FAIL")}");
+    failures += ok ? 0 : 1;
+}
+
 using (MemoryStream stream = new(ReadResource("OpenSans-Regular.ttf")))
 {
     FontCollection collection = new();
