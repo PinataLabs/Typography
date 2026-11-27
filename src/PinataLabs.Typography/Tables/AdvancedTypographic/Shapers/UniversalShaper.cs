@@ -204,7 +204,8 @@ internal sealed class UniversalShaper : DefaultShaper
             input[keptCount++] = values[i];
         }
 
-        int syllable = 0;
+        // No syllable of another run has one of these numbers.
+        int syllable = substitutionCollection.TakeSyllableNumbers(count);
         foreach (StateMatch match in StateMachine.Match(input[..keptCount]))
         {
             ++syllable;

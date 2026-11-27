@@ -161,7 +161,8 @@ internal struct SkippingGlyphIterator
         return (ignorables & kind) != 0;
     }
 
-    // The Indic and Khmer shapers, the universal shaper and the Myanmar shaper each number the syllables of a run.
+    // The Indic and Khmer shapers, the universal shaper and the Myanmar shaper each number the syllables of a run, with
+    // numbers that GlyphSubstitutionCollection.TakeSyllableNumbers gives no other run.
     private static int SyllableOf(GlyphShapingData data)
         => data.IndicShapingEngineInfo?.Syllable ?? data.UniversalShapingEngineInfo?.Syllable ?? data.MyanmarShapingEngineInfo?.Syllable ?? 0;
 

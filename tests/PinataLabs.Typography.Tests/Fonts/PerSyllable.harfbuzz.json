@@ -53,6 +53,7 @@
     ["PerSyllableRuns.ttf","\ud804\udc05\u0915",[8,1]],
     ["PerSyllableRuns.ttf","\u0916\u0995",[2,5]],
     ["PerSyllableRuns.ttf","\u0917\u1000",[3,6]],
-    ["PerSyllableRuns.ttf","\u0918\u1780",[4,7]]
+    ["PerSyllableRuns.ttf","\u0918\u1780",[4,7]],
+    ["PerSyllableRuns.ttf","\u0919\u091a\u091b\u0996",[18,11,12]]
   ]
 }

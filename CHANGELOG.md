@@ -522,6 +522,11 @@ Unicode conformance suites to that version.
   `cfar`, the Myanmar basic features `rphf`, `pref`, `blwf` and `pstf`, and the universal `nukt`, `akhn`, `rphf`,
   `pref`, `rkrf`, `abvf`, `blwf`, `half`, `pstf`, `vatu` and `cjct`. A lookup of these features matched the letter of
   the next syllable as its context. (#175)
+- A GSUB lookup that matches per syllable does not match a glyph of the script run before, as with HarfBuzz 15.0.0,
+  which a caller gives each script run in a buffer of its own. The Indic, Khmer, Myanmar and universal shapers each
+  numbered the syllables of a run from 1, so after a run of one syllable, a lookup of the first syllable of the next
+  run matched its glyph as context: Devanagari ka after Brahmi A, or Bengali ka after Devanagari kha, took a `locl`
+  form that the font gives after that letter. No two runs of a text now share a syllable number. (#175)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

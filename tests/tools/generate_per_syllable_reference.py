@@ -34,9 +34,10 @@ lookup changes the first letter only when it does not match per syllable.
   across syllables.
 * PerSyllableRuns.ttf has a locl lookup that changes a letter after a letter of another script: Devanagari ka after
   Brahmi A, Bengali ka after Devanagari kha, Myanmar ka after Devanagari ga, and Khmer ka after Devanagari gha. The
-  pairs cover the universal, Indic, Myanmar and Khmer shapers, and Devanagari and Bengali share a shaper. A caller of
-  HarfBuzz shapes each script run in a buffer of its own, with the text around it as context, so the lookup does not
-  match. The script shapes each letter of these texts so.
+  pairs cover the universal, Indic, Myanmar and Khmer shapers, and Devanagari and Bengali share a shaper. In the last
+  text, Bengali kha follows Devanagari nga, ca and cha, three syllables, and a calt lookup ligates nga and ca, so the
+  Devanagari run ends with fewer glyphs than syllables. A caller of HarfBuzz shapes each script run in a buffer of its
+  own, with the text around it as context, so the lookup does not match. The script shapes the texts so.
 
 Each row holds the font, the text and the glyph IDs that HarfBuzz gives. PerSyllableTests reads the reference.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -89,13 +90,13 @@ def shape(font, text):
     return [info.codepoint for info in buffer.glyph_infos]
 
 
-def shape_runs(font, text):
-    """Shapes each character in a buffer of its own, with the rest of the text as context, as a caller of HarfBuzz
-    shapes each script run of a text where each character is a run."""
+def shape_runs(font, text, split):
+    """Shapes the characters before `split` and those after it each in a buffer of their own, with the rest of the
+    text as context, as a caller of HarfBuzz shapes two script runs."""
     glyphs = []
-    for i in range(len(text)):
+    for start, end in ((0, split), (split, len(text))):
         buffer = hb.Buffer()
-        buffer.add_str(text, i, 1)
+        buffer.add_str(text, start, end - start)
         buffer.guess_segment_properties()
         hb.shape(font, buffer)
         glyphs += [info.codepoint for info in buffer.glyph_infos]
@@ -116,11 +117,11 @@ def make_required(path, tags, feature_tag):
 def main():
     rows = []
 
-    def add(file_name, path, texts, shaper=shape):
+    def add(file_name, path, texts):
         font = load_font(path)
         for text in texts:
             text = "".join(map(chr, text))
-            rows.append([file_name, text, shaper(font, text)])
+            rows.append([file_name, text, shape(font, text)])
 
     # Khmer: locl and ccmp apply to a letter, the basic features to the consonant after a coeng.
     file_name = "PerSyllableKhmer.ttf"
@@ -196,15 +197,22 @@ def main():
     make_required(path, pairs, "ccmp")
     add(file_name, path, [list(pair) for pair in pairs.values()])
 
-    # A letter after a letter of another script, each its own script run.
+    # A letter after a letter of another script. Each script run is a buffer of its own.
     file_name = "PerSyllableRuns.ttf"
-    pairs = [(0x11005, 0x0915), (0x0916, 0x0995), (0x0917, 0x1000), (0x0918, 0x1780)]
+    runs = [([0x11005], [0x0915]), ([0x0916], [0x0995]), ([0x0917], [0x1000]), ([0x0918], [0x1780]),
+            ([0x0919, 0x091A, 0x091B], [0x0996])]
     fea = "languagesystem DFLT dflt;\n" + "".join(
         "languagesystem %s dflt;\n" % tag for tag in ("brah", "dev2", "bng2", "mym2", "khmr"))
-    fea += "feature locl {\n" + "".join("  sub u%04X u%04X' by u%04X.locl;\n" % (a, b, b) for a, b in pairs) + "} locl;\n"
-    path = build_font(file_name, sorted(c for pair in pairs for c in pair), fea,
-                      extra_glyphs=["u%04X.locl" % b for _, b in pairs])
-    add(file_name, path, [list(pair) for pair in pairs], shape_runs)
+    fea += "feature calt { sub u0919 u091A by u0919_u091A; } calt;\n"
+    fea += "feature locl {\n" + "".join(
+        "  sub u%04X u%04X' by u%04X.locl;\n" % (before[-1], after[0], after[0]) for before, after in runs) + "} locl;\n"
+    # The letters of the last text come after the others, which keep their glyph IDs.
+    code_points = sorted(c for before, after in runs[:4] for c in before + after) + runs[4][0] + runs[4][1]
+    glyphs = ["u%04X.locl" % after[0] for _, after in runs] + ["u0919_u091A"]
+    font = load_font(build_font(file_name, code_points, fea, extra_glyphs=glyphs))
+    for before, after in runs:
+        text = "".join(map(chr, before + after))
+        rows.append([file_name, text, shape_runs(font, text, len(before))])
 
     write_reference(REFERENCE, rows)
 

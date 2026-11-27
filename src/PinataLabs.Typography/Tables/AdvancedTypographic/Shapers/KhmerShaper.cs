@@ -125,8 +125,8 @@ internal sealed class KhmerShaper : DefaultShaper
             values[i] = UnicodeData.GetIndicShapingProperties((uint)substitutionCollection[index + i].CodePoint.Value) >> 8;
         }
 
-        // A glyph that no syllable holds is a syllable of its own.
-        int syllable = 0;
+        // A glyph that no syllable holds is a syllable of its own. No syllable of another run has one of these numbers.
+        int syllable = substitutionCollection.TakeSyllableNumbers(count);
         int last = 0;
         foreach (StateMatch match in StateMachine.Match(values))
         {

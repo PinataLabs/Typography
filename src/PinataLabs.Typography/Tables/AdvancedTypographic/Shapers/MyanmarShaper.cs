@@ -197,12 +197,15 @@ internal sealed class MyanmarShaper : DefaultShaper
             start = end;
         }
 
+        // No syllable of another run has one of these numbers.
+        int firstSyllable = substitutionCollection.TakeSyllableNumbers(count) + 1;
         for (int s = syllables.Count - 1; s >= 0; s--)
         {
             (int start, int end, string type) = syllables[s];
+            int syllable = firstSyllable + s;
             for (int i = start; i < end; i++)
             {
-                substitutionCollection[index + i].MyanmarShapingEngineInfo = new(categories[i], Positions.Start, type, s + 1);
+                substitutionCollection[index + i].MyanmarShapingEngineInfo = new(categories[i], Positions.Start, type, syllable);
             }
 
             // The kinzi is the only part that takes part in rphf.
@@ -224,7 +227,7 @@ internal sealed class MyanmarShaper : DefaultShaper
                     // syllable: after a syllable of only kinzi, the glyph at its place is of the next syllable.
                     int at = index + start + (HasKinzi(categories.AsSpan(start, end - start)) ? KinziLength : 0);
                     substitutionCollection.InsertGlyph(at, Math.Min(at, index + end - 1), id, new(DottedCircle));
-                    substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, s + 1);
+                    substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, syllable);
                 }
             }
         }
