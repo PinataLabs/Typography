@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -48,6 +49,14 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <param name="index">The zero-based index of the element.</param>
     /// <returns>The metrics, which belong to this layout alone.</returns>
     public GlyphMetrics GetMetrics(int index) => this.glyphs[index].Metrics[0];
+
+    /// <summary>
+    /// Gets the size of a unit of the font that draws the glyph at the index, in points. Glyphs of two fonts in one
+    /// cluster have units of different sizes.
+    /// </summary>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <returns>The size along and across the line.</returns>
+    public Vector2 GetUnitSize(int index) => new Vector2(this.glyphs[index].PointSize) / this.GetMetrics(index).ScaleFactor;
 
     /// <inheritdoc />
     public void AddShapingFeature(int index, TagEntry feature)

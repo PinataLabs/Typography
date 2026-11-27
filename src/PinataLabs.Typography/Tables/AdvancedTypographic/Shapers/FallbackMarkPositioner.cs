@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Numerics;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -118,17 +119,16 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
-            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph. Such a glyph takes no advance and no
-            // place, so it may come from another font.
+            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph.
             int marksEnd = index + 1;
-            bool canPlace = collection.ShouldProcess(fontMetrics, index) && IsPlaceable(collection, collection[index]);
+            bool hasOwnGlyph = false;
             while (marksEnd < end && (IsUnicodeMark(collection[marksEnd]) || collection[marksEnd].IsDefaultIgnorable))
             {
-                canPlace &= collection[marksEnd].IsDefaultIgnorable || collection.ShouldProcess(fontMetrics, marksEnd);
+                hasOwnGlyph |= collection.ShouldProcess(fontMetrics, marksEnd);
                 marksEnd++;
             }
 
-            if (canPlace && marksEnd > index + 1)
+            if (hasOwnGlyph && IsPlaceable(collection, collection[index]))
             {
                 PlaceAroundBase(fontMetrics, collection, index, marksEnd);
             }
@@ -137,23 +137,30 @@ internal static class FallbackMarkPositioner
         }
     }
 
+    /// <summary>
+    /// Places the marks of this font that follow a base. A fallback font may draw the base or some of the marks, so each
+    /// font places its own marks, around the base and on the marks before them whatever font draws those. The places are
+    /// in units of the font of the base until each mark takes its own.
+    /// </summary>
     private static void PlaceAroundBase(FontMetrics fontMetrics, GlyphPositioningCollection collection, int baseIndex, int end)
     {
         GlyphShapingData baseData = collection[baseIndex];
         GlyphMetrics baseMetrics = collection.GetMetrics(baseIndex);
+        FontMetrics baseFont = baseMetrics.FontMetrics;
+        Vector2 baseUnit = collection.GetUnitSize(baseIndex);
         bool isForward = baseData.Direction == TextDirection.LeftToRight;
-        int gap = fontMetrics.UnitsPerEm / GapDivisor;
+        int gap = baseFont.UnitsPerEm / GapDivisor;
 
         // The advance of the base, not its box, aligns the mark across the line. So a base without ink also works.
         // It is the advance that the font gives the base. Kerning moves the base and leaves its marks in place.
         Box baseBox = Box.Of(baseMetrics);
         baseBox.Top += baseData.Bounds.Y;
         baseBox.Left = 0;
-        baseBox.Width = GetFontAdvance(fontMetrics, collection, baseData);
+        baseBox.Width = GetFontAdvance(baseFont, collection, baseData);
 
         // The pen is after the base in text that runs forward, and still before it in text that runs backward.
         int penOffset = isForward ? -GetAdvance(collection, baseIndex) : 0;
-        int components = GetComponentCount(fontMetrics, baseData);
+        int components = GetComponentCount(baseFont, baseData);
         int lastComponent = -1;
         Box componentBox = baseBox;
         Box stack = baseBox;
@@ -161,6 +168,7 @@ internal static class FallbackMarkPositioner
         for (int i = baseIndex + 1; i < end; i++)
         {
             GlyphShapingData data = collection[i];
+            Vector2 scale = collection.GetUnitSize(i) / baseUnit;
             uint placement = UnicodeData.GetCombiningClassData((uint)data.UnicodePropertiesCodePoint.Value);
             MarkAlignment alignment = (MarkAlignment)((placement >> CanonicalMappingData.MarkAlignmentShift) & CanonicalMappingData.MarkPlacementMask);
             MarkSide side = (MarkSide)((placement >> CanonicalMappingData.MarkSideShift) & CanonicalMappingData.MarkPlacementMask);
@@ -169,7 +177,8 @@ internal static class FallbackMarkPositioner
                 // HarfBuzz has taken the advance of a default-ignorable glyph away by now, and the layout does so later.
                 if (!data.IsDefaultIgnorable)
                 {
-                    penOffset += isForward ? -GetAdvance(collection, i) : GetAdvance(collection, i);
+                    int advance = Scale(GetAdvance(collection, i), scale.X);
+                    penOffset += isForward ? -advance : advance;
                 }
 
                 continue;
@@ -193,13 +202,22 @@ internal static class FallbackMarkPositioner
                 stack = componentBox;
             }
 
-            Box mark = Box.Of(collection.GetMetrics(i));
-            data.Bounds.X = penOffset + Align(stack, mark, alignment, isForward);
-            data.Bounds.Y = Stack(ref stack, mark, side, gap);
-            data.Bounds.Width = 0;
-            data.Bounds.Height = 0;
+            Box mark = Box.Of(collection.GetMetrics(i)).Scale(scale);
+            int x = penOffset + Align(stack, mark, alignment, isForward);
+            int y = Stack(ref stack, mark, side, gap);
+            if (collection.ShouldProcess(fontMetrics, i))
+            {
+                data.Bounds.X = Scale(x, 1 / scale.X);
+                data.Bounds.Y = Scale(y, 1 / scale.Y);
+                data.Bounds.Width = 0;
+                data.Bounds.Height = 0;
+            }
         }
     }
+
+    // Converts a length to the units of another font, given the size of a unit of its font in those units.
+    private static int Scale(int value, float scale)
+        => scale == 1 ? value : (int)MathF.Round(value * scale);
 
     // Only a ligature of components has parts for marks. A base that GSUB composed with marks is still one base.
     private static int GetComponentCount(FontMetrics fontMetrics, GlyphShapingData baseData)
@@ -369,5 +387,14 @@ internal static class FallbackMarkPositioner
                 Height = (int)(bounds.Min.Y - bounds.Max.Y),
             };
         }
+
+        public readonly Box Scale(Vector2 scale)
+            => scale == Vector2.One ? this : new Box
+            {
+                Left = FallbackMarkPositioner.Scale(this.Left, scale.X),
+                Top = FallbackMarkPositioner.Scale(this.Top, scale.Y),
+                Width = FallbackMarkPositioner.Scale(this.Width, scale.X),
+                Height = FallbackMarkPositioner.Scale(this.Height, scale.Y),
+            };
     }
 }

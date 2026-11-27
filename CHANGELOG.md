@@ -531,6 +531,11 @@ Unicode conformance suites to that version.
   and after a ZWJ the marks went on the ZWJ, not on the syllable. A default-ignorable glyph that a fallback font draws
   stops no placement either: with `MarksWithoutGlyphClassesFallback.ttf`, which lacks U+034F, and the fallback
   `MarksWithoutGlyphClasses.ttf`, a, grave, U+034F, acute left both accents unplaced. (#184)
+- Fallback mark placement places a cluster whose base and marks come from different fonts. Each font places its own
+  marks around the base and on the marks before them, whatever font draws those, and converts between the units of
+  the two fonts. Such a cluster kept its marks unplaced: with `MarksWithoutGlyphClassesBase.ttf`, which has f and the
+  grave, and the fallback `MarksWithoutGlyphClassesFallback.ttf`, f, grave, acute drew both accents at the start of f
+  on the baseline, where each font alone places them over f, the acute on the grave. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the
