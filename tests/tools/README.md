@@ -1068,3 +1068,23 @@ python tests/tools/generate_text_shaper_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Vertical advance reference
+
+`generate_vertical_advance_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/VerticalAdvance.harfbuzz.json`,
+what HarfBuzz gives for lines in horizontal and in vertical text, for issue #170. It builds two fonts of empty glyphs
+next to the reference, whose glyphs have an advance width and an advance height that differ. `VerticalAdvance.ttf` kerns
+with GPOS: `kern` moves the advance of A on both axes, and `vkrn` moves the advances of three ideographs down the line,
+one of them below zero, and one across it. `VerticalAdvanceKern.ttf` has a `kern` table of a horizontal and a vertical
+subtable and no GPOS table. Each row holds the glyphs in the coordinates of HarfBuzz, in which y goes up, and the advances
+that the font gives each glyph. `SignedAdvanceLayoutTests` checks that the layout advances each glyph along the line as
+HarfBuzz does and keeps the advance of the font across it.
+
+To write the fonts and the file again, install fontTools 4.68 or later and uharfbuzz 0.57.0 or later, and run this from
+the repository root:
+
+```
+python tests/tools/generate_vertical_advance_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

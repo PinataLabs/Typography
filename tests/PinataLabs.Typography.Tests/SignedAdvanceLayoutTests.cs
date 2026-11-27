@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 
 namespace PinataLabs.Typography.Tests;
 
@@ -53,6 +54,70 @@ public class SignedAdvanceLayoutTests
         await Assert.That(string.Join(' ', actual)).IsEqualTo(string.Join(' ', expected));
         await Assert.That(MathF.Round(TextMeasurer.MeasureAdvance(text, options).Width)).IsEqualTo(right - left);
     }
+
+    // VerticalAdvance.ttf kerns with GPOS: vkrn makes the advance of U+4E00 200 shorter, that of U+4E8C 300 longer and
+    // that of U+4E09 -300, and it moves U+4E09 by 77 across the line, which HarfBuzz leaves out. kern moves A across the
+    // line by 50, which HarfBuzz leaves out too. VerticalAdvanceKern.ttf kerns A V with a horizontal kern subtable, which
+    // HarfBuzz applies to horizontal text only. Along the line each glyph advances as far as HarfBuzz moves the pen, and
+    // across it the glyph keeps the advance of the font.
+    [Test]
+    [Arguments("VerticalAdvance.ttf", "AV", "ltr")]
+    [Arguments("VerticalAdvance.ttf", "一二三一", "ttb")]
+    [Arguments("VerticalAdvance.ttf", "三一", "ttb")]
+    [Arguments("VerticalAdvanceKern.ttf", "AV", "ltr")]
+    [Arguments("VerticalAdvanceKern.ttf", "AV", "ttb")]
+    public async Task GlyphsHaveTheAdvancesThatHarfBuzzGivesAlongAndAcrossTheLine(string fontName, string text, string direction)
+    {
+        JsonElement row = GetVerticalAdvanceRow(fontName, text, direction);
+        bool vertical = direction == "ttb";
+        int[][] glyphs = ToArrays(row.GetProperty("glyphs"));
+        int[][] fontAdvances = ToArrays(row.GetProperty("advances"));
+        List<string> expected = [];
+        int pen = 0;
+        int start = 0;
+        int end = 0;
+        for (int i = 0; i < glyphs.Length; i++)
+        {
+            // HarfBuzz gives the advance of vertical text in font space, where y goes up and the line goes down.
+            int advance = vertical ? -glyphs[i][2] : glyphs[i][1];
+            int advanceWidth = vertical ? fontAdvances[i][0] : advance;
+            int advanceHeight = vertical ? advance : fontAdvances[i][1];
+            expected.Add($"{glyphs[i][0]} at {pen} advances {advanceWidth} {advanceHeight}");
+            start = Math.Min(start, pen);
+            pen += advance;
+            end = Math.Max(end, pen);
+        }
+
+        TextOptions options = new(GetFont(fontName))
+        {
+            Dpi = 1,
+            LayoutMode = vertical ? LayoutMode.VerticalLeftRight : LayoutMode.HorizontalTopBottom,
+            FeatureTags = row.TryGetProperty("features", out JsonElement features)
+                ? features.EnumerateArray().Select(f => Tag.Parse(f.GetString()!)).ToArray()
+                : [],
+        };
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        string[] actual = layout
+            .Select(g => FormattableString.Invariant(
+                $"{g.Glyph.GlyphMetrics.GlyphId} at {MathF.Round(vertical ? g.PenLocation.Y - layout[0].PenLocation.Y : g.PenLocation.X - layout[0].PenLocation.X)} advances {g.Glyph.GlyphMetrics.AdvanceWidth} {g.Glyph.GlyphMetrics.AdvanceHeight}"))
+            .ToArray();
+
+        await Assert.That(string.Join(", ", actual)).IsEqualTo(string.Join(", ", expected));
+        FontRectangle measured = TextMeasurer.MeasureAdvance(text, options);
+        await Assert.That(MathF.Round(vertical ? measured.Height : measured.Width)).IsEqualTo(end - start);
+    }
+
+    private static JsonElement GetVerticalAdvanceRow(string fontName, string text, string direction)
+    {
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllText(TestFonts.GetPath("VerticalAdvance.harfbuzz.json")));
+        return document.RootElement.GetProperty("rows").EnumerateArray().Single(r =>
+            r.GetProperty("font").GetString() == fontName
+            && r.GetProperty("text").GetString() == text
+            && r.GetProperty("direction").GetString() == direction).Clone();
+    }
+
+    private static int[][] ToArrays(JsonElement rows)
+        => rows.EnumerateArray().Select(g => g.EnumerateArray().Select(v => v.GetInt32()).ToArray()).ToArray();
 
     // Each glyph of a row is its ID, cluster, x advance, x offset and y offset.
     private static int[][] GetHarfBuzzGlyphs(string fontName, string text)
