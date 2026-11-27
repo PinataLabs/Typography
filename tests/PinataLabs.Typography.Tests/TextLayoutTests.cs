@@ -1574,10 +1574,10 @@ public class TextLayoutTests
         Font font = new FontCollection().Add(TestFonts.Anchor2FontFile).CreateFont(24);
         TextOptions options = new(font) { TextAlignment = TextAlignment.Start, WrappingLength = wrappingLength };
 
-        GlyphLayout[][] lines = GetLines("אב\U0000001Ccd", options);
+        GlyphLayout[][] lines = GetLines("\u05D0\u05D1\U0000001Ccd", options);
 
         // Rule L1 gives the separator the level of its paragraph, so it is drawn at the left end of the Hebrew line.
-        await Assert.That(Visual(lines)).IsEqualTo("\U0000001Cבא|cd");
+        await Assert.That(Visual(lines)).IsEqualTo("\U0000001C\u05D1\u05D0|cd");
         await Assert.That(Math.Round(lines[0].Max(x => x.PenLocation.X + x.AdvanceX), 4)).IsEqualTo(Math.Round(wrappingLength / options.Dpi, 4));
         await Assert.That(lines[1].Min(x => x.PenLocation.X)).IsEqualTo(0);
     }
