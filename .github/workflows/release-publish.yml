@@ -126,11 +126,34 @@ jobs:
         run: dotnet test --solution PinataLabs.Typography.slnx -c Release -f net11.0 --no-build
 
       # Not ./artifacts: Directory.Build.props sends build output there.
+      # GenerateSBOM embeds an SPDX manifest in each .nupkg, and it is on here only, so that a PR
+      # build does not pay for it. It adds a package reference (Directory.Build.targets), so the
+      # projects are restored with it just before the pack: the test steps above restore them again
+      # without it, and the pack would then embed nothing.
       - name: Pack
         run: |
-          dotnet pack src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj -c Release --no-build --output ./packages
-          dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release --no-build --output ./packages
+          dotnet restore src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj -p:GenerateSBOM=true
+          dotnet restore src/PinataLabs.Typography/PinataLabs.Typography.csproj -p:GenerateSBOM=true
+          dotnet pack src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj -c Release --no-build --no-restore -p:GenerateSBOM=true --output ./packages
+          dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release --no-build --no-restore -p:GenerateSBOM=true --output ./packages
           ls -la ./packages/
+
+      # Fails the run if a package has no manifest, or if the manifest lists only the package itself,
+      # which is what it does when the generator cannot find project.assets.json.
+      - name: Check the packages embed an SBOM
+        run: |
+          manifest=_manifest/spdx_2.2/manifest.spdx.json
+          for package in ./packages/*.nupkg; do
+            if ! unzip -l "$package" "$manifest" >/dev/null; then
+              echo "::error::$(basename "$package") has no $manifest"
+              exit 1
+            fi
+            if ! unzip -p "$package" "$manifest" | jq -e '.packages | length > 1' >/dev/null; then
+              echo "::error::$(basename "$package") has an SPDX manifest that lists no dependency packages"
+              exit 1
+            fi
+          done
+          echo "Every package embeds an SPDX manifest that lists its dependencies"
 
       # What was actually built, read from the packages rather than assumed from inputs.
       # PinataLabs.Typography.<digit> cannot match PinataLabs.Typography.Unicode.<digit>, whose
@@ -208,6 +231,15 @@ jobs:
             esac
           done
           echo "$VERSION is not fully on nuget.org yet"
+
+      # One CycloneDX file per package, written next to the packages. Only a stable release attaches
+      # them to a GitHub Release, but this runs for a pre-release too: the stable path cannot be dry
+      # run, because its tag is pushed before this workflow starts, so a pre-release dry run is the
+      # one place to see the script work. The tool is pinned in .config/dotnet-tools.json.
+      - name: Generate CycloneDX SBOMs
+        run: |
+          dotnet tool restore
+          bash .github/scripts/generate-sbom.sh ./packages
 
       - name: Summary
         env:
@@ -337,3 +369,4 @@ jobs:
           files: |
             ./packages/*.nupkg
             ./packages/*.snupkg
+            ./packages/*.cdx.json
