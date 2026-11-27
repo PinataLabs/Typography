@@ -69,7 +69,7 @@ Unicode conformance suites to that version.
 - **The `PinataLabs.Typography.Unicode` package.** The Unicode algorithms and character properties that were in the
   `PinataLabs.Typography.Unicode` namespace of `PinataLabs.Typography` are now a package of their own, with no font code,
   for the same target frameworks. A caller that needs character properties, code point and grapheme enumeration and no
-  fonts can depend on it alone. The line-break algorithm stays internal and backs the layout of
+  fonts can depend on it alone. Its bidi, line-break and script algorithms also back the layout of
   `PinataLabs.Typography`. The namespace is the same, so source code needs no change.
   `UnicodeInfo.Version` is the new public member: it reports the Unicode version of the property data, which is
   18.0.0. The generator reads it from the rule files and fails when their headers name different versions. `UnicodeData.txt` has no header, so the generator cannot check that file. (#151)
