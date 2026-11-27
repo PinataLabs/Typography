@@ -1,0 +1,10 @@
+{
+  "harfbuzz": "15.0.0",
+  "rows": [
+    ["SelfGsub","a",true,[[69,0,0]]],
+    ["MutualGsub","b",true,[[139,0,0]]],
+    ["SelfGpos","x",true,[[4,0,640]]],
+    ["NaturalEnd","d",false,[[155,0,0]]],
+    ["TwoRecords","z",false,[[5,0,20]]]
+  ]
+}
