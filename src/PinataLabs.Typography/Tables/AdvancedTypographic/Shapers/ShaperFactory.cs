@@ -71,6 +71,17 @@ internal static class ShaperFactory
         };
 
     /// <summary>
+    /// Gets a value indicating whether the shaper of the script breaks the vowel sequences of
+    /// <c>IndicShapingInvalidCluster.txt</c> with a dotted circle before the text is normalized. The Indic and universal
+    /// shapers of HarfBuzz 15.0.0 do. Its Khmer and Myanmar shapers do not.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="substitutionScript">The tag that <see cref="GSubTable.GetScriptTag"/> gives for the script.</param>
+    /// <returns><see langword="true"/> if the shaper breaks the sequences.</returns>
+    public static bool BreaksInvalidVowelSequences(ScriptClass script, Tag substitutionScript)
+        => GetShaperKind(script, substitutionScript) is ShaperKind.Indic or ShaperKind.Universal or ShaperKind.UniversalJoining;
+
+    /// <summary>
     /// Gets a value indicating whether the shaper of the script positions glyphs without GPOS: it kerns with the
     /// <c>kern</c> table of the font, and in a font without a GPOS table it places a mark on its base from the boxes
     /// of the two glyphs. The default, Arabic, Hebrew and Hangul shapers of HarfBuzz do.

@@ -41,6 +41,9 @@ internal sealed class KhmerShaper : DefaultShaper
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
         ManualJoiners.Both, PrefTag, BlwfTag, AbvfTag, PstfTag, CfarTag, PresTag, AbvsTag, BlwsTag, PstsTag);
 
+    // As in HarfBuzz, the lookups of locl, ccmp and the basic features match within a syllable.
+    private static readonly HashSet<Tag> PerSyllableFeatures = [LoclTag, CcmpTag, PrefTag, BlwfTag, AbvfTag, PstfTag, CfarTag];
+
     // The two-part vowel signs that have no Unicode decomposition. The part in front of the base comes first.
     private static readonly Dictionary<int, int[]> Decompositions = new()
     {
@@ -75,6 +78,8 @@ internal sealed class KhmerShaper : DefaultShaper
         this.AddFeature(collection, index, count, BlwsTag);
         this.AddFeature(collection, index, count, PstsTag);
     }
+
+    protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
 
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
     {
@@ -120,8 +125,8 @@ internal sealed class KhmerShaper : DefaultShaper
             values[i] = UnicodeData.GetIndicShapingProperties((uint)substitutionCollection[index + i].CodePoint.Value) >> 8;
         }
 
-        // A glyph that no syllable holds is a syllable of its own.
-        int syllable = 0;
+        // A glyph that no syllable holds is a syllable of its own. No syllable of another run has one of these numbers.
+        int syllable = substitutionCollection.TakeSyllableNumbers(count);
         int last = 0;
         foreach (StateMatch match in StateMachine.Match(values))
         {

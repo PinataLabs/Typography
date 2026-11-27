@@ -489,6 +489,60 @@ Unicode conformance suites to that version.
   only when the font has a glyph for the tone mark whose horizontal advance is 0, as HarfBuzz 15.0.0 does. It took the
   .notdef glyph of a tone mark that the font lacks as zero width when that glyph was 0 wide, and a tone mark as zero
   width when one of its COLR layers was. (#174)
+- The Indic and universal shapers put a dotted circle before the sign of each vowel sequence of
+  `IndicShapingInvalidCluster.txt`, as HarfBuzz 15.0.0 does, so that an independent vowel and the sign after it do not
+  look like another vowel. Devanagari a, short e (U+0905, U+0946) gave a and the sign, where HarfBuzz gives a, the
+  circle and the sign. As in HarfBuzz, the circle comes before the text is normalized and takes the cluster and the
+  Unicode properties of the sign after it. So before a nonspacing mark it is a mark, which loses its advance in a font
+  without glyph classes, which mark positioning attaches past, and which a lookup that ignores marks skips, and before
+  the Sinhala virama it sorts with the marks. Before a vowel sign it continues a word, so a pre-base vowel sign after
+  it takes no `init`. A font without U+25CC gives `.notdef` in its place, unless `FallbackFontFamilies` is set: then
+  it gets no circle, as a fallback font would replace the `.notdef` together with the sign and give the sign twice.
+  The Khmer and Myanmar shapers of HarfBuzz insert no such circle, and neither do they here. (#113)
+- In a font without glyph classes, mark positioning takes the glyph of a nonspacing mark for a mark, as HarfBuzz
+  15.0.0 does. Mark-to-base and mark-to-ligature attach a mark past such a glyph, and mark-to-mark attaches a mark to
+  it. The library took no glyph of such a font for a mark there, so a second accent on a letter stayed where the pen
+  put it. (#113)
+- In a font without glyph classes, lookup flags take the same glyphs for marks as mark positioning, as HarfBuzz 15.0.0
+  does: the glyphs of nonspacing marks that are not default ignorable. They took any mark, so a lookup that ignores
+  marks skipped a spacing mark such as U+1D165 and the combining grapheme joiner U+034F, and formed the ligature of b
+  and b in b, U+1D165, b. (#113)
+- In a font without glyph classes, a ligature of components that are not all marks is a ligature glyph, as in HarfBuzz
+  15.0.0, even when its first component is a nonspacing mark. It was a mark, so the ligature of an acute and a lost its
+  advance and no mark attached to it. In a font without GPOS mark lookups, with or without glyph classes, fallback mark
+  positioning places the marks after such a ligature on it. A glyph of more than one character that is not such a
+  ligature, such as a composed character, is a base glyph for `IgnoreLigatures`, as in HarfBuzz. (#113)
+- A lookup skips the combining grapheme joiner U+034F as any other default-ignorable character when the joiner keeps
+  no mark from moving past another, as HarfBuzz 15.0.0 does. A joiner between an acute and a letter blocked the
+  ligature of the two. GPOS alone skips a joiner that keeps a mark in place. (#113)
+- Mark-to-base attaches a mark past a glyph that a multiple substitution made only when the glyph follows the glyph
+  that the substitution made before it, and the base coverage does not cover it, as in HarfBuzz 15.0.0. It attached
+  past every glyph with a ligature component: also one that the lookup covers, the jamo that the Hangul shaper
+  decomposes, and a glyph that a ligature skipped between its components. (#113)
+- For an old-spec script tag such as `beng`, the Indic shaper moves the first virama after the base to after the
+  last consonant in every script but Kannada, as HarfBuzz 15.0.0 does. It moved it in Malayalam only, so in a syllable
+  that ends in a virama, such as ka, virama, ya, virama, the virama after ka stayed before ya. (#175)
+- For the old-spec tag `deva`, the Indic shaper gives `blwf` to a ra, virama before the base when the base or any
+  character but ZWJ follows them, as HarfBuzz 15.0.0 does. It gave `blwf` only when ZWJ followed them, so ta, virama,
+  ra, virama, ka took the half form of ra where HarfBuzz gives its below-base form, and with ZWJ the eyelash ra took
+  its below-base form. (#175)
+- A GSUB lookup that two features of one stage share, where one feature matches per syllable and the other does not,
+  takes the flag that HarfBuzz 15.0.0 keeps. HarfBuzz adds the lookups of the required feature first, and then the
+  lookups of each feature in the order of the tags. It sorts them by index and keeps the flag of the first. The library
+  took the flag of either feature, so a lookup that the Indic shaper shared between `pres` and `calt` did not match
+  across syllables where HarfBuzz matches it. A lookup of a required feature that a per-syllable feature also lists did
+  not either. With more than 24 lookups in a stage, HarfBuzz sorts them with a quicksort that is not stable, and the
+  library sorts them the same way. (#175)
+- The GSUB lookups of the Khmer, Myanmar and universal shapers match glyphs of one syllable only for the features that
+  HarfBuzz 15.0.0 plans per syllable: `locl` and `ccmp`, the Khmer basic features `pref`, `blwf`, `abvf`, `pstf` and
+  `cfar`, the Myanmar basic features `rphf`, `pref`, `blwf` and `pstf`, and the universal `nukt`, `akhn`, `rphf`,
+  `pref`, `rkrf`, `abvf`, `blwf`, `half`, `pstf`, `vatu` and `cjct`. A lookup of these features matched the letter of
+  the next syllable as its context. (#175)
+- A GSUB lookup that matches per syllable does not match a glyph of the script run before, as with HarfBuzz 15.0.0,
+  which a caller gives each script run in a buffer of its own. The Indic, Khmer, Myanmar and universal shapers each
+  numbered the syllables of a run from 1, so after a run of one syllable, a lookup of the first syllable of the next
+  run matched its glyph as context: Devanagari ka after Brahmi A, or Bengali ka after Devanagari kha, took a `locl`
+  form that the font gives after that letter. No two runs of a text now share a syllable number. (#175)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

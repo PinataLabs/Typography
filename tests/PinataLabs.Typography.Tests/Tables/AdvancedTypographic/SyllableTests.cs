@@ -12,8 +12,9 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// The shapers find the syllables that HarfBuzz finds. Each row is a font, the ISO 15924 code of its script, a text,
-/// and the glyph ID and the place of each glyph that HarfBuzz gives. The fonts have no GSUB table, so only the
-/// shaper changes the order and the number of the glyphs.
+/// and the glyph ID and the place of each glyph that HarfBuzz gives. Only SyllablesCircles.ttf and
+/// SyllablesCircleProperties.ttf have a GSUB table, so in the other fonts only the shaper changes the order and the
+/// number of the glyphs.
 /// </summary>
 public class SyllableTests
 {
@@ -27,6 +28,34 @@ public class SyllableTests
     [Test]
     public async Task JoinerInsideASyllableGivesTheGlyphsThatHarfBuzzGives()
         => await Assert.That(DifferentRows(HarfBuzz.Joiners)).IsEmpty();
+
+    // A sequence of IndicShapingInvalidCluster.txt gets a dotted circle before the sign that would make the vowel look
+    // like another vowel.
+    [Test]
+    public async Task InvalidVowelSequenceGivesTheGlyphsThatHarfBuzzGives()
+        => await Assert.That(DifferentRows(HarfBuzz.Invalid)).IsEmpty();
+
+    // The dotted circle of an invalid sequence has the Unicode properties of the character after it, and is .notdef in
+    // a font without a dotted circle. So before a sign, the circle continues a word and is a mark.
+    [Test]
+    public async Task CircleOfAnInvalidSequenceGivesTheGlyphsThatHarfBuzzGives()
+        => await Assert.That(DifferentRows(HarfBuzz.Circles)).IsEmpty();
+
+    // A fallback font would replace the .notdef circle together with the sign that shares its offset, so the sign would
+    // be there twice. With fallback fonts, a font without a dotted circle gets none.
+    [Test]
+    public async Task CircleIsLeftOutWhenTheFontLacksItAndHasFallbackFonts()
+    {
+        FontCollection collection = new();
+        Font font = collection.Add(TestFonts.GetPath("SyllablesNoCircle.ttf")).CreateFont(12);
+        FontFamily fallback = collection.Add(TestFonts.GetPath("SyllablesInvalid.ttf"));
+        TextOptions options = new(font) { FallbackFontFamilies = [fallback] };
+
+        string glyphs = string.Join(' ', TextLayout.GenerateLayout("अॆ".AsSpan(), options)
+            .Select(g => g.Glyph.GlyphMetrics.GlyphId));
+
+        await Assert.That(glyphs).IsEqualTo("1 2");
+    }
 
     private static List<string> DifferentRows(JsonElement[][] rows)
     {
@@ -68,5 +97,7 @@ public class SyllableTests
         public JsonElement[][] Joiners { get; set; } = [];
 
         public JsonElement[][] Invalid { get; set; } = [];
+
+        public JsonElement[][] Circles { get; set; } = [];
     }
 }

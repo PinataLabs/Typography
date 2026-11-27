@@ -40,6 +40,9 @@ internal sealed class MyanmarShaper : DefaultShaper
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
         ManualJoiners.Zwj, RphfTag, PrefTag, BlwfTag, PstfTag, PresTag, AbvsTag, BlwsTag, PstsTag);
 
+    // As in HarfBuzz, the lookups of locl, ccmp and the basic features match within a syllable.
+    private static readonly HashSet<Tag> PerSyllableFeatures = [LoclTag, CcmpTag, RphfTag, PrefTag, BlwfTag, PstfTag];
+
     public MyanmarShaper(ScriptClass script, TextOptions textOptions)
        : base(script, MarkZeroingMode.PreGPos, textOptions, ManualJoinerFeatures)
     {
@@ -170,6 +173,8 @@ internal sealed class MyanmarShaper : DefaultShaper
         this.AddFeature(collection, index, count, MkmkTag);
     }
 
+    protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
+
     private static void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
     {
         if (collection is not GlyphSubstitutionCollection substitutionCollection)
@@ -192,12 +197,15 @@ internal sealed class MyanmarShaper : DefaultShaper
             start = end;
         }
 
+        // No syllable of another run has one of these numbers.
+        int firstSyllable = substitutionCollection.TakeSyllableNumbers(count) + 1;
         for (int s = syllables.Count - 1; s >= 0; s--)
         {
             (int start, int end, string type) = syllables[s];
+            int syllable = firstSyllable + s;
             for (int i = start; i < end; i++)
             {
-                substitutionCollection[index + i].MyanmarShapingEngineInfo = new(categories[i], Positions.Start, type, s + 1);
+                substitutionCollection[index + i].MyanmarShapingEngineInfo = new(categories[i], Positions.Start, type, syllable);
             }
 
             // The kinzi is the only part that takes part in rphf.
@@ -219,7 +227,7 @@ internal sealed class MyanmarShaper : DefaultShaper
                     // syllable: after a syllable of only kinzi, the glyph at its place is of the next syllable.
                     int at = index + start + (HasKinzi(categories.AsSpan(start, end - start)) ? KinziLength : 0);
                     substitutionCollection.InsertGlyph(at, Math.Min(at, index + end - 1), id, new(DottedCircle));
-                    substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, s + 1);
+                    substitutionCollection[at].MyanmarShapingEngineInfo = new(Categories.GB, Positions.Start, type, syllable);
                 }
             }
         }

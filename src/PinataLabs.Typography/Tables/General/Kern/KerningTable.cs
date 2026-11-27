@@ -95,7 +95,7 @@ internal sealed class KerningTable : Table
                 int left = start;
                 for (int right = start + 1; right < end; right++)
                 {
-                    if (collection.ShouldProcess(fontMetrics, right) && AdvancedTypographicUtils.IsZeroWidthMark(fontMetrics, collection[right]))
+                    if (collection.ShouldProcess(fontMetrics, right) && AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, collection[right]))
                     {
                         continue;
                     }

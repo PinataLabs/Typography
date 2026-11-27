@@ -18,6 +18,8 @@ namespace PinataLabs.Typography;
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal class GlyphShapingData
 {
+    private CodePoint codePoint;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphShapingData"/> class.
     /// </summary>
@@ -32,6 +34,8 @@ internal class GlyphShapingData
     {
         this.GlyphId = data.GlyphId;
         this.CodePoint = data.CodePoint;
+        this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
+        this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
         this.CodePointCount = data.CodePointCount;
         this.Cluster = data.Cluster;
         this.Direction = data.Direction;
@@ -43,6 +47,8 @@ internal class GlyphShapingData
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsSubstituted = data.IsSubstituted;
         this.IsDecomposed = data.IsDecomposed;
+        this.IsMultiplied = data.IsMultiplied;
+        this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
         this.SpaceFallback = data.SpaceFallback;
         this.JamoFeature = data.JamoFeature;
@@ -86,9 +92,31 @@ internal class GlyphShapingData
     public ushort GlyphId { get; set; }
 
     /// <summary>
-    /// Gets or sets the leading codepoint.
+    /// Gets or sets the leading codepoint. Setting it gives the glyph the Unicode properties of the codepoint.
     /// </summary>
-    public CodePoint CodePoint { get; set; }
+    public CodePoint CodePoint
+    {
+        get => this.codePoint;
+        set
+        {
+            this.codePoint = value;
+            this.UnicodePropertiesCodePoint = value;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the codepoint whose Unicode properties the glyph has: the general category that makes it a mark,
+    /// and the combining class that sorts it. It is <see cref="CodePoint"/>, except for the dotted circle that breaks an
+    /// invalid vowel sequence. As in HarfBuzz, that circle has the properties of the character after it.
+    /// </summary>
+    public CodePoint UnicodePropertiesCodePoint { get; set; }
+
+    /// <summary>
+    /// Gets or sets the class that GSUB gave the glyph, which a font without glyph classes takes in place of the class of
+    /// its character. As in HarfBuzz, a ligature of components that are not all marks is a ligature glyph, even when its
+    /// first component is a mark, and in any font its general category is Lo where it was Mn.
+    /// </summary>
+    public GlyphClassDef? SubstitutedGlyphClass { get; set; }
 
     /// <summary>
     /// Gets or sets the codepoint count represented by this glyph.
@@ -159,9 +187,21 @@ internal class GlyphShapingData
     public bool IsDefaultIgnorable => !this.IsSubstituted && UnicodeUtility.IsHiddenAfterShaping((uint)this.CodePoint.Value);
 
     /// <summary>
+    /// Gets or sets a value indicating whether the glyph is of a COMBINING GRAPHEME JOINER that keeps no mark from moving
+    /// past another. As in HarfBuzz, a lookup may then skip it as any other default-ignorable glyph, in GSUB too.
+    /// </summary>
+    public bool IsUnhiddenJoiner { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution
     /// </summary>
     public bool IsDecomposed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is one of the glyphs that a multiple substitution made of one.
+    /// As in HarfBuzz, a ligature that the glyph then forms is not.
+    /// </summary>
+    public bool IsMultiplied { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this glyph was resolved to a vertical form (the font's

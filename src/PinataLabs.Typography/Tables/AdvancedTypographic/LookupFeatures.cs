@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -257,6 +258,9 @@ internal readonly struct LookupFeatures
             AddReferences(references, featureTable, lookupCount, IndexOf(features, featureTable.FeatureTag), true);
         }
 
+        // GPOS matches across syllables, and so do the lookups of a stage that plans no feature per syllable.
+        List<bool>? perSyllableFlags = !positioning && HasPerSyllableFeature(features) ? GetPerSyllableFlags(references, features) : null;
+
         // List.Sort is unstable. The plan order of the feature makes the order total,
         // so the result does not depend on the order of the feature records.
         references.Sort((x, y) => x.Index != y.Index ? x.Index - y.Index : x.Order - y.Order);
@@ -272,16 +276,13 @@ internal readonly struct LookupFeatures
             bool required = false;
 
             // As in HarfBuzz, a lookup keeps a joiner when any of its features does, and the required feature keeps none.
-            // A lookup matches per syllable when any of its features does, and the required feature does not.
             ManualJoiners manualJoiners = ManualJoiners.None;
-            bool perSyllable = false;
             for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
             {
                 required |= references[end].Required;
                 if (!references[end].Required && references[end].Order >= 0)
                 {
                     manualJoiners |= features[references[end].Order].ManualJoiners;
-                    perSyllable |= features[references[end].Order].PerSyllable;
                 }
 
                 // Feature records that share a tag, or a feature that lists a lookup twice, repeat a reference.
@@ -291,10 +292,154 @@ internal readonly struct LookupFeatures
                 }
             }
 
+            // The flags and the references are both in the order of the lookup index, one flag for each lookup.
+            bool perSyllable = perSyllableFlags?[lookups.Count] ?? false;
             lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart, required, manualJoiners, perSyllable, positioning)));
         }
 
         return lookups;
+    }
+
+    private static bool HasPerSyllableFeature(IReadOnlyList<PlannedFeature> features)
+    {
+        for (int i = 0; i < features.Count; i++)
+        {
+            if (features[i].PerSyllable)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gets, for each lookup of a stage in the order of its index, whether it matches per syllable, as HarfBuzz 15.0.0
+    /// decides it. HarfBuzz adds an entry for each lookup of the required feature, and then of each feature in the order
+    /// of the tags. It sorts the entries by lookup index with <c>hb_qsort_inline</c>, and merges each lookup into its
+    /// first entry, which keeps its per-syllable flag. The required feature does not match per syllable.
+    /// </summary>
+    /// <param name="references">The references of the lookups of the stage, in the order of the language system.</param>
+    /// <param name="features">The features of the stage.</param>
+    /// <returns>The flag of each lookup.</returns>
+    private static List<bool> GetPerSyllableFlags(List<(ushort Index, int Order, Tag Feature, bool Required)> references, IReadOnlyList<PlannedFeature> features)
+    {
+        // Array.Sort is unstable. The place of the reference keeps the order of the records and of their lookups.
+        int[] order = new int[references.Count];
+        for (int i = 0; i < order.Length; i++)
+        {
+            order[i] = i;
+        }
+
+        Array.Sort(order, (x, y) =>
+        {
+            (_, _, Tag xFeature, bool xRequired) = references[x];
+            (_, _, Tag yFeature, bool yRequired) = references[y];
+            if (xRequired != yRequired)
+            {
+                return xRequired ? -1 : 1;
+            }
+
+            return !xRequired && xFeature != yFeature ? xFeature.Value.CompareTo(yFeature.Value) : x - y;
+        });
+
+        (ushort Index, bool PerSyllable)[] entries = new (ushort, bool)[order.Length];
+        for (int i = 0; i < order.Length; i++)
+        {
+            (ushort index, int planOrder, _, bool required) = references[order[i]];
+            entries[i] = (index, !required && planOrder >= 0 && features[planOrder].PerSyllable);
+        }
+
+        SortAsHarfBuzz(entries);
+
+        List<bool> flags = [];
+        for (int i = 0; i < entries.Length; i++)
+        {
+            if (i == 0 || entries[i].Index != entries[i - 1].Index)
+            {
+                flags.Add(entries[i].PerSyllable);
+            }
+        }
+
+        return flags;
+    }
+
+    /// <summary>
+    /// Sorts the entries by lookup index as <c>hb_qsort_inline</c> of HarfBuzz 15.0.0 does: a quicksort that stops at
+    /// ranges of 24 entries or fewer, and then one insertion sort. The quicksort is not stable, so this gives entries of
+    /// one lookup the order that HarfBuzz gives them.
+    /// </summary>
+    /// <param name="entries">The entries.</param>
+    private static void SortAsHarfBuzz(Span<(ushort Index, bool PerSyllable)> entries)
+    {
+        PartitionAsHarfBuzz(entries);
+        for (int i = 1; i < entries.Length; i++)
+        {
+            for (int j = i; j > 0 && entries[j - 1].Index > entries[j].Index; j--)
+            {
+                (entries[j - 1], entries[j]) = (entries[j], entries[j - 1]);
+            }
+        }
+    }
+
+    // The partitioning loop of hb_qsort_loop: a median-of-three pivot and a two-way Hoare partition.
+    private static void PartitionAsHarfBuzz(Span<(ushort Index, bool PerSyllable)> entries)
+    {
+        while (entries.Length > 24)
+        {
+            int last = entries.Length - 1;
+            int mid = entries.Length / 2;
+            if (entries[0].Index > entries[mid].Index)
+            {
+                (entries[0], entries[mid]) = (entries[mid], entries[0]);
+            }
+
+            if (entries[mid].Index > entries[last].Index)
+            {
+                (entries[mid], entries[last]) = (entries[last], entries[mid]);
+                if (entries[0].Index > entries[mid].Index)
+                {
+                    (entries[0], entries[mid]) = (entries[mid], entries[0]);
+                }
+            }
+
+            (entries[mid], entries[last - 1]) = (entries[last - 1], entries[mid]);
+            ushort pivot = entries[last - 1].Index;
+            int i = 0;
+            int j = last - 1;
+            while (true)
+            {
+                while (entries[++i].Index < pivot)
+                {
+                }
+
+                while (entries[--j].Index > pivot)
+                {
+                }
+
+                if (i >= j)
+                {
+                    break;
+                }
+
+                (entries[i], entries[j]) = (entries[j], entries[i]);
+            }
+
+            (entries[i], entries[last - 1]) = (entries[last - 1], entries[i]);
+
+            // Recurse on the smaller side, and go on with the larger.
+            int right = entries.Length - i - 1;
+            if (i < right)
+            {
+                PartitionAsHarfBuzz(entries.Slice(0, i));
+                entries = entries.Slice(i + 1);
+            }
+            else
+            {
+                PartitionAsHarfBuzz(entries.Slice(i + 1));
+                entries = entries.Slice(0, i);
+            }
+        }
     }
 
     /// <summary>

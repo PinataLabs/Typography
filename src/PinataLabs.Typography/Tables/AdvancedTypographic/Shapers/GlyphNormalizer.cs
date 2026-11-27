@@ -25,6 +25,8 @@ internal ref struct GlyphNormalizer
 
     private const int StackItems = 64;
 
+    private const int CombiningGraphemeJoiner = 0x034F;
+
     private static readonly Tag ThaiTag = Tag.Parse("thai");
 
     // The Arabic modifier marks sort before every other mark once they have moved, the ones below the base first.
@@ -97,6 +99,13 @@ internal ref struct GlyphNormalizer
             Tag scriptTag = this.fontMetrics.GetGSubTable().GetScriptTag(script);
             this.profile = ShaperFactory.GetNormalizationProfile(script, scriptTag);
             this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script, this.collection.TextOptions);
+
+            // As in HarfBuzz, this comes before the text is normalized.
+            if (ShaperFactory.BreaksInvalidVowelSequences(script, scriptTag))
+            {
+                this.runEnd += VowelConstraints.Apply(this.fontMetrics, this.collection, this.runStart, this.runEnd, script, this.hasFallbackFonts);
+            }
+
             if (this.profile.SplitsVowels)
             {
                 this.SplitVowels();
@@ -112,13 +121,13 @@ internal ref struct GlyphNormalizer
             this.runHasMarks = false;
             for (int i = index + 1; i < this.runEnd && !this.runHasMarks; i++)
             {
-                this.runHasMarks = CodePoint.IsMark(this.collection[i].CodePoint);
+                this.runHasMarks = CodePoint.IsMark(this.collection[i].UnicodePropertiesCodePoint);
             }
 
             while (index < this.runEnd)
             {
                 int end = index + 1;
-                while (end < this.runEnd && IsMarkOrNonStarter(this.collection[end].CodePoint))
+                while (end < this.runEnd && IsMarkOrNonStarter(this.collection[end].UnicodePropertiesCodePoint))
                 {
                     end++;
                 }
@@ -239,6 +248,13 @@ internal ref struct GlyphNormalizer
     {
         if (!this.CanNormalize(start, end))
         {
+            for (int i = start; i < end; i++)
+            {
+                GlyphShapingData data = this.collection[i];
+                items[i - start] = new Item(data.CodePoint, data.UnicodePropertiesCodePoint, data.GlyphId, i - start);
+            }
+
+            this.UnhideJoiners(start, end, items.Slice(0, end - start));
             return 0;
         }
 
@@ -248,8 +264,8 @@ internal ref struct GlyphNormalizer
         for (int i = start; i < end; i++)
         {
             GlyphShapingData data = this.collection[i];
-            bool hasMark = (i > this.runStart && CodePoint.IsMark(data.CodePoint))
-                || (i + 1 < this.runEnd && CodePoint.IsMark(this.collection[i + 1].CodePoint));
+            bool hasMark = (i > this.runStart && CodePoint.IsMark(data.UnicodePropertiesCodePoint))
+                || (i + 1 < this.runEnd && CodePoint.IsMark(this.collection[i + 1].UnicodePropertiesCodePoint));
 
             bool keepsGlyph = this.profile.Mode == NormalizationMode.None
                 || (this.profile.Mode == NormalizationMode.ComposedDiacritics && !hasMark);
@@ -260,7 +276,7 @@ internal ref struct GlyphNormalizer
 
             if (decomposed == 0)
             {
-                items[count++] = new Item(data.CodePoint, data.GlyphId, i - start);
+                items[count++] = new Item(data.CodePoint, data.UnicodePropertiesCodePoint, data.GlyphId, i - start);
                 continue;
             }
 
@@ -275,6 +291,7 @@ internal ref struct GlyphNormalizer
         {
             items = items.Slice(0, count);
             changed |= this.SortMarks(items);
+            this.UnhideJoiners(start, end, items);
             if (this.profile.Mode != NormalizationMode.None)
             {
                 int composed = this.Compose(items);
@@ -290,6 +307,26 @@ internal ref struct GlyphNormalizer
 
         this.collection.ReplaceNormalized(start, end - start, items.Slice(0, count));
         return count - (end - start);
+    }
+
+    /// <summary>
+    /// Unhides each COMBINING GRAPHEME JOINER of the cluster that keeps no mark from moving past another: the glyph after
+    /// it is a starter, or a mark that does not sort before the glyph before it. HarfBuzz checks this after it sorts the
+    /// marks and before it composes them. A joiner at either end of the run stays hidden.
+    /// </summary>
+    private readonly void UnhideJoiners(int start, int end, ReadOnlySpan<Item> items)
+    {
+        for (int i = 1; i < items.Length; i++)
+        {
+            if (items[i].CodePoint.Value != CombiningGraphemeJoiner || (i + 1 == items.Length && end == this.runEnd))
+            {
+                continue;
+            }
+
+            // The cluster ends before a starter.
+            byte next = i + 1 < items.Length ? items[i + 1].Order : (byte)0;
+            this.collection[start + items[i].Source].IsUnhiddenJoiner = next == 0 || items[i - 1].Order <= next;
+        }
     }
 
     private readonly bool CanNormalize(int start, int end)
@@ -398,7 +435,7 @@ internal ref struct GlyphNormalizer
         for (int i = 1; i < items.Length; i++)
         {
             Item item = items[i];
-            if (CodePoint.IsMark(item.CodePoint)
+            if (CodePoint.IsMark(item.UnicodePropertiesCodePoint)
                 && (starter == count - 1 || items[count - 1].Order < item.Order)
                 && this.profile.TryCompose((uint)items[starter].CodePoint.Value, (uint)item.CodePoint.Value, this.composesPresentationForms, out uint composed)
                 && this.TryGetGlyph(composed, out ushort glyphId))
@@ -553,9 +590,15 @@ internal ref struct GlyphNormalizer
     internal struct Item
     {
         public Item(CodePoint codePoint, ushort glyphId, int source)
+            : this(codePoint, codePoint, glyphId, source)
         {
-            uint data = UnicodeData.GetCombiningClassData((uint)codePoint.Value);
+        }
+
+        public Item(CodePoint codePoint, CodePoint unicodePropertiesCodePoint, ushort glyphId, int source)
+        {
+            uint data = UnicodeData.GetCombiningClassData((uint)unicodePropertiesCodePoint.Value);
             this.CodePoint = codePoint;
+            this.UnicodePropertiesCodePoint = unicodePropertiesCodePoint;
             this.GlyphId = glyphId;
             this.Source = source;
             this.Order = (byte)data;
@@ -563,6 +606,11 @@ internal ref struct GlyphNormalizer
         }
 
         public CodePoint CodePoint { get; }
+
+        /// <summary>
+        /// Gets the codepoint whose Unicode properties the glyph has. See <see cref="GlyphShapingData.UnicodePropertiesCodePoint"/>.
+        /// </summary>
+        public CodePoint UnicodePropertiesCodePoint { get; }
 
         public ushort GlyphId { get; }
 

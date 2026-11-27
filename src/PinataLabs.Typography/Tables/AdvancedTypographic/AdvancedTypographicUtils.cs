@@ -239,39 +239,18 @@ internal static class AdvancedTypographicUtils
     /// <returns>The rounded value.</returns>
     public static int Round(float value) => (int)MathF.Floor(value + 0.5F);
 
-    public static bool IsMarkGlyph(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
-    {
-        if (!fontMetrics.TryGetGlyphClass(glyphId, out GlyphClassDef? glyphClass) &&
-            !CodePoint.IsMark(shapingData.CodePoint))
-        {
-            return false;
-        }
-
-        if (glyphClass != GlyphClassDef.MarkGlyph)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     /// <summary>
-    /// Gets a value indicating whether the glyph is a mark that takes no advance. As in HarfBuzz, the GDEF table
-    /// says so when it has glyph classes. Without them, the glyph of a non-spacing mark is one.
+    /// Gets a value indicating whether the glyph is a mark: one that mark positioning attaches past, and that takes no
+    /// advance. As in HarfBuzz, the GDEF table says so when it has glyph classes. Without them, the glyph has the class
+    /// that <see cref="GetSynthesizedGlyphClass"/> gives.
     /// </summary>
     /// <param name="fontMetrics">The font of the glyph.</param>
     /// <param name="shapingData">The glyph.</param>
-    /// <returns><see langword="true"/> if the glyph loses its advance.</returns>
-    public static bool IsZeroWidthMark(FontMetrics fontMetrics, GlyphShapingData shapingData)
-    {
-        if (fontMetrics.TryGetGlyphClass(shapingData.GlyphId, out GlyphClassDef? glyphClass))
-        {
-            return glyphClass == GlyphClassDef.MarkGlyph;
-        }
-
-        return CodePoint.GetGeneralCategory(shapingData.CodePoint) == UnicodeCategory.NonSpacingMark
-            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)shapingData.CodePoint.Value);
-    }
+    /// <returns><see langword="true"/> if the glyph is a mark.</returns>
+    public static bool IsMarkGlyph(FontMetrics fontMetrics, GlyphShapingData shapingData)
+        => fontMetrics.TryGetGlyphClass(shapingData.GlyphId, out GlyphClassDef? glyphClass)
+            ? glyphClass == GlyphClassDef.MarkGlyph
+            : GetSynthesizedGlyphClass(shapingData) == GlyphClassDef.MarkGlyph;
 
     public static GlyphShapingClass GetGlyphShapingClass(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
     {
@@ -291,14 +270,26 @@ internal static class AdvancedTypographicUtils
         }
         else
         {
-            // TODO: We may have to store each codepoint. FontKit checks all.
-            isMark = CodePoint.IsMark(shapingData.CodePoint);
-            isBase = !isMark;
-            isLigature = shapingData.CodePointCount > 1;
+            GlyphClassDef synthesized = GetSynthesizedGlyphClass(shapingData);
+            isMark = synthesized == GlyphClassDef.MarkGlyph;
+            isBase = synthesized == GlyphClassDef.BaseGlyph;
+            isLigature = synthesized == GlyphClassDef.LigatureGlyph;
         }
 
         return new GlyphShapingClass(isMark, isBase, isLigature, markAttachmentType);
     }
+
+    /// <summary>
+    /// Gets the class that HarfBuzz gives a glyph in a font without glyph classes. It is the class that GSUB gave the
+    /// glyph, if any. Otherwise, as in hb_synthesize_glyph_classes, the glyph of a nonspacing mark that is not default
+    /// ignorable is a mark, and any other glyph is a base. So a spacing or enclosing mark, and the combining grapheme
+    /// joiner, are bases.
+    /// </summary>
+    private static GlyphClassDef GetSynthesizedGlyphClass(GlyphShapingData shapingData)
+        => shapingData.SubstitutedGlyphClass ?? (CodePoint.GetGeneralCategory(shapingData.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark
+            && !UnicodeUtility.IsDefaultIgnorableCodePoint((uint)shapingData.UnicodePropertiesCodePoint.Value)
+            ? GlyphClassDef.MarkGlyph
+            : GlyphClassDef.BaseGlyph);
 
     private static bool MatchGlyph(ushort component, GlyphShapingData data) => component == data.GlyphId;
 

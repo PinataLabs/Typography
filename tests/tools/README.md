@@ -615,6 +615,10 @@ It builds two fonts that have no GSUB table:
   after one of them stays in the syllable of the letter before it. The `joiners` rows hold such texts.
 - `SyllablesInvalid.ttf` has the characters of `IndicShapingInvalidCluster.txt`. The `invalid` rows hold each
   sequence of that file, which HarfBuzz breaks with a dotted circle.
+- `SyllablesCircles.ttf`, `SyllablesCircleProperties.ttf` and `SyllablesNoCircle.ttf` show that the dotted circle of
+  such a sequence has the Unicode properties of the character after it. The `circles` rows hold texts where that
+  matters: how the circle sorts, whether a lookup that ignores marks skips it, whether the sign after it takes init,
+  and whether mark positioning attaches past it. The first two fonts have a GSUB table.
 
 HarfBuzz shapes with `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`, so it keeps the joiners in its output as the
 library does. `SyllableTests` checks that the library gives the same glyphs and positions.
@@ -788,6 +792,28 @@ repository root:
 
 ```
 python tests/tools/generate_lookup_flags_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Marks without glyph classes reference
+
+`generate_marks_without_glyph_classes_reference.py` builds
+`tests/PinataLabs.Typography.Tests/Fonts/MarksWithoutGlyphClasses.ttf` and writes `MarksWithoutGlyphClasses.harfbuzz.json`
+next to it. The font has no GDEF table, so HarfBuzz gives each glyph the class of its character: a nonspacing mark that
+is not default ignorable is a mark, any other character is a base, and a ligature of components that are not all marks
+is a ligature. Its texts attach accents with mark, mkmk and mark-to-ligature lookups, form ligatures next to a spacing
+mark and a combining grapheme joiner, and attach an accent after the glyphs of a multiple substitution. It also builds
+`MarksWithoutGlyphClassesFallback.ttf`, which has no GPOS table, so HarfBuzz places an accent after a ligature itself.
+The script says what each text tests. The reference holds the glyph ID and the place of each glyph that HarfBuzz gives.
+
+`MarksWithoutGlyphClassesTests` checks that the library puts the same glyphs in the same places.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_marks_without_glyph_classes_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

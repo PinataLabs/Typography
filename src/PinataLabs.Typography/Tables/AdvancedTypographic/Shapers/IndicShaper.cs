@@ -162,7 +162,8 @@ internal sealed class IndicShaper : DefaultShaper
             values[i - index] = IndicShapingCategory(codePoint);
         }
 
-        int syllable = 0;
+        // No syllable of another run has one of these numbers.
+        int syllable = substitutionCollection.TakeSyllableNumbers(count);
         int last = 0;
         foreach (StateMatch match in StateMachine.Match(values))
         {
@@ -493,10 +494,8 @@ internal sealed class IndicShaper : DefaultShaper
             // For old-style Indic script tags, move the first post-base Halant after
             // last consonant.
             //
-            // Reports suggest that in some scripts Uniscribe does this only if there
-            // is *not* a Halant after last consonant already (eg. Kannada), while it
-            // does it unconditionally in other scripts (eg. Malayalam).  We don't
-            // currently know about other scripts, so we single out Malayalam for now.
+            // As in HarfBuzz, Kannada does this only if there is *not* a Halant after
+            // the last consonant already, and every other script does it unconditionally.
             //
             // Kannada test case:
             // U+0C9A,U+0CCD,U+0C9A,U+0CCD
@@ -508,7 +507,7 @@ internal sealed class IndicShaper : DefaultShaper
             // With lohit-ttf-20121122/Lohit-Malayalam.ttf
             if (this.isOldSpec)
             {
-                bool disallowDoubleHalants = this.ScriptClass != ScriptClass.Malayalam;
+                bool disallowDoubleHalants = this.ScriptClass == ScriptClass.Kannada;
                 for (int i = basePosition + 1; i < end; i++)
                 {
                     if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.H)
@@ -722,7 +721,7 @@ internal sealed class IndicShaper : DefaultShaper
                 {
                     if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.Ra &&
                         substitutionCollection[i + 1].IndicShapingEngineInfo?.Category == Categories.H &&
-                        (i + 1 == basePosition || substitutionCollection[i + 2].IndicShapingEngineInfo?.Category == Categories.ZWJ))
+                        (i + 2 == basePosition || substitutionCollection[i + 2].IndicShapingEngineInfo?.Category != Categories.ZWJ))
                     {
                         substitutionCollection.EnableShapingFeature(i, BlwfTag);
                         substitutionCollection.EnableShapingFeature(i + 1, BlwfTag);
@@ -1371,7 +1370,7 @@ internal sealed class IndicShaper : DefaultShaper
             // Apply 'init' to the Left Matra if it's a word start: as in HarfBuzz, at the start of the run, which HarfBuzz
             // shapes in a buffer of its own, or after a character that does not continue a word.
             if (substitutionCollection[start].IndicShapingEngineInfo?.Position == Positions.Pre_M &&
-                (start == index || !ContinuesWord(substitutionCollection[start - 1].CodePoint)))
+                (start == index || !ContinuesWord(substitutionCollection[start - 1].UnicodePropertiesCodePoint)))
             {
                 substitutionCollection.EnableShapingFeature(start, InitTag);
             }

@@ -404,7 +404,7 @@ internal class GPosTable : Table
         {
             int currentIndex = i + index;
             GlyphShapingData data = collection[currentIndex];
-            if (collection.ShouldProcess(fontMetrics, currentIndex) && AdvancedTypographicUtils.IsZeroWidthMark(fontMetrics, data))
+            if (collection.ShouldProcess(fontMetrics, currentIndex) && AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data))
             {
                 data.Bounds.Width = 0;
                 data.Bounds.Height = 0;

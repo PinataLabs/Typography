@@ -1,0 +1,24 @@
+{
+  "harfbuzz": "15.0.0",
+  "rows": [
+    ["MarksWithoutGlyphClasses.ttf","a\u0301\u0300",[[1,0,0],[9,100,500],[8,150,1400]]],
+    ["MarksWithoutGlyphClasses.ttf","a\u0300\u0301",[[1,0,0],[8,100,500],[9,100,500]]],
+    ["MarksWithoutGlyphClasses.ttf","\u0301a\u0300",[[13,0,0],[8,500,500]]],
+    ["MarksWithoutGlyphClasses.ttf","\u0301ab",[[13,0,0],[2,600,0]]],
+    ["MarksWithoutGlyphClasses.ttf","\u0301b",[[9,0,0],[2,0,0]]],
+    ["MarksWithoutGlyphClasses.ttf","\u0301\u034fa",[[13,0,0]]],
+    ["MarksWithoutGlyphClasses.ttf","b\ud834\udd65b",[[2,0,0],[12,600,0],[2,1200,0]]],
+    ["MarksWithoutGlyphClasses.ttf","b\u0301b",[[15,0,0],[9,600,0]]],
+    ["MarksWithoutGlyphClasses.ttf","b\u034fb",[[15,0,0]]],
+    ["MarksWithoutGlyphClasses.ttf","b\u0301\u034f\u0316b",[[2,0,0],[9,200,500],[10,600,0],[2,600,0]]],
+    ["MarksWithoutGlyphClasses.ttf","a\u034f\u0301",[[1,0,0],[9,100,500]]],
+    ["MarksWithoutGlyphClasses.ttf","a\u0301\u034f\u0300",[[1,0,0],[9,100,500],[8,150,1400]]],
+    ["MarksWithoutGlyphClasses.ttf","a\ud834\udd65\u0301",[[1,0,0],[12,600,0],[9,1200,0]]],
+    ["MarksWithoutGlyphClasses.ttf","c\u0301",[[4,0,0],[5,600,0],[9,1000,500]]],
+    ["MarksWithoutGlyphClasses.ttf","f\u0301",[[4,0,0],[7,600,0],[9,300,500]]],
+    ["MarksWithoutGlyphClasses.ttf","a\u0301b\u0300",[[14,0,0],[9,110,600],[8,710,600]]],
+    ["MarksWithoutGlyphClassesFallback.ttf","\u0301a\u0300",[[5,0,0],[3,450,62]]],
+    ["MarksWithoutGlyphClassesFallback.ttf","b\u0300",[[2,0,0],[3,300,62]]],
+    ["MarksWithoutGlyphClassesFallback.ttf","\u0301\u0300",[[4,-600,0],[3,-600,0]]]
+  ]
+}
