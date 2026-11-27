@@ -113,7 +113,6 @@ public sealed class BidiParagraph
 
         var paragraphLevels = (sbyte[])resolvedLevels.Clone();
         BidiAlgorithm.ResetWhitespaceLevels(types, paragraphLevels, paragraphLevel);
-        BidiAlgorithm.AssignLevelsToRemovedCharacters(types, paragraphLevels);
 
         var levels = new byte[text.Length];
         for (int i = 0; i < levels.Length; i++)
@@ -159,9 +158,6 @@ public sealed class BidiParagraph
             new ReadOnlyArraySlice<BidiCharacterType>(this.types, lineStart, lineLength),
             lineLevels,
             (sbyte)this.ParagraphLevel);
-        BidiAlgorithm.AssignLevelsToRemovedCharacters(
-            new ReadOnlyArraySlice<BidiCharacterType>(this.types, lineStart, lineLength),
-            lineLevels);
 
         List<BidiLevelRun> runs = this.GetLogicalRuns(lineStart, lineLevels);
         OrderVisually(runs);
