@@ -12,65 +12,71 @@ using PinataLabs.Typography.Unicode;
 namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
-/// ScriptRunContext.ttf has GSUB and GPOS lookups that apply only when a glyph of another script is next to the glyph
-/// they change: a context, a ligature, a pair, a mark and its base, and a cursive join. A caller of HarfBuzz shapes each
-/// script run in a buffer of its own, so none of them applies across the boundary of two runs (issue #194). In one
-/// buffer of one script, each of them applies.
+/// ScriptRunContext.ttf has GSUB and GPOS lookups that apply only when a glyph of another script or of the other
+/// direction is next to the glyph they change: a context, a ligature, a pair, a mark and its base, and a cursive join. A
+/// caller of HarfBuzz shapes each run of one script and one direction in a buffer of its own, so none of them applies
+/// across the boundary of two runs (issue #194). In one buffer of one script, each of them applies.
 /// </summary>
 public class ScriptRunContextTests
 {
+    private const string ScriptRuns = "";
+
+    private const string BidiRuns = "bidi";
+
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
     private static readonly Dictionary<string, ScriptClass> Scripts = new()
     {
         ["Latn"] = ScriptClass.Latin,
         ["Hani"] = ScriptClass.Han,
+        ["Hebr"] = ScriptClass.Hebrew,
     };
-
-    private static readonly Font Font = new FontCollection().Add(TestFonts.ScriptRunContextFile).CreateFont(12);
 
     private static readonly JsonElement[][] Rows = JsonSerializer.Deserialize<Reference>(
         File.ReadAllText(TestFonts.ScriptRunContextHarfBuzzReference),
         Options)!.Rows;
 
-    // Each row is a case, a text, the script of one buffer or "" for the script runs, and the glyph ID, x and y of each
-    // glyph. A text without a script is split into script runs, and a text with one is a single run.
+    // Each row is a case, a text, how the text is split, and the glyph ID, x and y of each glyph. TextShaper.Shape
+    // splits a text without a script into script runs, and does not split a text with one. It does not split a text
+    // by direction.
     [Test]
-    public async Task GlyphsHaveTheIdsAndPlacesThatHarfBuzzGives()
+    public async Task ShaperGivesTheGlyphsAndPlacesThatHarfBuzzGives()
     {
+        Font font = new FontCollection().Add(TestFonts.ScriptRunContextFile).CreateFont(12);
         List<string> different = [];
-        foreach (JsonElement[] row in Rows)
+        foreach (JsonElement[] row in Rows.Where(row => row[2].GetString() != BidiRuns))
         {
             string text = row[1].GetString()!;
-            string script = row[2].GetString()!;
-            ShapingOptions options = new() { Script = script.Length == 0 ? null : Scripts[script] };
-            string expected = string.Join(' ', row[3].EnumerateArray().Select(g => $"{g[0]}@{g[1]},{g[2]}"));
-            string actual = string.Join(' ', Places(TextShaper.Shape(Font, text, options)).Select(g => $"{g.Id}@{g.X},{g.Y}"));
-            if (expected != actual)
+            string split = row[2].GetString()!;
+            ShapingOptions options = new() { Script = split == ScriptRuns ? null : Scripts[split] };
+            string actual = Describe(Places(TextShaper.Shape(font, text, options)));
+            if (Describe(row[3]) != actual)
             {
-                different.Add($"{row[0].GetString()} {(script.Length == 0 ? "runs" : script)} expected [{expected}] actual [{actual}]");
+                different.Add($"{row[0].GetString()} {Name(split)} expected [{Describe(row[3])}] actual [{actual}]");
             }
         }
 
         await Assert.That(different).IsEmpty();
     }
 
-    // The layout splits the text into script runs as well.
+    // The layout splits the text into runs of one script and one direction.
     [Test]
-    public async Task LayoutHasTheGlyphsThatHarfBuzzGivesTheScriptRuns()
+    public async Task LayoutGivesTheGlyphsAndPlacesThatHarfBuzzGivesTheRuns()
     {
+        // The layout scales font units by size / (72 * UnitsPerEm), so at this size it keeps them unscaled.
+        Font font = new FontCollection().Add(TestFonts.ScriptRunContextFile).CreateFont(72 * 1000);
         List<string> different = [];
-        foreach (JsonElement[] row in Rows.Where(row => row[2].GetString()!.Length == 0))
+        foreach (JsonElement[] row in Rows.Where(row => row[2].GetString() is ScriptRuns or BidiRuns))
         {
             string text = row[1].GetString()!;
-            int[] expected = row[3].EnumerateArray().Select(g => g[0].GetInt32()).ToArray();
-            int[] actual = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(Font))
-                .Select(g => (int)g.Glyph.GlyphMetrics.GlyphId)
-                .ToArray();
-
-            if (!actual.SequenceEqual(expected))
+            IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font));
+            string actual = Describe(layout.Select(g => (
+                (int)g.Glyph.GlyphMetrics.GlyphId,
+                (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
+                (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y))));
+            if (Describe(row[3]) != actual)
             {
-                different.Add($"{row[0].GetString()} expected [{string.Join(' ', expected)}] actual [{string.Join(' ', actual)}]");
+                different.Add($"{row[0].GetString()} {Name(row[2].GetString()!)} expected [{Describe(row[3])}] actual [{actual}]");
             }
         }
 
@@ -87,6 +93,14 @@ public class ScriptRunContextTests
             pen += glyph.XAdvance;
         }
     }
+
+    private static string Describe(JsonElement glyphs)
+        => Describe(glyphs.EnumerateArray().Select(g => (g[0].GetInt32(), g[1].GetInt32(), g[2].GetInt32())));
+
+    private static string Describe(IEnumerable<(int Id, int X, int Y)> glyphs)
+        => string.Join(' ', glyphs.Select(g => $"{g.Id}@{g.X},{g.Y}"));
+
+    private static string Name(string split) => split == ScriptRuns ? "runs" : split;
 
     private sealed class Reference
     {

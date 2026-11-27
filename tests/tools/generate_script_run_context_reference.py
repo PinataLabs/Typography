@@ -26,10 +26,15 @@ the start of the text. Each case of the font has a lookup that applies only when
   Latin g after Greek epsilon and h before Greek zeta, and widens n of the input n theta.
 * MarkToBase, MarkToMark and MarkToLigature: a Cyrillic mark after a Latin base, a Latin mark, and a Latin ligature.
 * Cursive: Latin m and Greek eta join.
+* DirectionChange and DirectionChangePair: a caller also splits text where its direction changes, as the Unicode
+  Bidirectional Algorithm resolves it. A digit after a Hebrew letter is a run from left to right in a run from right
+  to left. A calt lookup gives Hebrew alef its alternate before digit one, and GPOS moves digit two after Hebrew bet.
 
-Each text is shaped as the script runs of a caller, and, for the cases that a script names, also in one buffer of that
-script, which shows that the lookup applies. Each row holds the case, the text, the ISO 15924 code of the script of one
-buffer or "" for the script runs, and the glyph ID, x and y of each glyph. ScriptRunContextTests reads it.
+Each text is shaped as the runs of a caller, and, for the cases that a script names, also in one buffer of that
+script, which shows that the lookup applies. Each row holds the case, the text, how the text is split, and the glyph
+ID, x and y of each glyph, from left to right. The text is split into script runs (""), into script runs and runs of
+one direction ("bidi"), or not at all, in one buffer of the script that an ISO 15924 code names. ScriptRunContextTests
+reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
@@ -44,7 +49,8 @@ from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 FILE_NAME = "ScriptRunContext.ttf"
 REFERENCE = os.path.join(FONTS, "ScriptRunContext.harfbuzz.json")
 
-# The case, its text, and the script of one buffer that shows that the lookup applies, if any.
+# The case, its text, and the script of one buffer that shows that the lookup applies, if any. Each text is split into
+# script runs, which run from left to right.
 CASES = [
     ("BrahmiBefore", [0x11005, 0x0915], "Latn"),
     ("BrahmiAfter", [0x0915, 0x11005], "Latn"),
@@ -66,7 +72,12 @@ CASES = [
     ("Cursive", [0x006D, 0x03B7], "Latn"),
 ]
 
-MARKS = [0x0301, 0x0483, 0x0484, 0x0487]
+# The case, its text, the script of one buffer, and the runs of the text from left to right: their start, end and
+# direction. In a paragraph from right to left, a digit after a letter is a run from left to right at its left.
+BIDI_CASES = [
+    ("DirectionChange", [0x05D0, 0x0031], "Hebr", [(1, 2, "ltr"), (0, 1, "rtl")]),
+    ("DirectionChangePair", [0x05D1, 0x0032], "Hebr", [(1, 2, "ltr"), (0, 1, "rtl")]),
+]
 
 FEATURES = """
 languagesystem DFLT dflt;
@@ -77,6 +88,7 @@ languagesystem dev2 dflt;
 languagesystem brah dflt;
 languagesystem hani dflt;
 languagesystem kana dflt;
+languagesystem hebr dflt;
 
 table GDEF {
     GlyphClassDef , [u006B_u006C], [u0301 u0483 u0484 u0487], ;
@@ -123,6 +135,10 @@ feature calt {
     lookup LIGATE_KL {
         sub u006B u006C by u006B_u006C;
     } LIGATE_KL;
+
+    lookup DIRECTION {
+        sub u05D0' u0031 by u05D0.alt;
+    } DIRECTION;
 } calt;
 
 feature kern {
@@ -138,6 +154,10 @@ feature kern {
     lookup CHAINED_INPUT {
         pos u006E' lookup N_MOVE u03B8';
     } CHAINED_INPUT;
+
+    lookup DIRECTION_PAIR {
+        pos u05D1 <0 0 0 0> u0032 <100 0 0 0>;
+    } DIRECTION_PAIR;
 } kern;
 
 markClass u0483 <anchor 0 500> @TOP;
@@ -171,13 +191,13 @@ feature curs {
 
 EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
-    "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C",
+    "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u05D0.alt",
 ]
 
 
 def itemize(text):
-    """Splits the text into script runs, as the library does. A character of no script of its own joins the run before
-    it, or the first run at the start of the text."""
+    """Splits the text into script runs from left to right, as the library does. A character of no script of its own
+    joins the run before it, or the first run at the start of the text."""
     runs = []
     start = 0
     script = None
@@ -186,25 +206,25 @@ def itemize(text):
         if current in ("Zyyy", "Zinh", "Zzzz"):
             continue
         if script is not None and current != script:
-            runs.append((start, i))
+            runs.append((start, i, "ltr"))
             start = i
         script = current
-    runs.append((start, len(text)))
+    runs.append((start, len(text), "ltr"))
     return runs
 
 
 def shape(font, code_points, runs, script=None):
     """Shapes each run in a buffer of its own, with the rest of the text as context, and gives the glyph ID, x and y of
-    each glyph, in font units from the start of the line. Every run of these texts runs from left to right."""
+    each glyph, in font units from the left of the line. The runs are in their order from left to right."""
     glyphs = []
     x = 0
-    for start, end in runs:
+    for start, end, direction in runs:
         buffer = hb.Buffer()
         buffer.add_codepoints(code_points, start, end - start)
         if script:
             buffer.script = script
+        buffer.direction = direction
         buffer.guess_segment_properties()
-        assert buffer.direction == "ltr", buffer.direction
         hb.shape(font, buffer)
         for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
             glyphs.append([info.codepoint, x + position.x_offset, position.y_offset])
@@ -213,16 +233,16 @@ def shape(font, code_points, runs, script=None):
 
 
 def main():
-    code_points = sorted({c for _, text, _ in CASES for c in text})
+    code_points = sorted({c for case in CASES + BIDI_CASES for c in case[1]})
     path = build_font(FILE_NAME, code_points, FEATURES, extra_glyphs=EXTRA_GLYPHS)
 
     # Check that the lookups have the types that the cases test.
     # The lookups of type 1 are B_ALT, N_MOVE and those of the inline substitutions and positions.
     font = TTFont(path)
     types = [lookup.LookupType for lookup in font["GSUB"].table.LookupList.Lookup]
-    assert types == [1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4], types
+    assert types == [1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 1], types
     types = [lookup.LookupType for lookup in font["GPOS"].table.LookupList.Lookup]
-    assert types == [1, 2, 8, 1, 8, 4, 5, 6, 3], types
+    assert types == [1, 2, 8, 1, 8, 2, 4, 5, 6, 3], types
 
     font = load_font(path)
     rows = []
@@ -230,7 +250,12 @@ def main():
         string = "".join(map(chr, text))
         rows.append([case, string, "", shape(font, text, itemize(string))])
         if script:
-            rows.append([case, string, script, shape(font, text, [(0, len(text))], script)])
+            rows.append([case, string, script, shape(font, text, [(0, len(text), "ltr")], script)])
+
+    for case, text, script, runs in BIDI_CASES:
+        string = "".join(map(chr, text))
+        rows.append([case, string, "bidi", shape(font, text, runs, script)])
+        rows.append([case, string, script, shape(font, text, [(0, len(text), "rtl")], script)])
 
     write_reference(REFERENCE, rows)
 
