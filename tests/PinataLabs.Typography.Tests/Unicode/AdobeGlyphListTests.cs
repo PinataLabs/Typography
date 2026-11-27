@@ -90,6 +90,29 @@ public class AdobeGlyphListTests
         await Assert.That(different).IsEmpty();
     }
 
+    // The list maps Omega, Delta and mu to the compatibility characters, as aglfn.txt does, and omegagreek, deltagreek and
+    // mugreek to the Greek letters. A caller that wants the letters normalizes the result (NFC for Omega only, NFKC for mu).
+    [Test]
+    [Arguments("Omega", "Ω")]
+    [Arguments("Delta", "∆")]
+    [Arguments("mu", "µ")]
+    [Arguments("Omegagreek", "Ω")]
+    [Arguments("Deltagreek", "Δ")]
+    [Arguments("mugreek", "μ")]
+    public async Task MapsADoubleMappedNameToItsListedCharacter(string glyphName, string expected)
+    {
+        await Assert.That(AdobeGlyphList.TryGetUnicode(glyphName, out string text)).IsTrue();
+        await Assert.That(text).IsEqualTo(expected);
+    }
+
+    [Test]
+    [Arguments(0x2126, "Omega")]
+    [Arguments(0x2206, "Delta")]
+    [Arguments(0x00B5, "mu")]
+    [Arguments(0x03A9, "uni03A9")]
+    public async Task NamesTheDoubleMappedCharactersAsAglfnDoes(int codePoint, string expected)
+        => await Assert.That(AdobeGlyphList.GetGlyphName(codePoint)).IsEqualTo(expected);
+
     [Test]
     [Arguments("A", "A")]
     [Arguments("Euro", "€")]

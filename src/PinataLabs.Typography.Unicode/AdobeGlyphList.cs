@@ -12,9 +12,19 @@ namespace PinataLabs.Typography.Unicode;
 /// Specification (AGL).
 /// </summary>
 /// <remarks>
+/// <para>
 /// The Adobe Glyph List gives several names to some code points, such as <c>space</c>, <c>spacehackarabic</c> and
 /// <c>nbspace</c>. <see cref="GetGlyphName"/> returns one preferred name for a code point: the name that aglfn.txt, the
 /// Adobe Glyph List for New Fonts, gives it, or a <c>uniXXXX</c> or <c>uXXXXX</c> name when aglfn.txt has none.
+/// </para>
+/// <para>
+/// A few names map to a compatibility character, not to the letter that a reader expects, and aglfn.txt agrees:
+/// <c>Omega</c> is U+2126 (OHM SIGN), <c>Delta</c> is U+2206 (INCREMENT) and <c>mu</c> is U+00B5 (MICRO SIGN).
+/// <c>Omegagreek</c>, <c>Deltagreek</c> and <c>mugreek</c> are the Greek letters U+03A9, U+0394 and U+03BC. The result
+/// is the listed character so that <see cref="GetGlyphName"/> reads it back. Text extraction that wants the letters
+/// normalizes the text: U+2126 becomes U+03A9 under NFC, and U+00B5 becomes U+03BC under NFKC. U+2206 has no
+/// normalization to U+0394.
+/// </para>
 /// </remarks>
 public static class AdobeGlyphList
 {

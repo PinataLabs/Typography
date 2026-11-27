@@ -13,7 +13,9 @@ public class GlyphNameEncodingsTests
 {
     public static IEnumerable<SimpleFontEncoding> Encodings() => Enum.GetValues<SimpleFontEncoding>();
 
-    // The entries of the data files: Annex D, with its notes, and the AFM files of the core fonts.
+    // The entries of the data files: Annex D, with its notes, and the AFM files of the core fonts. This compares the
+    // generated tables with the files they were generated from, so it guards against drift of the generator. It does not
+    // check the data files themselves: the rows below and the CFF tables do that, from other sources.
     [Test]
     [MethodDataSource(nameof(Encodings))]
     public async Task EveryCodeHasTheGlyphNameOfItsSource(SimpleFontEncoding encoding)
@@ -130,6 +132,53 @@ public class GlyphNameEncodingsTests
     [Arguments(SimpleFontEncoding.ZapfDingbats, 0xFE, "a191")]
     public async Task HasTheGlyphNameOfAnnexD(SimpleFontEncoding encoding, byte code, string expected)
         => await Assert.That(GlyphNameEncodings.GetGlyphName(encoding, code)).IsEqualTo(expected);
+
+    // Whole rows of ISO 32000-1 Annex D, written out here and not read from the data files.
+    [Test]
+    [Arguments(SimpleFontEncoding.WinAnsi, 0x80, "Euro bullet quotesinglbase florin quotedblbase ellipsis dagger daggerdbl circumflex perthousand Scaron guilsinglleft OE bullet Zcaron bullet")]
+    [Arguments(SimpleFontEncoding.WinAnsi, 0x90, "bullet quoteleft quoteright quotedblleft quotedblright bullet endash emdash tilde trademark scaron guilsinglright oe bullet zcaron Ydieresis")]
+    [Arguments(SimpleFontEncoding.MacRoman, 0x80, "Adieresis Aring Ccedilla Eacute Ntilde Odieresis Udieresis aacute agrave acircumflex adieresis atilde aring ccedilla eacute egrave")]
+    [Arguments(SimpleFontEncoding.Symbol, 0x41, "Alpha Beta Chi Delta Epsilon Phi Gamma Eta Iota theta1 Kappa Lambda Mu Nu Omicron Pi Theta Rho Sigma Tau Upsilon sigma1 Omega Xi Psi Zeta")]
+    [Arguments(SimpleFontEncoding.ZapfDingbats, 0x21, "a1 a2 a202 a3 a4 a5 a119 a118 a117 a11 a12 a13 a14 a15 a16")]
+    [Arguments(SimpleFontEncoding.Standard, 0xA1, "exclamdown cent sterling fraction yen florin section currency quotesingle quotedblleft guillemotleft guilsinglleft guilsinglright fi fl")]
+    public async Task HasTheRowOfAnnexD(SimpleFontEncoding encoding, int firstCode, string names)
+    {
+        string[] expected = names.Split(' ');
+        string[] actual = new string[expected.Length];
+        for (int i = 0; i < actual.Length; i++)
+        {
+            actual[i] = GlyphNameEncodings.GetGlyphName(encoding, (byte)(firstCode + i)) ?? "(none)";
+        }
+
+        await Assert.That(string.Join(' ', actual)).IsEqualTo(names);
+    }
+
+    // The CFF Expert encoding and MacExpert are different encodings, but they start with the same run: from the space to
+    // 0x43 they name the same glyphs at the codes that both have. Past it they diverge, such as 0x44 (Ethsmall, dsuperior).
+    [Test]
+    public async Task MacExpertAgreesWithTheCffExpertEncodingInTheirCommonRun()
+    {
+        List<string> different = [];
+        int shared = 0;
+        for (int code = 0x20; code < 0x44; code++)
+        {
+            ushort sid = CffPredefinedTables.ExpertEncoding[code];
+            string? pdf = GlyphNameEncodings.GetGlyphName(SimpleFontEncoding.MacExpert, (byte)code);
+            if (sid == 0 || pdf is null)
+            {
+                continue;
+            }
+
+            shared++;
+            if (pdf != CffStandardStrings.GetName(sid))
+            {
+                different.Add($"{code:X2} MacExpert {pdf} CFF {CffStandardStrings.GetName(sid)}");
+            }
+        }
+
+        await Assert.That(shared).IsGreaterThan(20);
+        await Assert.That(different).IsEmpty();
+    }
 
     [Test]
     [Arguments(SimpleFontEncoding.Standard, 0x00)]
