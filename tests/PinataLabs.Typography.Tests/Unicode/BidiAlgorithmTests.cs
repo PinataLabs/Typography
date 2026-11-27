@@ -169,12 +169,12 @@ public class BidiAlgorithmTests
     }
 
     [Test]
-    [Arguments("ab­", new sbyte[] { 2, 2, 1 })]
-    [Arguments("ab ­", new sbyte[] { 2, 2, 1, 1 })]
-    [Arguments("ab­ ", new sbyte[] { 2, 2, 1, 1 })]
-    [Arguments("ab­\tcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
-    [Arguments("ab\t­cd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
-    [Arguments("ab­cd", new sbyte[] { 2, 2, 2, 2, 2 })]
+    [Arguments("ab\u00AD", new sbyte[] { 2, 2, 1 })]
+    [Arguments("ab \u00AD", new sbyte[] { 2, 2, 1, 1 })]
+    [Arguments("ab\u00AD ", new sbyte[] { 2, 2, 1, 1 })]
+    [Arguments("ab\u00AD\tcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab\t\u00ADcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab\u00ADcd", new sbyte[] { 2, 2, 2, 2, 2 })]
     [Arguments("ab\u202C", new sbyte[] { 2, 2, 1 })]
     [Arguments("ab\u202A\tcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
     [Arguments("ab\u202C\u202A \tcd", new sbyte[] { 2, 2, 1, 1, 1, 1, 2, 2 })]
