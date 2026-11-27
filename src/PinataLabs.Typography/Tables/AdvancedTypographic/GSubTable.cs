@@ -179,7 +179,7 @@ internal class GSubTable : Table
             // Plan substitution features for each glyph.
             // Shapers can adjust the count during initialization and feature processing so we must capture
             // the current count to allow resetting indexes and processing counts.
-            ResolveVerticalForms(fontMetrics, this, collection, index, count, current);
+            ResolveVerticalForms(fontMetrics, this, collection, index, count, current, shaper.DisabledFeatureTags);
             int collectionCount = collection.Count;
             shaper.Plan(collection, index, count);
             int delta = collection.Count - collectionCount;
@@ -238,7 +238,8 @@ internal class GSubTable : Table
         GlyphSubstitutionCollection collection,
         int index,
         int count,
-        ScriptClass script)
+        ScriptClass script,
+        IReadOnlyList<Tag> disabledFeatures)
     {
         if (!collection.TextOptions.LayoutMode.IsVerticalMixed())
         {
@@ -248,7 +249,7 @@ internal class GSubTable : Table
         Tag vert = Tag.Parse("vert");
         PlannedFeature[] vertOnly = [new(vert)];
         TextOptions options = collection.TextOptions;
-        if (!table.TryGetFeatureLookups(vert, script, options.Language, options.DisabledFeatureTags, out _))
+        if (!table.TryGetFeatureLookups(vert, script, options.Language, disabledFeatures, out _))
         {
             return;
         }
@@ -271,7 +272,7 @@ internal class GSubTable : Table
             int probeIndex = 0;
             int probeCollectionCount = 1;
             int operations = 0;
-            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, options.DisabledFeatureTags, false, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
+            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, disabledFeatures, false, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
             data.HasVerticalForm = probe[0].GlyphId != data.GlyphId;
         }
     }
