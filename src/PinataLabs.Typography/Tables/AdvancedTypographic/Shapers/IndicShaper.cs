@@ -249,6 +249,7 @@ internal sealed class IndicShaper : DefaultShaper
         int max = index + count;
         int start = index;
         int end = NextSyllable(substitutionCollection, index, max);
+        int[] sources = [];
         while (start < max)
         {
             GlyphShapingData data = substitutionCollection[start];
@@ -613,12 +614,12 @@ internal sealed class IndicShaper : DefaultShaper
                 }
             }
 
-            substitutionCollection.Sort(start, end, (a, b) =>
+            if (sources.Length < end - start)
             {
-                int pa = a.IndicShapingEngineInfo?.Position != null ? (int)a.IndicShapingEngineInfo.Position : 0;
-                int pb = b.IndicShapingEngineInfo?.Position != null ? (int)b.IndicShapingEngineInfo.Position : 0;
-                return pa - pb;
-            });
+                sources = new int[end - start];
+            }
+
+            SortByPosition(substitutionCollection, start, end, sources);
 
             // Find base again
             for (int i = start; i < end; i++)
@@ -628,6 +629,17 @@ internal sealed class IndicShaper : DefaultShaper
                     basePosition = i;
                     break;
                 }
+            }
+
+            // As in HarfBuzz, the final reordering merges the clusters before the base. Here the glyphs that the sort
+            // moved over the base merge from the base, and old spec moved halants after it, so all of them merge.
+            if (this.isOldSpec)
+            {
+                substitutionCollection.MergeClusters(basePosition, end);
+            }
+            else
+            {
+                MergeClustersMovedOverBase(substitutionCollection, start, basePosition, end, sources);
             }
 
             // Setup features now.
@@ -769,6 +781,66 @@ internal sealed class IndicShaper : DefaultShaper
         }
 
         return Positions.Base_C;
+    }
+
+    // Sorts the glyphs of a syllable by their position, keeping the order of glyphs with the same position, and gives the
+    // index in the syllable that each glyph had before the sort. As in HarfBuzz, the sort merges no clusters.
+    private static void SortByPosition(GlyphSubstitutionCollection collection, int start, int end, Span<int> sources)
+    {
+        for (int i = 0; i < end - start; i++)
+        {
+            sources[i] = i;
+        }
+
+        for (int i = start + 1; i < end; i++)
+        {
+            int position = PositionOf(collection[i]);
+            int j = i;
+            while (j > start && PositionOf(collection[j - 1]) > position)
+            {
+                j--;
+            }
+
+            if (j < i)
+            {
+                collection.MoveGlyphKeepingClusters(i, j);
+                int source = sources[i - start];
+                sources[(j - start)..(i - start)].CopyTo(sources[(j - start + 1)..]);
+                sources[j - start] = source;
+            }
+        }
+    }
+
+    private static int PositionOf(GlyphShapingData data) => (int)(data.IndicShapingEngineInfo?.Position ?? 0);
+
+    // As HarfBuzz merges the clusters after a sort of a syllable in the new spec: the glyphs that took each other's places
+    // form a cycle, and a cycle with a glyph from the base on merges from the base, or its first glyph after the base, to
+    // its last glyph. A glyph that the sort moved from after the base to before it so merges with the glyphs up to its old
+    // place, and the glyphs before the base keep their clusters.
+    private static void MergeClustersMovedOverBase(GlyphSubstitutionCollection collection, int start, int basePosition, int end, Span<int> sources)
+    {
+        const int visited = -1;
+        for (int i = basePosition; i < end; i++)
+        {
+            if (sources[i - start] == visited)
+            {
+                continue;
+            }
+
+            int min = i;
+            int max = i;
+            int j = start + sources[i - start];
+            while (j != i)
+            {
+                min = Math.Min(min, j);
+                max = Math.Max(max, j);
+                int next = start + sources[j - start];
+                sources[j - start] = visited;
+                j = next;
+            }
+
+            collection.MergeClusters(Math.Max(basePosition, min), max + 1);
+        }
     }
 
     // As in HarfBuzz, the font has a feature for the run when the language system of its language lists it and the caller
@@ -1013,6 +1085,7 @@ internal sealed class IndicShaper : DefaultShaper
                     }
                 }
 
+                // As in HarfBuzz, a matra merges the clusters from its place to the base, after it moves.
                 if (start < newPos && substitutionCollection[newPos].IndicShapingEngineInfo?.Position != Positions.Pre_M)
                 {
                     // Now go see if there's actually any matras...
@@ -1027,8 +1100,20 @@ internal sealed class IndicShaper : DefaultShaper
                                 basePosition--;
                             }
 
-                            substitutionCollection.MoveGlyph(oldPos, newPos);
+                            substitutionCollection.MoveGlyphKeepingClusters(oldPos, newPos);
+                            substitutionCollection.MergeClusters(newPos, Math.Min(end, basePosition + 1));
                             newPos--;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = start; i < basePosition; i++)
+                    {
+                        if (substitutionCollection[i].IndicShapingEngineInfo?.Position == Positions.Pre_M)
+                        {
+                            substitutionCollection.MergeClusters(i, Math.Min(end, basePosition + 1));
+                            break;
                         }
                     }
                 }

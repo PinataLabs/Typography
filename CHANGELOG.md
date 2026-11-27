@@ -465,6 +465,12 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- `TextShaper` gives the clusters of HarfBuzz 15.0.0 for an Indic syllable whose vowel sign is written before its
+  consonant. The Indic shaper merged the cluster of every glyph that the sign moved past, so in Sumana, Marathi, ta,
+  virama, ra, i had the clusters 0, 0, 0, 0. As in HarfBuzz, the initial reordering merges no clusters before the base,
+  and the final reordering merges from the new place of the sign to the base, so the clusters are 0, 0, 2, 2. A glyph
+  that the initial reordering moves from after the base to before it merges with the glyphs from the base to its old
+  place. (#168)
 - The Hangul shaper applies `calt`, as HarfBuzz 15.0.0 does, and keeps it off only for the jamo that do not compose to a
   syllable. It turned `calt` off for the whole run, as Uniscribe does, so in Noto Sans KR the space between two
   syllables kept its full width where the font narrows it. (#163)
