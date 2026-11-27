@@ -85,5 +85,4 @@ image library or a GPU renderer.
 
 PinataLabs.Typography is derived from [SixLabors.Fonts](https://github.com/SixLabors/Fonts). It was
 forked at commit `32bef429` and has been changed by PinataLabs. It is not affiliated with or
-endorsed by Six Labors. If you use SixLabors.Fonts today, read
-[Migrating from SixLabors.Fonts](./reference/migrating-from-sixlabors-fonts.md).
+endorsed by Six Labors.

@@ -82,7 +82,6 @@ const sidebars: SidebarsConfig = {
           ],
         },
         'reference/platforms',
-        'reference/migrating-from-sixlabors-fonts',
         'reference/troubleshooting',
         'reference/faq',
         'reference/licensing',

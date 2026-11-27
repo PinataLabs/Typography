@@ -46,8 +46,7 @@ See [Platforms and deployment](./platforms.md#thread-safety).
 ## How is it related to SixLabors.Fonts?
 
 It is a fork of SixLabors.Fonts, taken at commit `32bef429`, with new namespaces, newer target
-frameworks and further changes. See
-[Migrating from SixLabors.Fonts](./migrating-from-sixlabors-fonts.md).
+frameworks and further changes.
 
 ## Where do I report a bug?
 
