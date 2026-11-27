@@ -35,8 +35,10 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     private int[] normalizedOffsets = [];
 
-    // The syllable numbers that the shapers of the script runs have taken.
-    private int syllableNumbers;
+    // The glyphs before and after the script run that the table shapes. Substitutions add and remove glyphs of the run
+    // only, so the glyphs after it keep their number, and the end of the run follows the substitutions.
+    private int runStart;
+    private int glyphsAfterRun;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GlyphSubstitutionCollection"/> class.
@@ -52,6 +54,12 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <inheritdoc />
     public TextOptions TextOptions { get; }
+
+    /// <inheritdoc />
+    public int RunStart => this.runStart;
+
+    /// <inheritdoc />
+    public int RunEnd => this.glyphs.Count - this.glyphsAfterRun;
 
     /// <summary>
     /// Gets or sets the metrics of the font currently being shaped. This can differ from the font
@@ -89,17 +97,14 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Takes syllable numbers for a script run, as many as the run has glyphs, which is the most syllables it can have.
-    /// A per-syllable lookup matches only glyphs of the syllable of its first glyph, and its context can reach the
-    /// glyphs of another run, which HarfBuzz shapes in a buffer of its own. So no two runs share a number.
+    /// Sets the script run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
     /// </summary>
+    /// <param name="start">The zero-based index of the first glyph of the run.</param>
     /// <param name="count">The number of glyphs of the run.</param>
-    /// <returns>The number before the first one taken.</returns>
-    public int TakeSyllableNumbers(int count)
+    public void SetRun(int start, int count)
     {
-        int last = this.syllableNumbers;
-        this.syllableNumbers += count;
-        return last;
+        this.runStart = start;
+        this.glyphsAfterRun = this.glyphs.Count - start - count;
     }
 
     /// <summary>
@@ -401,7 +406,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         this.glyphs.Clear();
         this.regionalIndicators = 0;
         this.LigatureId = 1;
-        this.syllableNumbers = 0;
+        this.SetRun(0, 0);
         this.PreContext.Clear();
         this.PostContext.Clear();
     }

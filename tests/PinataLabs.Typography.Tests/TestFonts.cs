@@ -112,6 +112,11 @@ public static class TestFonts
     // Written by tests/tools/generate_text_run_context_reference.py.
     public static string TextRunContextHarfBuzzReference => GetFullPath("TextRunContext.harfbuzz.json");
 
+    // Built by tests/tools/generate_script_run_context_reference.py, which also writes the HarfBuzz reference.
+    public static string ScriptRunContextFile => GetFullPath("ScriptRunContext.ttf");
+
+    public static string ScriptRunContextHarfBuzzReference => GetFullPath("ScriptRunContext.harfbuzz.json");
+
     // Written by tests/tools/generate_thai_pua_reference.py, with the ThaiPua fonts.
     public static string ThaiPuaHarfBuzzReference => GetFullPath("ThaiPua.harfbuzz.json");
 

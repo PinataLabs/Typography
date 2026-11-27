@@ -9,7 +9,8 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// <summary>
 /// Walks the glyphs of a collection past the glyphs that the lookup flags skip, and past the default-ignorable glyphs
 /// that the lookup may skip. A default-ignorable glyph that the lookup may skip is still matched where the lookup asks
-/// for it, as in HarfBuzz.
+/// for it, as in HarfBuzz. The walk stops at the ends of the script run of the collection, as at the ends of a HarfBuzz
+/// buffer.
 /// </summary>
 internal struct SkippingGlyphIterator
 {
@@ -105,7 +106,7 @@ internal struct SkippingGlyphIterator
         while (true)
         {
             this.Index += direction;
-            if (this.Index < 0 || this.Index >= this.Collection.Count)
+            if (this.Index < this.Collection.RunStart || this.Index >= this.Collection.RunEnd)
             {
                 return false;
             }
@@ -162,8 +163,7 @@ internal struct SkippingGlyphIterator
         return (ignorables & kind) != 0;
     }
 
-    // The Indic and Khmer shapers, the universal shaper and the Myanmar shaper each number the syllables of a run, with
-    // numbers that GlyphSubstitutionCollection.TakeSyllableNumbers gives no other run.
+    // The Indic and Khmer shapers, the universal shaper and the Myanmar shaper each number the syllables of a run from 1.
     private static int SyllableOf(GlyphShapingData data)
         => data.IndicShapingEngineInfo?.Syllable ?? data.UniversalShapingEngineInfo?.Syllable ?? data.MyanmarShapingEngineInfo?.Syllable ?? 0;
 
@@ -171,7 +171,7 @@ internal struct SkippingGlyphIterator
     private void Move(int direction)
     {
         this.Index += direction;
-        while (this.Index >= 0 && this.Index < this.Collection.Count)
+        while (this.Index >= this.Collection.RunStart && this.Index < this.Collection.RunEnd)
         {
             if (this.GetSkip(this.Index) == Skip.No)
             {

@@ -104,20 +104,8 @@ internal static class LookupType4SubTable
                 return false;
             }
 
-            // Search backward for a base glyph, past the joiners that the lookup skips. As in HarfBuzz, a glyph that
-            // the mark does not attach to is skipped too, unless the lookup covers it.
-            int baseGlyphIndex = index;
-            while (--baseGlyphIndex >= 0)
-            {
-                GlyphShapingData data = collection[baseGlyphIndex];
-                if (!AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, data)
-                    && !SkippingGlyphIterator.MaySkip(data, features.InputIgnorables)
-                    && (AttachesMarks(fontMetrics, collection, baseGlyphIndex) || this.baseCoverage.CoverageIndexOf(data.GlyphId) >= 0))
-                {
-                    break;
-                }
-            }
-
+            // Search backward in the run for a base glyph.
+            int baseGlyphIndex = AdvancedTypographicUtils.FindMarkBaseIndex(fontMetrics, collection, features, index, this.baseCoverage);
             if (baseGlyphIndex < 0)
             {
                 return false;
@@ -141,26 +129,6 @@ internal static class LookupType4SubTable
             AnchorTable? baseAnchor = baseAnchors[markRecord.MarkClass];
 
             return AdvancedTypographicUtils.ApplyAnchor(fontMetrics, collection, index, baseAnchor, markRecord, baseGlyphIndex);
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether a mark attaches to the glyph. As in HarfBuzz, it does not attach to a glyph
-        /// that a multiple substitution made, other than the first, right after the glyph that the substitution made
-        /// before it. So of those glyphs, a mark attaches to the first, or to one after a mark.
-        /// </summary>
-        private static bool AttachesMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index)
-        {
-            GlyphShapingData data = collection[index];
-            if (!data.IsMultiplied || data.LigatureComponent <= 0 || index == 0)
-            {
-                return true;
-            }
-
-            GlyphShapingData previous = collection[index - 1];
-            return AdvancedTypographicUtils.IsMarkGlyph(fontMetrics, previous)
-                || !previous.IsMultiplied
-                || data.LigatureId != previous.LigatureId
-                || data.LigatureComponent != previous.LigatureComponent + 1;
         }
     }
 }

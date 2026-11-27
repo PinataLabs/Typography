@@ -22,6 +22,19 @@ internal interface IGlyphShapingCollection
     TextOptions TextOptions { get; }
 
     /// <summary>
+    /// Gets the index of the first glyph of the script run that the GSUB or GPOS table shapes. HarfBuzz shapes each
+    /// script run in a buffer of its own, so a lookup matches, skips to and attaches only glyphs of the run. Outside a
+    /// run it is 0.
+    /// </summary>
+    int RunStart { get; }
+
+    /// <summary>
+    /// Gets the index after the last glyph of the script run. A substitution that adds or removes glyphs of the run
+    /// moves it. Outside a run it is <see cref="Count"/>.
+    /// </summary>
+    int RunEnd { get; }
+
+    /// <summary>
     /// Gets the glyph shaping data at the specified index.
     /// </summary>
     /// <param name="index">The zero-based index of the elements to get.</param>
