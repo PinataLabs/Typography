@@ -382,6 +382,11 @@ internal sealed class BidiAlgorithm
 
                 this.hasIsolates = true;
             }
+            else if (t == BidiCharacterType.ParagraphSeparator)
+            {
+                // A paragraph separator ends every isolate, so no PDI after it matches an initiator before it.
+                this.pendingIsolateOpenings.Clear();
+            }
         }
     }
 
@@ -496,7 +501,13 @@ internal sealed class BidiAlgorithm
                     {
                         if (!this.isolatePairs.TryGetValue(i, out int endOfIsolate))
                         {
-                            endOfIsolate = this.originalTypes.Length;
+                            // With no matching PDI, the isolate ends at the end of the paragraph.
+                            endOfIsolate = i + 1;
+                            while (endOfIsolate < this.originalTypes.Length
+                                && this.originalTypes[endOfIsolate] != BidiCharacterType.ParagraphSeparator)
+                            {
+                                endOfIsolate++;
+                            }
                         }
 
                         // Rule X5c
@@ -614,7 +625,15 @@ internal sealed class BidiAlgorithm
 
                 case BidiCharacterType.ParagraphSeparator:
                 {
-                    // Rule X8
+                    // Rule X8: the separator ends every embedding, override and isolate.
+                    while (this.statusStack.Count > 1)
+                    {
+                        this.statusStack.Pop();
+                    }
+
+                    overflowIsolateCount = 0;
+                    overflowEmbeddingCount = 0;
+                    validIsolateCount = 0;
                     this.ResolvedLevels[i] = this.paragraphEmbeddingLevel;
                     break;
                 }

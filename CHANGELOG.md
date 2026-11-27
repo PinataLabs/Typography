@@ -472,6 +472,12 @@ Unicode conformance suites to that version.
 - Text that has no codepoint to lay out, such as text that is only U+FE0F, lays out as empty text: no glyph, no line,
   and the size of empty text. `TextLayout` threw `InvalidOperationException` ("Sequence contains no elements"),
   because a text with no line has no longest line. (#179)
+- A paragraph separator, such as a line feed, ends every embedding, override and isolate before it, as UAX #9 BD9
+  and X8 say. No isolate initiator matches a PDI after the separator, the text after it is at the paragraph level, and
+  the text that rule X5c reads for an FSI with no matching PDI ends at it. An isolate that held a line feed, such as
+  U+2066 `a` U+000A U+2069, made `TextLayout` and `BidiParagraph.Resolve` throw
+  `InvalidOperationException` ("Internal error"), and an isolate or embedding before a line feed raised the text after
+  it. (#179)
 - `ArraySlice<T>.Slice` and `ReadOnlyArraySlice<T>.Slice` start the new slice at the start of the slice plus `start`.
   They started it at `start` in the array, so a slice of a slice that did not begin at 0 held the wrong items. Every
   caller sliced a slice that begins at 0, so no output changes. (#180)
