@@ -30,7 +30,7 @@ public readonly struct LineBreak
 
     /// <summary>
     /// Gets the break position, before any trailing whitespace.
-    /// This doesn't include trailing whitespace.
+    /// This leaves out the spaces before the break and, for a required break, the line terminator, CR LF being one.
     /// </summary>
     public int PositionMeasure { get; }
 

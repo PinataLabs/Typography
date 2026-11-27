@@ -117,14 +117,13 @@ if (bidi.TryGetPairedBracket(out CodePoint closing))
 which is `true` for a mandatory break.
 
 ```csharp
-foreach (LineBreak lineBreak in new LineBreakEnumerator("Hello World
-Bye".AsSpan()))
+foreach (LineBreak lineBreak in new LineBreakEnumerator("Hello World\nBye".AsSpan()))
 {
     Console.WriteLine($"{lineBreak.PositionWrap} {lineBreak.Required}");
 }
 // 6 False
-// 13 True
-// 16 False
+// 12 True
+// 15 False
 ```
 
 A layout engine that holds text in runs asks about the seam between two of them instead. Pass the
@@ -142,8 +141,10 @@ indicators longer than that runs across the seam.
 
 Both take a `LineBreakTailoring`. With none, which is the default, the result is the algorithm as
 published. `SouthEastAsianAsIdeographs` allows a break between Thai, Lao, Khmer and Myanmar letters,
-for which the algorithm has no dictionary, and `HangulAsAlphabetic` breaks Korean at its spaces and
-not between syllables.
+for which the algorithm has no dictionary. A syllable stays whole: a vowel that follows its consonant
+stays with it, as the vowels of Khmer and Myanmar do, and no break comes after a Thai or Lao vowel that
+is written before its consonant, so a line may end before such a vowel and not after it.
+`HangulAsAlphabetic` breaks Korean at its spaces and not between syllables or between jamo.
 
 `new ArabicJoiningClass(codePoint)` gives the Arabic joining type and joining group of a code
 point. The namespace also has the `ScriptClass`, `IndicSyllabicCategory` and
