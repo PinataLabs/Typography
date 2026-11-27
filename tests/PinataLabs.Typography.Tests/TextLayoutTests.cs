@@ -1561,6 +1561,90 @@ public class TextLayoutTests
         await Assert.That(beh).IsEqualTo(joined);
     }
 
+    // Rule L1 applies to each line, so the soft hyphen that ends a wrapped line takes the paragraph level and is drawn at
+    // the left end of the right-to-left line, not next to the b. The soft hyphen has no advance, so it shares its x with
+    // the a.
+    [Test]
+    public async Task RuleL1_RightToLeftParagraph_MovesSoftHyphenThatEndsAWrappedLineToTheLineEnd()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.RightToLeft };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("abc", options).Width - 1;
+
+        GlyphLayout[][] lines = GetLines($"ab{Shy}cd ef", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", $"{Shy}ab", "cd", "ef"));
+        await Assert.That(X(lines[0], Shy[0])).IsEqualTo(X(lines[0], 'a'));
+    }
+
+    // In a left-to-right paragraph the space between two Arabic words resolves to level 1. When the line wraps after it,
+    // rule L1 gives it level 0, so it is drawn at the right end of the line, after the Arabic word, not before it.
+    [Test]
+    public async Task RuleL1_LeftToRightParagraph_MovesSpaceThatEndsAWrappedLineToTheLineEnd()
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.LeftToRight, WordBreaking = WordBreaking.BreakAll };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("abc كتب ", options).Width + 1;
+
+        GlyphLayout[][] lines = GetLines("abc كتب جمل", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", "abc بتك ", "لمج"));
+        await Assert.That(lines[0][^1].CodePoint).IsEqualTo(new CodePoint(' '));
+        await Assert.That(lines[0][^1].PenLocation.X).IsGreaterThan(X(lines[0], 'ك'));
+    }
+
+    // The tab is a segment separator, so rule L1 resets the soft hyphen before it on every line. The soft hyphen that
+    // ends the wrapped line is reset by L1 on that line, so it is drawn at the left end of the right-to-left line.
+    [Test]
+    public async Task RuleL1_RightToLeftParagraph_ResetsBeforeATabAndAtTheEndOfAWrappedLine()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.RightToLeft };
+        options.WrappingLength = TextMeasurer.MeasureAdvance($"ab{Shy}\tcd{Shy}", options).Width + 1;
+
+        GlyphLayout[][] lines = GetLines($"ab{Shy}\tcd{Shy}ef", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", $"{Shy}cd\t{Shy}ab", "ef"));
+    }
+
+    // Rule L1 on the last line resets the soft hyphen at the end of the text, as it did when L1 applied to the whole text.
+    [Test]
+    public async Task RuleL1_RightToLeftParagraph_ResetsSoftHyphenAtTheEndOfTheLastLine()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.RightToLeft };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("abc", options).Width - 1;
+
+        GlyphLayout[][] lines = GetLines($"cd ab{Shy}", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", "cd", $"{Shy}ab"));
+    }
+
+    private static readonly string Shy = ((char)0xAD).ToString();
+
+    // The glyphs of each line, in the order the layout draws them, which is left to right.
+    private static GlyphLayout[][] GetLines(string text, TextOptions options)
+    {
+        List<List<GlyphLayout>> lines = [];
+        foreach (GlyphLayout glyph in TextLayout.GenerateLayout(text.AsSpan(), options))
+        {
+            if (glyph.IsStartOfLine)
+            {
+                lines.Add([]);
+            }
+
+            lines[^1].Add(glyph);
+        }
+
+        return [.. lines.Select(x => x.ToArray())];
+    }
+
+    // Each line in visual order, left to right, with the lines separated by |.
+    private static string Visual(GlyphLayout[][] lines)
+        => string.Join("|", lines.Select(line => string.Concat(line.Select(x => x.CodePoint.ToString()))));
+
+    private static float X(GlyphLayout[] line, char c) => line.Single(x => x.CodePoint == new CodePoint(c)).PenLocation.X;
+
     private static string GetVisualOrder(string text, TextOptions options)
     {
         TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
