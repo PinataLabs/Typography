@@ -26,7 +26,7 @@ internal static class FallbackMarkPositioner
     /// <param name="gpos">The GPOS table of the font, if it has one.</param>
     public static void ZeroMarksBeforeKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection, GPosTable? gpos)
     {
-        ShapingRunEnumerator runs = new(collection);
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByFont(collection);
         while (runs.MoveNext())
         {
             ScriptClass script = runs.Script;
@@ -46,7 +46,7 @@ internal static class FallbackMarkPositioner
     /// <param name="gpos">The GPOS table of the font, if it has one.</param>
     public static void PlaceMarksAfterKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection, GPosTable? gpos)
     {
-        ShapingRunEnumerator runs = new(collection);
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByFont(collection);
         while (runs.MoveNext())
         {
             ScriptClass script = runs.Script;

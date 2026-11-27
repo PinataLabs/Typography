@@ -77,14 +77,15 @@ internal sealed class KerningTable : Table
             return;
         }
 
-        ShapingRunEnumerator runs = new(collection);
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByFont(collection);
         while (runs.MoveNext())
         {
             ScriptClass script = runs.Script;
             int start = runs.Start;
             int end = runs.End;
             Tag substitutionScript = fontMetrics.GetGSubTable().GetScriptTag(script);
-            if (ShaperFactory.HasFallbackPositioning(script, substitutionScript)
+            if (collection.ShouldProcess(fontMetrics, start)
+                && ShaperFactory.HasFallbackPositioning(script, substitutionScript)
                 && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag, collection.TextOptions.Language, ShaperFactory.Create(script, substitutionScript, collection.TextOptions).DisabledFeatureTags)))
             {
                 // The change that the kerning makes to the advance and to the offset of each glyph of the run.

@@ -7,9 +7,11 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
 /// <summary>
 /// Splits the glyphs of a collection into the runs that a caller of HarfBuzz shapes in a buffer each: runs of one script,
-/// one direction and, in vertical mixed text, one orientation. A character of the scripts Common, Inherited or Unknown joins the script before it, or the script
-/// after it at the start of the text. A caller itemizes text by script first, so each piece of a script run keeps the
-/// script of the run, also a piece of digits that runs the other way. A mark keeps the orientation of its base, as a
+/// one direction, in vertical mixed text one orientation, and, for positioning, one font. A character of the scripts
+/// Common, Inherited or Unknown joins the script before it, or the script after it at the start of the text. A caller
+/// itemizes text by script first, so each piece of a script run keeps the script of the run, also a piece of digits that
+/// runs the other way or of characters that a fallback font draws. A default-ignorable glyph of another font does not
+/// end a run: HarfBuzz hides such a character that a font lacks, so its caller takes no other font for it. A mark keeps the orientation of its base, as a
 /// grapheme cluster does in CSS. The orientation of a Tr glyph is <see cref="GlyphShapingData.HasVerticalForm"/>, which
 /// GSUB resolves before it shapes the runs.
 /// </summary>
@@ -21,6 +23,7 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 internal struct ShapingRunEnumerator
 {
     private readonly IGlyphShapingCollection collection;
+    private readonly GlyphPositioningCollection? fonts;
     private int glyphsAfterRun;
     private int glyphsAfterScriptRun;
 
@@ -29,8 +32,14 @@ internal struct ShapingRunEnumerator
     /// </summary>
     /// <param name="collection">The glyphs to split.</param>
     public ShapingRunEnumerator(IGlyphShapingCollection collection)
+        : this(collection, null)
+    {
+    }
+
+    private ShapingRunEnumerator(IGlyphShapingCollection collection, GlyphPositioningCollection? fonts)
     {
         this.collection = collection;
+        this.fonts = fonts;
         this.glyphsAfterRun = collection.Count;
         this.glyphsAfterScriptRun = collection.Count;
     }
@@ -54,6 +63,14 @@ internal struct ShapingRunEnumerator
     /// Gets the script of the run.
     /// </summary>
     public ScriptClass Script { get; private set; }
+
+    /// <summary>
+    /// Gets the runs that a font positions: each run also has the glyphs of one font. HarfBuzz shapes the glyphs of each
+    /// font in a buffer of their own, so a lookup of one font does not see the glyphs of another.
+    /// </summary>
+    /// <param name="collection">The glyphs to split.</param>
+    /// <returns>The enumerator, before the first run.</returns>
+    public static ShapingRunEnumerator ByFont(GlyphPositioningCollection collection) => new(collection, collection);
 
     /// <summary>
     /// Moves to the run after the current one.
@@ -81,11 +98,14 @@ internal struct ShapingRunEnumerator
     {
         GlyphShapingData first = this.collection[start];
         bool upright = this.IsUpright(first);
+        FontMetrics? font = this.fonts?.GetMetrics(start).FontMetrics;
         int end = start + 1;
         while (end < scriptRunEnd)
         {
             GlyphShapingData data = this.collection[end];
-            if (data.Direction != first.Direction || (this.IsUpright(data) != upright && !CodePoint.IsMark(data.CodePoint)))
+            if (data.Direction != first.Direction
+                || (this.IsUpright(data) != upright && !CodePoint.IsMark(data.CodePoint))
+                || (font is not null && !data.IsDefaultIgnorable && this.fonts!.GetMetrics(end).FontMetrics != font))
             {
                 break;
             }

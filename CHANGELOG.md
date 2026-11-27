@@ -494,6 +494,12 @@ Unicode conformance suites to that version.
   apply only within a run of one orientation, so a `ccmp` lookup of upright U+5B57 before the sideways hyphen-minus no
   longer applies. A mark keeps the orientation of its base. A `c` and an upright copyright sign no longer form a
   ligature in vertical mixed text. (#202)
+- The GPOS lookups and the `kern` table of a font apply only within a run of the glyphs that the font draws, as
+  HarfBuzz does when its caller shapes the characters of each font in a buffer of their own. A lookup matched the
+  glyphs of a fallback font, or of the font of the text, by glyph ID, so a glyph of the other font with the same ID
+  took the pair values, the context or the anchors of a glyph that it is not. A default-ignorable glyph of another font
+  does not end the run, and the marks of a cluster whose base another font draws are still placed across fonts.
+  (#198)
 - A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
   does. It found the glyph of each nested lookup by walking the glyphs again from the first. After a nested ligature
   took the second glyph of the input, a nested lookup at that glyph changed the glyph after the input, which can be

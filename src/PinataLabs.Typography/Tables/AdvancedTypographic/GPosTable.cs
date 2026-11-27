@@ -138,13 +138,13 @@ internal class GPosTable : Table
         bool maxOperationsReached = false;
 
         bool updated = false;
-        ShapingRunEnumerator runs = new(collection);
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByFont(collection);
         while (runs.MoveNext())
         {
             ScriptClass current = runs.Script;
             int index = runs.Start;
             int count = runs.Count;
-            if (!HasGlyphOf(fontMetrics, collection, index, count) || !this.PositionsScript(current))
+            if (!collection.ShouldProcess(fontMetrics, index) || !this.PositionsScript(current))
             {
                 continue;
             }
@@ -227,19 +227,6 @@ internal class GPosTable : Table
         }
 
         return updated;
-    }
-
-    private static bool HasGlyphOf(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index, int count)
-    {
-        for (int i = index; i < index + count; i++)
-        {
-            if (collection.ShouldProcess(fontMetrics, i))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /// <summary>
