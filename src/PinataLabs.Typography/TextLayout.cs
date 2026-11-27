@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -230,6 +231,13 @@ internal static class TextLayout
             {
                 font.FontMetrics.UpdatePositions(positionings);
             }
+        }
+
+        // A cluster whose base and marks come from two fonts takes the places of its marks once both fonts have
+        // positioned their own glyphs.
+        if (positioned.Count > 1)
+        {
+            FallbackMarkPositioner.PlaceMarksAcrossFonts(positionings);
         }
 
         return BreakLines(text, options, bidiLevels, positionings, layoutMode);

@@ -572,6 +572,17 @@ Unicode conformance suites to that version.
   kept its vertical advance in its bounds, which GPOS took for an advance across the line between a base and its mark,
   so the mark went down by an em. With `MarksWithoutGlyphClassesGposAcute.ttf` and the fallback
   `MarksWithoutGlyphClassesGpos.ttf`, which attaches the grave to f at y 700, f, grave put the grave at y -300. (#191)
+- The marks of a cluster whose base and marks come from different fonts are placed once every font has positioned its
+  own glyphs, and each stacks on the marks before it where they are. Each font placed its own marks and stacked them on
+  where it would have placed the marks of the other font. So a mark of a font without GPOS stacked under a mark that
+  GPOS attached higher: with `MarksWithoutGlyphClassesGpos.ttf`, which attaches the grave to f at y 700, and the
+  fallback `MarksWithoutGlyphClassesFallback.ttf`, f, grave, acute put the acute at y 124, where it now goes over the
+  grave, at y 762. A font with GPOS placed no mark on a base of another font, as its GPOS cannot attach one there, so
+  the mark stayed at the pen: with `MarksWithoutGlyphClassesBase.ttf`, which has f and no GPOS, and the fallback
+  `MarksWithoutGlyphClassesGposAcute.ttf`, which has the acute and GPOS, f, acute drew the acute after f on the
+  baseline, where it now goes over f, as the font alone places the `.notdef` of the acute. Such a mark also goes there
+  when the GPOS of its font attached it to a glyph of the other font whose glyph ID is that of a base of its own. A
+  glyph that the GDEF table of its font calls a base keeps its advance and its place. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

@@ -179,6 +179,10 @@ internal sealed class FileFontMetrics : FontMetrics
         => this.fontMetrics.Value.GetGSubTable();
 
     /// <inheritdoc/>
+    internal override GPosTable? GetGPosTable()
+        => this.fontMetrics.Value.GetGPosTable();
+
+    /// <inheritdoc/>
     internal override float GetDeviceDelta(VariationIndex index)
         => this.fontMetrics.Value.GetDeviceDelta(index);
 

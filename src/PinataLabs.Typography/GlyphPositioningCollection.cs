@@ -463,7 +463,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Updates the position of the glyph at the specified index.
+    /// Updates the position of the glyph at the specified index, if the font draws it. The glyph moves by the change to its
+    /// offset since the last update, so a pass can set the offset of a glyph that an earlier pass positioned.
     /// </summary>
     /// <param name="fontMetrics">The font metrics.</param>
     /// <param name="index">The zero-based index of the element.</param>
@@ -472,11 +473,12 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         GlyphShapingData data = this[index];
         bool isDirtyXY = data.Bounds.IsDirtyXY;
         bool isDirtyWH = data.Bounds.IsDirtyWH;
-        if (!isDirtyXY && !isDirtyWH)
+        if ((!isDirtyXY && !isDirtyWH) || !this.ShouldProcess(fontMetrics, index))
         {
             return;
         }
 
+        (int x, int y) = isDirtyXY ? data.Bounds.TakeOffsetChange() : default;
         ushort glyphId = data.GlyphId;
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         foreach (GlyphMetrics m in this.glyphs[index].Metrics)
@@ -485,7 +487,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             {
                 if (isDirtyXY)
                 {
-                    m.ApplyOffset(data.Bounds.X, data.Bounds.Y);
+                    m.ApplyOffset(x, y);
                 }
 
                 // As in HarfBuzz, positioning changes the advance along the line only. Across the line the glyph keeps

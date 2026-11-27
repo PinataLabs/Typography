@@ -380,6 +380,9 @@ internal partial class StreamFontMetrics : FontMetrics
     internal override GSubTable GetGSubTable() => this.substitution;
 
     /// <inheritdoc/>
+    internal override GPosTable? GetGPosTable() => this.positioning;
+
+    /// <inheritdoc/>
     internal override float GetDeviceDelta(VariationIndex index)
         => index.IsNone ? 0 : this.layoutScalars.GetDelta(index.Outer, index.Inner);
 
