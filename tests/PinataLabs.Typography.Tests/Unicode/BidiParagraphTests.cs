@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
+using TUnit.Assertions.Enums;
 using TUnit.Core.Interfaces;
 
 namespace PinataLabs.Typography.Tests.Unicode;
@@ -202,7 +203,7 @@ public class BidiParagraphTests
 
         BidiLevelRun[] runs = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight).GetVisualRuns(0, text.Length);
 
-        await Assert.That(runs).IsEquivalentTo([new BidiLevelRun(0, 2, 1), new BidiLevelRun(2, 1, 0)]);
+        await Assert.That(runs).IsEquivalentTo([new BidiLevelRun(0, 2, 1), new BidiLevelRun(2, 1, 0)], CollectionOrdering.Matching);
     }
 
     [Test]
@@ -212,7 +213,7 @@ public class BidiParagraphTests
 
         BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight);
 
-        await Assert.That(paragraph.GetVisualRuns(0, text.Length)).IsEquivalentTo([new BidiLevelRun(2, 1, 1), new BidiLevelRun(0, 1, 1)]);
+        await Assert.That(paragraph.GetVisualRuns(0, text.Length)).IsEquivalentTo([new BidiLevelRun(2, 1, 1), new BidiLevelRun(0, 1, 1)], CollectionOrdering.Matching);
     }
 
     [Test]
@@ -223,8 +224,8 @@ public class BidiParagraphTests
 
         BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight);
 
-        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 0, 0, 1, 1, 1, 1 });
-        await Assert.That(paragraph.GetVisualRuns(0, text.Length)).IsEquivalentTo([new BidiLevelRun(0, 2, 0), new BidiLevelRun(2, 4, 1)]);
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 0, 0, 1, 1, 1, 1 }, CollectionOrdering.Matching);
+        await Assert.That(paragraph.GetVisualRuns(0, text.Length)).IsEquivalentTo([new BidiLevelRun(0, 2, 0), new BidiLevelRun(2, 4, 1)], CollectionOrdering.Matching);
     }
 
     [Test]
@@ -235,13 +236,13 @@ public class BidiParagraphTests
         BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight);
 
         // As one line, the space is between two right-to-left letters and so is at their level.
-        await Assert.That(paragraph.GetVisualRuns(0, text.Length)).IsEquivalentTo([new BidiLevelRun(0, 5, 1)]);
+        await Assert.That(paragraph.GetVisualRuns(0, text.Length)).IsEquivalentTo([new BidiLevelRun(0, 5, 1)], CollectionOrdering.Matching);
 
         // A line that ends at the space has it reset to the paragraph level.
-        await Assert.That(paragraph.GetVisualRuns(0, 3)).IsEquivalentTo([new BidiLevelRun(2, 1, 0), new BidiLevelRun(0, 2, 1)]);
+        await Assert.That(paragraph.GetVisualRuns(0, 3)).IsEquivalentTo([new BidiLevelRun(0, 2, 1), new BidiLevelRun(2, 1, 0)], CollectionOrdering.Matching);
 
         // The same space at the start of the next line is followed by letters and keeps its level.
-        await Assert.That(paragraph.GetVisualRuns(2, 3)).IsEquivalentTo([new BidiLevelRun(2, 3, 1)]);
+        await Assert.That(paragraph.GetVisualRuns(2, 3)).IsEquivalentTo([new BidiLevelRun(2, 3, 1)], CollectionOrdering.Matching);
     }
 
     [Test]
@@ -251,7 +252,7 @@ public class BidiParagraphTests
 
         BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.LeftToRight);
 
-        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 1, 1, 0 });
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 1, 1, 0 }, CollectionOrdering.Matching);
     }
 
     [Test]

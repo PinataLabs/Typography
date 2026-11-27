@@ -52,6 +52,8 @@ public sealed class BidiParagraph
     /// </summary>
     public ReadOnlySpan<byte> Levels => this.levels;
 
+    internal ReadOnlySpan<char> Text => this.text;
+
     /// <summary>
     /// Resolves a paragraph of text.
     /// </summary>

@@ -92,3 +92,20 @@ static PinataLabs.Typography.Unicode.BidiParagraph.Resolve(System.ReadOnlySpan<c
 static PinataLabs.Typography.Unicode.CodePoint.GetScriptClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.ScriptClass
 PinataLabs.Typography.Unicode.ScriptClassExtensions
 static PinataLabs.Typography.Unicode.ScriptClassExtensions.GetIso15924Code(this PinataLabs.Typography.Unicode.ScriptClass script) -> string!
+override PinataLabs.Typography.Unicode.ItemizedRun.Equals(object? obj) -> bool
+override PinataLabs.Typography.Unicode.ItemizedRun.GetHashCode() -> int
+override PinataLabs.Typography.Unicode.ItemizedRun.ToString() -> string!
+PinataLabs.Typography.Unicode.ItemizedRun
+PinataLabs.Typography.Unicode.ItemizedRun.Equals(PinataLabs.Typography.Unicode.ItemizedRun other) -> bool
+PinataLabs.Typography.Unicode.ItemizedRun.IsRightToLeft.get -> bool
+PinataLabs.Typography.Unicode.ItemizedRun.ItemizedRun() -> void
+PinataLabs.Typography.Unicode.ItemizedRun.ItemizedRun(int start, int length, PinataLabs.Typography.Unicode.ScriptClass script, byte level) -> void
+PinataLabs.Typography.Unicode.ItemizedRun.Length.get -> int
+PinataLabs.Typography.Unicode.ItemizedRun.Level.get -> byte
+PinataLabs.Typography.Unicode.ItemizedRun.Script.get -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ItemizedRun.Start.get -> int
+PinataLabs.Typography.Unicode.TextItemizer
+static PinataLabs.Typography.Unicode.ItemizedRun.operator !=(PinataLabs.Typography.Unicode.ItemizedRun left, PinataLabs.Typography.Unicode.ItemizedRun right) -> bool
+static PinataLabs.Typography.Unicode.ItemizedRun.operator ==(PinataLabs.Typography.Unicode.ItemizedRun left, PinataLabs.Typography.Unicode.ItemizedRun right) -> bool
+static PinataLabs.Typography.Unicode.TextItemizer.Itemize(PinataLabs.Typography.Unicode.BidiParagraph! paragraph, int lineStart, int lineLength) -> PinataLabs.Typography.Unicode.ItemizedRun[]!
+static PinataLabs.Typography.Unicode.TextItemizer.Itemize(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.ItemizedRun[]!

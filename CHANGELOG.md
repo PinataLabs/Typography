@@ -101,6 +101,13 @@ Unicode conformance suites to that version.
 - **`OpenTypeScriptTags.GetTags`.** It gives the OpenType script tags that the library searches a font for, for a
   `ScriptClass`, in the order it tries them: `dev3`, `dev2` and `deva` for Devanagari. These are the tags of HarfBuzz
   15.0.0, which the library already used internally. (#154)
+- **`TextItemizer` cuts text into runs of one script and one direction.** `Itemize(text, direction)` gives the
+  `ItemizedRun` values (`Start`, `Length`, `Script`, `Level`, `IsRightToLeft`) of a paragraph in visual order, and
+  `Itemize(paragraph, lineStart, lineLength)` those of one line of a `BidiParagraph`. Each run of the bidi algorithm is
+  cut at every change of script. Common and Inherited characters take the script of the text before them, or of the
+  first letter after them when nothing comes before. A closing paired bracket takes the script of its opening bracket,
+  so `a (б) c` is Latin, Cyrillic and Latin. A script run that sits in a right to left bidi run is drawn in that
+  direction, so the piece written first comes last. Script_Extensions is not read. (#154)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.

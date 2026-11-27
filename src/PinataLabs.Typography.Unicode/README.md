@@ -15,6 +15,8 @@ Use this package on its own when you need the character properties, code point a
 - `GlyphNameEncodings`: the PDF Standard, WinAnsi, MacRoman and MacExpert encodings and the Symbol and ZapfDingbats built-in encodings, as code to glyph name.
 - `AdobeGlyphList`: glyph name to Unicode by the Adobe Glyph List specification, and Unicode to glyph name.
 - `BidiParagraph`: the Unicode Bidirectional Algorithm (UAX #9). It gives the embedding level of each code unit of a paragraph, and the runs of a line in visual order.
+- `CodePoint.GetScriptClass` and `ScriptClassExtensions.GetIso15924Code`: the script of a code point (UAX #24) and its ISO 15924 code.
+- `TextItemizer`: cuts a paragraph into runs of one script and one direction, in visual order, for a shaper.
 - The property data behind them, built from the [Unicode Character Database](https://www.unicode.org/ucd/).
 
 ## Install
