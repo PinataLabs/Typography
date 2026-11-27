@@ -1,16 +1,22 @@
 {
   "harfbuzz": "15.0.0",
   "rows": [
-    ["ChainFormat1","\ue000\ue00c\ue001",[[1,0,0],[13,600,0],[2,600,100]]],
-    ["ChainFormat2","\ue002\ue00c\ue003",[[3,0,0],[13,600,0],[4,600,100]]],
-    ["ChainFormat3","\ue004\ue00c\ue005",[[5,0,0],[13,600,0],[6,600,100]]],
-    ["MarkToMarkPastFilteredMark","\ue006\ue00d\ue00f\ue00e",[[7,0,0],[14,600,0],[16,600,0],[15,600,300]]],
-    ["SubstitutionAfterLeadingIgnoredMark","\ue010\ue007",[[17,0,0],[8,0,50]]],
-    ["PositioningAfterLeadingIgnoredMark","\ue011\ue007",[[18,0,0],[8,0,50]]],
+    ["ChainFormat1","\ue000\ue00f\ue001",[[1,0,0],[16,600,0],[2,600,100]]],
+    ["ChainFormat2","\ue002\ue00f\ue003",[[3,0,0],[16,600,0],[4,600,100]]],
+    ["ChainFormat3","\ue004\ue00f\ue005",[[5,0,0],[16,600,0],[6,600,100]]],
+    ["MarkToMarkPastFilteredMark","\ue006\ue010\ue012\ue011",[[7,0,0],[17,600,0],[19,600,0],[18,600,300]]],
+    ["SubstitutionAfterLeadingIgnoredMark","\ue013\ue007",[[20,0,0],[8,0,50]]],
+    ["PositioningAfterLeadingIgnoredMark","\ue014\ue007",[[21,0,0],[8,0,50]]],
     ["ReverseFromContext","\ue008\ue009",[[9,0,0],[10,600,0]]],
     ["Cursive","\ue00a\ue00a\ue00a",[[11,0,0],[11,600,100],[11,1200,200]]],
     ["CursiveRightToLeftFlag","\ue00b\ue00b\ue00b",[[12,0,-200],[12,600,-100],[12,1200,0]]],
-    ["CursiveRightToLeftText","\u05d0\u05d0\u05d0",[[19,0,200],[19,600,100],[19,1200,0]]],
-    ["CursiveRightToLeftTextAndFlag","\u05d1\u05d1\u05d1",[[20,0,0],[20,600,-100],[20,1200,-200]]]
+    ["CursiveRightToLeftText","\u05d0\u05d0\u05d0",[[24,0,200],[24,600,100],[24,1200,0]]],
+    ["CursiveRightToLeftTextAndFlag","\u05d1\u05d1\u05d1",[[25,0,0],[25,600,-100],[25,1200,-200]]],
+    ["CursiveIgnoreMarks","\ue00c\ue015\ue00c\ue015\ue00c",[[13,0,0],[22,600,0],[13,600,100],[22,1200,0],[13,1200,200]]],
+    ["CursiveIgnoreMarksRightToLeftFlag","\ue00d\ue015\ue00d\ue015\ue00d",[[14,0,-200],[22,600,0],[14,600,-100],[22,1200,0],[14,1200,0]]],
+    ["CursiveIgnoreMarksRightToLeftText","\u05d2\u05b0\u05d2\u05b0\u05d2",[[26,0,200],[28,600,0],[26,600,100],[28,1200,0],[26,1200,0]]],
+    ["CursiveIgnoreMarksRightToLeftTextAndFlag","\u05d3\u05b0\u05d3\u05b0\u05d3",[[27,0,0],[28,600,0],[27,600,-100],[28,1200,0],[27,1200,-200]]],
+    ["CursivePastFilteredMark","\ue00e\ue015\ue00e\ue015\ue00e",[[15,0,0],[22,600,0],[15,600,100],[22,1200,0],[15,1200,200]]],
+    ["CursiveAtMarkInFilteringSet","\ue00e\ue016\ue00e\ue015\ue00e",[[15,0,0],[23,600,0],[15,600,0],[22,1200,0],[15,1200,100]]]
   ]
 }
