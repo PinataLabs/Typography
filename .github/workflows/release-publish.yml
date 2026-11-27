@@ -226,6 +226,15 @@ jobs:
           done
           echo "$VERSION is not fully on nuget.org yet"
 
+      # One CycloneDX file per package, written next to the packages. Only a stable release attaches
+      # them to a GitHub Release, but this runs for a pre-release too: the stable path cannot be dry
+      # run, because its tag is pushed before this workflow starts, so a pre-release dry run is the
+      # one place to see the script work. The tool is pinned in .config/dotnet-tools.json.
+      - name: Generate CycloneDX SBOMs
+        run: |
+          dotnet tool restore
+          bash .github/scripts/generate-sbom.sh ./packages
+
       - name: Summary
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -354,3 +363,4 @@ jobs:
           files: |
             ./packages/*.nupkg
             ./packages/*.snupkg
+            ./packages/*.cdx.json
