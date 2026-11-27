@@ -890,8 +890,8 @@ to it. Each case of the font has a GSUB or GPOS lookup that applies only with a 
 glyph it changes: a chained context, a context, a reverse chaining and a ligature lookup, a pair, mark-to-base,
 mark-to-mark, mark-to-ligature and cursive lookup, and lookups across Han, Hiragana and Katakana. Two more cases
 apply only with a digit next to a Hebrew letter, which the Unicode Bidirectional Algorithm gives the other direction,
-one gives a digit an alternate only in the Hebrew script, and one applies only with an upright Han character next to
-a sideways hyphen-minus. The script splits each text into script
+one gives a digit an alternate only in the Hebrew script, one applies only with an upright Han character next to a
+sideways hyphen-minus, and one checks that a mark stays in the upright run of its base. The script splits each text into script
 runs as the library does, with Common and Inherited characters in the run before them, the Hebrew texts into runs of
 one direction too, which keep the Hebrew script, and the vertical text into runs of one orientation, and shapes each
 run in its own buffer. For each case that crosses a boundary it also shapes the text in one buffer, where the lookup

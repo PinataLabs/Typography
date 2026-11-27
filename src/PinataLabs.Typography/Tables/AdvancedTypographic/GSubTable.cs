@@ -139,6 +139,9 @@ internal class GSubTable : Table
         // Shapers must query the font that is actually being shaped, not the font of the text run.
         collection.FontMetrics = fontMetrics;
 
+        // A run ends where the orientation changes, which is known for a Tr glyph only once the vert lookups are probed.
+        this.ResolveVerticalForms(fontMetrics, collection);
+
         ShapingRunEnumerator runs = new(collection);
         while (runs.MoveNext() && runs.Start < maxCount)
         {
@@ -152,7 +155,6 @@ internal class GSubTable : Table
 
             // Plan substitution features for each glyph. A shaper can change the number of glyphs of the run, which
             // the run follows.
-            ResolveVerticalForms(fontMetrics, this, collection, index, runs.Count, script, shaper.DisabledFeatureTags);
             shaper.Plan(collection, index, runs.Count);
 
             IReadOnlyList<ShapingStage> stages = shaper.GetShapingStages();
@@ -199,29 +201,41 @@ internal class GSubTable : Table
     /// glyph in a vertical mixed layout has a vertical form in this font. Glyphs the <c>vert</c> feature
     /// substitutes are laid out upright; the others stay rotated and are shaped like any horizontal glyph.
     /// </summary>
-    private static void ResolveVerticalForms(
+    private void ResolveVerticalForms(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
+    {
+        TextOptions options = collection.TextOptions;
+        if (!options.LayoutMode.IsVerticalMixed())
+        {
+            return;
+        }
+
+        // The runs end where a glyph that is not yet resolved is rotated, which is fine, as each glyph is probed alone
+        // with the script of its run.
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
+        {
+            ScriptClass script = runs.Script;
+            IReadOnlyList<Tag> disabledFeatures = ShaperFactory.Create(script, this.GetScriptTag(script), options).DisabledFeatureTags;
+            this.ResolveVerticalForms(fontMetrics, collection, runs.Start, runs.End, script, disabledFeatures);
+        }
+    }
+
+    private void ResolveVerticalForms(
         FontMetrics fontMetrics,
-        GSubTable table,
         GlyphSubstitutionCollection collection,
-        int index,
-        int count,
+        int start,
+        int end,
         ScriptClass script,
         IReadOnlyList<Tag> disabledFeatures)
     {
-        if (!collection.TextOptions.LayoutMode.IsVerticalMixed())
-        {
-            return;
-        }
-
         Tag vert = Tag.Parse("vert");
         PlannedFeature[] vertOnly = [new(vert)];
-        TextOptions options = collection.TextOptions;
-        if (!table.TryGetFeatureLookups(vert, script, options.Language, disabledFeatures, out _))
+        if (!this.TryGetFeatureLookups(vert, script, collection.TextOptions.Language, disabledFeatures, out _))
         {
             return;
         }
 
-        for (int i = index; i < index + count; i++)
+        for (int i = start; i < end; i++)
         {
             GlyphShapingData data = collection[i];
             if (data.HasVerticalForm || CodePoint.GetVerticalOrientationType(data.CodePoint) != VerticalOrientationType.TransformRotate)
@@ -237,7 +251,7 @@ internal class GSubTable : Table
             SkippingGlyphIterator iterator = new(fontMetrics, probe, 0, default);
             int probeCount = 1;
             int operations = 0;
-            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, disabledFeatures, false, script, 0, ref probeCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
+            this.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, disabledFeatures, false, script, 0, ref probeCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
             data.HasVerticalForm = probe[0].GlyphId != data.GlyphId;
         }
     }

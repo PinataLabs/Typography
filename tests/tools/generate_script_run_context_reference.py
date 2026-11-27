@@ -44,6 +44,8 @@ the start of the text. Each case of the font has a lookup that applies only when
 * OrientationChange: in vertical text a caller splits text where its orientation changes. Han U+5B57 is upright and
   the hyphen-minus is sideways, so they are a run from top to bottom and a run from left to right. A ccmp lookup gives
   U+5B57 its alternate before the hyphen-minus. HarfBuzz applies calt only to horizontal text.
+* MarkOrientation: a mark takes the orientation of its base, as a grapheme cluster does in CSS, so the sideways acute
+  after U+5B57 is in its upright run, where a ccmp lookup gives the acute its alternate after U+5B57.
 
 Each text is shaped as the runs of a caller, and, for the cases that a script names, also in one buffer of that
 script, which shows that the lookup applies. Each row holds the case, the text, how the text is split, and the glyph
@@ -104,6 +106,7 @@ BIDI_CASES = [
 # The case, its text, and its runs of one orientation in vertical text: their start, end and direction.
 VERTICAL_CASES = [
     ("OrientationChange", [0x5B57, 0x002D], [(0, 1, "ttb"), (1, 2, "ltr")]),
+    ("MarkOrientation", [0x5B57, 0x0301], [(0, 2, "ttb")]),
 ]
 
 MARKS = [0x0301, 0x0483, 0x0484, 0x0487]
@@ -214,6 +217,7 @@ feature calt {
 feature ccmp {
     lookup ORIENTATION {
         sub u5B57' u002D by u5B57.alt;
+        sub u5B57 u0301' by u0301.alt;
     } ORIENTATION;
 } ccmp;
 
@@ -272,7 +276,7 @@ feature curs {
 EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
     "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u006F_u0070", "u0070.alt", "u03C9.alt", "u0072.alt",
-    "u0076.tail", "u0077.alt", "u0076.tail.alt", "u05D0.alt", "u0033.alt", "u5B57.alt",
+    "u0076.tail", "u0077.alt", "u0076.tail.alt", "u05D0.alt", "u0033.alt", "u5B57.alt", "u0301.alt",
 ]
 
 

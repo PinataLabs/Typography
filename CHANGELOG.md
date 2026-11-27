@@ -490,7 +490,10 @@ Unicode conformance suites to that version.
   direction, as HarfBuzz does when its caller splits text by script and then by the direction that the bidi algorithm
   resolves. A digit after a Hebrew letter is a run from left to right inside a run from right to left, so a `calt`
   lookup of alef before digit one, and a pair of bet and digit two, no longer apply in the layout. The digits keep the
-  script of their script run, so a lookup of the Hebrew script still applies to them. (#202)
+  script of their script run, so a lookup of the Hebrew script still applies to them. In vertical mixed text they
+  apply only within a run of one orientation, so a `ccmp` lookup of upright U+5B57 before the sideways hyphen-minus no
+  longer applies. A mark keeps the orientation of its base. A `c` and an upright copyright sign no longer form a
+  ligature in vertical mixed text. (#202)
 - A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
   does. It found the glyph of each nested lookup by walking the glyphs again from the first. After a nested ligature
   took the second glyph of the input, a nested lookup at that glyph changed the glyph after the input, which can be

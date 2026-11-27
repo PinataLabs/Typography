@@ -6,10 +6,12 @@ using PinataLabs.Typography.Unicode;
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
 /// <summary>
-/// Splits the glyphs of a collection into the runs that a caller of HarfBuzz shapes in a buffer each: runs of one script
-/// and one direction. A character of the scripts Common, Inherited or Unknown joins the script before it, or the script
+/// Splits the glyphs of a collection into the runs that a caller of HarfBuzz shapes in a buffer each: runs of one script,
+/// one direction and, in vertical mixed text, one orientation. A character of the scripts Common, Inherited or Unknown joins the script before it, or the script
 /// after it at the start of the text. A caller itemizes text by script first, so each piece of a script run keeps the
-/// script of the run, also a piece of digits that runs the other way.
+/// script of the run, also a piece of digits that runs the other way. A mark keeps the orientation of its base, as a
+/// grapheme cluster does in CSS. The orientation of a Tr glyph is <see cref="GlyphShapingData.HasVerticalForm"/>, which
+/// GSUB resolves before it shapes the runs.
 /// </summary>
 /// <remarks>
 /// The end of a run is kept as the number of glyphs after it, as <see cref="IGlyphShapingCollection.RunEnd"/> is, so a
@@ -77,15 +79,25 @@ internal struct ShapingRunEnumerator
 
     private readonly int GetRunEnd(int start, int scriptRunEnd)
     {
-        TextDirection direction = this.collection[start].Direction;
+        GlyphShapingData first = this.collection[start];
+        bool upright = this.IsUpright(first);
         int end = start + 1;
-        while (end < scriptRunEnd && this.collection[end].Direction == direction)
+        while (end < scriptRunEnd)
         {
+            GlyphShapingData data = this.collection[end];
+            if (data.Direction != first.Direction || (this.IsUpright(data) != upright && !CodePoint.IsMark(data.CodePoint)))
+            {
+                break;
+            }
+
             end++;
         }
 
         return end;
     }
+
+    private readonly bool IsUpright(GlyphShapingData data)
+        => AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, this.collection.TextOptions.LayoutMode, data.HasVerticalForm);
 
     private int GetScriptRunEnd(int start)
     {
