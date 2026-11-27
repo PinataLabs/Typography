@@ -107,6 +107,12 @@ internal sealed class FileFontMetrics : FontMetrics
     public override float ItalicAngle => this.fontMetrics.Value.ItalicAngle;
 
     /// <inheritdoc/>
+    public override FontDescriptorMetrics DescriptorMetrics => this.fontMetrics.Value.DescriptorMetrics;
+
+    /// <inheritdoc/>
+    public override FontEmbeddingPermissions EmbeddingPermissions => this.fontMetrics.Value.EmbeddingPermissions;
+
+    /// <inheritdoc/>
     public override IReadOnlyList<FontVariationAxis> VariationAxes => this.Description.Fvar?.Axes ?? [];
 
     /// <inheritdoc/>

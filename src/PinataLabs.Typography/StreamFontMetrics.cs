@@ -68,6 +68,11 @@ internal partial class StreamFontMetrics : FontMetrics
     private short underlinePosition;
     private short underlineThickness;
     private float italicAngle;
+    private short os2CapHeight;
+    private short os2XHeight;
+    private FontDescriptorMetrics? descriptorMetrics;
+    private MetricSource ascentSource;
+    private MetricSource descentSource;
     private FontMetrics? owner;
 
     // A face of a variable font keeps weak references to the variation instances that are alive, so that fonts that ask
@@ -521,7 +526,11 @@ internal partial class StreamFontMetrics : FontMetrics
         this.underlineThickness = mvar.Apply(MvarVariation.UnderlineThickness, post.UnderlineThickness);
         this.italicAngle = post.ItalicAngle;
 
-        HorizontalMetrics horizontalMetrics = InitializeHorizontalMetrics(hhea, vhea, os2, mvar);
+        // A version 2 or later table that stores no height states none, so MVAR does not give it one.
+        this.os2CapHeight = os2 is { Version: >= 2, CapHeight: not 0 } ? mvar.Apply(MvarVariation.CapHeight, os2.CapHeight) : (short)0;
+        this.os2XHeight = os2 is { Version: >= 2, XHeight: not 0 } ? mvar.Apply(MvarVariation.XHeight, os2.XHeight) : (short)0;
+
+        HorizontalMetrics horizontalMetrics = InitializeHorizontalMetrics(hhea, vhea, os2, mvar, out this.ascentSource, out this.descentSource);
         VerticalMetrics verticalMetrics = InitializeVerticalMetrics(horizontalMetrics, vhea, mvar);
 
         if (os2 is null)
@@ -553,7 +562,13 @@ internal partial class StreamFontMetrics : FontMetrics
         return (horizontalMetrics, verticalMetrics);
     }
 
-    private static HorizontalMetrics InitializeHorizontalMetrics(HorizontalHeadTable hhea, VerticalHeadTable? vhea, OS2Table? os2, in MvarVariation mvar)
+    private static HorizontalMetrics InitializeHorizontalMetrics(
+        HorizontalHeadTable hhea,
+        VerticalHeadTable? vhea,
+        OS2Table? os2,
+        in MvarVariation mvar,
+        out MetricSource ascentSource,
+        out MetricSource descentSource)
     {
         short ascender;
         short descender;
@@ -579,12 +594,16 @@ internal partial class StreamFontMetrics : FontMetrics
             ascender = os2.TypoAscender;
             descender = os2.TypoDescender;
             lineGap = os2.TypoLineGap;
+            ascentSource = MetricSource.Os2TypoAscender;
+            descentSource = MetricSource.Os2TypoDescender;
         }
         else
         {
             ascender = hhea.Ascender;
             descender = hhea.Descender;
             lineGap = hhea.LineGap;
+            ascentSource = MetricSource.HheaAscender;
+            descentSource = MetricSource.HheaDescender;
         }
 
         if (os2 is not null && (ascender == 0 || descender == 0))
@@ -594,11 +613,25 @@ internal partial class StreamFontMetrics : FontMetrics
                 ascender = os2.TypoAscender;
                 descender = os2.TypoDescender;
                 lineGap = os2.TypoLineGap;
+                ascentSource = MetricSource.Os2TypoAscender;
+                descentSource = MetricSource.Os2TypoDescender;
             }
             else
             {
                 winMetrics = os2;
+                ascentSource = MetricSource.Os2WinAscent;
+                descentSource = MetricSource.Os2WinDescent;
             }
+        }
+
+        // A font that states no ascent and descent gives them to the descriptor from head. The rules look at the stored values.
+        bool statesNone = winMetrics is not null
+            ? winMetrics.WinAscent == 0 && winMetrics.WinDescent == 0
+            : ascender == 0 && descender == 0;
+        if (statesNone)
+        {
+            ascentSource = MetricSource.HeadYMax;
+            descentSource = MetricSource.HeadYMin;
         }
 
         // MVAR varies the metrics that the rules above chose. The rules look at the values of the font, not at the varied ones.

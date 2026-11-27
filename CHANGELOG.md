@@ -25,6 +25,17 @@ An additive or breaking public API change needs all of these:
 
 ### Added
 
+- **Font descriptor metrics and embedding permissions.** `FontMetrics.DescriptorMetrics` gives the values that a PDF
+  `/FontDescriptor` is written from, in design units: `Ascent`, `Descent`, `CapHeight`, `XHeight`, `ItalicAngle`,
+  `BoundingBox` and `Flags`. Each value has a `MetricSource` that names the table field that gave it, or the fallback:
+  `Os2TypoAscender`, `Os2WinAscent`, `HheaAscender`, `HeadYMax`, `Os2CapHeight`, `CapitalHBounds`, `FallbackAscent` and
+  so on. `FontDescriptorFlags` has the bit positions of ISO 32000-1, Table 123, and holds what the tables state: fixed
+  pitch, serif, script, italic, and symbolic or non-symbolic from a (3, 0) `cmap` subtable. The library never sets all
+  caps, small caps or force bold. `FontMetrics.EmbeddingPermissions` gives the `OS/2` `fsType` as a
+  `FontEmbeddingUsage` (installable, restricted, preview and print, editable; the least restrictive bit set applies),
+  `NoSubsetting` (bit 8) and `BitmapEmbeddingOnly` (bit 9), and `IsStated` is `false` for a font with no `OS/2` table.
+  The ascent and descent follow the rules of `HorizontalMetrics`, and the order of every value is in
+  `docs/specs/003-font-descriptor.md`. The values of the 208 faces of the test fonts match fontTools. (#157)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
@@ -298,6 +309,11 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- The `OS/2` table reader reads `ulCodePageRange1` and `ulCodePageRange2` as 32-bit values. It read 16 bits each, so the
+  `sxHeight`, `sCapHeight`, `usDefaultChar`, `usBreakChar`, `usMaxContext`, `usLowerOpticalPointSize` and
+  `usUpperOpticalPointSize` of a version 2 or later table were read 4 bytes off. Nothing used them until the font
+  descriptor metrics. It also skips the fields that the length of a truncated table does not cover, where it read the
+  bytes of the next table. (#157)
 - A TrueType or CFF font with no `OS/2` table loads. On macOS these are AppleGothic and AppleMyungjo, which threw
   `MissingFontTableException` for `OS/2` on first use. As in HarfBuzz 15.0.0, the ascender, descender and line gap come
   from `hhea`, and `head.macStyle` gives the weight (400 or bold 700), the width (100%, condensed 75% or expanded
