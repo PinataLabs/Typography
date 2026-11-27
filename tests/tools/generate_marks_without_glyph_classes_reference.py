@@ -62,6 +62,11 @@ calls the acute a base. So the acute keeps its advance and its place: in f, acut
 f. MarksWithoutGlyphClassesTests checks that a grave of the font of f goes over f past such an acute of a fallback font,
 as HarfBuzz moves the pen back by the advance of any glyph of a cluster that it does not place.
 
+MarksWithoutGlyphClassesGposLatin.ttf has a, Cyrillic a, alef, the acute and qamats, and a GPOS table with the latn
+script alone. HarfBuzz places no mark around its base in a font with GPOS, whatever scripts the table has, so in
+Cyrillic a, acute the acute stays after the base. The Hebrew shaper turns GPOS off for a font without the hebr script,
+so in alef, qamats HarfBuzz places the qamats under alef.
+
 The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the line, as
 HarfBuzz gives them. MarksWithoutGlyphClassesTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -158,6 +163,14 @@ feature mark { pos base u0061 <anchor 100 500> mark @Accent; } mark;
 feature mkmk { pos mark u0301 <anchor 50 900> mark @Accent; } mkmk;
 """
 
+GPOS_LATIN_FEATURES = """
+languagesystem latn dflt;
+markClass [u0301 u05B8] <anchor 0 0> @Accent;
+feature mark { pos base u0061 <anchor 100 500> mark @Accent; } mark;
+"""
+
+GPOS_LATIN_TEXTS = ["á", "а́", "אָ"]
+
 GDEF_BASE_ACUTE_FEATURES = """
 languagesystem DFLT dflt; languagesystem latn dflt;
 feature kern { pos u0061 u0061 -10; } kern;
@@ -183,8 +196,13 @@ def main():
             ("MarksWithoutGlyphClassesGposAcute.ttf", [0x61, 0x0301], GPOS_ACUTE_FEATURES, [])]:
         hb_font = build_font_without_gdef(file_name, code_points, features, extra_glyphs)
         rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in MIXED_TEXTS)
-    hb_font = load_font(build_font("MarksWithoutGlyphClassesGdefBaseAcute.ttf", [0x61, 0x0301], GDEF_BASE_ACUTE_FEATURES))
-    rows.extend(["MarksWithoutGlyphClassesGdefBaseAcute.ttf", text, shape_line(hb_font, text)[0]] for text in MIXED_TEXTS)
+    for file_name, code_points, features, without_gdef, texts in [
+            ("MarksWithoutGlyphClassesGdefBaseAcute.ttf", [0x61, 0x0301], GDEF_BASE_ACUTE_FEATURES, False, MIXED_TEXTS),
+            ("MarksWithoutGlyphClassesGposLatin.ttf", [0x61, 0x0430, 0x05D0, 0x0301, 0x05B8], GPOS_LATIN_FEATURES, True,
+             GPOS_LATIN_TEXTS)]:
+        hb_font = (build_font_without_gdef(file_name, code_points, features, []) if without_gdef
+                   else load_font(build_font(file_name, code_points, features)))
+        rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in texts)
     write_reference(REFERENCE, rows)
 
 

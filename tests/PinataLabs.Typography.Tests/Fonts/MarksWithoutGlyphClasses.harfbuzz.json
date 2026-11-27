@@ -74,6 +74,9 @@
     ["MarksWithoutGlyphClassesGdefBaseAcute.ttf","a\u0301",[[1,0,0],[2,600,0]]],
     ["MarksWithoutGlyphClassesGdefBaseAcute.ttf","a\u0301b",[[1,0,0],[2,600,0],[0,1200,0]]],
     ["MarksWithoutGlyphClassesGdefBaseAcute.ttf","f\u0301\u0300",[[0,0,0],[2,600,0],[0,1200,0]]],
-    ["MarksWithoutGlyphClassesGdefBaseAcute.ttf","f\u0301\u0301",[[0,0,0],[2,600,0],[2,1200,0]]]
+    ["MarksWithoutGlyphClassesGdefBaseAcute.ttf","f\u0301\u0301",[[0,0,0],[2,600,0],[2,1200,0]]],
+    ["MarksWithoutGlyphClassesGposLatin.ttf","a\u0301",[[1,0,0],[4,100,500]]],
+    ["MarksWithoutGlyphClassesGposLatin.ttf","\u0430\u0301",[[2,0,0],[4,600,0]]],
+    ["MarksWithoutGlyphClassesGposLatin.ttf","\u05d0\u05b8",[[5,300,-62],[3,0,0]]]
   ]
 }
