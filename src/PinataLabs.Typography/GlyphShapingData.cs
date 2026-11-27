@@ -51,6 +51,7 @@ internal class GlyphShapingData
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsSubstituted = data.IsSubstituted;
         this.IsDecomposed = data.IsDecomposed;
+        this.IsVowelSignPart = data.IsVowelSignPart;
         this.IsMultiplied = data.IsMultiplied;
         this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
@@ -233,6 +234,12 @@ internal class GlyphShapingData
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution
     /// </summary>
     public bool IsDecomposed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is a part of a vowel sign that a shaper split. A part can have the
+    /// code point of the whole sign, as the second part of Khmer U+17BE has, so the code point alone does not tell them apart.
+    /// </summary>
+    public bool IsVowelSignPart { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the glyph is one of the glyphs that a multiple substitution made of one.

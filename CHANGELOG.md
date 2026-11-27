@@ -546,6 +546,11 @@ Unicode conformance suites to that version.
   HarfBuzz 15.0.0. It went on the first, which differs when that glyph is itself a ligature: in
   `LigaturePropertiesNested.ttf`, where a and b ligate and then a_b and c, a, b, acute, c put the acute on the
   component of a, where HarfBuzz puts it on the component of b. (#191)
+- A fallback font that keeps whole a Khmer vowel sign, such as U+17BE, that the font of the text split draws the whole
+  sign once, also when the font drew the first part. The second part of the split sign has the code point of the
+  sign, so the glyph of the whole sign took the place of that part alone, and the first part was drawn twice. With
+  `FontFallbackPartsPre.ttf`, which has U+17C1 and lacks U+17BE, and the fallback `FontFallbackPartsWhole.ttf`, ka,
+  U+17BE drew U+17C1, ka and the whole sign. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

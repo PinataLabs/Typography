@@ -218,9 +218,11 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
 
     // Two glyphs of a character draw the same part when a shaper inserted both or neither, as it inserts a dotted circle,
-    // and they have the same code point, as each part of a vowel sign that a shaper split has its own.
+    // split both or neither from a vowel sign, and they have the same code point, as each part of a split sign has its own.
     private static bool IsSamePart(GlyphShapingData glyph, GlyphShapingData other)
-        => glyph.IsInserted == other.IsInserted && glyph.CodePoint == other.CodePoint;
+        => glyph.IsInserted == other.IsInserted
+            && glyph.IsVowelSignPart == other.IsVowelSignPart
+            && glyph.CodePoint == other.CodePoint;
 
     /// <summary>
     /// Plans the glyphs that replace the glyphs of one character. Each missing glyph takes the glyphs of the fallback font

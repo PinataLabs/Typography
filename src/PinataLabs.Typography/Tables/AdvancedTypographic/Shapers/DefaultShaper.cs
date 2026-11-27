@@ -310,6 +310,7 @@ internal class DefaultShaper : BaseShaper
             for (int j = 0; j < parts.Length; j++)
             {
                 substitutionCollection[i + j].CodePoint = new(parts[j]);
+                substitutionCollection[i + j].IsVowelSignPart = true;
             }
         }
     }
