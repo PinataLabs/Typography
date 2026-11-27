@@ -56,6 +56,9 @@ internal static class SeedCorpus
         "FontPrograms/cff-encoding-format1.otf",
         "FontPrograms/cff-expertsubset.otf",
         "FontPrograms/cff-isoadobe.otf",
+
+        // GSUB and GPOS context lookups that name themselves (issue #205).
+        "NestingLimit.ttf",
     ];
 
     private static readonly string[] BareCffFiles =

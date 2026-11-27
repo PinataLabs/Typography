@@ -16,6 +16,9 @@ internal static class AdvancedTypographicUtils
     // by maliciously crafted fonts.
     // Based on HarfBuzz hb-buffer.hh
     public const int MaxContextLength = 64;
+
+    // HB_MAX_NESTING_LEVEL of hb-limits.hh: how deep the nested lookups of context lookups apply.
+    public const int MaxNestingLevel = 64;
     private const int MaxLengthFactor = 64;
     private const int MaxLengthMinimum = 16384;
     private const int MaxOperationsFactor = 1024;
@@ -61,7 +64,8 @@ internal static class AdvancedTypographicUtils
     /// <summary>
     /// Applies the nested lookups of a context rule at the input glyphs that it matched, as HarfBuzz does in apply_lookup.
     /// A record whose sequence index is past the input, or past the run, is skipped. A nested lookup that adds or removes
-    /// glyphs moves the input glyphs after it.
+    /// glyphs moves the input glyphs after it. As in HarfBuzz, no record applies past <see cref="MaxNestingLevel"/>, or
+    /// after a nested lookup reached it.
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <param name="table">The GSUB table.</param>
@@ -89,16 +93,22 @@ internal static class AdvancedTypographicUtils
                 continue;
             }
 
-            // As in HarfBuzz, a reverse chaining substitution applies only as a lookup of a feature.
-            GSub.LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
-            if (lookup.IsReverse)
+            if (!TryEnterNestedLookup(collection))
             {
-                continue;
+                break;
             }
 
+            // As in HarfBuzz, a reverse chaining substitution applies only as a lookup of a feature. HarfBuzz turns it
+            // down after it takes the nesting level, so a reverse lookup past the limit puts the run in error too.
+            GSub.LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
             int position = positions[sequenceIndex];
             int length = collection.Count;
-            lookup.TrySubstitution(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            if (!lookup.IsReverse)
+            {
+                lookup.TrySubstitution(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            }
+
+            collection.NestingLevel--;
             int delta = collection.Count - length;
             if (delta == 0)
             {
@@ -145,7 +155,8 @@ internal static class AdvancedTypographicUtils
 
     /// <summary>
     /// Applies the nested lookups of a context rule at the input glyphs that it matched, as HarfBuzz does. A record
-    /// whose sequence index is past the input is skipped. Positioning neither adds nor removes glyphs.
+    /// whose sequence index is past the input is skipped. Positioning neither adds nor removes glyphs. As in HarfBuzz,
+    /// no record applies past <see cref="MaxNestingLevel"/>, or after a nested lookup reached it.
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <param name="table">The GPOS table.</param>
@@ -170,10 +181,34 @@ internal static class AdvancedTypographicUtils
                 continue;
             }
 
+            if (!TryEnterNestedLookup(collection))
+            {
+                break;
+            }
+
             int position = positions[lookupRecord.SequenceIndex];
             LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
             lookup.TryUpdatePosition(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            collection.NestingLevel--;
         }
+    }
+
+    // As HarfBuzz does in recurse: a nested lookup past the limit puts the run in error, and no lookup applies after it.
+    private static bool TryEnterNestedLookup(IGlyphShapingCollection collection)
+    {
+        if (collection.NestingLimitReached)
+        {
+            return false;
+        }
+
+        if (collection.NestingLevel == MaxNestingLevel)
+        {
+            collection.NestingLimitReached = true;
+            return false;
+        }
+
+        collection.NestingLevel++;
+        return true;
     }
 
     /// <summary>

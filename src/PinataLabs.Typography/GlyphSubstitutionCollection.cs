@@ -61,6 +61,12 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <inheritdoc />
     public int RunEnd => this.glyphs.Count - this.glyphsAfterRun;
 
+    /// <inheritdoc />
+    public int NestingLevel { get; set; }
+
+    /// <inheritdoc />
+    public bool NestingLimitReached { get; set; }
+
     /// <summary>
     /// Gets or sets the metrics of the font currently being shaped. This can differ from the font
     /// of a glyph's text run when the glyph is being shaped by a fallback font.
@@ -105,6 +111,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     {
         this.runStart = start;
         this.glyphsAfterRun = this.glyphs.Count - start - count;
+        this.NestingLevel = 0;
+        this.NestingLimitReached = false;
     }
 
     /// <summary>

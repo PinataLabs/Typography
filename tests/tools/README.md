@@ -906,6 +906,28 @@ python tests/tools/generate_script_run_context_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Nesting limit reference
+
+`generate_nesting_limit_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/NestingLimit.ttf` and writes
+`NestingLimit.harfbuzz.json` next to it (issue #205). HarfBuzz applies the nested lookups of a context lookup at most
+64 levels deep, its `HB_MAX_NESTING_LEVEL`. Each case of the font has a GSUB or GPOS context lookup whose records name a
+lookup that moves the glyph one step and then the context lookup itself, or a second one that names it back, so the
+glyph that HarfBuzz gives counts the levels. Two control cases nest less deep than the limit. feaLib does not let a
+lookup name itself, so the feature code names a placeholder and the script points those records at the right lookup.
+HarfBuzz reports a failure when it runs out of levels, which uharfbuzz raises as MemoryError, and the script reads the
+glyphs from the buffer anyway. The reference holds the glyph ID and the place of each glyph.
+
+`NestingLimitTests` checks that the library gives the same glyphs in the same places.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_nesting_limit_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Thai private use reference
 
 `generate_thai_pua_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ThaiPua.harfbuzz.json`. When the

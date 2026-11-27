@@ -493,6 +493,10 @@ Unicode conformance suites to that version.
   a nested lookup whose glyph a ligature took, and the library now does too. The walk also passed a ZWJ or other
   default-ignorable glyph that the input names, so a nested lookup after it changed the glyph after its own. (#194,
   #203)
+- A GSUB or GPOS context lookup whose nested lookups name the lookup itself, directly or through other lookups, no
+  longer overflows the stack and ends the process. As in HarfBuzz, nested lookups apply at most 64 levels deep. When a
+  nested lookup would go deeper, HarfBuzz stops shaping the buffer, and the library applies no further GSUB or GPOS
+  lookup to that script run either, so a lookup that names itself twice takes 64 steps and not 2^64. (#205)
 - The bidi algorithm splits the text into paragraphs after each paragraph separator, as UAX #9 rule P1 says, and
   resolves each paragraph on its own. LF, CR, U+0085, U+2029 and U+001C to U+001E end a paragraph, and CR LF is one
   separator. It took the whole text as one paragraph, so rules W2 and N1 read across a line feed: in a left-to-right

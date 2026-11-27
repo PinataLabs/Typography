@@ -228,6 +228,15 @@ internal class GSubTable : Table
                 i += delta;
             }
 
+            // GPOS reads it when it positions the glyphs of the run.
+            if (collection.NestingLimitReached)
+            {
+                for (int g = collection.RunStart; g < collection.RunEnd; g++)
+                {
+                    collection[g].SubstitutionReachedNestingLimit = true;
+                }
+            }
+
             collection.SetRun(0, collection.Count);
         }
     }
@@ -320,7 +329,7 @@ internal class GSubTable : Table
                 iterator.Reset(index + count, lookupTable.LookupFlags);
                 while (iterator.Increment(-1) >= index)
                 {
-                    if (currentOperations++ >= maxOperationsCount)
+                    if (currentOperations++ >= maxOperationsCount || collection.NestingLimitReached)
                     {
                         return;
                     }
@@ -337,7 +346,7 @@ internal class GSubTable : Table
             iterator.Start(index, lookupTable.LookupFlags);
             while (iterator.Index < index + count)
             {
-                if (collection.Count >= maxCount || currentOperations++ >= maxOperationsCount)
+                if (collection.Count >= maxCount || currentOperations++ >= maxOperationsCount || collection.NestingLimitReached)
                 {
                     return;
                 }
