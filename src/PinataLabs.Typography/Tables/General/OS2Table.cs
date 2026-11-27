@@ -206,6 +206,16 @@ internal sealed class OS2Table : Table
 
     public ushort WidthClass => this.widthClass;
 
+    public ushort FsType => this.styleType;
+
+    public short FamilyClass => this.familyClass;
+
+    public byte[] Panose => this.panose;
+
+    public short CapHeight => this.capHeight;
+
+    public short XHeight => this.heightX;
+
     public short TypoAscender { get; }
 
     public short TypoDescender { get; }

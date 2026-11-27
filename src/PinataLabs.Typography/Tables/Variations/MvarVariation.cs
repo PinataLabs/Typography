@@ -31,6 +31,8 @@ internal readonly struct MvarVariation
     internal static readonly Tag SuperscriptYOffset = Tag.Parse("spyo");
     internal static readonly Tag StrikeoutSize = Tag.Parse("strs");
     internal static readonly Tag StrikeoutPosition = Tag.Parse("stro");
+    internal static readonly Tag CapHeight = Tag.Parse("cpht");
+    internal static readonly Tag XHeight = Tag.Parse("xhgt");
     internal static readonly Tag UnderlineThickness = Tag.Parse("unds");
     internal static readonly Tag UnderlinePosition = Tag.Parse("undo");
 

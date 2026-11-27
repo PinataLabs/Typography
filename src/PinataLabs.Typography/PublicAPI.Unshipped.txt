@@ -221,3 +221,66 @@ static PinataLabs.Typography.FontVariation.operator !=(PinataLabs.Typography.Fon
 static PinataLabs.Typography.FontVariation.operator ==(PinataLabs.Typography.FontVariation left, PinataLabs.Typography.FontVariation right) -> bool
 PinataLabs.Typography.Font.Variations.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.FontVariation>!
 PinataLabs.Typography.Font.WithVariations(params System.ReadOnlySpan<PinataLabs.Typography.FontVariation> variations) -> PinataLabs.Typography.Font!
+abstract PinataLabs.Typography.FontMetrics.DescriptorMetrics.get -> PinataLabs.Typography.FontDescriptorMetrics!
+abstract PinataLabs.Typography.FontMetrics.EmbeddingPermissions.get -> PinataLabs.Typography.FontEmbeddingPermissions
+PinataLabs.Typography.FontBoundingBox
+PinataLabs.Typography.FontBoundingBox.FontBoundingBox() -> void
+PinataLabs.Typography.FontBoundingBox.FontBoundingBox(short xMin, short yMin, short xMax, short yMax) -> void
+PinataLabs.Typography.FontBoundingBox.XMax.get -> short
+PinataLabs.Typography.FontBoundingBox.XMin.get -> short
+PinataLabs.Typography.FontBoundingBox.YMax.get -> short
+PinataLabs.Typography.FontBoundingBox.YMin.get -> short
+PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.AllCap = 65536 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.FixedPitch = 1 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.ForceBold = 262144 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.Italic = 64 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.None = 0 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.Nonsymbolic = 32 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.Script = 8 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.Serif = 2 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.SmallCap = 131072 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorFlags.Symbolic = 4 -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorMetrics
+PinataLabs.Typography.FontDescriptorMetrics.Ascent.get -> short
+PinataLabs.Typography.FontDescriptorMetrics.AscentSource.get -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.FontDescriptorMetrics.BoundingBox.get -> PinataLabs.Typography.FontBoundingBox
+PinataLabs.Typography.FontDescriptorMetrics.BoundingBoxSource.get -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.FontDescriptorMetrics.CapHeight.get -> short
+PinataLabs.Typography.FontDescriptorMetrics.CapHeightSource.get -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.FontDescriptorMetrics.Descent.get -> short
+PinataLabs.Typography.FontDescriptorMetrics.DescentSource.get -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.FontDescriptorMetrics.Flags.get -> PinataLabs.Typography.FontDescriptorFlags
+PinataLabs.Typography.FontDescriptorMetrics.ItalicAngle.get -> float
+PinataLabs.Typography.FontDescriptorMetrics.ItalicAngleSource.get -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.FontDescriptorMetrics.XHeight.get -> short
+PinataLabs.Typography.FontDescriptorMetrics.XHeightSource.get -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.FontEmbeddingPermissions
+PinataLabs.Typography.FontEmbeddingPermissions.BitmapEmbeddingOnly.get -> bool
+PinataLabs.Typography.FontEmbeddingPermissions.FontEmbeddingPermissions() -> void
+PinataLabs.Typography.FontEmbeddingPermissions.FsType.get -> ushort
+PinataLabs.Typography.FontEmbeddingPermissions.IsStated.get -> bool
+PinataLabs.Typography.FontEmbeddingPermissions.NoSubsetting.get -> bool
+PinataLabs.Typography.FontEmbeddingPermissions.Usage.get -> PinataLabs.Typography.FontEmbeddingUsage
+PinataLabs.Typography.FontEmbeddingUsage
+PinataLabs.Typography.FontEmbeddingUsage.Editable = 3 -> PinataLabs.Typography.FontEmbeddingUsage
+PinataLabs.Typography.FontEmbeddingUsage.Installable = 0 -> PinataLabs.Typography.FontEmbeddingUsage
+PinataLabs.Typography.FontEmbeddingUsage.PreviewAndPrint = 2 -> PinataLabs.Typography.FontEmbeddingUsage
+PinataLabs.Typography.FontEmbeddingUsage.Restricted = 1 -> PinataLabs.Typography.FontEmbeddingUsage
+PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.CapitalHBounds = 12 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.FallbackAscent = 14 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.HeadBounds = 9 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.HeadYMax = 7 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.HeadYMin = 8 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.HheaAscender = 5 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.HheaDescender = 6 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.None = 0 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.Os2CapHeight = 10 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.Os2TypoAscender = 1 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.Os2TypoDescender = 2 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.Os2WinAscent = 3 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.Os2WinDescent = 4 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.Os2XHeight = 11 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.PostItalicAngle = 15 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.MetricSource.SmallXBounds = 13 -> PinataLabs.Typography.MetricSource
