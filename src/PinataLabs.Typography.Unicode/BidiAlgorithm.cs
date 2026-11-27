@@ -1366,7 +1366,9 @@ internal sealed class BidiAlgorithm
     /// </summary>
     /// <remarks>
     /// A removed character in a sequence that L1 resets takes the paragraph level. Every other removed character takes
-    /// the level of the character before it after L1, so one after a separator takes the reset level.
+    /// the level of the character before it after L1, so one after a separator takes the reset level. A removed character
+    /// at the start of the line keeps the level that <see cref="Process(BidiData, bool)"/> gave it: that of the character
+    /// before it in the paragraph, or the paragraph level at the start of the paragraph.
     /// </remarks>
     /// <param name="types">The bidi types of the line.</param>
     /// <param name="levels">The resolved levels of the line, which this resets in place.</param>
@@ -1463,8 +1465,9 @@ internal sealed class BidiAlgorithm
             return;
         }
 
-        // Fix up first character
-        if (this.ResolvedLevels[0] < 0)
+        // Fix up first character. Section 5.2: a removed character with no character before it takes the paragraph level,
+        // where rules X2 to X5 gave an embedding control the level that it pushes.
+        if (this.ResolvedLevels[0] < 0 || IsRemovedByX9(this.originalTypes[0]))
         {
             this.ResolvedLevels[0] = this.paragraphEmbeddingLevel;
         }
