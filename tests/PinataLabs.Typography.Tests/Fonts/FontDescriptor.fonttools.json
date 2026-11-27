@@ -477,6 +477,62 @@
     "bitmapEmbeddingOnly": false
    }
   },
+  "FontDescriptor/ObliqueVersion3.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/Os2Zeros.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 700,
+   "ascentSource": "HeadYMax",
+   "descent": -150,
+   "descentSource": "HeadYMin",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 32,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
   "FontDescriptor/PanoseScript.ttf#0": {
    "unitsPerEm": 1000,
    "ascent": 800,
@@ -525,6 +581,34 @@
    ],
    "boundingBoxSource": "HeadBounds",
    "flags": 34,
+   "embedding": {
+    "isStated": true,
+    "fsType": 4,
+    "usage": "PreviewAndPrint",
+    "noSubsetting": false,
+    "bitmapEmbeddingOnly": false
+   }
+  },
+  "FontDescriptor/SymbolFormat6.ttf#0": {
+   "unitsPerEm": 1000,
+   "ascent": 800,
+   "ascentSource": "HheaAscender",
+   "descent": -200,
+   "descentSource": "HheaDescender",
+   "capHeight": 700,
+   "capHeightSource": "CapitalHBounds",
+   "xHeight": 500,
+   "xHeightSource": "SmallXBounds",
+   "italicAngle": 0.0,
+   "italicAngleSource": "PostItalicAngle",
+   "boundingBox": [
+    50,
+    -150,
+    550,
+    700
+   ],
+   "boundingBoxSource": "HeadBounds",
+   "flags": 4,
    "embedding": {
     "isStated": true,
     "fsType": 4,
@@ -5825,5 +5909,65 @@
     "bitmapEmbeddingOnly": false
    }
   }
+ },
+ "instances": {
+  "Teko/Teko-Variable.ttf": [
+   {
+    "location": {
+     "wght": 300
+    },
+    "ascent": 958,
+    "descent": -475,
+    "capHeight": 622,
+    "xHeight": 485
+   },
+   {
+    "location": {
+     "wght": 500
+    },
+    "ascent": 958,
+    "descent": -475,
+    "capHeight": 631,
+    "xHeight": 485
+   },
+   {
+    "location": {
+     "wght": 700
+    },
+    "ascent": 958,
+    "descent": -475,
+    "capHeight": 642,
+    "xHeight": 486
+   }
+  ],
+  "SourceSans3/SourceSans3VF-Upright.otf": [
+   {
+    "location": {
+     "wght": 200
+    },
+    "ascent": 1000,
+    "descent": -326,
+    "capHeight": 660,
+    "xHeight": 478
+   },
+   {
+    "location": {
+     "wght": 600
+    },
+    "ascent": 1000,
+    "descent": -326,
+    "capHeight": 660,
+    "xHeight": 491
+   },
+   {
+    "location": {
+     "wght": 900
+    },
+    "ascent": 1000,
+    "descent": -326,
+    "capHeight": 660,
+    "xHeight": 500
+   }
+  ]
  }
 }

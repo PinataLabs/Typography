@@ -19,13 +19,19 @@ internal sealed class CMapTable : Table
     private readonly Format14SubTable[] format14SubTables = [];
     private CodePoint[]? codepoints;
 
-    public CMapTable(IEnumerable<CMapSubTable> tables)
+    public CMapTable(IEnumerable<CMapSubTable> tables, IReadOnlyList<EncodingRecord>? encodingRecords = null)
     {
+        this.EncodingRecords = encodingRecords ?? [];
         this.Tables = tables.OrderBy(t => GetPreferredPlatformOrder(t.Platform)).ToArray();
         this.format14SubTables = this.Tables.OfType<Format14SubTable>().ToArray();
     }
 
     internal CMapSubTable[] Tables { get; }
+
+    /// <summary>
+    /// Gets the encoding records of the table, including those whose subtable has a format that the library does not read.
+    /// </summary>
+    internal IReadOnlyList<EncodingRecord> EncodingRecords { get; }
 
     private static int GetPreferredPlatformOrder(PlatformIDs platform)
         => platform switch
@@ -143,6 +149,6 @@ internal sealed class CMapTable : Table
             }
         }
 
-        return new CMapTable(tables);
+        return new CMapTable(tables, encodings);
     }
 }

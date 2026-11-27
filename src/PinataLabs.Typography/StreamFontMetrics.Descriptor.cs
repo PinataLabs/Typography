@@ -74,9 +74,9 @@ internal partial class StreamFontMetrics
 
     private static bool HasSymbolCmap(CMapTable cmap)
     {
-        foreach (CMapSubTable subTable in cmap.Tables)
+        foreach (EncodingRecord record in cmap.EncodingRecords)
         {
-            if (subTable.Platform == PlatformIDs.Windows && subTable.Encoding == 0)
+            if (record.PlatformID == PlatformIDs.Windows && record.EncodingID == 0)
             {
                 return true;
             }
@@ -91,16 +91,15 @@ internal partial class StreamFontMetrics
         OS2Table? os2 = tables.Os2;
         HeadTable head = tables.Head;
 
+        // InitializeHorizontalMetrics decided, from the values the font stores, whether the font states no ascent and descent.
         short ascent = this.horizontalMetrics.Ascender;
         short descent = this.horizontalMetrics.Descender;
         MetricSource ascentSource = this.ascentSource;
         MetricSource descentSource = this.descentSource;
-        if (ascent == 0 && descent == 0)
+        if (ascentSource == MetricSource.HeadYMax)
         {
             ascent = VariationRounding.ToInt16(head.Bounds.Max.Y);
             descent = VariationRounding.ToInt16(head.Bounds.Min.Y);
-            ascentSource = MetricSource.HeadYMax;
-            descentSource = MetricSource.HeadYMin;
         }
 
         short capHeight = this.os2CapHeight;
@@ -143,7 +142,10 @@ internal partial class StreamFontMetrics
             flags |= FontDescriptorFlags.Script;
         }
 
-        bool isItalic = (os2 is not null && (os2.FontStyle & (OS2Table.FontStyleSelection.ITALIC | OS2Table.FontStyleSelection.OBLIQUE)) != 0)
+        // The OBLIQUE bit of fsSelection is reserved before version 4.
+        bool isItalic = (os2 is not null
+                && (os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.ITALIC)
+                    || (os2.Version >= 4 && os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.OBLIQUE))))
             || head.MacStyle.HasFlag(HeadTable.HeadMacStyle.Italic)
             || this.italicAngle != 0;
         if (isItalic)

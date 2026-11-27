@@ -310,9 +310,10 @@ An additive or breaking public API change needs all of these:
 ### Fixed
 
 - The `OS/2` table reader reads `ulCodePageRange1` and `ulCodePageRange2` as 32-bit values. It read 16 bits each, so the
-  `sxHeight`, `sCapHeight`, `usDefaultChar`, `usBreakChar` and `usMaxContext` of a version 2 or later table were 4 bytes off.
-  Nothing used them until the font descriptor metrics. (#157)
-
+  `sxHeight`, `sCapHeight`, `usDefaultChar`, `usBreakChar`, `usMaxContext`, `usLowerOpticalPointSize` and
+  `usUpperOpticalPointSize` of a version 2 or later table were read 4 bytes off. Nothing used them until the font
+  descriptor metrics. It also skips the fields that the length of a truncated table does not cover, where it read the
+  bytes of the next table. (#157)
 - A TrueType or CFF font with no `OS/2` table loads. On macOS these are AppleGothic and AppleMyungjo, which threw
   `MissingFontTableException` for `OS/2` on first use. As in HarfBuzz 15.0.0, the ascender, descender and line gap come
   from `hhea`, and `head.macStyle` gives the weight (400 or bold 700), the width (100%, condensed 75% or expanded

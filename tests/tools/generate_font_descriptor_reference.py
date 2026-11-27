@@ -19,7 +19,11 @@ permissions. It reads the tables with fontTools and applies the precedence that 
   top of the glyph of U+0048 or U+0078 (see glyph_name_of), else the ascent (cap height) or 0 (x-height). The top of a glyph is the yMax of
   its glyf header, or the top of its CFF outline.
 * Italic angle: post italicAngle. Bounding box: head xMin, yMin, xMax and yMax.
-* Flags: the bits of ISO 32000-1 Table 123 that the tables state.
+* Flags: the bits of ISO 32000-1 Table 123 that the tables state. The OBLIQUE bit of fsSelection counts only in an OS/2
+  table of version 4 or later, and a (3, 0) cmap subtable of any format makes the font symbolic.
+
+The reference also holds, under "instances", the ascent, descent, cap height and x-height of variation instances of the
+variable test fonts, from fontTools.varLib.instancer, which adds the MVAR deltas (hasc, hdsc, cpht and xhgt) to the tables.
 
 The script also builds the fonts in Fonts/FontDescriptor, which cover what the other faces do not: the win metrics and the
 head fallback, a symbol cmap, the PANOSE classification, and the fsType bits that restrict embedding.
@@ -38,6 +42,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTCollection, TTFont
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables.O_S_2f_2 import Panose
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
@@ -164,8 +169,10 @@ def is_script(os2):
 
 
 def is_italic(font, os2):
+    # The OBLIQUE bit is reserved before OS/2 version 4.
+    mask = FS_SELECTION_ITALIC | (FS_SELECTION_OBLIQUE if os2 is not None and os2.version >= 4 else 0)
     return (
-        (os2 is not None and os2.fsSelection & (FS_SELECTION_ITALIC | FS_SELECTION_OBLIQUE) != 0)
+        (os2 is not None and os2.fsSelection & mask != 0)
         or font["head"].macStyle & MAC_STYLE_ITALIC != 0
         or font["post"].italicAngle != 0
     )
@@ -235,7 +242,7 @@ def panose(family_kind, serif_style):
     return result
 
 
-def build_synthetic(file_name, hhea=(800, -200), os2=None, symbol=False, fixed_pitch=False, italic_angle=0):
+def build_synthetic(file_name, hhea=(800, -200), os2=None, symbol=False, fixed_pitch=False, italic_angle=0, symbol_format6=False):
     """Saves a TrueType font of four boxes. `os2` is the arguments of setupOS2, or None for a font with no OS/2 table."""
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(list(GLYPHS))
@@ -262,6 +269,12 @@ def build_synthetic(file_name, hhea=(800, -200), os2=None, symbol=False, fixed_p
         cmap = builder.font["cmap"]
         cmap.tables = [table for table in cmap.tables if (table.platformID, table.platEncID) == (3, 1)]
         cmap.tables[0].platEncID = 0
+    if symbol_format6:
+        # A (3, 0) subtable of a format that the library does not read, next to the (3, 1) one that it does.
+        table = CmapSubtable.newSubtable(6)
+        table.platformID, table.platEncID, table.language = 3, 0, 0
+        table.cmap = {code + SYMBOL_OFFSET: name for code, name in code_points.items()}
+        builder.font["cmap"].tables.append(table)
     builder.font.save(os.path.join(SYNTHETIC, file_name))
 
 
@@ -302,6 +315,24 @@ def build_synthetic_fonts():
         os2=dict(version=4, sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200,
                  sFamilyClass=0, panose=panose(3, 0), fsSelection=1 << 9),
     )
+    # The OBLIQUE bit is reserved in a version 3 table, so the font is not italic.
+    build_synthetic(
+        "ObliqueVersion3.ttf",
+        os2=dict(version=3, sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200,
+                 sFamilyClass=0, fsSelection=1 << 9),
+    )
+    # The only (3, 0) subtable has format 6, which the library does not read, and the font is still symbolic.
+    build_synthetic(
+        "SymbolFormat6.ttf",
+        os2=dict(version=4, sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200, sFamilyClass=0),
+        symbol_format6=True,
+    )
+    # An OS/2 table whose ascent, descent and win metrics are all 0 states none, so head gives them.
+    build_synthetic(
+        "Os2Zeros.ttf",
+        hhea=(0, 0),
+        os2=dict(version=4, sTypoAscender=0, sTypoDescender=0, usWinAscent=0, usWinDescent=0, sFamilyClass=0),
+    )
 
 
 def has_outlines(font):
@@ -313,6 +344,34 @@ def faces_of(path):
         yield from enumerate(TTCollection(path, lazy=True).fonts)
     else:
         yield 0, TTFont(path, lazy=True)
+
+
+INSTANCED = {
+    "Teko/Teko-Variable.ttf": [{"wght": 300}, {"wght": 500}, {"wght": 700}],
+    "SourceSans3/SourceSans3VF-Upright.otf": [{"wght": 200}, {"wght": 600}, {"wght": 900}],
+}
+
+
+def instance_values(path, location):
+    from fontTools.varLib import instancer
+
+    font = instancer.instantiateVariableFont(TTFont(path), location, inplace=False)
+    os2 = font["OS/2"]
+    ascent, descent, _ = vertical_metrics(font)
+    return {
+        "location": location,
+        "ascent": ascent,
+        "descent": descent,
+        "capHeight": os2.sCapHeight,
+        "xHeight": os2.sxHeight,
+    }
+
+
+def instances():
+    return {
+        key: [instance_values(os.path.join(FONTS, *key.split("/")), location) for location in locations]
+        for key, locations in INSTANCED.items()
+    }
 
 
 def main():
@@ -331,7 +390,7 @@ def main():
             except Exception:
                 continue
 
-    reference = {"fontTools": fontTools.version, "faces": dict(sorted(faces.items()))}
+    reference = {"fontTools": fontTools.version, "faces": dict(sorted(faces.items())), "instances": instances()}
     with open(REFERENCE, "w", encoding="utf-8", newline="\n") as file:
         json.dump(reference, file, indent=1)
         file.write("\n")

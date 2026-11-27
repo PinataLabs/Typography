@@ -525,8 +525,10 @@ internal partial class StreamFontMetrics : FontMetrics
         this.underlinePosition = mvar.Apply(MvarVariation.UnderlinePosition, post.UnderlinePosition);
         this.underlineThickness = mvar.Apply(MvarVariation.UnderlineThickness, post.UnderlineThickness);
         this.italicAngle = post.ItalicAngle;
-        this.os2CapHeight = os2 is { Version: >= 2 } ? mvar.Apply(MvarVariation.CapHeight, os2.CapHeight) : (short)0;
-        this.os2XHeight = os2 is { Version: >= 2 } ? mvar.Apply(MvarVariation.XHeight, os2.XHeight) : (short)0;
+
+        // A version 2 or later table that stores no height states none, so MVAR does not give it one.
+        this.os2CapHeight = os2 is { Version: >= 2, CapHeight: not 0 } ? mvar.Apply(MvarVariation.CapHeight, os2.CapHeight) : (short)0;
+        this.os2XHeight = os2 is { Version: >= 2, XHeight: not 0 } ? mvar.Apply(MvarVariation.XHeight, os2.XHeight) : (short)0;
 
         HorizontalMetrics horizontalMetrics = InitializeHorizontalMetrics(hhea, vhea, os2, mvar, out this.ascentSource, out this.descentSource);
         VerticalMetrics verticalMetrics = InitializeVerticalMetrics(horizontalMetrics, vhea, mvar);
@@ -620,6 +622,16 @@ internal partial class StreamFontMetrics : FontMetrics
                 ascentSource = MetricSource.Os2WinAscent;
                 descentSource = MetricSource.Os2WinDescent;
             }
+        }
+
+        // A font that states no ascent and descent gives them to the descriptor from head. The rules look at the stored values.
+        bool statesNone = winMetrics is not null
+            ? winMetrics.WinAscent == 0 && winMetrics.WinDescent == 0
+            : ascender == 0 && descender == 0;
+        if (statesNone)
+        {
+            ascentSource = MetricSource.HeadYMax;
+            descentSource = MetricSource.HeadYMin;
         }
 
         // MVAR varies the metrics that the rules above chose. The rules look at the values of the font, not at the varied ones.

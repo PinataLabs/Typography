@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 
 namespace PinataLabs.Typography.Tests;
 
@@ -61,6 +63,61 @@ public class FontDescriptorMetricsReferenceTests
         }
 
         await Assert.That(FontTools.Faces.Count).IsGreaterThan(100);
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
+    public async Task DescriptorMetricsOfAFontOfACollectionMatchTheMetricsOfItsFile()
+    {
+        // FileFontMetrics forwards to the metrics that it loads from the file.
+        List<string> differences = [];
+        foreach (string key in new[] { "FontDescriptor/Win.ttf#0", "FontDescriptor/SymbolFormat6.ttf#0", "FontDescriptor/PanoseSerif.ttf#0" })
+        {
+            string path = Path.Combine(Path.GetDirectoryName(TestFonts.FontDescriptorFontToolsReference)!, key[..key.LastIndexOf('#')]);
+            FontMetrics viaFont = new FontCollection().Add(path).CreateFont(12).FontMetrics;
+            FontMetrics direct = LoadFace(key);
+
+            FontDescriptorMetrics a = viaFont.DescriptorMetrics;
+            FontDescriptorMetrics b = direct.DescriptorMetrics;
+            Compare(differences, key, "ascent", a.Ascent, b.Ascent);
+            Compare(differences, key, "descent", a.Descent, b.Descent);
+            Compare(differences, key, "capHeight", a.CapHeight, b.CapHeight);
+            Compare(differences, key, "xHeight", a.XHeight, b.XHeight);
+            Compare(differences, key, "embedding", viaFont.EmbeddingPermissions.FsType, direct.EmbeddingPermissions.FsType);
+            Compare(differences, key, "flags", (int)viaFont.DescriptorMetrics.Flags, FontTools.Faces[key].Flags);
+            Compare(differences, key, "fsType", viaFont.EmbeddingPermissions.FsType, FontTools.Faces[key].Embedding.FsType);
+        }
+
+        await Assert.That(differences).IsEmpty();
+    }
+
+    [Test]
+    public async Task DescriptorMetricsOfVariationInstancesMatchFontTools()
+    {
+        // MVAR varies cpht and xhgt of Teko-Variable and xhgt of SourceSans3VF-Upright, which the instancer of fontTools adds.
+        List<string> differences = [];
+        bool varied = false;
+        foreach ((string key, List<InstanceReference> instances) in FontTools.Instances)
+        {
+            FontFamily family = new FontCollection().Add(Path.Combine(Path.GetDirectoryName(TestFonts.FontDescriptorFontToolsReference)!, key));
+            foreach (InstanceReference expected in instances)
+            {
+                FontVariation[] variations = [.. expected.Location.Select(axis => new FontVariation(Tag.Parse(axis.Key), (float)axis.Value))];
+                FontDescriptorMetrics actual = family.CreateFont(family.Faces[0].UnitsPerEm, default, variations).FontMetrics.DescriptorMetrics;
+                string name = $"{key} {string.Join(",", expected.Location.Select(axis => $"{axis.Key}={axis.Value}"))}";
+
+                Compare(differences, name, "ascent", actual.Ascent, expected.Ascent);
+                Compare(differences, name, "descent", actual.Descent, expected.Descent);
+                Compare(differences, name, "capHeight", actual.CapHeight, expected.CapHeight);
+                Compare(differences, name, "capHeightSource", actual.CapHeightSource, MetricSource.Os2CapHeight);
+                Compare(differences, name, "xHeight", actual.XHeight, expected.XHeight);
+                Compare(differences, name, "xHeightSource", actual.XHeightSource, MetricSource.Os2XHeight);
+                varied |= expected.CapHeight != instances[0].CapHeight || expected.XHeight != instances[0].XHeight;
+            }
+        }
+
+        // A reference whose instances all give the default values would test nothing.
+        await Assert.That(varied).IsTrue();
         await Assert.That(differences).IsEmpty();
     }
 
@@ -146,6 +203,21 @@ public class FontDescriptorMetricsReferenceTests
     private sealed class Reference
     {
         public Dictionary<string, FaceReference> Faces { get; set; } = [];
+
+        public Dictionary<string, List<InstanceReference>> Instances { get; set; } = [];
+    }
+
+    private sealed class InstanceReference
+    {
+        public Dictionary<string, double> Location { get; set; } = [];
+
+        public short Ascent { get; set; }
+
+        public short Descent { get; set; }
+
+        public short CapHeight { get; set; }
+
+        public short XHeight { get; set; }
     }
 
     private sealed class FaceReference
