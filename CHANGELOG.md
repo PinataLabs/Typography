@@ -503,6 +503,21 @@ Unicode conformance suites to that version.
   15.0.0 does. Mark-to-base and mark-to-ligature attach a mark past such a glyph, and mark-to-mark attaches a mark to
   it. The library took no glyph of such a font for a mark there, so a second accent on a letter stayed where the pen
   put it. (#113)
+- In a font without glyph classes, lookup flags take the same glyphs for marks as mark positioning, as HarfBuzz 15.0.0
+  does: the glyphs of nonspacing marks that are not default ignorable. They took any mark, so a lookup that ignores
+  marks skipped a spacing mark such as U+1D165 and the combining grapheme joiner U+034F, and formed the ligature of b
+  and b in b, U+1D165, b. (#113)
+- In a font without glyph classes, a ligature of components that are not all marks is a ligature glyph, as in
+  HarfBuzz 15.0.0, even when its first component is a nonspacing mark. It was a mark, so the ligature of an acute and a
+  lost its advance and no mark attached to it. A glyph of more than one character that is not such a ligature, such
+  as a composed character, is a base glyph for `IgnoreLigatures`, as in HarfBuzz. (#113)
+- A lookup skips the combining grapheme joiner U+034F as any other default-ignorable character when the joiner keeps
+  no mark from moving past another, as HarfBuzz 15.0.0 does. A joiner between an acute and a letter blocked the
+  ligature of the two. GPOS alone skips a joiner that keeps a mark in place. (#113)
+- Mark-to-base attaches a mark past a glyph that a multiple substitution made only when the glyph follows the glyph
+  that the substitution made before it, and the base coverage does not cover it, as in HarfBuzz 15.0.0. It attached
+  past every glyph with a ligature component: also one that the lookup covers, the jamo that the Hangul shaper
+  decomposes, and a glyph that a ligature skipped between its components. (#113)
 - For an old-spec script tag such as `beng`, the Indic shaper moves the first virama after the base to after the
   last consonant in every script but Kannada, as HarfBuzz 15.0.0 does. It moved it in Malayalam only, so in a syllable
   that ends in a virama, such as ka, virama, ya, virama, the virama after ka stayed before ya. (#175)
