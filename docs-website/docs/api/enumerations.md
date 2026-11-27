@@ -129,6 +129,16 @@ A flags enumeration. Default for a `TextRun`: `None`.
 | `Standard` | An ordinary glyph. |
 | `ColrLayer` | One layer of a color glyph. |
 
+### FontSlopeKind
+
+The kind of a [`FontSlope`](./font.md#fontweight-fontwidth-and-fontslope).
+
+| Value | Description |
+| --- | --- |
+| `Normal` | Upright glyphs, the CSS `font-style: normal`. |
+| `Italic` | Italic glyphs, the CSS `font-style: italic`. |
+| `Oblique` | Glyphs that lean at the angle of `FontSlope.ObliqueAngle`, the CSS `font-style: oblique <angle>`. |
+
 ### GlyphLayoutMode
 
 | Value | Description |

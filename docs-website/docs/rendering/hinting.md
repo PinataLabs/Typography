@@ -32,6 +32,9 @@ resolution, so the wrong DPI gives the wrong result.
 - Hinting changes the **outlines** that your [glyph renderer](./glyph-renderers.md) gets. When
   hinting is on, the library also rounds the positions of attached marks (accents) to whole pixels.
   The advances of the glyphs, and so the measurements of the text, do not change.
+- A [variable font](../fonts/variable-fonts.md) is hinted at the instance that you draw. The
+  library adds the font's `cvar` deltas for that instance to the control values. A font with no
+  `cvar` table hints every instance with the values of its `cvt ` table.
 
 ## Faulty hint programs
 

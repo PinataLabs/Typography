@@ -19,9 +19,10 @@ WOFF and WOFF2. See [Loading fonts](../fonts/loading-fonts.md#supported-formats)
 
 ## Does it support variable fonts?
 
-Only in part. The library loads a variable font and draws the outlines of its default instance.
-It does not read the variation tables (`fvar`, `gvar`, `HVAR` and others), so you cannot choose a
-weight or width on the font's axes.
+Yes. The library draws TrueType and CFF2 variable fonts at any instance. A style such as
+`FontStyle.Bold` sets the matching axes, and `FontVariation` sets any axis by its tag. Outlines,
+metrics, hinting, GPOS positioning and feature variations all follow the instance. See
+[Variable fonts](../fonts/variable-fonts.md).
 
 ## Can it make a bold or italic font when the family has none?
 
