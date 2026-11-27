@@ -9,24 +9,31 @@ using PinataLabs.Typography.Unicode;
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
 /// <summary>
-/// Provides a map from Unicode <see cref="ScriptClass"/> to OTF <see cref="Tag"/>.
+/// Gives the OpenType script tags of a Unicode <see cref="ScriptClass"/>.
 /// <see href="https://docs.microsoft.com/en-us/typography/opentype/spec/scripttags"/>
 /// </summary>
-internal sealed class UnicodeScriptTagMap : Dictionary<ScriptClass, Tag[]>
+public static class OpenTypeScriptTags
 {
-    private static readonly Lazy<UnicodeScriptTagMap> Lazy = new(() => CreateMap());
+    private static readonly Dictionary<ScriptClass, Tag[]> Map = CreateMap();
 
     /// <summary>
-    /// Prevents a default instance of the <see cref="UnicodeScriptTagMap"/> class from being created.
+    /// Gets the OpenType script tags that a font is searched for, in the order they are tried.
     /// </summary>
-    private UnicodeScriptTagMap()
-    {
-    }
-
-    public static UnicodeScriptTagMap Instance => Lazy.Value;
+    /// <remarks>
+    /// The tags are the ones that HarfBuzz looks for. A script of an Indic or Myanmar shaper has the tag of the
+    /// newer script table first, such as <c>dev3</c>, <c>dev2</c> and then <c>deva</c>, and some tags differ from
+    /// the ISO 15924 code of the script, such as <c>nko </c> for <c>Nkoo</c>. Every script has at least one tag.
+    /// </remarks>
+    /// <param name="script">The script.</param>
+    /// <returns>The tags, which a caller cannot change.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="script"/> is not a defined value.</exception>
+    public static ReadOnlySpan<Tag> GetTags(ScriptClass script)
+        => Map.TryGetValue(script, out Tag[]? tags)
+            ? tags
+            : throw new ArgumentOutOfRangeException(nameof(script), script, null);
 
     // The tags of each script, in the order that HarfBuzz tries them. ScriptTagTests checks them against HarfBuzz.
-    private static UnicodeScriptTagMap CreateMap()
+    private static Dictionary<ScriptClass, Tag[]> CreateMap()
         => new()
         {
             { ScriptClass.Unknown, new[] { Tag.Parse("zzzz") } },

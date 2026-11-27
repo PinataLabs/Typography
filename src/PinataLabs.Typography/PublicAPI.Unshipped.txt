@@ -249,3 +249,5 @@ PinataLabs.Typography.MetricSource.Os2WinDescent = 4 -> PinataLabs.Typography.Me
 PinataLabs.Typography.MetricSource.Os2XHeight = 11 -> PinataLabs.Typography.MetricSource
 PinataLabs.Typography.MetricSource.PostItalicAngle = 15 -> PinataLabs.Typography.MetricSource
 PinataLabs.Typography.MetricSource.SmallXBounds = 13 -> PinataLabs.Typography.MetricSource
+PinataLabs.Typography.Tables.AdvancedTypographic.OpenTypeScriptTags
+static PinataLabs.Typography.Tables.AdvancedTypographic.OpenTypeScriptTags.GetTags(PinataLabs.Typography.Unicode.ScriptClass script) -> System.ReadOnlySpan<PinataLabs.Typography.Tables.AdvancedTypographic.Tag>

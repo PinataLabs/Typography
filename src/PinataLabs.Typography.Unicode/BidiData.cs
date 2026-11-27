@@ -23,6 +23,10 @@ internal class BidiData
 
     public bool HasBrackets { get; private set; }
 
+    /// <summary>
+    /// Gets a value indicating whether the data holds a character that rule X9 removes: an embedding or
+    /// override control, or a boundary neutral.
+    /// </summary>
     public bool HasEmbeddings { get; private set; }
 
     public bool HasIsolates { get; private set; }
@@ -95,6 +99,7 @@ internal class BidiData
                 case BidiCharacterType.RightToLeftEmbedding:
                 case BidiCharacterType.RightToLeftOverride:
                 case BidiCharacterType.PopDirectionalFormat:
+                case BidiCharacterType.BoundaryNeutral:
                     this.HasEmbeddings = true;
                     break;
 
@@ -110,17 +115,9 @@ internal class BidiData
             BidiPairedBracketType pbt = bidi.PairedBracketType;
             this.pairedBracketTypes[i] = pbt;
 
-            if (pbt == BidiPairedBracketType.Open)
+            if (pbt != BidiPairedBracketType.None)
             {
-                // Opening bracket types can never have a null pairing.
-                bidi.TryGetPairedBracket(out CodePoint paired);
-                this.pairedBracketValues[i] = CodePoint.GetCanonicalType(paired).Value;
-
-                this.HasBrackets = true;
-            }
-            else if (pbt == BidiPairedBracketType.Close)
-            {
-                this.pairedBracketValues[i] = CodePoint.GetCanonicalType(codePoint).Value;
+                this.pairedBracketValues[i] = bidi.GetBracketPairKey(codePoint);
                 this.HasBrackets = true;
             }
 

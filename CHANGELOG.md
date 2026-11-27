@@ -69,8 +69,8 @@ Unicode conformance suites to that version.
 - **The `PinataLabs.Typography.Unicode` package.** The Unicode algorithms and character properties that were in the
   `PinataLabs.Typography.Unicode` namespace of `PinataLabs.Typography` are now a package of their own, with no font code,
   for the same target frameworks. A caller that needs character properties, code point and grapheme enumeration and no
-  fonts can depend on it alone. The bidi and line-break algorithms stay internal and back the layout of
-  `PinataLabs.Typography`; public APIs for them are to follow. The namespace is the same, so source code needs no change.
+  fonts can depend on it alone. Its bidi, line-break and script algorithms also back the layout of
+  `PinataLabs.Typography`. The namespace is the same, so source code needs no change.
   `UnicodeInfo.Version` is the new public member: it reports the Unicode version of the property data, which is
   18.0.0. The generator reads it from the rule files and fails when their headers name different versions. `UnicodeData.txt` has no header, so the generator cannot check that file. (#151)
 - **Font descriptor metrics and embedding permissions.** `FontMetrics.DescriptorMetrics` gives the values that a PDF
@@ -84,6 +84,38 @@ Unicode conformance suites to that version.
   `NoSubsetting` (bit 8) and `BitmapEmbeddingOnly` (bit 9), and `IsStated` is `false` for a font with no `OS/2` table.
   The ascent and descent follow the rules of `HorizontalMetrics`, and the order of every value is in
   `docs/specs/003-font-descriptor.md`. The values of the 208 faces of the test fonts match fontTools. (#157)
+- **The bidi algorithm is public.** `BidiParagraph.Resolve(text, direction)` resolves a paragraph of UTF-16 text left to
+  right, right to left or from its first strong character (rules P2 and P3). `ParagraphLevel` and `Levels` give the
+  embedding level of the paragraph and of each code unit. `GetVisualRuns(lineStart, lineLength)` applies rule L1 to
+  one line and returns its `BidiLevelRun` values (`Start`, `Length`, `Level`, `IsRightToLeft`) in visual order (rule
+  L2), so a caller that breaks the lines applies L1 where its lines end. U+200C and U+200D stay in a run, because they
+  decide how the letters on either side join. A joiner is in the run of the character before it, unless the level
+  changes at the joiner and the character after it joins to the one before it (Arabic joining type R, D or C): then it
+  is in the run after it, so `a ZWJ ب` gives the Arabic run its joiner. A joiner at the start of a line, or after a
+  removed character that is not a joiner, goes with the run after it, and one with no letter after it is a run of its
+  own. Runs never overlap. Every other character that rule X9 removes is in no run and ends the run before it. A line
+  that starts or ends between the two code units of a surrogate pair throws `ArgumentOutOfRangeException`. `Levels`
+  and `GetVisualRuns` give a removed character the level of the character before it after rule L1, as `TextLayout`
+  does. `TextLayout` runs the same engine. The API passes all of `BidiTest.txt` and `BidiCharacterTest.txt` of
+  Unicode 18.0.0, levels and visual order. (#152)
+- **`CodePoint.GetScriptClass` is public.** It gives the Script property of `Scripts.txt` for a code point, and
+  `Unknown` for a code point that no script owns. A test compares it with `Scripts.txt` of Unicode 18.0.0 for every
+  code point. Script_Extensions is not read. (#154)
+- **`ScriptClassExtensions.GetIso15924Code`.** It gives the four-letter ISO 15924 code of a `ScriptClass`, such as
+  `Latn`, `Arab`, `Hebr`, `Zyyy` for Common, `Zinh` for Inherited and `Zzzz` for Unknown. The generator reads the codes
+  from the `sc` lines of `PropertyValueAliases.txt`, so they follow the Unicode version of the data. (#154)
+- **`OpenTypeScriptTags.GetTags`.** It gives the OpenType script tags that the library searches a font for, for a
+  `ScriptClass`, in the order it tries them: `dev3`, `dev2` and `deva` for Devanagari. These are the tags of HarfBuzz
+  15.0.0, which the library already used internally. (#154)
+- **`TextItemizer` cuts text into runs of one script and one direction.** `Itemize(text, direction)` gives the
+  `ItemizedRun` values (`Start`, `Length`, `Script`, `Level`, `IsRightToLeft`) of a paragraph in visual order, and
+  `Itemize(paragraph, lineStart, lineLength)` those of one line of a `BidiParagraph`. Each run of the bidi algorithm is
+  cut at every change of script. Common and Inherited characters, and characters that no script owns (Unknown, such as
+  a private-use icon), take the script of the text before them, or of the first letter after them when nothing comes
+  before. This differs from the PdfPinata itemizer, which makes a run of its own of each such character and so cuts
+  a word at an icon; text that has only Unknown characters is one Unknown run. A closing paired bracket takes the script of its opening bracket,
+  so `a (б) c` is Latin, Cyrillic and Latin. A script run that sits in a right to left bidi run is drawn in that
+  direction, so the piece written first comes last. Script_Extensions is not read. (#154)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
@@ -372,6 +404,9 @@ Unicode conformance suites to that version.
   `usUpperOpticalPointSize` of a version 2 or later table were read 4 bytes off. Nothing used them until the font
   descriptor metrics. It also skips the fields that the length of a truncated table does not cover, where it read the
   bytes of the next table. (#157)
+- The bidi algorithm removes the characters of class BN, such as U+00AD, U+200C and U+200D, in text that has no
+  embedding or isolate controls. Before, it removed them only when such a control was present, so a mark after a BN
+  character was typed from the BN character and could resolve to the wrong level. (#152)
 - A TrueType or CFF font with no `OS/2` table loads. On macOS these are AppleGothic and AppleMyungjo, which threw
   `MissingFontTableException` for `OS/2` on first use. As in HarfBuzz 15.0.0, the ascender, descender and line gap come
   from `hhea`, and `head.macStyle` gives the weight (400 or bold 700), the width (100%, condensed 75% or expanded

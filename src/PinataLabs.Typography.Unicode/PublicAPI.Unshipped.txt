@@ -67,3 +67,45 @@ PinataLabs.Typography.Unicode.LineBreakTailoring.None = 0 -> PinataLabs.Typograp
 PinataLabs.Typography.Unicode.LineBreakTailoring.SouthEastAsianAsIdeographs = 1 -> PinataLabs.Typography.Unicode.LineBreakTailoring
 PinataLabs.Typography.Unicode.LineBreakAlgorithm
 static PinataLabs.Typography.Unicode.LineBreakAlgorithm.IsBreakAllowedBetween(System.ReadOnlySpan<char> before, System.ReadOnlySpan<char> after, PinataLabs.Typography.Unicode.LineBreakTailoring tailoring = PinataLabs.Typography.Unicode.LineBreakTailoring.None) -> bool
+override PinataLabs.Typography.Unicode.BidiLevelRun.Equals(object? obj) -> bool
+override PinataLabs.Typography.Unicode.BidiLevelRun.GetHashCode() -> int
+override PinataLabs.Typography.Unicode.BidiLevelRun.ToString() -> string!
+PinataLabs.Typography.Unicode.BidiLevelRun
+PinataLabs.Typography.Unicode.BidiLevelRun.BidiLevelRun() -> void
+PinataLabs.Typography.Unicode.BidiLevelRun.BidiLevelRun(int start, int length, byte level) -> void
+PinataLabs.Typography.Unicode.BidiLevelRun.Equals(PinataLabs.Typography.Unicode.BidiLevelRun other) -> bool
+PinataLabs.Typography.Unicode.BidiLevelRun.IsRightToLeft.get -> bool
+PinataLabs.Typography.Unicode.BidiLevelRun.Length.get -> int
+PinataLabs.Typography.Unicode.BidiLevelRun.Level.get -> byte
+PinataLabs.Typography.Unicode.BidiLevelRun.Start.get -> int
+PinataLabs.Typography.Unicode.BidiParagraph
+PinataLabs.Typography.Unicode.BidiParagraph.GetVisualRuns(int lineStart, int lineLength) -> PinataLabs.Typography.Unicode.BidiLevelRun[]!
+PinataLabs.Typography.Unicode.BidiParagraph.Levels.get -> System.ReadOnlySpan<byte>
+PinataLabs.Typography.Unicode.BidiParagraph.ParagraphLevel.get -> byte
+PinataLabs.Typography.Unicode.BidiParagraphDirection
+PinataLabs.Typography.Unicode.BidiParagraphDirection.Auto = 2 -> PinataLabs.Typography.Unicode.BidiParagraphDirection
+PinataLabs.Typography.Unicode.BidiParagraphDirection.LeftToRight = 0 -> PinataLabs.Typography.Unicode.BidiParagraphDirection
+PinataLabs.Typography.Unicode.BidiParagraphDirection.RightToLeft = 1 -> PinataLabs.Typography.Unicode.BidiParagraphDirection
+static PinataLabs.Typography.Unicode.BidiLevelRun.operator !=(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
+static PinataLabs.Typography.Unicode.BidiLevelRun.operator ==(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
+static PinataLabs.Typography.Unicode.BidiParagraph.Resolve(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.BidiParagraph!
+static PinataLabs.Typography.Unicode.CodePoint.GetScriptClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClassExtensions
+static PinataLabs.Typography.Unicode.ScriptClassExtensions.GetIso15924Code(this PinataLabs.Typography.Unicode.ScriptClass script) -> string!
+override PinataLabs.Typography.Unicode.ItemizedRun.Equals(object? obj) -> bool
+override PinataLabs.Typography.Unicode.ItemizedRun.GetHashCode() -> int
+override PinataLabs.Typography.Unicode.ItemizedRun.ToString() -> string!
+PinataLabs.Typography.Unicode.ItemizedRun
+PinataLabs.Typography.Unicode.ItemizedRun.Equals(PinataLabs.Typography.Unicode.ItemizedRun other) -> bool
+PinataLabs.Typography.Unicode.ItemizedRun.IsRightToLeft.get -> bool
+PinataLabs.Typography.Unicode.ItemizedRun.ItemizedRun() -> void
+PinataLabs.Typography.Unicode.ItemizedRun.ItemizedRun(int start, int length, PinataLabs.Typography.Unicode.ScriptClass script, byte level) -> void
+PinataLabs.Typography.Unicode.ItemizedRun.Length.get -> int
+PinataLabs.Typography.Unicode.ItemizedRun.Level.get -> byte
+PinataLabs.Typography.Unicode.ItemizedRun.Script.get -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ItemizedRun.Start.get -> int
+PinataLabs.Typography.Unicode.TextItemizer
+static PinataLabs.Typography.Unicode.ItemizedRun.operator !=(PinataLabs.Typography.Unicode.ItemizedRun left, PinataLabs.Typography.Unicode.ItemizedRun right) -> bool
+static PinataLabs.Typography.Unicode.ItemizedRun.operator ==(PinataLabs.Typography.Unicode.ItemizedRun left, PinataLabs.Typography.Unicode.ItemizedRun right) -> bool
+static PinataLabs.Typography.Unicode.TextItemizer.Itemize(PinataLabs.Typography.Unicode.BidiParagraph! paragraph, int lineStart, int lineLength) -> PinataLabs.Typography.Unicode.ItemizedRun[]!
+static PinataLabs.Typography.Unicode.TextItemizer.Itemize(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.ItemizedRun[]!

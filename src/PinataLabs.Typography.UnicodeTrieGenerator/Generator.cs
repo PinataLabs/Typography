@@ -503,6 +503,7 @@ public static partial class Generator
         List<Codepoint> codePoints = GenerateUniversalShapingDataTrie(ugc, uisc, uipc, uajt);
         GenerateIndicShapingDataTrie(codePoints.ToArray());
         GenerateNormalizationData();
+        GenerateScriptCodes();
         GenerateUnicodeInfo(unicodeVersion);
     }
 

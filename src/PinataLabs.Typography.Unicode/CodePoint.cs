@@ -587,9 +587,14 @@ public readonly struct CodePoint : IComparable, IComparable<CodePoint>, IEquatab
     /// <summary>
     /// Gets the <see cref="ScriptClass"/> for the given codepoint.
     /// </summary>
+    /// <remarks>
+    /// This is the Script property (<c>sc</c>) of <c>Scripts.txt</c>, as <see href="https://unicode.org/reports/tr24/">UAX #24</see> defines it.
+    /// A code point that no script owns, such as an unassigned one, has the script <see cref="ScriptClass.Unknown"/>.
+    /// The Script_Extensions property is not read.
+    /// </remarks>
     /// <param name="codePoint">The codepoint to evaluate.</param>
     /// <returns>The <see cref="ScriptClass"/>.</returns>
-    internal static ScriptClass GetScriptClass(CodePoint codePoint)
+    public static ScriptClass GetScriptClass(CodePoint codePoint)
         => UnicodeData.GetScriptClass(codePoint.value);
 
     /// <summary>
