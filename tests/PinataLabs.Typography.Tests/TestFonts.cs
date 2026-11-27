@@ -74,6 +74,9 @@ public static class TestFonts
 
     public static string IndicOldSpecHarfBuzzReference => GetFullPath("IndicOldSpec.harfbuzz.json");
 
+    // Written by tests/tools/generate_per_syllable_reference.py, with the PerSyllable fonts.
+    public static string PerSyllableHarfBuzzReference => GetFullPath("PerSyllable.harfbuzz.json");
+
     // Built by tests/tools/generate_lookup_flags_reference.py, which also writes the HarfBuzz reference.
     public static string LookupFlagsFile => GetFullPath("LookupFlags.ttf");
 
