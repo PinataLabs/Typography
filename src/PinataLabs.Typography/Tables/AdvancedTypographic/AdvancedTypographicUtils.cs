@@ -179,8 +179,8 @@ internal static class AdvancedTypographicUtils
         CoverageTable[] backtrack,
         CoverageTable[] lookahead)
     {
-        // Check that there are enough context glyphs.
-        if (index - backtrack.Length < 0 || input.Length + lookahead.Length > count)
+        // Check that there are enough context glyphs in the run.
+        if (index - backtrack.Length < collection.RunStart || input.Length + lookahead.Length > count)
         {
             return false;
         }

@@ -111,7 +111,7 @@ internal static class LookupType6SubTable
             const LookupFlags ignoreFlags = LookupFlags.IgnoreBaseGlyphs | LookupFlags.IgnoreLigatures | LookupFlags.IgnoreMarks;
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags & ~ignoreFlags, features.InputIgnorables);
             int prevIdx = iterator.Increment(-1);
-            if (prevIdx < 0)
+            if (prevIdx < collection.RunStart)
             {
                 return false;
             }

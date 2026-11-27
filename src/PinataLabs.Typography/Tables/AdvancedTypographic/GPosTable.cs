@@ -215,6 +215,8 @@ internal class GPosTable : Table
             IReadOnlyList<PlannedFeature> enabledFeatures = LookupFeatures.WithoutDisabled(features, shaper.DisabledFeatureTags);
             if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, enabledFeatures, current, collection.TextOptions.Language, withRequiredFeature, positioning: true, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
+                // As in HarfBuzz, which shapes each script run in a buffer of its own, lookups apply within the run.
+                collection.SetRun(index, count);
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
                 {
@@ -240,6 +242,7 @@ internal class GPosTable : Table
             }
 
             EndLookups:
+            collection.SetRun(0, collection.Count);
             if (shaper.MarkZeroingMode == MarkZeroingMode.PostGpos)
             {
                 ZeroMarkAdvances(fontMetrics, collection, index, count);
