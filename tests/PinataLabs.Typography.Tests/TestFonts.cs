@@ -119,6 +119,8 @@ public static class TestFonts
 
     public static string FontVariationsFontToolsReference => GetFullPath("Variations/FontVariations.fonttools.json");
 
+    public static string FontDescriptorFontToolsReference => GetFullPath("FontDescriptor.fonttools.json");
+
     // Written by tests/tools/generate_cff2_outline_reference.py, from SourceSans3VF-Upright.otf.
     public static string Cff2OutlinesFontToolsReference => GetFullPath("Variations/Cff2Outlines.fonttools.json");
 

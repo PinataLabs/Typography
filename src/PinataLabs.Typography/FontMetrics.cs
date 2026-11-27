@@ -115,6 +115,16 @@ public abstract class FontMetrics
     public abstract float ItalicAngle { get; }
 
     /// <summary>
+    /// Gets the values that a PDF font descriptor is written from. See <see cref="FontDescriptorMetrics"/>.
+    /// </summary>
+    public abstract FontDescriptorMetrics DescriptorMetrics { get; }
+
+    /// <summary>
+    /// Gets the embedding permissions that the <c>fsType</c> field of the <c>OS/2</c> table gives.
+    /// </summary>
+    public abstract FontEmbeddingPermissions EmbeddingPermissions { get; }
+
+    /// <summary>
     /// Gets the variation axes of the font, in the order of its <c>fvar</c> table. The list is empty for a static font,
     /// and for a variable font whose <c>fvar</c> table is malformed, which loads as a static font.
     /// </summary>

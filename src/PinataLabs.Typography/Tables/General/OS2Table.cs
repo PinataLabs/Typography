@@ -8,14 +8,19 @@ internal sealed class OS2Table : Table
 {
     internal const string TableName = "OS/2";
 
+    // The byte lengths of the table at each version that adds fields.
+    private const int Version1Length = 86;
+    private const int Version2Length = 96;
+    private const int Version5Length = 100;
+
     private readonly ushort styleType;
     private readonly byte[] panose;
     private readonly short capHeight;
     private readonly short familyClass;
     private readonly short heightX;
     private readonly string tag;
-    private readonly ushort codePageRange1;
-    private readonly ushort codePageRange2;
+    private readonly uint codePageRange1;
+    private readonly uint codePageRange2;
     private readonly uint unicodeRange1;
     private readonly uint unicodeRange2;
     private readonly uint unicodeRange3;
@@ -97,8 +102,8 @@ internal sealed class OS2Table : Table
 
     public OS2Table(
         OS2Table version0Table,
-        ushort codePageRange1,
-        ushort codePageRange2,
+        uint codePageRange1,
+        uint codePageRange2,
         short heightX,
         short capHeight,
         ushort defaultChar,
@@ -206,6 +211,16 @@ internal sealed class OS2Table : Table
 
     public ushort WidthClass => this.widthClass;
 
+    public ushort FsType => this.styleType;
+
+    public short FamilyClass => this.familyClass;
+
+    public byte[] Panose => this.panose;
+
+    public short CapHeight => this.capHeight;
+
+    public short XHeight => this.heightX;
+
     public short TypoAscender { get; }
 
     public short TypoDescender { get; }
@@ -293,6 +308,10 @@ internal sealed class OS2Table : Table
         // uint16 |usMaxContext            |
         // uint16 |usLowerOpticalPointSize |
         // uint16 |usUpperOpticalPointSize |
+        // The fields of a later version are read only when the table is long enough to hold them. A truncated table
+        // would otherwise give the bytes of the next table.
+        long start = reader.BaseStream.Position;
+        long length = reader.EndOfTable - start;
         ushort version = reader.ReadUInt16(); // assert 0x0005
         short averageCharWidth = reader.ReadInt16();
         ushort weightClass = reader.ReadUInt16();
@@ -358,7 +377,7 @@ internal sealed class OS2Table : Table
                 winAscent,
                 winDescent);
 
-        if (version == 0)
+        if (version == 0 || length < Version1Length)
         {
             return version0Table;
         }
@@ -370,11 +389,11 @@ internal sealed class OS2Table : Table
         ushort breakChar = 0;
         ushort maxContext = 0;
 
-        ushort codePageRange1 = reader.ReadUInt16(); // Bits 0–31
-        ushort codePageRange2 = reader.ReadUInt16(); // Bits 32–63
+        uint codePageRange1 = reader.ReadUInt32(); // Bits 0–31
+        uint codePageRange2 = reader.ReadUInt32(); // Bits 32–63
 
         // fields exist only in > v1 https://docs.microsoft.com/en-us/typography/opentype/spec/os2
-        if (version > 1)
+        if (version > 1 && length >= Version2Length)
         {
             heightX = reader.ReadInt16();
             capHeight = reader.ReadInt16();
@@ -393,7 +412,7 @@ internal sealed class OS2Table : Table
                 breakChar,
                 maxContext);
 
-        if (version < 5)
+        if (version < 5 || length < Version5Length)
         {
             return versionLessThan5Table;
         }
