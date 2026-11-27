@@ -59,6 +59,7 @@ internal static class FontRunShaper
 
         // Enumerate through each grapheme in the text.
         int graphemeIndex = start;
+        int textIndex = textBefore.Length;
         var graphemeEnumerator = new SpanGraphemeEnumerator(text);
         while (graphemeEnumerator.MoveNext())
         {
@@ -76,6 +77,8 @@ internal static class FontRunShaper
             var codePointEnumerator = new SpanCodePointEnumerator(graphemeEnumerator.Current);
             while (codePointEnumerator.MoveNext())
             {
+                int codePointTextIndex = textIndex;
+                textIndex += codePointEnumerator.Current.Utf16SequenceLength;
                 if (codePointIndex == bidiRuns[bidiRunIndex].End)
                 {
                     bidiRunIndex++;
@@ -101,7 +104,7 @@ internal static class FontRunShaper
 
                 // Get the glyph id for the codepoint and add to the collection.
                 font.FontMetrics.TryGetGlyphId(current, next, out ushort glyphId, out skipNextCodePoint);
-                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex);
+                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex, codePointTextIndex);
 
                 codePointIndex++;
                 graphemeCodePointIndex++;

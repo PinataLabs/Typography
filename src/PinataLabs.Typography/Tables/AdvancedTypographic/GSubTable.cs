@@ -261,7 +261,7 @@ internal class GSubTable : Table
 
             // Probe the vert lookups with the glyph on its own.
             GlyphSubstitutionCollection probe = new(collection.TextOptions) { FontMetrics = fontMetrics };
-            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0);
+            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0, data.Cluster);
             probe.AddShapingFeature(0, new TagEntry(vert, true));
 
             SkippingGlyphIterator iterator = new(fontMetrics, probe, 0, default);
