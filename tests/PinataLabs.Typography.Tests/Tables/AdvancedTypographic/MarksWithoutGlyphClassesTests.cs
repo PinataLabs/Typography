@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -54,6 +55,34 @@ public class MarksWithoutGlyphClassesTests
         }
 
         await Assert.That(different).IsEmpty();
+    }
+
+    // MarksWithoutGlyphClassesFallback.ttf lacks U+034F. HarfBuzz hides its .notdef and places both accents over a. With
+    // a fallback font that draws U+034F, the accents of the font go to the same places.
+    [Test]
+    public async Task MarksGoOnPastADefaultIgnorableGlyphOfAFallbackFont()
+    {
+        const string fontName = "MarksWithoutGlyphClassesFallback.ttf";
+        const string text = "à͏́";
+        JsonElement[] row = HarfBuzz.Rows.Single(r => r[0].GetString() == fontName && r[1].GetString() == text);
+        string expected = string.Join(' ', row[2].EnumerateArray().Select(g => $"{g[0]}@{g[1]},{g[2]}"));
+
+        FontCollection collection = new();
+        FontFamily family = collection.Add(TestFonts.GetPath(fontName));
+        TextOptions options = new(family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm))
+        {
+            FallbackFontFamilies = [collection.Add(TestFonts.GetPath("MarksWithoutGlyphClasses.ttf"))],
+        };
+
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        string actual = string.Join(' ', layout.Select(g =>
+        {
+            GlyphMetrics metrics = g.Glyph.GlyphMetrics;
+            float x = g.PenLocation.X - layout[0].PenLocation.X + metrics.Offset.X;
+            return $"{metrics.GlyphId}@{MathF.Round(x)},{MathF.Round(metrics.Offset.Y)}";
+        }));
+
+        await Assert.That(actual).IsEqualTo(expected);
     }
 
     private sealed class Reference

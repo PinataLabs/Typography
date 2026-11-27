@@ -36,7 +36,10 @@ MarksWithoutGlyphClassesFallback.ttf has a, b, the two accents, U+1D165, U+20DD 
 GPOS table, so HarfBuzz places marks around their base itself. A ligature of components that are not all marks takes
 the general category Lo in place of Mn, so in acute, a, grave the grave goes over the ligature, as over b in b, grave.
 The spacing mark and the enclosing mark after b keep their advance, as they are bases, and in b, U+20DD, grave the
-grave still goes over b, the base of the cluster.
+grave still goes over b, the base of the cluster. The font lacks U+034F, so in a, grave, U+034F, acute HarfBuzz hides
+the .notdef of the joiner and places both accents over a, as the marks of a base go on past a default-ignorable glyph.
+MarksWithoutGlyphClassesTests checks that the library places them there too when MarksWithoutGlyphClasses.ttf, which
+has U+034F, is a fallback font.
 
 The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the line, as
 HarfBuzz gives them. MarksWithoutGlyphClassesTests reads it.
@@ -101,7 +104,8 @@ FALLBACK_CODE_POINTS = [0x61, 0x62, 0x0300, 0x0301, 0x1D165, 0x20DD]
 
 FALLBACK_FEATURES = "languagesystem DFLT dflt; languagesystem latn dflt; feature liga { sub u0301 u0061 by acute_a; } liga;"
 
-FALLBACK_TEXTS = ["\u0301a\u0300", "b\u0300", "\u0301\u0300", "b\U0001D165", "b\u20dd", "b\u20dd\u0300"]
+FALLBACK_TEXTS = ["\u0301a\u0300", "b\u0300", "\u0301\u0300", "b\U0001D165", "b\u20dd", "b\u20dd\u0300",
+                  "a\u0300\u034f\u0301"]
 
 
 def build_font_without_gdef(file_name, code_points, features, extra_glyphs):
