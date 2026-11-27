@@ -479,6 +479,10 @@ Unicode conformance suites to that version.
   dotted circle. The jamo of a syllable compose only to the syllable of all of them, and a syllable that the font cannot
   take apart into jamo becomes its precomposed syllable and trailing consonant, if the font has those. The shaper moved
   a tone mark after a trailing consonant three glyphs back, before the start of the syllable. (#174)
+- The Hangul shaper gives GPOS only the jamo features that it gives GSUB, as HarfBuzz 15.0.0 does: `ljmo`, `vjmo` and
+  `tjmo` for the jamo of a syllable that does not compose, and none for a precomposed syllable, for a jamo outside a
+  syllable, or for the syllable and trailing consonant of a syllable that the font cannot take apart. GPOS gave a
+  precomposed syllable `ljmo` and `vjmo`, and each trailing consonant `tjmo`. (#174)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

@@ -58,53 +58,25 @@ internal sealed class HangulShaper : DefaultShaper
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
     {
-        if (collection is GlyphSubstitutionCollection substitutionCollection)
+        // The GSUB pass shapes the syllables and gives each jamo of a syllable left in jamo its jamo feature. Each glyph
+        // keeps that feature for GPOS, as the mask of a glyph in HarfBuzz serves both.
+        int end = collection is GlyphSubstitutionCollection substitutionCollection
+            ? ShapeSyllables(substitutionCollection, index, index + count)
+            : index + count;
+
+        for (int i = index; i < end; i++)
         {
-            // GSub
-            int end = ShapeSyllables(substitutionCollection, index, index + count);
+            GlyphShapingData data = collection[i];
+            if (data.JamoFeature is Tag feature)
+            {
+                collection.EnableShapingFeature(i, feature);
+            }
 
             // As in HarfBuzz, calt stays on for the run but not for the jamo that the shaper leaves, because some
             // fonts (Noto Sans CJK, Source Han Sans) put their jamo lookups in calt. A syllable keeps it.
-            for (int i = index; i < end; i++)
+            if (GetSyllableType(data.CodePoint) is L or V or T)
             {
-                if (GetSyllableType(substitutionCollection[i].CodePoint) is L or V or T)
-                {
-                    substitutionCollection.DisableShapingFeature(i, CaltTag);
-                }
-            }
-        }
-        else
-        {
-            // GPos
-            // Simply loop and enable based on type.
-            // Glyph substitution has handled [de]composition.
-            for (int i = index; i < index + count; i++)
-            {
-                GlyphShapingData data = collection[i];
-                CodePoint codePoint = data.CodePoint;
-                switch (GetSyllableType(codePoint))
-                {
-                    case L:
-                        collection.EnableShapingFeature(i, LjmoTag);
-                        break;
-                    case V:
-                        collection.EnableShapingFeature(i, VjmoTag);
-                        break;
-                    case T:
-                        collection.EnableShapingFeature(i, TjmoTag);
-                        break;
-                    case LV:
-                        collection.EnableShapingFeature(i, LjmoTag);
-                        collection.EnableShapingFeature(i, VjmoTag);
-                        break;
-                    case LVT:
-                        collection.EnableShapingFeature(i, LjmoTag);
-                        collection.EnableShapingFeature(i, VjmoTag);
-                        collection.EnableShapingFeature(i, TjmoTag);
-                        break;
-                    default:
-                        break;
-                }
+                collection.DisableShapingFeature(i, CaltTag);
             }
         }
     }
@@ -239,11 +211,11 @@ internal sealed class HangulShaper : DefaultShaper
     /// <returns>The end of the syllable.</returns>
     private static int SetJamoFeatures(GlyphSubstitutionCollection collection, int index, int length)
     {
-        collection.EnableShapingFeature(index, LjmoTag);
-        collection.EnableShapingFeature(index + 1, VjmoTag);
+        collection[index].JamoFeature = LjmoTag;
+        collection[index + 1].JamoFeature = VjmoTag;
         if (length == 3)
         {
-            collection.EnableShapingFeature(index + 2, TjmoTag);
+            collection[index + 2].JamoFeature = TjmoTag;
         }
 
         collection.MergeClusters(index, index + length);

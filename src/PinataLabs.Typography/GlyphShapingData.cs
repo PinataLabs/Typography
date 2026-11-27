@@ -45,6 +45,7 @@ internal class GlyphShapingData
         this.IsDecomposed = data.IsDecomposed;
         this.HasVerticalForm = data.HasVerticalForm;
         this.SpaceFallback = data.SpaceFallback;
+        this.JamoFeature = data.JamoFeature;
         if (data.UniversalShapingEngineInfo != null)
         {
             this.UniversalShapingEngineInfo = new(
@@ -174,6 +175,12 @@ internal class GlyphShapingData
     /// Gets or sets the space that this glyph of U+0020 stands for, when the font lacks that space.
     /// </summary>
     public SpaceFallbackKind SpaceFallback { get; set; }
+
+    /// <summary>
+    /// Gets or sets the jamo feature, <c>ljmo</c>, <c>vjmo</c> or <c>tjmo</c>, that the Hangul shaper gives the glyph of a
+    /// jamo in a syllable that it does not compose. GSUB and GPOS apply only that one of the three to the glyph.
+    /// </summary>
+    public Tag? JamoFeature { get; set; }
 
     /// <summary>
     /// Gets or sets the universal shaping information.
