@@ -881,6 +881,29 @@ python tests/tools/generate_text_run_context_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Script run context reference
+
+`generate_script_run_context_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ScriptRunContext.ttf` and
+writes `ScriptRunContext.harfbuzz.json` next to it. A caller of HarfBuzz shapes each script run in a buffer of its
+own, so no lookup matches or attaches a glyph of the run next to it. Each case of the font has a GSUB or GPOS lookup
+that applies only with a glyph of another script next to the glyph it changes: a chained context, a context, a
+reverse chaining and a ligature lookup, a pair, mark-to-base, mark-to-mark, mark-to-ligature and cursive lookup, and
+lookups across Han, Hiragana and Katakana. The script splits each text into script runs as the library does, with
+Common and Inherited characters in the run before them, and shapes each run in its own buffer. For each case that
+crosses a boundary it also shapes the text in one buffer of one script, where the lookup applies. The reference holds
+the glyph ID and the place of each glyph.
+
+`ScriptRunContextTests` checks that the library gives the same glyphs in the same places.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_script_run_context_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Thai private use reference
 
 `generate_thai_pua_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ThaiPua.harfbuzz.json`. When the
