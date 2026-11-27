@@ -41,7 +41,8 @@ internal sealed class CffClosure : ICffCallObserver
     public bool[] GlobalSubrs { get; }
 
     /// <summary>
-    /// Gets, for each Font DICT, whether a kept glyph of that Font DICT calls each of its local subroutines.
+    /// Gets, for each Font DICT, whether a kept glyph calls each of its local subroutines. Font DICTs that share one local Subrs INDEX
+    /// share one array, which a call from a glyph of any of them marks.
     /// </summary>
     public bool[][] LocalSubrs { get; }
 
@@ -49,13 +50,14 @@ internal sealed class CffClosure : ICffCallObserver
     /// Finds the closure of glyphs. Glyph 0 is always in it.
     /// </summary>
     /// <param name="font">The font.</param>
+    /// <param name="map">The parts of the table, which say which Font DICTs share a local Subrs INDEX.</param>
     /// <param name="glyphIds">The glyphs to keep.</param>
     /// <param name="budget">The budget that the arrays are charged to.</param>
     /// <returns>The closure.</returns>
     /// <exception cref="ArgumentOutOfRangeException">A glyph ID is not a glyph of the font.</exception>
     /// <exception cref="InvalidFontFileException">The charstring of a kept glyph is malformed.</exception>
     /// <exception cref="FontProgramTooLargeException">The arrays do not fit under the cap of the budget.</exception>
-    public static CffClosure Compute(CffFont font, IReadOnlyCollection<ushort> glyphIds, ref LoadBudget budget)
+    public static CffClosure Compute(CffFont font, CffTableMap map, IReadOnlyCollection<ushort> glyphIds, ref LoadBudget budget)
     {
         int glyphCount = font.GlyphCount;
         int globalCount = font.GlobalSubrs.Count;
@@ -63,16 +65,21 @@ internal sealed class CffClosure : ICffCallObserver
             + LoadBudget.SizeOf<ushort>(glyphCount)
             + LoadBudget.SizeOf<bool>(globalCount)
             + LoadBudget.SizeOf<bool[]>(font.FontDictCount);
-        for (int i = 0; i < font.FontDictCount; i++)
+        int[] owners = map.SubrsOwners;
+        for (int i = 0; i < owners.Length; i++)
         {
-            size += LoadBudget.SizeOf<bool>(font.GetLocalSubrs(i).Count);
+            if (owners[i] == i)
+            {
+                size += LoadBudget.SizeOf<bool>(font.GetLocalSubrs(i).Count);
+            }
         }
 
         budget.Reserve(size);
         bool[][] localSubrs = budget.Allocate<bool[]>(font.FontDictCount);
         for (int i = 0; i < localSubrs.Length; i++)
         {
-            localSubrs[i] = budget.Allocate<bool>(font.GetLocalSubrs(i).Count);
+            // The owner of a Font DICT comes before it, so its array is there to share.
+            localSubrs[i] = owners[i] < 0 ? [] : owners[i] == i ? budget.Allocate<bool>(font.GetLocalSubrs(i).Count) : localSubrs[owners[i]];
         }
 
         CffClosure closure = new(budget.Allocate<bool>(glyphCount), budget.Allocate<bool>(globalCount), localSubrs, budget.Allocate<ushort>(glyphCount));

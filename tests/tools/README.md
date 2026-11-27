@@ -989,6 +989,7 @@ python tests/tools/generate_font_descriptor_reference.py
 ```
 
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
+
 ## Font subsets
 
 `verify_font_subsets.py` checks the subsets that `FontSubsetter` writes (issue #155) with fontTools. The `FontSubsetter` tests write each subset,

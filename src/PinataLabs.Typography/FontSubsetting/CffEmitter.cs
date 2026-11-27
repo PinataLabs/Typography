@@ -18,8 +18,8 @@ internal ref struct CffEmitter
     // The INDEX that is being written: the size of its offsets, where the next offset goes,
     // and the offset of the next object, which counts from 1.
     private int offSize;
-    private int nextOffsetPosition;
-    private int nextObjectOffset;
+    private long nextOffsetPosition;
+    private long nextObjectOffset;
 
     public CffEmitter(Span<byte> destination)
     {
@@ -32,9 +32,10 @@ internal ref struct CffEmitter
     }
 
     /// <summary>
-    /// Gets the position of the next byte to write.
+    /// Gets the position of the next byte to write. The count is 64 bits, so measuring a table that is too large to write does not overflow.
+    /// Only a position below 2 GB is a place that a writer can use.
     /// </summary>
-    public int Position { get; private set; }
+    public long Position { get; private set; }
 
     /// <summary>
     /// Writes bytes.
@@ -44,7 +45,7 @@ internal ref struct CffEmitter
     {
         if (this.write)
         {
-            bytes.CopyTo(this.destination.Slice(this.Position));
+            bytes.CopyTo(this.destination.Slice((int)this.Position));
         }
 
         this.Position += bytes.Length;
@@ -66,7 +67,7 @@ internal ref struct CffEmitter
         this.offSize = GetOffSize(dataLength);
         if (this.write)
         {
-            Span<byte> header = this.destination.Slice(this.Position);
+            Span<byte> header = this.destination.Slice((int)this.Position);
             BinaryPrimitives.WriteUInt16BigEndian(header, (ushort)count);
             header[2] = (byte)this.offSize;
             WriteOffset(header.Slice(3), this.offSize, 1);
@@ -74,7 +75,7 @@ internal ref struct CffEmitter
 
         this.nextOffsetPosition = this.Position + 3 + this.offSize;
         this.nextObjectOffset = 1;
-        this.Position += 3 + (int)((count + 1L) * this.offSize);
+        this.Position += 3 + ((count + 1L) * this.offSize);
     }
 
     /// <summary>
@@ -95,7 +96,7 @@ internal ref struct CffEmitter
     /// <param name="offsets">The new values.</param>
     public void AddDict(ReadOnlySpan<byte> source, CffDictKind kind, in CffDictOffsets offsets)
     {
-        int length = CffDictRewriter.Rewrite(source, kind, in offsets, this.write ? this.destination.Slice(this.Position) : default);
+        int length = CffDictRewriter.Rewrite(source, kind, in offsets, this.write ? this.destination.Slice((int)this.Position) : default);
         this.Position += length;
         this.EndObject(length);
     }
@@ -109,7 +110,7 @@ internal ref struct CffEmitter
     /// <returns>The length of the DICT.</returns>
     public int WriteDict(ReadOnlySpan<byte> source, CffDictKind kind, in CffDictOffsets offsets)
     {
-        int length = CffDictRewriter.Rewrite(source, kind, in offsets, this.write ? this.destination.Slice(this.Position) : default);
+        int length = CffDictRewriter.Rewrite(source, kind, in offsets, this.write ? this.destination.Slice((int)this.Position) : default);
         this.Position += length;
         return length;
     }
@@ -131,7 +132,7 @@ internal ref struct CffEmitter
         this.nextObjectOffset += length;
         if (this.write)
         {
-            WriteOffset(this.destination.Slice(this.nextOffsetPosition), this.offSize, this.nextObjectOffset);
+            WriteOffset(this.destination.Slice((int)this.nextOffsetPosition), this.offSize, this.nextObjectOffset);
         }
 
         this.nextOffsetPosition += this.offSize;

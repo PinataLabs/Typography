@@ -194,6 +194,49 @@ public class FontSubsetterCffTests
         await Assert.That(exception.Message).Contains($"glyph {broken}");
     }
 
+    [Test]
+    [Arguments(CffFontBuilder.Sharing.PrivateDict)]
+    [Arguments(CffFontBuilder.Sharing.SubrsOnly)]
+    public async Task FontDictsThatShareAPrivateDictOrItsSubroutinesGetOneCopyOfThem(CffFontBuilder.Sharing sharing)
+    {
+        // 256 Font DICTs, and 1,000 local subroutines. A copy for each Font DICT would be 256 times as long.
+        byte[][] subrs = [.. Enumerable.Range(0, 1000).Select(CffFontBuilder.Subr)];
+        byte[][] charStrings = [.. Enumerable.Range(0, 300).Select(i => i == 0 ? (byte[])[14] : CffFontBuilder.CallingGlyph((i * 7) % 1000))];
+        byte[] font = CffFontBuilder.Build("T"u8.ToArray(), charStrings, 256, subrs, sharing);
+        ushort[] requested = [1, 2, 3, 258];
+
+        byte[] subset = FontSubsetter.Subset(font, requested);
+
+        await Assert.That(subset.Length).IsLessThan(font.Length);
+        List<string> differences = SubsetComparison.Compare(font, subset, requested, out int dropped);
+        await Assert.That(differences).IsEmpty();
+        await Assert.That(dropped).IsGreaterThan(0);
+
+        // The subroutines that the kept glyphs call are kept, whichever Font DICT each glyph has: 7, 14, 21 and 258 * 7 % 1000.
+        CffFont after = CffParser.Load(subset);
+        foreach (int called in new[] { 7, 14, 21, (258 * 7) % 1000 })
+        {
+            for (int fontDict = 0; fontDict < 256; fontDict += 51)
+            {
+                after.GetLocalSubrs(fontDict).TryGet(called, out ReadOnlyMemory<byte> body);
+                await Assert.That(body.ToArray()).IsEquivalentTo(CffFontBuilder.Subr(called));
+            }
+        }
+    }
+
+    [Test]
+    public async Task AFontNameOfZeroBytesStaysAFontName()
+    {
+        byte[][] charStrings = [[14], [14], [14]];
+        byte[] font = CffFontBuilder.Build([], charStrings, 1, [], CffFontBuilder.Sharing.PrivateDict);
+
+        byte[] subset = FontSubsetter.Subset(font, [1]);
+
+        // The Name INDEX follows the 4-byte header: one object, with offsets 1 and 1, and not an INDEX of no objects.
+        await Assert.That(subset.AsSpan(4, 5).ToArray()).IsEquivalentTo(new byte[] { 0, 1, 1, 1, 1 });
+        await Assert.That(FontProgram.Load(subset).GlyphCount).IsEqualTo(3);
+    }
+
     private static void Check(CffIndex before, CffIndex after, int index, bool called, string name, List<string> failures)
     {
         before.TryGet(index, out ReadOnlyMemory<byte> original);

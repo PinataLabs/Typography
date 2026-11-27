@@ -88,24 +88,29 @@ internal static class CffDictRewriter
     }
 
     /// <summary>
-    /// Finds out whether a DICT has a Subrs operator with an operand, as the reader of the font requires.
+    /// Finds the operand of the Subrs operator of a Private DICT: the offset of the local Subrs INDEX from the start of the DICT.
+    /// The reader of the font takes the last Subrs operator that has an operand.
     /// </summary>
     /// <param name="privateDict">The Private DICT.</param>
+    /// <param name="offset">Receives the operand.</param>
     /// <returns><see langword="true"/> if the DICT names local subroutines.</returns>
     /// <exception cref="InvalidFontFileException">The DICT is malformed.</exception>
-    public static bool HasSubrs(ReadOnlySpan<byte> privateDict)
+    public static bool TryGetSubrsOffset(ReadOnlySpan<byte> privateDict, out double offset)
     {
+        offset = 0;
+        bool found = false;
         Span<double> operands = stackalloc double[CffDictReader.MaxOperands];
         CffDictReader reader = new(privateDict);
         while (reader.TryRead(operands, out int count, out int op))
         {
             if (op == Subrs && count >= 1)
             {
-                return true;
+                offset = operands[0];
+                found = true;
             }
         }
 
-        return false;
+        return found;
     }
 
     private static bool TryGetReplacement(CffDictKind kind, int op, int count, in CffDictOffsets offsets, out int first, out int second, out int operandCount)

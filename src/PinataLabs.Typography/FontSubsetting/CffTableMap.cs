@@ -26,6 +26,7 @@ internal sealed class CffTableMap
 
     private CffTableMap(
         ReadOnlyMemory<byte> header,
+        bool hasName,
         ReadOnlyMemory<byte> name,
         ReadOnlyMemory<byte> topDict,
         ReadOnlyMemory<byte> strings,
@@ -35,9 +36,12 @@ internal sealed class CffTableMap
         ReadOnlyMemory<byte> encodingData,
         ReadOnlyMemory<byte> fdSelect,
         bool hasFdArray,
-        FontDictMap[] fontDicts)
+        FontDictMap[] fontDicts,
+        int[] privateOwners,
+        int[] subrsOwners)
     {
         this.Header = header;
+        this.HasName = hasName;
         this.Name = name;
         this.TopDict = topDict;
         this.Strings = strings;
@@ -48,12 +52,17 @@ internal sealed class CffTableMap
         this.FdSelect = fdSelect;
         this.HasFdArray = hasFdArray;
         this.FontDicts = fontDicts;
+        this.PrivateOwners = privateOwners;
+        this.SubrsOwners = subrsOwners;
     }
 
     /// <summary>Gets the header, which is copied as it is.</summary>
     public ReadOnlyMemory<byte> Header { get; }
 
-    /// <summary>Gets the first font name, or an empty memory when the Name INDEX is empty.</summary>
+    /// <summary>Gets a value indicating whether the Name INDEX has a name. The name can have no bytes.</summary>
+    public bool HasName { get; }
+
+    /// <summary>Gets the first font name, which is empty when <see cref="HasName"/> is <see langword="false"/> or the name has no bytes.</summary>
     public ReadOnlyMemory<byte> Name { get; }
 
     /// <summary>Gets the Top DICT.</summary>
@@ -87,6 +96,18 @@ internal sealed class CffTableMap
     public FontDictMap[] FontDicts { get; }
 
     /// <summary>
+    /// Gets, for each Font DICT, the first Font DICT whose Private DICT is the same bytes of the table, so the layout writes
+    /// that Private DICT once. It is -1 for a Font DICT with no Private DICT.
+    /// </summary>
+    public int[] PrivateOwners { get; }
+
+    /// <summary>
+    /// Gets, for each Font DICT, the first Font DICT whose local Subrs INDEX is the same bytes of the table, so the layout writes
+    /// that INDEX once. It is -1 for a Font DICT with no local subroutines.
+    /// </summary>
+    public int[] SubrsOwners { get; }
+
+    /// <summary>
     /// Finds the parts of a CFF table.
     /// </summary>
     /// <param name="table">The CFF table, which the reader of the font has already read.</param>
@@ -110,7 +131,8 @@ internal sealed class CffTableMap
         CffIndex.Read(table, position, 2, out int stringsEnd);
 
         ReadOnlyMemory<byte> name = default;
-        if (names.Count > 0 && !names.TryGet(0, out name))
+        bool hasName = names.Count > 0;
+        if (hasName && !names.TryGet(0, out name))
         {
             throw new InvalidFontFileException("The CFF Name INDEX is malformed.");
         }
@@ -168,7 +190,7 @@ internal sealed class CffTableMap
         FontDictMap[] fontDicts = budget.Allocate<FontDictMap>(font.FontDictCount);
         if (fdArray == 0)
         {
-            fontDicts[0] = new FontDictMap(default, ReadPrivate(table, privateSize, privateOffset));
+            fontDicts[0] = ReadPrivate(table, default, privateSize, privateOffset);
         }
         else
         {
@@ -184,8 +206,29 @@ internal sealed class CffTableMap
             }
         }
 
+        int[] privateOwners = budget.Allocate<int>(fontDicts.Length);
+        int[] subrsOwners = budget.Allocate<int>(fontDicts.Length);
+        for (int i = 0; i < fontDicts.Length; i++)
+        {
+            privateOwners[i] = fontDicts[i].Private.IsEmpty ? -1 : i;
+            subrsOwners[i] = fontDicts[i].SubrsStart < 0 ? -1 : i;
+            for (int j = 0; j < i; j++)
+            {
+                if (privateOwners[i] == i && privateOwners[j] == j && fontDicts[j].PrivateOffset == fontDicts[i].PrivateOffset && fontDicts[j].Private.Length == fontDicts[i].Private.Length)
+                {
+                    privateOwners[i] = j;
+                }
+
+                if (subrsOwners[i] == i && subrsOwners[j] == j && fontDicts[j].SubrsStart == fontDicts[i].SubrsStart)
+                {
+                    subrsOwners[i] = j;
+                }
+            }
+        }
+
         return new CffTableMap(
             table.Slice(0, headerSize),
+            hasName,
             name,
             topDict,
             table.Slice(stringsStart, stringsEnd - stringsStart),
@@ -195,7 +238,9 @@ internal sealed class CffTableMap
             encodingData,
             fdSelectData,
             fdArray != 0,
-            fontDicts);
+            fontDicts,
+            privateOwners,
+            subrsOwners);
     }
 
     private static FontDictMap ReadFontDict(ReadOnlyMemory<byte> table, ReadOnlyMemory<byte> fontDict)
@@ -213,11 +258,20 @@ internal sealed class CffTableMap
             }
         }
 
-        return new FontDictMap(fontDict, ReadPrivate(table, privateSize, privateOffset));
+        return ReadPrivate(table, fontDict, privateSize, privateOffset);
     }
 
-    private static ReadOnlyMemory<byte> ReadPrivate(ReadOnlyMemory<byte> table, int size, int offset)
-        => size == 0 ? default : Slice(table, offset, size);
+    private static FontDictMap ReadPrivate(ReadOnlyMemory<byte> table, ReadOnlyMemory<byte> fontDict, int size, int offset)
+    {
+        if (size == 0)
+        {
+            return new FontDictMap(fontDict, default, 0, -1);
+        }
+
+        ReadOnlyMemory<byte> privateDict = Slice(table, offset, size);
+        int subrsStart = CffDictRewriter.TryGetSubrsOffset(privateDict.Span, out double subrs) ? offset + ToOffset(subrs, table.Length) : -1;
+        return new FontDictMap(fontDict, privateDict, offset, subrsStart);
+    }
 
     private static ReadOnlyMemory<byte> Slice(ReadOnlyMemory<byte> table, int offset, int length)
         => (long)offset + length <= table.Length
@@ -300,11 +354,7 @@ internal sealed class CffTableMap
     /// </summary>
     /// <param name="Dict">The Font DICT, or an empty memory for the Top DICT of a font without an FDArray.</param>
     /// <param name="Private">The Private DICT, or an empty memory when the font has none.</param>
-    internal readonly record struct FontDictMap(ReadOnlyMemory<byte> Dict, ReadOnlyMemory<byte> Private)
-    {
-        /// <summary>
-        /// Gets a value indicating whether the Private DICT names local subroutines.
-        /// </summary>
-        public bool HasSubrs => !this.Private.IsEmpty && CffDictRewriter.HasSubrs(this.Private.Span);
-    }
+    /// <param name="PrivateOffset">The offset of the Private DICT in the table.</param>
+    /// <param name="SubrsStart">The offset of the local Subrs INDEX in the table, or -1 when the Private DICT names none.</param>
+    internal readonly record struct FontDictMap(ReadOnlyMemory<byte> Dict, ReadOnlyMemory<byte> Private, int PrivateOffset, int SubrsStart);
 }

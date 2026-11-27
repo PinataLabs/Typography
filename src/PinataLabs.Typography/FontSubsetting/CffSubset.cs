@@ -32,11 +32,15 @@ internal sealed class CffSubset : ISubsetTable
     private readonly long globalSubrsLength;
     private readonly long charStringsLength;
 
-    // For each Font DICT, the length of the data of its local Subrs INDEX.
+    // For each Font DICT that owns its local Subrs INDEX (see CffTableMap.SubrsOwners), the length of the data of the INDEX.
     private readonly long[] localSubrsLengths;
 
-    // For each Font DICT, the length and the offset of its Private DICT, as the layout places it.
-    private readonly int[] privates;
+    // For each Font DICT that owns its Private DICT, the length of the DICT and its offset, as the layout places it.
+    private readonly int[] privateLengths;
+    private readonly int[] privateOffsets;
+
+    // For each Font DICT that owns its local Subrs INDEX, the offset of the INDEX, as the layout places it.
+    private readonly int[] subrsOffsets;
 
     // Where the layout placed each part. A pass over the layout sets them, and the next pass writes them into the DICTs.
     private int charsetOffset;
@@ -53,12 +57,14 @@ internal sealed class CffSubset : ISubsetTable
 
         int fontDictCount = font.FontDictCount;
         this.localSubrsLengths = budget.Allocate<long>(fontDictCount);
-        this.privates = budget.Allocate<int>(2 * fontDictCount);
+        this.privateLengths = budget.Allocate<int>(fontDictCount);
+        this.privateOffsets = budget.Allocate<int>(fontDictCount);
+        this.subrsOffsets = budget.Allocate<int>(fontDictCount);
 
         this.globalSubrsLength = GetSubrsLength(font.GlobalSubrs, closure.GlobalSubrs);
         for (int i = 0; i < fontDictCount; i++)
         {
-            this.localSubrsLengths[i] = map.FontDicts[i].HasSubrs ? GetSubrsLength(font.GetLocalSubrs(i), closure.LocalSubrs[i]) : 0;
+            this.localSubrsLengths[i] = map.SubrsOwners[i] == i ? GetSubrsLength(font.GetLocalSubrs(i), closure.LocalSubrs[i]) : 0;
         }
 
         for (int i = 0; i < font.GlyphCount; i++)
@@ -66,8 +72,11 @@ internal sealed class CffSubset : ISubsetTable
             this.charStringsLength += closure.Glyphs[i] ? GetLength(font.CharStrings, i) : EndChar.Length;
         }
 
-        // The first pass finds where each part goes, and the length of the table.
-        this.Length = this.Emit(default);
+        // The first pass finds where each part goes, and the length of the table. Font DICTs that share a Private DICT or a local Subrs INDEX
+        // share one copy, so the table is the size of the parts that the font has. A font that is built so that its parts overlap
+        // can still be larger than the font, so the length is counted in 64 bits.
+        long length = this.Emit(default);
+        this.Length = length <= int.MaxValue ? (int)length : throw new InvalidFontFileException("The CFF table of the subset would be larger than 2 GB.");
     }
 
     /// <summary>
@@ -88,15 +97,15 @@ internal sealed class CffSubset : ISubsetTable
     public static CffSubset Create(ReadOnlyMemory<byte> table, IReadOnlyCollection<ushort> glyphIds, ref LoadBudget budget)
     {
         CffFont font = CffParser.Load(table, ref budget);
-        CffClosure closure = CffClosure.Compute(font, glyphIds, ref budget);
         CffTableMap map = CffTableMap.Read(table, font, ref budget);
+        CffClosure closure = CffClosure.Compute(font, map, glyphIds, ref budget);
         return new CffSubset(font, closure, map, ref budget);
     }
 
     /// <inheritdoc />
     public void Write(Span<byte> destination)
     {
-        int length = this.Emit(destination);
+        long length = this.Emit(destination);
         Debug.Assert(length == this.Length, "The second pass over the layout gave another length.");
     }
 
@@ -125,20 +134,20 @@ internal sealed class CffSubset : ISubsetTable
     }
 
     // Writes the table, or measures it when the destination is empty.
-    private int Emit(Span<byte> destination)
+    private long Emit(Span<byte> destination)
     {
         CffEmitter emitter = new(destination);
         emitter.Write(this.map.Header.Span);
 
-        // The first font only: the Name INDEX and the Top DICT INDEX each hold one object.
-        if (this.map.Name.IsEmpty)
-        {
-            emitter.BeginIndex(0, 0);
-        }
-        else
+        // The first font only: the Name INDEX and the Top DICT INDEX each hold one object. The name can have no bytes.
+        if (this.map.HasName)
         {
             emitter.BeginIndex(1, this.map.Name.Length);
             emitter.AddObject(this.map.Name.Span);
+        }
+        else
+        {
+            emitter.BeginIndex(0, 0);
         }
 
         CffDictOffsets top = this.GetTopOffsets();
@@ -148,14 +157,14 @@ internal sealed class CffSubset : ISubsetTable
         emitter.Write(this.map.Strings.Span);
         WriteSubrs(ref emitter, this.font.GlobalSubrs, this.closure.GlobalSubrs, this.globalSubrsLength);
 
-        this.charsetOffset = emitter.Position;
+        this.charsetOffset = (int)emitter.Position;
         emitter.Write(this.map.CharsetData.Span);
-        this.fdSelectOffset = emitter.Position;
+        this.fdSelectOffset = (int)emitter.Position;
         emitter.Write(this.map.FdSelect.Span);
-        this.encodingOffset = emitter.Position;
+        this.encodingOffset = (int)emitter.Position;
         emitter.Write(this.map.EncodingData.Span);
 
-        this.charStringsOffset = emitter.Position;
+        this.charStringsOffset = (int)emitter.Position;
         emitter.BeginIndex(this.font.GlyphCount, this.charStringsLength);
         for (int i = 0; i < this.font.GlyphCount; i++)
         {
@@ -165,7 +174,7 @@ internal sealed class CffSubset : ISubsetTable
 
         if (this.map.HasFdArray)
         {
-            this.fdArrayOffset = emitter.Position;
+            this.fdArrayOffset = (int)emitter.Position;
             long fontDictsLength = 0;
             for (int i = 0; i < this.map.FontDicts.Length; i++)
             {
@@ -181,26 +190,28 @@ internal sealed class CffSubset : ISubsetTable
             }
         }
 
-        // Each Private DICT is followed by its local Subrs INDEX, which its Subrs operator names by the length of the DICT.
+        // Each Private DICT that a Font DICT names, and each local Subrs INDEX that a Private DICT names, is written once, however many
+        // Font DICTs name it. The Subrs operator of a Private DICT gives the distance to the INDEX, which is always ahead of the DICT.
         for (int i = 0; i < this.map.FontDicts.Length; i++)
         {
-            CffTableMap.FontDictMap fontDict = this.map.FontDicts[i];
-            if (fontDict.Private.IsEmpty)
+            if (this.map.PrivateOwners[i] != i)
             {
-                this.privates[2 * i] = 0;
-                this.privates[(2 * i) + 1] = 0;
                 continue;
             }
 
-            int offset = emitter.Position;
-            CffDictOffsets measure = default;
-            int length = CffDictRewriter.Rewrite(fontDict.Private.Span, CffDictKind.Private, in measure, default);
-            CffDictOffsets offsets = new() { Subrs = length };
-            emitter.WriteDict(fontDict.Private.Span, CffDictKind.Private, in offsets);
-            this.privates[2 * i] = length;
-            this.privates[(2 * i) + 1] = offset;
-            if (fontDict.HasSubrs)
+            ReadOnlySpan<byte> privateDict = this.map.FontDicts[i].Private.Span;
+            int offset = (int)emitter.Position;
+            int subrsOwner = this.map.SubrsOwners[i];
+            CffDictOffsets offsets = new() { Subrs = subrsOwner < 0 ? 0 : this.subrsOffsets[subrsOwner] - offset };
+            this.privateLengths[i] = emitter.WriteDict(privateDict, CffDictKind.Private, in offsets);
+            this.privateOffsets[i] = offset;
+        }
+
+        for (int i = 0; i < this.map.FontDicts.Length; i++)
+        {
+            if (this.map.SubrsOwners[i] == i)
             {
+                this.subrsOffsets[i] = (int)emitter.Position;
                 WriteSubrs(ref emitter, this.font.GetLocalSubrs(i), this.closure.LocalSubrs[i], this.localSubrsLengths[i]);
             }
         }
@@ -218,10 +229,17 @@ internal sealed class CffSubset : ISubsetTable
             FdSelect = this.map.FdSelect.IsEmpty ? 0 : this.fdSelectOffset,
 
             // A font with an FDArray takes its Private DICTs from the Font DICTs and ignores the one of the Top DICT.
-            PrivateSize = this.map.HasFdArray ? 0 : this.privates[0],
-            PrivateOffset = this.map.HasFdArray ? 0 : this.privates[1],
+            PrivateSize = this.map.HasFdArray ? 0 : this.GetPrivateLength(0),
+            PrivateOffset = this.map.HasFdArray ? 0 : this.GetPrivateOffset(0),
         };
 
     private CffDictOffsets GetFontDictOffsets(int fontDict)
-        => new() { PrivateSize = this.privates[2 * fontDict], PrivateOffset = this.privates[(2 * fontDict) + 1] };
+        => new() { PrivateSize = this.GetPrivateLength(fontDict), PrivateOffset = this.GetPrivateOffset(fontDict) };
+
+    // A Font DICT that has no Private DICT names none. One that shares a Private DICT names the copy that its owner has.
+    private int GetPrivateLength(int fontDict)
+        => this.map.PrivateOwners[fontDict] < 0 ? 0 : this.privateLengths[this.map.PrivateOwners[fontDict]];
+
+    private int GetPrivateOffset(int fontDict)
+        => this.map.PrivateOwners[fontDict] < 0 ? 0 : this.privateOffsets[this.map.PrivateOwners[fontDict]];
 }
