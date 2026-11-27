@@ -1561,6 +1561,170 @@ public class TextLayoutTests
         await Assert.That(beh).IsEqualTo(joined);
     }
 
+    // Rule L1 applies to each line, so the soft hyphen that ends a wrapped line takes the paragraph level and is drawn at
+    // the left end of the right-to-left line, not next to the b. The soft hyphen has no advance, so it shares its x with
+    // the a.
+    [Test]
+    public async Task RuleL1_RightToLeftParagraph_MovesSoftHyphenThatEndsAWrappedLineToTheLineEnd()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.RightToLeft };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("abc", options).Width - 1;
+
+        GlyphLayout[][] lines = GetLines($"ab{Shy}cd ef", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", $"{Shy}ab", "cd", "ef"));
+        await Assert.That(X(lines[0], Shy[0])).IsEqualTo(X(lines[0], 'a'));
+    }
+
+    // In a left-to-right paragraph the space between two Arabic words resolves to level 1. When the line wraps after it,
+    // rule L1 gives it level 0, so it is drawn at the right end of the line, after the Arabic word, not before it.
+    [Test]
+    public async Task RuleL1_LeftToRightParagraph_MovesSpaceThatEndsAWrappedLineToTheLineEnd()
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.LeftToRight, WordBreaking = WordBreaking.BreakAll };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("abc كتب ", options).Width + 1;
+
+        GlyphLayout[][] lines = GetLines("abc كتب جمل", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", "abc بتك ", "لمج"));
+        await Assert.That(lines[0][^1].CodePoint).IsEqualTo(new CodePoint(' '));
+        await Assert.That(lines[0][^1].PenLocation.X).IsGreaterThan(X(lines[0], 'ك'));
+    }
+
+    // The tab is a segment separator, so rule L1 resets the soft hyphen before it on every line. The soft hyphen that
+    // ends the wrapped line is reset by L1 on that line, so it is drawn at the left end of the right-to-left line.
+    [Test]
+    public async Task RuleL1_RightToLeftParagraph_ResetsBeforeATabAndAtTheEndOfAWrappedLine()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.RightToLeft };
+        options.WrappingLength = TextMeasurer.MeasureAdvance($"ab{Shy}\tcd{Shy}", options).Width + 1;
+
+        GlyphLayout[][] lines = GetLines($"ab{Shy}\tcd{Shy}ef", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", $"{Shy}cd\t{Shy}ab", "ef"));
+    }
+
+    // Rule L1 on the last line resets the soft hyphen at the end of the text, as it did when L1 applied to the whole text.
+    [Test]
+    public async Task RuleL1_RightToLeftParagraph_ResetsSoftHyphenAtTheEndOfTheLastLine()
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = TextDirection.RightToLeft };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("abc", options).Width - 1;
+
+        GlyphLayout[][] lines = GetLines($"cd ab{Shy}", options);
+
+        await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", "cd", $"{Shy}ab"));
+    }
+
+    // With WordBreaking.BreakAll the first line keeps the space it ends with. That space is at the logical end of the
+    // line, so justification gives it no padding, whichever side of the line rule L1 draws it on: the right in a
+    // left-to-right paragraph, the left in a right-to-left one. Padding goes after a glyph, so the d, the last glyph
+    // before that space or the line end, takes none either.
+    [Test]
+    [Arguments(TextDirection.LeftToRight, TextJustification.InterWord)]
+    [Arguments(TextDirection.RightToLeft, TextJustification.InterWord)]
+    [Arguments(TextDirection.LeftToRight, TextJustification.InterCharacter)]
+    [Arguments(TextDirection.RightToLeft, TextJustification.InterCharacter)]
+    public async Task Justification_GivesNoPaddingToTheSpaceThatEndsAWrappedLine(TextDirection direction, TextJustification justification)
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = direction, WordBreaking = WordBreaking.BreakAll };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("ab cd e", options).Width - 1;
+
+        GlyphLayout[] line = GetLines("ab cd efg", options)[0];
+        options.TextJustification = justification;
+        GlyphLayout[] justified = GetLines("ab cd efg", options)[0];
+
+        // In visual order the line is "ab cd " in a left-to-right paragraph and " ab cd" in a right-to-left one.
+        int trailing = direction == TextDirection.LeftToRight ? line.Length - 1 : 0;
+        int between = direction == TextDirection.LeftToRight ? 2 : 3;
+        int d = direction == TextDirection.LeftToRight ? line.Length - 2 : line.Length - 1;
+        await Assert.That(Visual([justified])).IsEqualTo(direction == TextDirection.LeftToRight ? "ab cd " : " ab cd");
+        await Assert.That(justified[trailing].AdvanceX).IsEqualTo(line[trailing].AdvanceX);
+        await Assert.That(justified[d].AdvanceX).IsEqualTo(line[d].AdvanceX);
+        await Assert.That(justified[between].AdvanceX).IsGreaterThan(line[between].AdvanceX);
+        await Assert.That(Math.Round(justified.Sum(x => x.AdvanceX) * options.Dpi, 3)).IsEqualTo(Math.Round(options.WrappingLength, 3));
+    }
+
+    // A joiner that starts a wrapped line has no character before it on the line. TextLayout draws it in the run of the
+    // character after it, as BidiParagraph.GetVisualRuns does, not at the level it takes from the space that ends the
+    // line before.
+    [Test]
+    [Arguments("\u0627\u0628 \u200Dcd", TextDirection.RightToLeft)]
+    [Arguments("ab \u200D\u0627\u0628", TextDirection.LeftToRight)]
+    [Arguments("ab \u200Dcd", TextDirection.RightToLeft)]
+    public async Task RuleL1_JoinerThatStartsAWrappedLine_IsDrawnAsGetVisualRunsDrawsIt(string text, TextDirection direction)
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = direction };
+        options.WrappingLength = TextMeasurer.MeasureAdvance(text.AsSpan(0, 3), options).Width + 1;
+
+        GlyphLayout[][] lines = GetLines(text, options);
+
+        BidiParagraph paragraph = BidiParagraph.Resolve(
+            text,
+            direction == TextDirection.RightToLeft ? BidiParagraphDirection.RightToLeft : BidiParagraphDirection.LeftToRight);
+        string expected = string.Concat(paragraph.GetVisualRuns(3, text.Length - 3).Select(run =>
+        {
+            string characters = text.Substring(run.Start, run.Length);
+            return run.IsRightToLeft ? string.Concat(characters.Reverse()) : characters;
+        }));
+
+        await Assert.That(lines.Length).IsEqualTo(2);
+        await Assert.That(Visual([lines[1]])).IsEqualTo(expected);
+    }
+
+    // The font ligates the space and the line feed after it, so the line feed has no glyph. The line wraps at the space,
+    // which does not start the next line, so no glyph is on that line at the mandatory break after the line feed. The
+    // break ends no line, and the b starts the second line.
+    [Test]
+    [Arguments(TextDirection.LeftToRight)]
+    [Arguments(TextDirection.RightToLeft)]
+    public async Task MandatoryBreakAfterALineFeedWithNoGlyph_AddsNoEmptyLine(TextDirection direction)
+    {
+        const string text = "aaaa \nb";
+        Font font = ((IFontMetricsCollection)new FontCollection())
+            .AddMetrics(new SpaceLineFeedLigatingFakeFontInstance(text), CultureInfo.InvariantCulture)
+            .CreateFont(12);
+        TextOptions options = new(font) { TextDirection = direction, WordBreaking = WordBreaking.BreakAll };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("aaaa", options).Width + 1;
+        float lineHeight = TextMeasurer.MeasureAdvance("a", options).Height;
+
+        GlyphLayout[][] lines = GetLines(text, options);
+
+        await Assert.That(Visual(lines)).IsEqualTo("aaaa|b");
+        await Assert.That(lines[1][0].PenLocation.Y - lines[0][0].PenLocation.Y).IsEqualTo(lineHeight / options.Dpi).Within(0.0001F);
+    }
+
+    private static readonly string Shy = ((char)0xAD).ToString();
+
+    // The glyphs of each line, in the order the layout draws them, which is left to right.
+    private static GlyphLayout[][] GetLines(string text, TextOptions options)
+    {
+        List<List<GlyphLayout>> lines = [];
+        foreach (GlyphLayout glyph in TextLayout.GenerateLayout(text.AsSpan(), options))
+        {
+            if (glyph.IsStartOfLine)
+            {
+                lines.Add([]);
+            }
+
+            lines[^1].Add(glyph);
+        }
+
+        return [.. lines.Select(x => x.ToArray())];
+    }
+
+    // Each line in visual order, left to right, with the lines separated by |.
+    private static string Visual(GlyphLayout[][] lines)
+        => string.Join("|", lines.Select(line => string.Concat(line.Select(x => x.CodePoint.ToString()))));
+
+    private static float X(GlyphLayout[] line, char c) => line.Single(x => x.CodePoint == new CodePoint(c)).PenLocation.X;
+
     private static string GetVisualOrder(string text, TextOptions options)
     {
         TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);

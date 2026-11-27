@@ -526,18 +526,39 @@ Unicode conformance suites to that version.
   `BidiParagraph.Levels` and `BidiParagraph.GetVisualRuns` all have the fix. In `TextLayout`, a soft hyphen at the end
   of the text is now drawn at the end of the line in the paragraph direction, not next to the letter before it. It has
   no advance, so no other glyph moves. (#165)
+  65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a
+  vertical advance outside 0 to 65535, so its placement is not checked against HarfBuzz. (#162)
 - Rule L1 of the bidi algorithm now leaves a character that rule X9 removes, such as U+00AD or an embedding control,
   at the paragraph level when it is in the whitespace that L1 resets at the end of a line or before a separator, as
   UAX #9 section 5.2 says. The pass that gives each removed character the level of the character before it ran after
   L1 and overwrote the reset, so in `"ab"` + U+00AD in a right-to-left paragraph the soft hyphen took level 2, not 1.
-  `BidiParagraph.Levels` and `BidiParagraph.GetVisualRuns` have the fix. `TextLayout` applies L1 to the whole text as
-  one line, so a soft hyphen at the end of the text, or before a tab, now takes the paragraph level and is drawn on
-  the paragraph side of the letter before it. A soft hyphen at the end of a wrapped line that is not the last does not
-  move. A ZWJ or ZWNJ moves the same way, and the letter before it still joins to it, because shaping splits a font
-  run by script, not by direction. None of these characters has an advance, so no other glyph moves. (#165)
+  `BidiAlgorithm.Process`, `BidiParagraph.Levels` and `BidiParagraph.GetVisualRuns` have the fix. In `TextLayout`, a
+  soft hyphen at the end of the text, or before a tab, now takes the paragraph level and is drawn on the paragraph side
+  of the letter before it. A ZWJ or ZWNJ moves the same way, and the letter before it still joins to it, because
+  shaping splits a font run by script, not by direction. None of these characters has an advance, so no other glyph
+  moves. (#165)
 - A character that rule X9 removes at the start of a paragraph now takes the paragraph level, as UAX #9 section 5.2
   says. Rules X2 to X5 gave an RLE, LRE, RLO or LRO there the level that it pushes, so in RLE + `abc` in a
   left-to-right paragraph `BidiParagraph.Levels` gave the RLE level 1, not 0. (#165)
+- `TextLayout` and `TextMeasurer` apply rule L1 of the bidi algorithm to each line, as UAX #9 says, not to the whole
+  text as one line. The whitespace, isolate controls and characters that rule X9 removes at the end of a wrapped line
+  that is not the last kept their resolved level, so they were drawn inside the line, not at its end in the paragraph
+  direction. In `"ab"` + U+00AD + `"cd ef"` in a right-to-left paragraph, wrapped after the soft hyphen, the soft hyphen
+  was drawn after the b, not at the left end of the line. A space at the end of a wrapped line moves the same way when
+  the line keeps it, as with `WordBreaking.BreakAll`. Each line now has the levels that `BidiParagraph.GetVisualRuns`
+  gives it. Shaping still takes the levels of the whole text, so no glyph takes another form. A character that rule X9
+  removes at the start of a line, such as a ZWJ after the space where the line wraps, is drawn in the run of the
+  character after it, where `BidiParagraph.GetVisualRuns` puts a joiner. It kept the level of the character before it
+  in the text, which ends the line before, so in `"اب "` + ZWJ + `"cd"` in a right-to-left paragraph, wrapped after
+  the space, the ZWJ was drawn after the d, not before the c. (#171)
+- `TextJustification` gives no padding to the whitespace at the end of a wrapped line, or to the last glyph before it,
+  in either paragraph direction. It padded every glyph but the one drawn last. In a right-to-left paragraph, rule L1
+  draws a space that the line keeps at its end, as with `WordBreaking.BreakAll`, at the left end of the line, so that
+  space took padding and left a gap at the start of the line. With `TextJustification.InterCharacter` in a
+  left-to-right paragraph, the letter before that space took padding. (#171)
+- `TextLayout` no longer throws `ArgumentOutOfRangeException` when a line wraps at a space that a font ligates with the
+  line feed after it. The line feed had no glyph, so the mandatory break after it added a line with no glyph, and the
+  bidi reordering read its first glyph. (#171)
 - A wrapped line no longer keeps a trailing space that follows a character outside the Basic Multilingual Plane, such as
   an emoji or a mathematical letter. The line break enumerator measured the text before a break through UTF-16 indexes as
   if they were code point indexes, so after such a character it stopped one position too far and `TextLayout` left the
