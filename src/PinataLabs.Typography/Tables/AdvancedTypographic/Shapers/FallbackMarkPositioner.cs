@@ -118,12 +118,13 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
-            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph.
+            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph. Such a glyph takes no advance and no
+            // place, so it may come from another font.
             int marksEnd = index + 1;
             bool canPlace = collection.ShouldProcess(fontMetrics, index) && IsPlaceable(collection, collection[index]);
             while (marksEnd < end && (IsUnicodeMark(collection[marksEnd]) || collection[marksEnd].IsDefaultIgnorable))
             {
-                canPlace &= collection.ShouldProcess(fontMetrics, marksEnd);
+                canPlace &= collection[marksEnd].IsDefaultIgnorable || collection.ShouldProcess(fontMetrics, marksEnd);
                 marksEnd++;
             }
 
