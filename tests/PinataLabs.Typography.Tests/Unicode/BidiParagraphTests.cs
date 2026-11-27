@@ -290,6 +290,14 @@ public class BidiParagraphTests
     }
 
     [Test]
+    public async Task AnIsolateThatHoldsALineFeedEndsAtTheLineFeed()
+    {
+        BidiParagraph paragraph = BidiParagraph.Resolve("\u2066a\n\u2069", BidiParagraphDirection.LeftToRight);
+
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 0, 2, 0, 0 }, CollectionOrdering.Matching);
+    }
+
+    [Test]
     public async Task ARemovedCharacterAfterAResetSeparatorTakesItsLevel()
     {
         BidiParagraph paragraph = BidiParagraph.Resolve("abc\t" + SoftHyphen + "def", BidiParagraphDirection.RightToLeft);

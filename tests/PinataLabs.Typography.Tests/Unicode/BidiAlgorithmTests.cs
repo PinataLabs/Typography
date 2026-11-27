@@ -209,6 +209,53 @@ public class BidiAlgorithmTests
         await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
+    [Test]
+    [Arguments("\u2068\n\u2069", new sbyte[] { 0, 0, 0 })]
+    [Arguments("\u2066a\n\u2069", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2067a\n\u2069", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2066a\nb\u2069", new sbyte[] { 0, 2, 0, 0, 0 })]
+    [Arguments("\u2066\na\u2069", new sbyte[] { 0, 0, 0, 0 })]
+    [Arguments("\u202B\na", new sbyte[] { 0, 0, 0 })]
+    [Arguments("\u2068!\n\u05D0", new sbyte[] { 0, 2, 0, 1 })]
+    public async Task AParagraphSeparatorEndsEveryIsolateAndEmbedding(string text, sbyte[] expected)
+    {
+        // UAX #9 BD9 and X8: a paragraph separator ends every embedding, override and isolate, so no isolate initiator
+        // matches a PDI after it, and the text after it is at the paragraph level. The text that rule X5c reads for an
+        // FSI with no matching PDI ends at the separator.
+        var data = new BidiData();
+        data.Init(text, 0);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data);
+
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
+    // Rule X5c reads the text of an FSI and rule P2 the text of the paragraph, and both skip each isolate pair in it. The
+    // FSI holds the pair LRI a PDI, then an R, so it resolves right to left. With paragraph level 2, P2 skips the pair
+    // and finds the R. Types that are a slice of a longer array resolve to the levels of the same types in an array of
+    // their own.
+    [Test]
+    [Arguments(0, new[] { BidiCharacterType.FirstStrongIsolate, BidiCharacterType.LeftToRightIsolate, BidiCharacterType.LeftToRight, BidiCharacterType.PopDirectionalIsolate, BidiCharacterType.RightToLeft, BidiCharacterType.PopDirectionalIsolate })]
+    [Arguments(2, new[] { BidiCharacterType.LeftToRightIsolate, BidiCharacterType.LeftToRight, BidiCharacterType.PopDirectionalIsolate, BidiCharacterType.RightToLeft })]
+    public async Task TypesThatDoNotStartTheArray_ResolveAsTheTypesOnTheirOwn(int paragraphEmbeddingLevel, BidiCharacterType[] types)
+    {
+        BidiCharacterType[] prefixed = [BidiCharacterType.LeftToRight, BidiCharacterType.LeftToRight, .. types];
+
+        sbyte[] alone = Resolve(types);
+        sbyte[] sliced = Resolve(new ReadOnlyArraySlice<BidiCharacterType>(prefixed, 2, types.Length));
+
+        await Assert.That(sliced).IsEquivalentTo(alone, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(alone[^2]).IsEqualTo((sbyte)1);
+
+        sbyte[] Resolve(ReadOnlyArraySlice<BidiCharacterType> slice)
+        {
+            var bidi = new BidiAlgorithm();
+            bidi.Process(slice, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, (sbyte)paragraphEmbeddingLevel, false, null, null, null);
+            return bidi.ResolvedLevels.ToArray();
+        }
+    }
+
     private bool ICUTestsImpl()
     {
         this.Output.WriteLine("Bidi Class Tests");

@@ -307,6 +307,9 @@ internal sealed class BidiAlgorithm
     /// <returns>The resolved embedding level</returns>
     public sbyte ResolveEmbeddingLevel(ReadOnlyArraySlice<BidiCharacterType> data)
     {
+        // The isolatePairs map holds indices into originalTypes, and data is a slice of it.
+        int offset = data.Start - this.originalTypes.Start;
+
         // P2
         for (int i = 0; i < data.Length; ++i)
         {
@@ -325,11 +328,9 @@ internal sealed class BidiAlgorithm
                 case BidiCharacterType.LeftToRightIsolate:
                 case BidiCharacterType.RightToLeftIsolate:
                     // Skip isolate pairs
-                    // (Because we're working with a slice, we need to adjust the indices
-                    //  we're using for the isolatePairs map)
-                    if (this.isolatePairs.TryGetValue(data.Start + i, out i))
+                    if (this.isolatePairs.TryGetValue(offset + i, out i))
                     {
-                        i -= data.Start;
+                        i -= offset;
                     }
                     else
                     {
@@ -381,6 +382,11 @@ internal sealed class BidiAlgorithm
                 }
 
                 this.hasIsolates = true;
+            }
+            else if (t == BidiCharacterType.ParagraphSeparator)
+            {
+                // A paragraph separator ends every isolate, so no PDI after it matches an initiator before it.
+                this.pendingIsolateOpenings.Clear();
             }
         }
     }
@@ -496,7 +502,13 @@ internal sealed class BidiAlgorithm
                     {
                         if (!this.isolatePairs.TryGetValue(i, out int endOfIsolate))
                         {
-                            endOfIsolate = this.originalTypes.Length;
+                            // With no matching PDI, the isolate ends at the end of the paragraph.
+                            endOfIsolate = i + 1;
+                            while (endOfIsolate < this.originalTypes.Length
+                                && this.originalTypes[endOfIsolate] != BidiCharacterType.ParagraphSeparator)
+                            {
+                                endOfIsolate++;
+                            }
                         }
 
                         // Rule X5c
@@ -614,7 +626,15 @@ internal sealed class BidiAlgorithm
 
                 case BidiCharacterType.ParagraphSeparator:
                 {
-                    // Rule X8
+                    // Rule X8: the separator ends every embedding, override and isolate.
+                    while (this.statusStack.Count > 1)
+                    {
+                        this.statusStack.Pop();
+                    }
+
+                    overflowIsolateCount = 0;
+                    overflowEmbeddingCount = 0;
+                    validIsolateCount = 0;
                     this.ResolvedLevels[i] = this.paragraphEmbeddingLevel;
                     break;
                 }

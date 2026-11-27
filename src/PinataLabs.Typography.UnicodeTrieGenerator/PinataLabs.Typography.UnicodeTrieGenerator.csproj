@@ -26,6 +26,7 @@
 
     <Compile Include="..\PinataLabs.Typography.Unicode\ArraySlice{T}.cs" Link="StateAutomation\ArraySlice{T}.cs" />
     <Compile Include="..\PinataLabs.Typography.Unicode\ReadOnlyArraySlice{T}.cs" Link="StateAutomation\ReadOnlyArraySlice{T}.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\SliceRange.cs" Link="StateAutomation\SliceRange.cs" />
     <Compile Include="..\PinataLabs.Typography.Unicode\DebugGuard.cs" Link="DebugGuard.cs" />
   </ItemGroup>
 

@@ -516,7 +516,7 @@ public class TextLayoutTests
     [Test]
     [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 25, 7)]
     [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 50, 7)]
-    [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 6)]
+    [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 100, 7)]
     [Arguments("This is a long and Honorificabilitudinitatibus califragilisticexpialidocious", 200, 6)]
     public async Task CountLinesWrappingLength(string text, int wrappingLength, int usedLines)
     {
@@ -1651,8 +1651,9 @@ public class TextLayoutTests
     }
 
     // A joiner that starts a wrapped line has no character before it on the line. TextLayout draws it in the run of the
-    // character after it, as BidiParagraph.GetVisualRuns does, not at the level it takes from the space that ends the
-    // line before.
+    // character after it, as BidiParagraph.GetVisualRuns does, not at the level it takes from the space before it. The
+    // line is just wider than the text after the space, and the space overflows it. A wrapped line does not start with a
+    // space, so the next line starts with the joiner.
     [Test]
     [Arguments("\u0627\u0628 \u200Dcd", TextDirection.RightToLeft)]
     [Arguments("ab \u200D\u0627\u0628", TextDirection.LeftToRight)]
@@ -1661,7 +1662,7 @@ public class TextLayoutTests
     {
         Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
         TextOptions options = new(font) { TextDirection = direction };
-        options.WrappingLength = TextMeasurer.MeasureAdvance(text.AsSpan(0, 3), options).Width + 1;
+        options.WrappingLength = TextMeasurer.MeasureAdvance(text.AsSpan(3), options).Width + 1;
 
         GlyphLayout[][] lines = GetLines(text, options);
 
@@ -1688,7 +1689,7 @@ public class TextLayoutTests
     {
         const string text = "aaaa \nb";
         Font font = ((IFontMetricsCollection)new FontCollection())
-            .AddMetrics(new SpaceLineFeedLigatingFakeFontInstance(text), CultureInfo.InvariantCulture)
+            .AddMetrics(new PairLigatingFakeFontInstance(text, ' ', '\n'), CultureInfo.InvariantCulture)
             .CreateFont(12);
         TextOptions options = new(font) { TextDirection = direction, WordBreaking = WordBreaking.BreakAll };
         options.WrappingLength = TextMeasurer.MeasureAdvance("aaaa", options).Width + 1;
@@ -1698,6 +1699,111 @@ public class TextLayoutTests
 
         await Assert.That(Visual(lines)).IsEqualTo("aaaa|b");
         await Assert.That(lines[1][0].PenLocation.Y - lines[0][0].PenLocation.Y).IsEqualTo(lineHeight / options.Dpi).Within(0.0001F);
+    }
+
+    // A line feed ends every isolate (UAX #9 BD9 and X8), so the isolate ends at the line feed and the PDI after it
+    // matches no isolate initiator.
+    [Test]
+    [Arguments("\u2068\n\u2069")]
+    [Arguments("\u2066a\n\u2069")]
+    [Arguments("\u2067a\n\u2069")]
+    public async Task IsolateThatHoldsALineFeed_EndsAtTheLineFeed(string text)
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
+
+        await Assert.That(TextMeasurer.CountLines(text, new TextOptions(font))).IsEqualTo(2);
+    }
+
+    // The layout lays out no variation selector, so a line break opportunity at one is taken at the codepoint after it,
+    // and the text breaks into the lines it breaks into without the variation selector. A variation selector after a
+    // space or a line feed starts a grapheme, and the codepoint after it can be in the same grapheme.
+    [Test]
+    [Arguments("a\n\uFE0Fb", 2)]
+    [Arguments("a \n\uFE0Fb", 2)]
+    [Arguments("a \uFE0F\nb", 2)]
+    [Arguments("a\n\uFE0F\u0301b", 2)]
+    [Arguments("aaaa \uFE0Fbbbb cccc", 3)]
+    [Arguments("aaaa\n\uFE0Fbbbb cccc", 3)]
+    public async Task BreakAtAVariationSelector_IsTakenAtTheCodepointAfterIt(string text, int lineCount)
+    {
+        Font font = CreateFont(text, 12);
+        string withoutSelector = text.Replace("\uFE0F", string.Empty);
+        foreach (WordBreaking wordBreaking in Enum.GetValues<WordBreaking>())
+        {
+            TextOptions options = new(font) { WordBreaking = wordBreaking };
+            options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
+
+            string expected = Visual(GetLines(withoutSelector, options));
+
+            await Assert.That(Visual(GetLines(text, options))).IsEqualTo(expected);
+            await Assert.That(expected.Split('|').Length).IsEqualTo(lineCount);
+        }
+    }
+
+    // The b overflows the line, and the line break opportunity is right before it, after the space. No glyph on the
+    // line is at or after the opportunity, so the line wraps there, before the b. BreakAll wraps before the glyph that
+    // overflows, at a break opportunity or not, so it is not at issue.
+    [Test]
+    [Arguments("aaaa b", WordBreaking.Standard)]
+    [Arguments("aaaa b", WordBreaking.KeepAll)]
+    [Arguments("aaaa b", WordBreaking.BreakWord)]
+    [Arguments("aaaa \uFE0Fb", WordBreaking.Standard)]
+    [Arguments("aaaa \uFE0Fb", WordBreaking.KeepAll)]
+    [Arguments("aaaa \uFE0Fb", WordBreaking.BreakWord)]
+    public async Task OverflowAtTheCodepointOfABreak_WrapsAtTheBreak(string text, WordBreaking wordBreaking)
+    {
+        Font font = CreateFont(text, 12);
+        TextOptions options = new(font) { WordBreaking = wordBreaking };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
+
+        await Assert.That(Visual(GetLines(text, options))).IsEqualTo("aaaa|b");
+    }
+
+    // U+FE0F and U+0301 extend the grapheme of the space before them, and the line break opportunity after the space is
+    // inside that grapheme. A line wraps only between graphemes, so the line wraps after the grapheme, before the b.
+    [Test]
+    [Arguments("a \uFE0F\u0301bbbb")]
+    [Arguments("a \u0301bbbb")]
+    public async Task BreakInsideAGrapheme_IsTakenAtTheNextGrapheme(string text)
+    {
+        Font font = CreateFont(text, 12);
+        TextOptions options = new(font);
+        options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
+
+        await Assert.That(Visual(GetLines(text, options))).IsEqualTo("a \u0301|bbbb");
+    }
+
+    // The font ligates the line feed and the b after it, so the b, at the mandatory break after the line feed, has no
+    // glyph. The break is taken at the c.
+    [Test]
+    public async Task MandatoryBreakAtACodepointWithNoGlyph_IsTakenAtTheCodepointAfterIt()
+    {
+        const string text = "a\nbc d";
+        Font font = ((IFontMetricsCollection)new FontCollection())
+            .AddMetrics(new PairLigatingFakeFontInstance(text, '\n', 'b'), CultureInfo.InvariantCulture)
+            .CreateFont(12);
+
+        await Assert.That(Visual(GetLines(text, new TextOptions(font)))).IsEqualTo("a|c d");
+    }
+
+    // The layout lays out no variation selector on its own, so text that is only variation selectors has no line, as
+    // empty text has none.
+    [Test]
+    [Arguments("\uFE0F", LayoutMode.HorizontalTopBottom)]
+    [Arguments("\uFE0F\uFE0F", LayoutMode.HorizontalTopBottom)]
+    [Arguments("\uFE0F", LayoutMode.HorizontalBottomTop)]
+    [Arguments("\uFE0F", LayoutMode.VerticalLeftRight)]
+    [Arguments("\uFE0F", LayoutMode.VerticalRightLeft)]
+    [Arguments("\uFE0F", LayoutMode.VerticalMixedLeftRight)]
+    [Arguments("\uFE0F", LayoutMode.VerticalMixedRightLeft)]
+    public async Task TextWithNoGlyphToLayOut_LaysOutAsEmptyText(string text, LayoutMode layoutMode)
+    {
+        Font font = CreateFont("a", 12);
+        TextOptions options = new(font) { LayoutMode = layoutMode, TextAlignment = TextAlignment.Center, WrappingLength = 100 };
+
+        await Assert.That(TextLayout.GenerateLayout(text.AsSpan(), options).Count).IsEqualTo(0);
+        await Assert.That(TextMeasurer.CountLines(text, options)).IsEqualTo(TextMeasurer.CountLines(string.Empty, options));
+        await Assert.That(TextMeasurer.MeasureSize(text, options)).IsEqualTo(TextMeasurer.MeasureSize(string.Empty, options));
     }
 
     private static readonly string Shy = ((char)0xAD).ToString();

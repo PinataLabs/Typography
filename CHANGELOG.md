@@ -469,6 +469,25 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- Text that has no codepoint to lay out, such as text that is only U+FE0F, lays out as empty text: no glyph, no line,
+  and the size of empty text. `TextLayout` threw `InvalidOperationException` ("Sequence contains no elements"),
+  because a text with no line has no longest line. (#179)
+- A paragraph separator, such as a line feed, ends every embedding, override and isolate before it, as UAX #9 BD9
+  and X8 say. No isolate initiator matches a PDI after the separator, the text after it is at the paragraph level, and
+  the text that rule X5c reads for an FSI with no matching PDI ends at it. An isolate that held a line feed, such as
+  U+2066 `a` U+000A U+2069, made `TextLayout` and `BidiParagraph.Resolve` throw
+  `InvalidOperationException` ("Internal error"), and an isolate or embedding before a line feed raised the text after
+  it. (#179)
+- `TextLayout` takes a line break at a codepoint that it does not lay out, a variation selector or a codepoint that a
+  ligature leaves with no glyph, at the first codepoint after it that it lays out. A break at such a codepoint, such as
+  after a space or a line feed that a variation selector follows, stayed the next break, so it and every break after it
+  in the text were lost, mandatory breaks too: `a` U+000A U+FE0F `b` was one line. (#181)
+- `TextLayout` wraps a line at a line break opportunity right before the codepoint that overflows it. The line kept
+  that codepoint and overflowed the wrapping length when no glyph on it was at or after the opportunity, as after a
+  space: with `WordBreaking.Standard`, `aaaa b` was one line in a width that fits `aaaaa`. (#181)
+- `TextLayout` keeps a grapheme on one line. A line break opportunity inside a grapheme, such as after a space that
+  a combining mark extends, moves to the end of the grapheme: `a` U+0020 U+0301 `bbbb` wrapped after the space, and
+  the next line began with the acute on its own. (#181)
 - The Hangul shaper puts the jamo of a syllable that does not compose in one cluster, as HarfBuzz 15.0.0 does: a lead,
   a vowel and an optional trail that have no precomposed glyph, and a precomposed LV syllable that it takes apart because
   the trail after it does not compose, with that trail. It kept one cluster for each jamo, so `TextShaper` split the
