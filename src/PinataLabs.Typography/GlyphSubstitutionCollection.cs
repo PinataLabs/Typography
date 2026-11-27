@@ -501,13 +501,17 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <summary>
     /// Replaces a single glyph id with a collection of glyph ids. As in HarfBuzz, each glyph is a component of the glyph it
     /// replaces, unless that glyph has a ligature id, as a ligature or a mark that a ligature skipped has: then each glyph
-    /// keeps the id and the component. A ligature gives glyphs of the base class.
+    /// keeps the id and the component. A ligature gives glyphs of the base class. One glyph id is a single substitution.
     /// </summary>
     /// <param name="index">The zero-based index of the element to replace.</param>
     /// <param name="glyphIds">The collection of replacement glyph ids.</param>
     public void Replace(int index, ReadOnlySpan<ushort> glyphIds)
     {
-        if (glyphIds.Length > 0)
+        if (glyphIds.Length == 1)
+        {
+            this.Replace(index, glyphIds[0]);
+        }
+        else if (glyphIds.Length > 0)
         {
             OffsetGlyphDataPair pair = this.glyphs[index];
             GlyphShapingData current = pair.Data;
@@ -529,19 +533,16 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             current.IsDecomposed = true;
 
             // Add additional glyphs from the rest of the sequence.
-            if (glyphIds.Length > 1)
+            glyphIds = glyphIds.Slice(1);
+            for (int i = 0; i < glyphIds.Length; i++)
             {
-                glyphIds = glyphIds.Slice(1);
-                for (int i = 0; i < glyphIds.Length; i++)
+                GlyphShapingData data = new(current, false)
                 {
-                    GlyphShapingData data = new(current, false)
-                    {
-                        GlyphId = glyphIds[i],
-                        LigatureComponent = isComponent ? i + 1 : current.LigatureComponent
-                    };
+                    GlyphId = glyphIds[i],
+                    LigatureComponent = isComponent ? i + 1 : current.LigatureComponent
+                };
 
-                    this.glyphs.Insert(++index, new(pair.Offset, data));
-                }
+                this.glyphs.Insert(++index, new(pair.Offset, data));
             }
         }
         else
