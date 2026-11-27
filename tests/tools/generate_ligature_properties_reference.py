@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) PinataLabs.
 # Licensed under the Apache License, Version 2.0.
-"""Builds six fonts and writes LigatureProperties.harfbuzz.json, how a substitution keeps or resets the ligature
+"""Builds eight fonts and writes LigatureProperties.harfbuzz.json, how a substitution keeps or resets the ligature
 properties of a glyph in HarfBuzz.
 
 Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
@@ -75,6 +75,25 @@ u25CC.alt are bases, circle_u and circle_u.alt ligatures, and the signs marks.
   ligature class without GDEF. The lookup that ignores ligatures changes it.
 * i: the circle has no class, so the lookup that ignores base glyphs changes it, with GDEF too. U+25CC, i: the circle
   of the text is a base, and the lookup skips it.
+
+LigaturePropertiesComponents.ttf ligates e and the acute into eacute, the ligature of a base and a mark, which has no
+ligature id. It ligates x and y into x_y, and substitutes x_y by p1 and the mark p2, and a by a1 and a2. Then,
+skipping marks, it ligates eacute and f into eacute_f, z and p1 into z_p1, and a1 and a2 into a12. Mark-to-ligature
+has an anchor at x 100 and 700 on the two components of eacute_f, and at x 100, 700 and 1300 on the three of z_p1.
+
+* e, acute, grave, f: eacute is no ligature, so it gives one component, whatever characters it holds, and the grave
+  that eacute_f skips goes on the first (ligate_input). e, acute, f, grave: the grave after the ligature goes on the
+  last component.
+* z, x, y: p2 keeps the ligature id of x_y, which p1 has, but it has no component, as a glyph of a ligature has none.
+  So HarfBuzz stops at it when it moves the marks after p1 to z_p1 (ligate_input), and p2 goes on the last component.
+
+LigaturePropertiesComponentsFallback.ttf has the same glyphs and substitutions, and no GDEF or GPOS table, so HarfBuzz
+places marks around their base itself, on an equal part of a ligature for each component.
+
+* e, acute, grave, f and e, acute, f, grave: eacute_f has two components, so the grave goes over the middle of the
+  first half, at x 150, and of the second, at x 450.
+* a, grave: a2 is a glyph after the first that a multiple substitution made, so it gives no component of its own
+  (_hb_glyph_info_get_lig_num_comps_in_ligation). a12 has one component, and the grave goes over its middle.
 
 The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the
 line, as HarfBuzz gives them. LigaturePropertiesTests reads it.
@@ -156,6 +175,30 @@ table GDEF { GlyphClassDef [u0061 u0062 u0063 u0064], [a_b a_b_c d_c], [u0301], 
 """
 NESTED_TEXTS = ["ab́c", "d́c", "abć"]
 
+COMPONENTS_FONT = "LigaturePropertiesComponents.ttf"
+COMPONENTS_CODE_POINTS = [0x61, 0x65, 0x66, 0x78, 0x79, 0x7A, 0x0300, 0x0301]
+COMPONENTS_EXTRA_GLYPHS = ["eacute", "eacute_f", "x_y", "p1", "p2", "z_p1", "a1", "a2", "a12"]
+COMPONENTS_FEATURES = """
+languagesystem DFLT dflt; languagesystem latn dflt;
+markClass [u0300 u0301 p2] <anchor 0 0> @Accent;
+lookup BaseMark { sub u0065 u0301 by eacute; } BaseMark;
+lookup Pair { sub u0078 u0079 by x_y; } Pair;
+lookup Split { sub x_y by p1 p2; sub u0061 by a1 a2; } Split;
+lookup Ligate { lookupflag IgnoreMarks; sub eacute u0066 by eacute_f; sub u007A p1 by z_p1; sub a1 a2 by a12; } Ligate;
+feature liga { lookup BaseMark; lookup Pair; lookup Split; lookup Ligate; } liga;
+feature mark {
+    pos ligature eacute_f <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent;
+    pos ligature z_p1 <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent
+        ligComponent <anchor 1300 500> mark @Accent;
+} mark;
+table GDEF {
+    GlyphClassDef [u0061 u0065 u0066 u0078 u0079 u007A eacute p1 a1 a2], [eacute_f x_y z_p1 a12], [u0300 u0301 p2], ;
+} GDEF;
+"""
+COMPONENTS_TEXTS = ["é̀f", "éf̀", "zxy"]
+COMPONENTS_FALLBACK_FONT = "LigaturePropertiesComponentsFallback.ttf"
+COMPONENTS_FALLBACK_TEXTS = ["é̀f", "éf̀", "à"]
+
 CIRCLE_FONT = "LigaturePropertiesCircle.ttf"
 CIRCLE_GDEF_FONT = "LigaturePropertiesCircleGdef.ttf"
 CIRCLE_CODE_POINTS = [0x0915, 0x093F, 0x0941, 0x1780, 0x17BB, 0x1000, 0x102D, 0x1B13, 0x1B36, 0x25CC]
@@ -178,12 +221,13 @@ table GDEF {
 CIRCLE_TEXTS = ["ु", "◌ु", "ុ", "ိ", "ᬶ", "ि", "◌ि"]
 
 
-def build(file_name, code_points, features, extra_glyphs, without_gdef=False):
+def build(file_name, code_points, features, extra_glyphs, without_gdef=False, without_gpos=False):
     path = build_font(file_name, code_points, features, extra_glyphs=extra_glyphs)
-    if without_gdef:
+    if without_gdef or without_gpos:
         font = TTFont(path)
-        if "GDEF" in font:
-            del font["GDEF"]
+        for tag, remove in (("GDEF", without_gdef), ("GPOS", without_gpos)):
+            if remove and tag in font:
+                del font[tag]
         font.save(path)
     return load_font(path)
 
@@ -200,6 +244,11 @@ def main():
             (CIRCLE_GDEF_FONT, CIRCLE_CODE_POINTS, CIRCLE_FEATURES + CIRCLE_GDEF, CIRCLE_EXTRA_GLYPHS, False,
              CIRCLE_TEXTS)]:
         hb_font = build(file_name, code_points, features, extra_glyphs, without_gdef)
+        rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in texts)
+    for file_name, without_positioning, texts in [(COMPONENTS_FONT, False, COMPONENTS_TEXTS),
+                                                  (COMPONENTS_FALLBACK_FONT, True, COMPONENTS_FALLBACK_TEXTS)]:
+        hb_font = build(file_name, COMPONENTS_CODE_POINTS, COMPONENTS_FEATURES, COMPONENTS_EXTRA_GLYPHS,
+                        without_positioning, without_positioning)
         rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in texts)
     write_reference(REFERENCE, rows)
 

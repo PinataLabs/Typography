@@ -33,6 +33,12 @@
     ["LigaturePropertiesCircleGdef.ttf","\u102d",[[11,0,0]]],
     ["LigaturePropertiesCircleGdef.ttf","\u1b36",[[11,0,0]]],
     ["LigaturePropertiesCircleGdef.ttf","\u093f",[[2,0,0],[13,600,0]]],
-    ["LigaturePropertiesCircleGdef.ttf","\u25cc\u093f",[[2,0,0],[10,600,0]]]
+    ["LigaturePropertiesCircleGdef.ttf","\u25cc\u093f",[[2,0,0],[10,600,0]]],
+    ["LigaturePropertiesComponents.ttf","e\u0301\u0300f",[[10,0,0],[7,100,500]]],
+    ["LigaturePropertiesComponents.ttf","e\u0301f\u0300",[[10,0,0],[7,700,500]]],
+    ["LigaturePropertiesComponents.ttf","zxy",[[14,0,0],[13,1300,500]]],
+    ["LigaturePropertiesComponentsFallback.ttf","e\u0301\u0300f",[[10,0,0],[7,150,62]]],
+    ["LigaturePropertiesComponentsFallback.ttf","e\u0301f\u0300",[[10,0,0],[7,450,62]]],
+    ["LigaturePropertiesComponentsFallback.ttf","a\u0300",[[17,0,0],[7,300,62]]]
   ]
 }
