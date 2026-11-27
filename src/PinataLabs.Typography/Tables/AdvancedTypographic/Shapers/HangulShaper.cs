@@ -83,14 +83,6 @@ internal sealed class HangulShaper : DefaultShaper
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
     {
-        for (int i = index; i < index + count; i++)
-        {
-            // Uniscribe does not apply 'calt' for Hangul, and certain fonts
-            // (Noto Sans CJK, Source Sans Han, etc) apply all of jamo lookups
-            // in calt, which is not desirable.
-            collection.DisableShapingFeature(i, CaltTag);
-        }
-
         // Apply the state machine to map glyphs to features.
         if (collection is GlyphSubstitutionCollection substitutionCollection)
         {
@@ -139,6 +131,16 @@ internal sealed class HangulShaper : DefaultShaper
 
                 // An action can add or remove glyphs, and the run ends that many glyphs later.
                 end += substitutionCollection.Count - collectionCount;
+            }
+
+            // As in HarfBuzz, calt stays on for the run but not for the jamo that the state machine leaves, because some
+            // fonts (Noto Sans CJK, Source Han Sans) put their jamo lookups in calt. A syllable keeps it.
+            for (int i = index; i < end; i++)
+            {
+                if (GetSyllableType(substitutionCollection[i].CodePoint) is L or V or T)
+                {
+                    substitutionCollection.DisableShapingFeature(i, CaltTag);
+                }
             }
         }
         else

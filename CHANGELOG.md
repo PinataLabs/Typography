@@ -465,6 +465,9 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- The Hangul shaper applies `calt`, as HarfBuzz 15.0.0 does, and keeps it off only for the jamo that do not compose to a
+  syllable. It turned `calt` off for the whole run, as Uniscribe does, so in Noto Sans KR the space between two
+  syllables kept its full width where the font narrows it. (#163)
 - `TextLayout` and `TextMeasurer` place the glyph after one whose advance GPOS kerning takes below zero or above 65535
   where HarfBuzz places it. The advance wrapped at 16 bits, so a kern of -700 on an advance of 600 moved the next glyph
   65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a
