@@ -7,10 +7,13 @@ using System.Diagnostics;
 namespace PinataLabs.Typography.Unicode;
 
 /// <summary>
-/// Information about a potential line break position.
+/// Information about a line break opportunity: a position in the text where a line may end, or must.
 /// </summary>
+/// <remarks>
+/// A position is the index of a code point, not of a UTF-16 code unit: a surrogate pair counts as one.
+/// </remarks>
 [DebuggerDisplay("{PositionMeasure}/{PositionWrap} @ {Required}")]
-internal readonly struct LineBreak
+public readonly struct LineBreak
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LineBreak"/> struct.
@@ -18,7 +21,7 @@ internal readonly struct LineBreak
     /// <param name="positionMeasure">The code point index to measure to</param>
     /// <param name="positionWrap">The code point index to actually break the line at</param>
     /// <param name="required">True if this is a required line break; otherwise false</param>
-    public LineBreak(int positionMeasure, int positionWrap, bool required = false)
+    internal LineBreak(int positionMeasure, int positionWrap, bool required = false)
     {
         this.PositionMeasure = positionMeasure;
         this.PositionWrap = positionWrap;
@@ -27,7 +30,7 @@ internal readonly struct LineBreak
 
     /// <summary>
     /// Gets the break position, before any trailing whitespace.
-    /// This doesn't include trailing whitespace.
+    /// This leaves out the spaces before the break and, for a required break, the line terminator, CR LF being one.
     /// </summary>
     public int PositionMeasure { get; }
 

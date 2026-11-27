@@ -4,20 +4,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
-using TUnit.Core.Interfaces;
 
 namespace PinataLabs.Typography.Tests.Unicode;
 
 public class LineBreakEnumeratorTests
 {
-    private ITestOutput Output => TestContext.Current!.Output;
-
     [Test]
     public async Task BasicLatinTest()
     {
@@ -141,144 +135,81 @@ public class LineBreakEnumeratorTests
         await Assert.That(breaks.ToArray()).IsEquivalentTo(expected);
     }
 
+    // The positions count code points, so a character outside the Basic Multilingual Plane counts as one.
     [Test]
-    public async Task ICUTests()
+    [Arguments("\U0001F600 a", 1, 2)]
+    [Arguments("\U0001D400\U0001D400  a", 2, 4)]
+    [Arguments("\U0001D400\U0001D400\r\n\U0001D400", 2, 4)]
+    public async Task PositionMeasureCountsCodePointsAfterACharacterOutsideTheBasicMultilingualPlane(string text, int measure, int wrap)
     {
-        await Assert.That(this.ICUTestsImpl()).IsTrue();
+        LineBreak first = FirstBreak(text);
+        await Assert.That(first.PositionMeasure).IsEqualTo(measure);
+        await Assert.That(first.PositionWrap).IsEqualTo(wrap);
     }
 
-    // Contains over 7000 tests
-    // https://www.unicode.org/Public/13.0.0/ucd/auxiliary/LineBreakTest.html
-    private bool ICUTestsImpl()
+    // The measure stops before the whole mandatory break, CR LF being one, and before the spaces in front of it.
+    [Test]
+    [Arguments("a\r\nb", 1, 3)]
+    [Arguments("a \r\nb", 1, 4)]
+    [Arguments("a\rb", 1, 2)]
+    [Arguments("a\nb", 1, 2)]
+    [Arguments("a\u0085b", 1, 2)]
+    [Arguments("a\u000Bb", 1, 2)]
+    [Arguments("a\u000Cb", 1, 2)]
+    [Arguments("a\u2028b", 1, 2)]
+    [Arguments("a\u2029b", 1, 2)]
+    [Arguments("a  \u0085b", 1, 4)]
+    public async Task PositionMeasureStopsBeforeAMandatoryBreak(string text, int measure, int wrap)
     {
-        this.Output.WriteLine("Line Breaker Tests");
-        this.Output.WriteLine("------------------");
-
-        // Read the test file
-        string[] lines = File.ReadAllLines(Path.Combine(TestEnvironment.UnicodeTestDataFullPath, "LineBreakTest.txt"));
-
-        // Process each line
-        var tests = new List<Test>();
-        for (int lineNumber = 1; lineNumber < lines.Length + 1; lineNumber++)
-        {
-            // Get the line, remove comments
-            string line = lines[lineNumber - 1].Split('#')[0].Trim();
-
-            // Ignore blank/comment only lines
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                continue;
-            }
-
-            var codePoints = new List<uint>();
-            var breakPoints = new List<int>();
-
-            // Parse the test
-            int p = 0;
-            while (p < line.Length)
-            {
-                // Ignore white space
-                if (char.IsWhiteSpace(line[p]))
-                {
-                    p++;
-                    continue;
-                }
-
-                if (line[p] == '×')
-                {
-                    p++;
-                    continue;
-                }
-
-                if (line[p] == '÷')
-                {
-                    breakPoints.Add(codePoints.Count);
-                    p++;
-                    continue;
-                }
-
-                int codePointPos = p;
-                while (p < line.Length && IsHexDigit(line[p]))
-                {
-                    p++;
-                }
-
-                string codePointStr = line.Substring(codePointPos, p - codePointPos);
-                uint codePoint = Convert.ToUInt32(codePointStr, 16);
-                codePoints.Add(codePoint);
-            }
-
-            // Create test
-            var test = new Test(lineNumber, codePoints.ToArray(), breakPoints.ToArray());
-            tests.Add(test);
-        }
-
-        var foundBreaks = new List<int>();
-
-        for (int testNumber = 0; testNumber < tests.Count; testNumber++)
-        {
-            Test t = tests[testNumber];
-
-            foundBreaks.Clear();
-
-            // Run the line breaker and build a list of break points
-            string text = Encoding.UTF32.GetString(MemoryMarshal.Cast<uint, byte>(t.CodePoints).ToArray());
-
-            var enumerator = new LineBreakEnumerator(text.AsSpan());
-            while (enumerator.MoveNext())
-            {
-                foundBreaks.Add(enumerator.Current.PositionWrap);
-            }
-
-            // Check the same
-            bool pass = true;
-            if (foundBreaks.Count != t.BreakPoints.Length)
-            {
-                pass = false;
-            }
-            else
-            {
-                for (int i = 0; i < foundBreaks.Count; i++)
-                {
-                    if (foundBreaks[i] != t.BreakPoints[i])
-                    {
-                        pass = false;
-                    }
-                }
-            }
-
-            if (!pass)
-            {
-                LineBreakClass[] classes = t.CodePoints.Select(x => UnicodeData.GetLineBreakClass(x)).ToArray();
-
-                this.Output.WriteLine($"Failed test on line {t.LineNumber}");
-                this.Output.WriteLine($"    Code Points: {string.Join(" ", t.CodePoints)}");
-                this.Output.WriteLine($"Expected Breaks: {string.Join(" ", t.BreakPoints)}");
-                this.Output.WriteLine($"  Actual Breaks: {string.Join(" ", foundBreaks)}");
-                this.Output.WriteLine($"     Char Props: {string.Join(" ", classes)}");
-
-                return false;
-            }
-        }
-
-        return true;
+        LineBreak first = FirstBreak(text);
+        await Assert.That(first.PositionMeasure).IsEqualTo(measure);
+        await Assert.That(first.PositionWrap).IsEqualTo(wrap);
+        await Assert.That(first.Required).IsTrue();
     }
 
-    private static bool IsHexDigit(char ch) => char.IsDigit(ch) || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f');
-
-    private readonly struct Test
+    // A text that ends in a mandatory break measures as one that goes on after it does (LB3).
+    [Test]
+    [Arguments("a\r\n", 1, 3)]
+    [Arguments("a\u0085", 1, 2)]
+    [Arguments("a \r", 1, 3)]
+    public async Task PositionMeasureStopsBeforeAMandatoryBreakAtTheEndOfTheText(string text, int measure, int wrap)
     {
-        public Test(int lineNumber, uint[] codePoints, int[] breakPoints)
+        LineBreak first = FirstBreak(text);
+        await Assert.That(first.PositionMeasure).IsEqualTo(measure);
+        await Assert.That(first.PositionWrap).IsEqualTo(wrap);
+        await Assert.That(first.Required).IsTrue();
+    }
+
+    private static LineBreak FirstBreak(string text)
+    {
+        LineBreakEnumerator enumerator = new(text.AsSpan());
+        enumerator.MoveNext();
+        return enumerator.Current;
+    }
+
+    // Contains 19,346 tests at Unicode 18.0.0
+    // https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/LineBreakTest.html
+    [Test]
+    public async Task LineBreakTestSuitePasses()
+    {
+        List<LineBreakTestCase> cases = LineBreakTestCase.Read();
+        await Assert.That(cases.Count).IsGreaterThan(19000);
+
+        List<string> failures = [];
+        foreach (LineBreakTestCase test in cases)
         {
-            this.LineNumber = lineNumber;
-            this.CodePoints = codePoints;
-            this.BreakPoints = breakPoints;
+            List<int> found = [];
+            foreach (LineBreak lineBreak in new LineBreakEnumerator(test.Text.AsSpan()))
+            {
+                found.Add(lineBreak.PositionWrap);
+            }
+
+            if (!found.SequenceEqual(test.BreakPoints))
+            {
+                failures.Add($"line {test.LineNumber}: expected {string.Join(" ", test.BreakPoints)}, found {string.Join(" ", found)}");
+            }
         }
 
-        public int LineNumber { get; }
-
-        public uint[] CodePoints { get; }
-
-        public int[] BreakPoints { get; }
+        await Assert.That(failures.Take(10)).IsEmpty();
     }
 }

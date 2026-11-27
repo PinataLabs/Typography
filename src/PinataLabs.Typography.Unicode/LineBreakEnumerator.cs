@@ -8,21 +8,30 @@ using System.Globalization;
 namespace PinataLabs.Typography.Unicode;
 
 /// <summary>
-/// Supports a simple iteration over a linebreak collection.
+/// Supports a simple iteration over the line break opportunities of a text, each one a <see cref="LineBreak"/>.
 /// Implementation of the Unicode Line Break Algorithm. UAX:14
 /// <see href="https://www.unicode.org/reports/tr14/"/>
 /// Methods are pattern-matched by compiler to allow using foreach pattern.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The rules are those of Unicode 18.0.0, in the form of LineBreakTest.html, which LineBreakTest.txt checks.
 /// Rule LB9 joins a character and its combining marks into one unit, and the rules from LB11 on apply to units.
+/// </para>
+/// <para>
+/// The opportunities come in order, and the last is at the end of the text (LB3), so a text that is not empty
+/// gives at least one. A <see cref="LineBreak.Required"/> opportunity is a mandatory break. The text is read as a
+/// whole: its start is the start of the text for LB2 and its end the end for LB3. To ask about the boundary between
+/// two pieces of a text instead, see <see cref="LineBreakAlgorithm.IsBreakAllowedBetween"/>.
+/// </para>
 /// </remarks>
-internal ref struct LineBreakEnumerator
+public ref struct LineBreakEnumerator
 {
     private const int FirstPictographBlock = 0x1F000;
     private const int LastPictographBlock = 0x1FFFF;
 
     private readonly ReadOnlySpan<char> source;
+    private readonly LineBreakTailoring tailoring;
     private readonly int pointsLength;
     private int charPosition;
     private int position;
@@ -35,10 +44,16 @@ internal ref struct LineBreakEnumerator
     private Unit previous;
     private Unit beforeSpaces;
 
-    public LineBreakEnumerator(ReadOnlySpan<char> source)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LineBreakEnumerator"/> struct.
+    /// </summary>
+    /// <param name="source">The text to find the line break opportunities of.</param>
+    /// <param name="tailoring">The changes to make to the line break classes. The default is none, the algorithm as published.</param>
+    public LineBreakEnumerator(ReadOnlySpan<char> source, LineBreakTailoring tailoring = LineBreakTailoring.None)
         : this()
     {
         this.source = source;
+        this.tailoring = tailoring;
         this.pointsLength = CodePoint.GetCodePointCount(source);
         this.previous = Unit.Sot;
         this.beforeSpaces = Unit.Sot;
@@ -56,15 +71,18 @@ internal ref struct LineBreakEnumerator
         DottedCircle = 1 << 3,
         ExtendedPictographicUnassigned = 1 << 4,
 
+        // A Thai or Lao vowel that is written before its consonant, after which SouthEastAsianAsIdeographs allows no break.
+        LeadingVowel = 1 << 5,
+
         // Context of a unit, from the units before it.
-        OpeningQuote = 1 << 5,
-        HyphenAfterBreak = 1 << 6,
-        HyphenAfterHebrew = 1 << 7,
-        QuoteAfterNonEastAsian = 1 << 8,
-        ViramaAfterAksara = 1 << 9,
-        OddRegionalIndicator = 1 << 10,
-        Number = 1 << 11,
-        ClosedNumber = 1 << 12,
+        OpeningQuote = 1 << 6,
+        HyphenAfterBreak = 1 << 7,
+        HyphenAfterHebrew = 1 << 8,
+        QuoteAfterNonEastAsian = 1 << 9,
+        ViramaAfterAksara = 1 << 10,
+        OddRegionalIndicator = 1 << 11,
+        Number = 1 << 12,
+        ClosedNumber = 1 << 13,
     }
 
     private enum Decision
@@ -74,6 +92,10 @@ internal ref struct LineBreakEnumerator
         Mandatory,
     }
 
+    /// <summary>
+    /// Gets the line break opportunity the enumerator is at. It is the default value before the first
+    /// <see cref="MoveNext"/> and once that has returned <see langword="false"/>.
+    /// </summary>
     public LineBreak Current { get; private set; }
 
     /// <summary>
@@ -94,6 +116,7 @@ internal ref struct LineBreakEnumerator
         while (this.position < this.pointsLength)
         {
             int boundary = this.position;
+            int boundaryChar = this.charPosition;
             Character next = this.Read(this.charPosition, out int count);
             this.charPosition += count;
             this.position++;
@@ -119,7 +142,7 @@ internal ref struct LineBreakEnumerator
 
             if (decision != Decision.NoBreak)
             {
-                this.Current = new LineBreak(this.FindPriorNonWhitespace(boundary), boundary, decision == Decision.Mandatory);
+                this.Current = new LineBreak(this.FindPriorNonWhitespace(boundary, boundaryChar), boundary, decision == Decision.Mandatory);
                 return true;
             }
         }
@@ -129,13 +152,27 @@ internal ref struct LineBreakEnumerator
         {
             this.done = true;
             bool required = this.previousCharacter is LineBreakClass.BK or LineBreakClass.CR or LineBreakClass.LF or LineBreakClass.NL;
-            this.Current = new LineBreak(this.FindPriorNonWhitespace(this.pointsLength), this.pointsLength, required);
+            this.Current = new LineBreak(this.FindPriorNonWhitespace(this.pointsLength, this.source.Length), this.pointsLength, required);
             return true;
         }
 
         this.Current = default;
         return false;
     }
+
+    // The vowels of Thai (U+0E30, U+0E32, U+0E33, U+0E45) and Lao (U+0EB0, U+0EB2, U+0EB3, U+0EBD) that follow their
+    // consonant and are letters of class SA, not marks.
+    private static bool IsFollowingVowel(int value)
+        => value is 0x0E30 or 0x0E32 or 0x0E33 or 0x0E45 or 0x0EB0 or 0x0EB2 or 0x0EB3 or 0x0EBD;
+
+    // The vowels of Thai (U+0E40 to U+0E44) and Lao (U+0EC0 to U+0EC4) that are written before their consonant and
+    // encoded before it.
+    private static bool IsLeadingVowel(int value)
+        => value is (>= 0x0E40 and <= 0x0E44) or (>= 0x0EC0 and <= 0x0EC4);
+
+    // The Hangul letters that LB1 leaves as ideographs: the compatibility jamo and the halfwidth jamo.
+    private static bool IsHangulCompatibilityJamo(int value)
+        => value is (>= 0x3131 and <= 0x318E) or (>= 0xFFA0 and <= 0xFFDC);
 
     private static bool IsAksara(Unit unit)
         => unit.Class is LineBreakClass.AK or LineBreakClass.AS || unit.Has(Flags.DottedCircle);
@@ -190,6 +227,12 @@ internal ref struct LineBreakEnumerator
         Unit a = Unit.Create(next, b);
         LineBreakClass bc = b.Class;
         LineBreakClass ac = a.Class;
+
+        // The tailoring that keeps a Thai or Lao syllable whole: no break after a vowel that is written before its consonant.
+        if (b.Has(Flags.LeadingVowel))
+        {
+            return Decision.NoBreak;
+        }
 
         // LB11, LB12, LB12a
         if (ac == LineBreakClass.WJ || bc is LineBreakClass.WJ or LineBreakClass.GL)
@@ -392,7 +435,7 @@ internal ref struct LineBreakEnumerator
     }
 
     /// <summary>
-    /// Reads the character at a UTF-16 index and resolves its class by LB1.
+    /// Reads the character at a UTF-16 index and resolves its class by LB1, and by the tailoring.
     /// </summary>
     private readonly Character Read(int index, out int count)
     {
@@ -420,9 +463,37 @@ internal ref struct LineBreakEnumerator
                 break;
 
             case LineBreakClass.SA:
-                cls = CodePoint.GetGeneralCategory(cp) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark
-                    ? LineBreakClass.CM
-                    : LineBreakClass.AL;
+                if (CodePoint.GetGeneralCategory(cp) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark)
+                {
+                    cls = LineBreakClass.CM;
+                }
+                else if ((this.tailoring & LineBreakTailoring.SouthEastAsianAsIdeographs) == 0)
+                {
+                    cls = LineBreakClass.AL;
+                }
+                else if (IsFollowingVowel(cp.Value))
+                {
+                    cls = LineBreakClass.CM;
+                }
+                else
+                {
+                    cls = LineBreakClass.ID;
+                    if (IsLeadingVowel(cp.Value))
+                    {
+                        flags |= Flags.LeadingVowel;
+                    }
+                }
+
+                break;
+
+            case LineBreakClass.JL or LineBreakClass.JV or LineBreakClass.JT or LineBreakClass.H2 or LineBreakClass.H3
+                when (this.tailoring & LineBreakTailoring.HangulAsAlphabetic) != 0:
+                cls = LineBreakClass.AL;
+                break;
+
+            case LineBreakClass.ID
+                when (this.tailoring & LineBreakTailoring.HangulAsAlphabetic) != 0 && IsHangulCompatibilityJamo(cp.Value):
+                cls = LineBreakClass.AL;
                 break;
 
             case LineBreakClass.CJ:
@@ -480,36 +551,39 @@ internal ref struct LineBreakEnumerator
         return new Character(Character.Eot, Flags.None);
     }
 
-    private readonly int FindPriorNonWhitespace(int from)
+    /// <summary>
+    /// Finds where the text before a break ends once the mandatory break and the spaces in front of it are left out.
+    /// </summary>
+    /// <param name="position">The code point index of the break.</param>
+    /// <param name="charPosition">The UTF-16 index of the break.</param>
+    /// <returns>The code point index to measure to.</returns>
+    private readonly int FindPriorNonWhitespace(int position, int charPosition)
     {
-        if (from > 0)
+        // The characters that are left out are all in the Basic Multilingual Plane, so each is one code unit and one
+        // code point, and the two indexes move together.
+        int end = charPosition;
+        if (end > 0 && IsMandatoryBreak(this.source[end - 1]))
         {
-            var cp = CodePoint.DecodeFromUtf16At(this.source, from - 1, out int count);
-            LineBreakClass cls = CodePoint.GetLineBreakClass(cp);
+            end--;
 
-            if (cls is LineBreakClass.BK or LineBreakClass.LF or LineBreakClass.CR)
+            // CR LF is one mandatory break (LB5).
+            if (this.source[end] == '\n' && end > 0 && this.source[end - 1] == '\r')
             {
-                from -= count;
+                end--;
             }
         }
 
-        while (from > 0)
+        while (end > 0 && this.source[end - 1] == ' ')
         {
-            var cp = CodePoint.DecodeFromUtf16At(this.source, from - 1, out int count);
-            LineBreakClass cls = CodePoint.GetLineBreakClass(cp);
-
-            if (cls == LineBreakClass.SP)
-            {
-                from -= count;
-            }
-            else
-            {
-                break;
-            }
+            end--;
         }
 
-        return from;
+        return position - (charPosition - end);
     }
+
+    private static bool IsMandatoryBreak(char value)
+        => !char.IsSurrogate(value)
+        && CodePoint.GetLineBreakClass(new CodePoint(value)) is LineBreakClass.BK or LineBreakClass.CR or LineBreakClass.LF or LineBreakClass.NL;
 
     /// <summary>
     /// A character with its class after LB1.
