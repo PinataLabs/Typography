@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Globalization;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -103,12 +104,18 @@ internal static class FallbackMarkPositioner
         }
     }
 
+    // As in HarfBuzz, a ligature of components that are not all marks has the general category Lo where it was Mn.
+    private static bool IsUnicodeMark(GlyphShapingData data)
+        => CodePoint.IsMark(data.CodePoint)
+            && !(data.SubstitutedGlyphClass == GlyphClassDef.LigatureGlyph
+                && CodePoint.GetGeneralCategory(data.CodePoint) == UnicodeCategory.NonSpacingMark);
+
     private static void PlaceMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
     {
         int index = start;
         while (index < end)
         {
-            if (CodePoint.IsMark(collection[index].CodePoint))
+            if (IsUnicodeMark(collection[index]))
             {
                 index++;
                 continue;
@@ -116,7 +123,7 @@ internal static class FallbackMarkPositioner
 
             int marksEnd = index + 1;
             bool canPlace = collection.ShouldProcess(fontMetrics, index) && IsPlaceable(collection, collection[index]);
-            while (marksEnd < end && CodePoint.IsMark(collection[marksEnd].CodePoint))
+            while (marksEnd < end && IsUnicodeMark(collection[marksEnd]))
             {
                 canPlace &= collection.ShouldProcess(fontMetrics, marksEnd);
                 marksEnd++;

@@ -114,7 +114,7 @@ internal class GlyphShapingData
     /// <summary>
     /// Gets or sets the class that GSUB gave the glyph, which a font without glyph classes takes in place of the class of
     /// its character. As in HarfBuzz, a ligature of components that are not all marks is a ligature glyph, even when its
-    /// first component is a mark.
+    /// first component is a mark, and in any font its general category is Lo where it was Mn.
     /// </summary>
     public GlyphClassDef? SubstitutedGlyphClass { get; set; }
 
