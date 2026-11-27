@@ -89,7 +89,7 @@ public class BidiCharacterTests
             }
 
             ReadOnlyArraySlice<sbyte> resultLevels = bidi.ResolvedLevels;
-            int resultParagraphLevel = bidi.ResolvedParagraphEmbeddingLevel;
+            int resultParagraphLevel = bidi.Paragraphs[0].Level;
 
             // Assert
             bool passed = true;

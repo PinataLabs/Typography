@@ -85,9 +85,13 @@ Unicode conformance suites to that version.
   The ascent and descent follow the rules of `HorizontalMetrics`, and the order of every value is in
   `docs/specs/003-font-descriptor.md`. The values of the 208 faces of the test fonts match fontTools. (#157)
 - **The bidi algorithm is public.** `BidiParagraph.Resolve(text, direction)` resolves a paragraph of UTF-16 text left to
-  right, right to left or from its first strong character (rules P2 and P3). `ParagraphLevel` and `Levels` give the
-  embedding level of the paragraph and of each code unit. `GetVisualRuns(lineStart, lineLength)` applies rule L1 to
-  one line and returns its `BidiLevelRun` values (`Start`, `Length`, `Level`, `IsRightToLeft`) in visual order (rule
+  right, right to left or from its first strong character (rules P2 and P3). `BidiParagraph.ResolveAll(text,
+  direction)` splits text into paragraphs after each paragraph separator (rule P1: LF, CR, CR LF as one, U+0085,
+  U+2029 and U+001C to U+001E) and resolves each on its own, with its own level under `Auto`. `Resolve` throws
+  `ArgumentException` for text of more than one paragraph; a separator at its end is part of the paragraph. `Start`
+  and `Length` give the code units of a paragraph in the text, and `ParagraphLevel` and `Levels` the embedding level of
+  the paragraph and of each of its code units. `GetVisualRuns(lineStart, lineLength)` applies rule L1 to
+  one line of the paragraph and returns its `BidiLevelRun` values (`Start`, `Length`, `Level`, `IsRightToLeft`) in visual order (rule
   L2), so a caller that breaks the lines applies L1 where its lines end. U+200C and U+200D stay in a run, because they
   decide how the letters on either side join. A joiner is in the run of the character before it, unless the level
   changes at the joiner and the character after it joins to the one before it (Arabic joining type R, D or C): then it
@@ -97,7 +101,7 @@ Unicode conformance suites to that version.
   that starts or ends between the two code units of a surrogate pair throws `ArgumentOutOfRangeException`. `Levels`
   and `GetVisualRuns` give a removed character the level of the character before it after rule L1, as `TextLayout`
   does. `TextLayout` runs the same engine. The API passes all of `BidiTest.txt` and `BidiCharacterTest.txt` of
-  Unicode 18.0.0, levels and visual order. (#152)
+  Unicode 18.0.0, levels and visual order. (#152, #189)
 - **`CodePoint.GetScriptClass` is public.** It gives the Script property of `Scripts.txt` for a code point, and
   `Unknown` for a code point that no script owns. A test compares it with `Scripts.txt` of Unicode 18.0.0 for every
   code point. Script_Extensions is not read. (#154)
@@ -108,14 +112,15 @@ Unicode conformance suites to that version.
   `ScriptClass`, in the order it tries them: `dev3`, `dev2` and `deva` for Devanagari. These are the tags of HarfBuzz
   15.0.0, which the library already used internally. (#154)
 - **`TextItemizer` cuts text into runs of one script and one direction.** `Itemize(text, direction)` gives the
-  `ItemizedRun` values (`Start`, `Length`, `Script`, `Level`, `IsRightToLeft`) of a paragraph in visual order, and
+  `ItemizedRun` values (`Start`, `Length`, `Script`, `Level`, `IsRightToLeft`) of each paragraph of a text in visual
+  order, each paragraph as one line and the paragraphs in the order of the text, and
   `Itemize(paragraph, lineStart, lineLength)` those of one line of a `BidiParagraph`. Each run of the bidi algorithm is
   cut at every change of script. Common and Inherited characters, and characters that no script owns (Unknown, such as
   a private-use icon), take the script of the text before them, or of the first letter after them when nothing comes
   before. This differs from the PdfPinata itemizer, which makes a run of its own of each such character and so cuts
   a word at an icon; text that has only Unknown characters is one Unknown run. A closing paired bracket takes the script of its opening bracket,
   so `a (б) c` is Latin, Cyrillic and Latin. A script run that sits in a right to left bidi run is drawn in that
-  direction, so the piece written first comes last. Script_Extensions is not read. (#154)
+  direction, so the piece written first comes last. Script_Extensions is not read. (#154, #189)
 - **Font subsetter for CFF fonts.** `FontSubsetter.Subset(font, glyphIds, options)` cuts an OpenType font with a `CFF ` table,
   or a bare CFF font as a PDF embeds it in `/FontFile3`, down to the glyphs that a document uses, and keeps every glyph at its
   glyph ID, as a PDF with `/CIDToGIDMap /Identity` needs. A kept glyph keeps its charstring byte for byte, and so its outline and
@@ -469,6 +474,20 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- The bidi algorithm splits the text into paragraphs after each paragraph separator, as UAX #9 rule P1 says, and
+  resolves each paragraph on its own. LF, CR, U+0085, U+2029 and U+001C to U+001E end a paragraph, and CR LF is one
+  separator. It took the whole text as one paragraph, so rules W2 and N1 read across a line feed: in a left-to-right
+  paragraph, U+0627 LF `1` gave the `1` level 2, as if the Arabic letter before the line feed made it an Arabic number,
+  and it now stays a European number at level 0. With `TextDirection.Auto`, each paragraph takes its level from its own
+  first strong character (rules P2 and P3), where every paragraph took the level of the first, and rule L1 resets its
+  whitespace to that level. In `TextLayout`, the second line of `"كتب abc\nabc كتب"` now runs left to right, with
+  `abc` drawn first, and each line aligns by the direction of its own paragraph: with `TextAlignment.Start`, the
+  Arabic line of `"abc\nكتب"` ends at the right edge of the box, where it started at the left with the Latin line.
+  Under a fixed `TextDirection` every paragraph has that direction, so the alignment does not change. Each paragraph
+  starts a line, so a line is in one paragraph: U+001C to U+001E now break the line, where UAX #14 alone does not.
+  ICU 72 gives the same levels. `TextShaper.Shape` does not split a run, so with `TextDirection.Auto` it still takes
+  the direction of the first strong character anywhere in the run: a line feed followed by Hebrew runs right to left.
+  (#189)
 - Text that has no codepoint to lay out, such as text that is only U+FE0F, lays out as empty text: no glyph, no line,
   and the size of empty text. `TextLayout` threw `InvalidOperationException` ("Sequence contains no elements"),
   because a text with no line has no longest line. (#179)

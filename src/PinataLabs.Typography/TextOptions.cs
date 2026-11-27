@@ -148,6 +148,9 @@ public class TextOptions
     /// <summary>
     /// Gets or sets the base (paragraph) direction of the text.
     /// The Unicode Bidirectional Algorithm is always applied, so runs of the other direction keep their own order.
+    /// A paragraph separator, such as a line feed, ends a paragraph, and with <see cref="TextDirection.Auto"/> each
+    /// paragraph takes the direction of its own first strong character. Each line is ordered and aligned in the direction
+    /// of its paragraph, so <see cref="TextAlignment.Start"/> puts the lines of a right-to-left paragraph at the right.
     /// </summary>
     public TextDirection TextDirection { get; set; } = TextDirection.Auto;
 

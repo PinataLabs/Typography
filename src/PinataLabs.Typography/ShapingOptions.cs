@@ -35,9 +35,11 @@ public sealed class ShapingOptions
     /// <summary>
     /// Gets the direction of the run. The characters are all of this direction: the run is not split by the
     /// Unicode Bidirectional Algorithm, so a caller that has text of both directions shapes each run on its own.
-    /// <see cref="TextDirection.Auto"/>, the default, takes the direction of the first character that has one. A run with
-    /// no such character, such as digits and brackets, takes the direction of <see cref="Script"/>, as HarfBuzz does for
-    /// a buffer, and is left to right when it has no script. <see cref="TextShaper.Shape"/> throws for any other value.
+    /// <see cref="TextDirection.Auto"/>, the default, takes the direction of the first character that has one, anywhere
+    /// in the run: a paragraph separator, such as a line feed, does not end the search, because the run is one paragraph.
+    /// A run with no such character, such as digits and brackets, takes the direction of <see cref="Script"/>, as
+    /// HarfBuzz does for a buffer, and is left to right when it has no script. <see cref="TextShaper.Shape"/> throws for
+    /// any other value.
     /// </summary>
     public TextDirection Direction { get; init; } = TextDirection.Auto;
 

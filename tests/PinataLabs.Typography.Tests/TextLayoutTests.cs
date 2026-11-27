@@ -1542,6 +1542,59 @@ public class TextLayoutTests
         await Assert.That(Math.Round(rightEdges[1], 4)).IsEqualTo(Math.Round(rightEdges[0], 4));
     }
 
+    // With Auto, each paragraph takes its own direction, so TextAlignment.Start is the left edge of the box for the
+    // left-to-right paragraph and the right edge for the right-to-left one, whichever comes first, as CSS
+    // text-align: start does with unicode-bidi: plaintext.
+    [Test]
+    [Arguments("abc\nكتب")]
+    [Arguments("كتب\nabc")]
+    public async Task TextDirection_Auto_AlignsEachParagraphToItsOwnStart(string text)
+    {
+        const float wrappingLength = 300;
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextAlignment = TextAlignment.Start, WrappingLength = wrappingLength };
+
+        TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
+        GlyphBounds[] glyphs = bounds.ToArray();
+        float latinLeft = glyphs.Where(x => x.Codepoint.Value is >= 'a' and <= 'z').Min(x => x.Bounds.Left);
+        float arabicRight = glyphs.Where(x => x.Codepoint.Value is >= 0x0600 and <= 0x06FF).Max(x => x.Bounds.Right);
+
+        // Ink bounds sit inside the advance by the side bearings, so allow a few pixels.
+        await Assert.That(latinLeft).IsLessThan(5);
+        await Assert.That(Math.Abs(arabicRight - wrappingLength)).IsLessThan(5);
+    }
+
+    // U+001C ends a paragraph (UAX #9 P1) but is no mandatory break of UAX #14. The line still ends with the paragraph,
+    // so each line is in one paragraph and is ordered and aligned in the direction of that paragraph: the Hebrew line
+    // runs right to left from the right edge, and the Latin line left to right from the left edge.
+    [Test]
+    public async Task EachParagraphStartsALine_EvenAtASeparatorThatIsNoLineBreak()
+    {
+        const float wrappingLength = 300;
+        Font font = new FontCollection().Add(TestFonts.Anchor2FontFile).CreateFont(24);
+        TextOptions options = new(font) { TextAlignment = TextAlignment.Start, WrappingLength = wrappingLength };
+
+        GlyphLayout[][] lines = GetLines("\u05D0\u05D1\U0000001Ccd", options);
+
+        // Rule L1 gives the separator the level of its paragraph, so it is drawn at the left end of the Hebrew line.
+        await Assert.That(Visual(lines)).IsEqualTo("\U0000001C\u05D1\u05D0|cd");
+        await Assert.That(Math.Round(lines[0].Max(x => x.PenLocation.X + x.AdvanceX), 4)).IsEqualTo(Math.Round(wrappingLength / options.Dpi, 4));
+        await Assert.That(lines[1].Min(x => x.PenLocation.X)).IsEqualTo(0);
+    }
+
+    // A line feed ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its direction from its own first
+    // strong character (P2, P3). The first paragraph runs right to left, so its Latin word, written last, is drawn left
+    // of the Arabic. The second runs left to right, so its Latin word, written first, is drawn left of the Arabic too.
+    [Test]
+    public async Task TextDirection_Auto_OrdersEachParagraphInItsOwnDirection()
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+
+        GlyphLayout[][] lines = GetLines("كتب abc\nabc كتب", new TextOptions(font));
+
+        await Assert.That(Visual(lines)).IsEqualTo("abc بتك|abc بتك");
+    }
+
     // Rule L1 gives a joiner at the end of the line, or before a tab, the paragraph level, so it is in no level run
     // with the beh before it. The beh still joins to it, so it takes its initial form, as before another beh.
     [Test]

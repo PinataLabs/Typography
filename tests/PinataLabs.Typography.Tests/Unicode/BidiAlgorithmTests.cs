@@ -231,6 +231,97 @@ public class BidiAlgorithmTests
         await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
+    // UAX #9 P1: each paragraph separator ends a paragraph, and the rules after it see one paragraph at a time. Rule W2
+    // does not read the AL before the line feed, so the EN stays EN, and W7 makes it L at sos. Rule N1 does not read the
+    // R before the line feed, so the ON takes sos. With Auto, P2 and P3 give each paragraph its own level from its own
+    // text, skipping its own isolates, and L1 resets its whitespace to that level. CR LF is one separator. ICU 72
+    // (ubidi, as Windows ships it) gives the same levels.
+    [Test]
+    [Arguments("\u0627\n1", 0, new sbyte[] { 1, 0, 0 })]
+    [Arguments("\u05D0\n!\u05D1", 0, new sbyte[] { 1, 0, 0, 1 })]
+    [Arguments("\n\u05D0", 2, new sbyte[] { 0, 1 })]
+    [Arguments("abc\n\u05D0!a", 2, new sbyte[] { 0, 0, 0, 0, 1, 1, 2 })]
+    [Arguments("abc\n\u05D0 ", 2, new sbyte[] { 0, 0, 0, 0, 1, 1 })]
+    [Arguments("\u2067\u05D0\u2069a\n\u2066a\u2069\u05D0", 2, new sbyte[] { 0, 1, 0, 0, 0, 1, 2, 1, 1 })]
+    [Arguments("\u05D0\r\nb", 2, new sbyte[] { 1, 1, 1, 0 })]
+    public async Task EachParagraphIsResolvedOnItsOwn(string text, int paragraphEmbeddingLevel, sbyte[] expected)
+    {
+        var data = new BidiData();
+        data.Init(text, (sbyte)paragraphEmbeddingLevel);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data);
+
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
+    // Rule P1 keeps each separator with the paragraph before it: LF, CR LF as one, U+2029 and U+001C. A text that ends
+    // with a separator has no empty paragraph after it, and empty text is one empty paragraph at the level asked for, or
+    // at 0 with Auto. ICU 72 splits the first text into the same paragraphs, at the same levels.
+    [Test]
+    public async Task ParagraphsSplitAfterEachSeparator()
+    {
+        await Assert.That(Paragraphs("a\n\u05D0\r\n\u2029\u001Cb", 2))
+            .IsEquivalentTo(
+                [new BidiAlgorithm.Paragraph(0, 2, 0), new(2, 3, 1), new(5, 1, 0), new(6, 1, 0), new(7, 1, 0)],
+                TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(Paragraphs("a\n", 1)).IsEquivalentTo([new BidiAlgorithm.Paragraph(0, 2, 1)], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(Paragraphs(string.Empty, 1)).IsEquivalentTo([new BidiAlgorithm.Paragraph(0, 0, 1)], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(Paragraphs(string.Empty, 2)).IsEquivalentTo([new BidiAlgorithm.Paragraph(0, 0, 0)], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+
+        static BidiAlgorithm.Paragraph[] Paragraphs(string text, int paragraphEmbeddingLevel)
+        {
+            var data = new BidiData();
+            data.Init(text, (sbyte)paragraphEmbeddingLevel);
+            var bidi = new BidiAlgorithm();
+            bidi.Process(data);
+            return [.. bidi.Paragraphs];
+        }
+    }
+
+    // A caller can put a paragraph separator inside a paragraph, as BidiTest.txt does. Rules X8 and BD9 still end every
+    // embedding, override and isolate at it, so the levels are those of the text split into paragraphs at it.
+    [Test]
+    [Arguments("\u202Ba\nb", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2068\n\u2069", new sbyte[] { 0, 0, 0 })]
+    [Arguments("\u2066a\n\u2069", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2067a\n\u2069", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2066a\nb\u2069", new sbyte[] { 0, 2, 0, 0, 0 })]
+    [Arguments("\u2066\na\u2069", new sbyte[] { 0, 0, 0, 0 })]
+    [Arguments("\u202B\na", new sbyte[] { 0, 0, 0 })]
+    [Arguments("\u2068!\n\u05D0", new sbyte[] { 0, 2, 0, 1 })]
+    public async Task AParagraphSeparatorInsideAParagraphEndsEveryIsolateAndEmbedding(string text, sbyte[] expected)
+    {
+        var data = new BidiData();
+        data.Init(text, 0);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data.Types, data.PairedBracketTypes, data.PairedBracketValues, 0, data.HasBrackets, data.HasEmbeddings, data.HasIsolates, [data.Length]);
+
+        await Assert.That(bidi.Paragraphs.Count).IsEqualTo(1);
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
+    // The paragraph ends must split the types into paragraphs that cover them: each end after the one before, and the
+    // last at the end of the types. Only empty types are one empty paragraph.
+    [Test]
+    [Arguments(3, new int[0])]
+    [Arguments(3, new[] { 2 })]
+    [Arguments(3, new[] { 4 })]
+    [Arguments(3, new[] { 2, 1, 3 })]
+    [Arguments(3, new[] { 1, 1, 3 })]
+    [Arguments(3, new[] { 0, 3 })]
+    [Arguments(0, new[] { 0, 0 })]
+    [Arguments(0, new[] { 1 })]
+    public async Task ParagraphEndsThatDoNotSplitTheTypesThrow(int length, int[] paragraphEnds)
+    {
+        BidiCharacterType[] types = Enumerable.Repeat(BidiCharacterType.LeftToRight, length).ToArray();
+        var bidi = new BidiAlgorithm();
+
+        await Assert.That(() => bidi.Process(types, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, 0, false, null, null, paragraphEnds))
+            .ThrowsExactly<ArgumentException>().WithParameterName("paragraphEnds");
+    }
+
     // Rule X5c reads the text of an FSI and rule P2 the text of the paragraph, and both skip each isolate pair in it. The
     // FSI holds the pair LRI a PDI, then an R, so it resolves right to left. With paragraph level 2, P2 skips the pair
     // and finds the R. Types that are a slice of a longer array resolve to the levels of the same types in an array of
@@ -251,7 +342,7 @@ public class BidiAlgorithmTests
         sbyte[] Resolve(ReadOnlyArraySlice<BidiCharacterType> slice)
         {
             var bidi = new BidiAlgorithm();
-            bidi.Process(slice, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, (sbyte)paragraphEmbeddingLevel, false, null, null, null);
+            bidi.Process(slice, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, (sbyte)paragraphEmbeddingLevel, false, null, null, [slice.Length]);
             return bidi.ResolvedLevels.ToArray();
         }
     }
@@ -365,7 +456,7 @@ public class BidiAlgorithmTests
                 false,
                 null,
                 null,
-                null);
+                [t.Types.Length]);
 
             resultLevels = bidi.ResolvedLevels;
 

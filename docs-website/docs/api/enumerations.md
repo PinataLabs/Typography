@@ -27,7 +27,7 @@ Default: `Auto`.
 
 | Value | Description |
 | --- | --- |
-| `Auto` | Find the base direction from the first strong character, as HTML `dir="auto"` does. |
+| `Auto` | Find the base direction of each paragraph from its first strong character, as CSS `unicode-bidi: plaintext` does. |
 | `LeftToRight` | Use a left-to-right base direction, as CSS `direction: ltr` does. |
 | `RightToLeft` | Use a right-to-left base direction, as CSS `direction: rtl` does. |
 
@@ -37,7 +37,7 @@ All three apply the Unicode Bidirectional Algorithm, so each run of text keeps i
 
 | Value | Description |
 | --- | --- |
-| `Start` | At the start of the line: left for left-to-right text, right for right-to-left text. |
+| `Start` | At the start of the line: left for a line of a left-to-right paragraph, right for one of a right-to-left paragraph. |
 | `End` | At the end of the line. |
 | `Center` | In the centre of the line. |
 

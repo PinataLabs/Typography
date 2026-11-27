@@ -131,17 +131,21 @@ internal static class TextLayout
         var bidiData = new BidiData();
         bidiData.Init(text, (sbyte)options.TextDirection);
 
+        // Each paragraph separator ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its own level.
         // Rule L1 applies to each line, so BreakLines applies it once it knows the lines.
         bidi.Process(bidiData, resetWhitespace: false);
-        BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), (sbyte)bidi.ResolvedParagraphEmbeddingLevel);
+        BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), [.. bidi.Paragraphs]);
 
-        TextDirection paragraphDirection = (bidiLevels.ParagraphLevel & 1) == 0
-            ? TextDirection.LeftToRight
-            : TextDirection.RightToLeft;
-
-        // Shaping takes the directional runs of the levels with rule L1 applied to the whole text as one line.
+        // Shaping takes the directional runs of the levels with rule L1 applied to each paragraph as one line.
         // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
-        BidiAlgorithm.ResetWhitespaceLevels(bidiData.Types, bidi.ResolvedLevels, bidiLevels.ParagraphLevel);
+        foreach (BidiAlgorithm.Paragraph paragraph in bidiLevels.Paragraphs)
+        {
+            BidiAlgorithm.ResetWhitespaceLevels(
+                bidiData.Types.Slice(paragraph.Start, paragraph.Length),
+                bidi.ResolvedLevels.Slice(paragraph.Start, paragraph.Length),
+                paragraph.Level);
+        }
+
         BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
 
         // Incrementally build out collection of glyphs.
@@ -228,7 +232,7 @@ internal static class TextLayout
             }
         }
 
-        return BreakLines(text, options, paragraphDirection, bidiLevels, positionings, layoutMode);
+        return BreakLines(text, options, bidiLevels, positionings, layoutMode);
     }
 
     private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options, Vector2 origin)
@@ -239,12 +243,11 @@ internal static class TextLayout
         Vector2 boxLocation = origin / options.Dpi;
         Vector2 penLocation = boxLocation;
 
-        TextDirection direction = textBox.TextDirection();
-
         // If a wrapping length is specified that should be used to determine the
         // box size to align text within. Only left-to-right text aligned to Start can skip it;
-        // for right-to-left text, Start is the far edge of the box.
-        bool isLeftToRightStart = options.TextAlignment == TextAlignment.Start && direction == TextDirection.LeftToRight;
+        // for a right-to-left line, Start is the far edge of the box.
+        bool isLeftToRightStart = options.TextAlignment == TextAlignment.Start
+            && textBox.TextLines.All(line => line.Direction == TextDirection.LeftToRight);
         float maxScaledAdvance = textBox.ScaledMaxAdvance();
         if (!isLeftToRightStart && options.WrappingLength > 0)
         {
@@ -258,7 +261,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineHorizontal(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     i,
@@ -274,7 +276,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineHorizontal(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     index++,
@@ -289,7 +290,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVertical(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     i,
@@ -305,7 +305,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVertical(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     index++,
@@ -320,7 +319,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVerticalMixed(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     i,
@@ -336,7 +334,6 @@ internal static class TextLayout
                 glyphs.AddRange(LayoutLineVerticalMixed(
                     textBox,
                     textBox.TextLines[i],
-                    direction,
                     maxScaledAdvance,
                     options,
                     index++,
@@ -351,7 +348,6 @@ internal static class TextLayout
     private static IEnumerable<GlyphLayout> LayoutLineHorizontal(
         TextBox textBox,
         TextLine textLine,
-        TextDirection direction,
         float maxScaledAdvance,
         TextOptions options,
         int index,
@@ -404,7 +400,7 @@ internal static class TextLayout
         }
 
         // Set the alignment of lines within the text.
-        if (direction == TextDirection.LeftToRight)
+        if (textLine.Direction == TextDirection.LeftToRight)
         {
             switch (options.TextAlignment)
             {
@@ -478,7 +474,6 @@ internal static class TextLayout
     private static IEnumerable<GlyphLayout> LayoutLineVertical(
         TextBox textBox,
         TextLine textLine,
-        TextDirection direction,
         float maxScaledAdvance,
         TextOptions options,
         int index,
@@ -509,7 +504,7 @@ internal static class TextLayout
         }
 
         // Set the alignment of lines within the text.
-        if (direction == TextDirection.LeftToRight)
+        if (textLine.Direction == TextDirection.LeftToRight)
         {
             switch (options.TextAlignment)
             {
@@ -612,7 +607,6 @@ internal static class TextLayout
     private static IEnumerable<GlyphLayout> LayoutLineVerticalMixed(
         TextBox textBox,
         TextLine textLine,
-        TextDirection direction,
         float maxScaledAdvance,
         TextOptions options,
         int index,
@@ -643,7 +637,7 @@ internal static class TextLayout
         }
 
         // Set the alignment of lines within the text.
-        if (direction == TextDirection.LeftToRight)
+        if (textLine.Direction == TextDirection.LeftToRight)
         {
             switch (options.TextAlignment)
             {
@@ -774,7 +768,6 @@ internal static class TextLayout
     private static TextBox BreakLines(
         ReadOnlySpan<char> text,
         TextOptions options,
-        TextDirection paragraphDirection,
         BidiLevels bidiLevels,
         GlyphPositioningCollection positionings,
         LayoutMode layoutMode)
@@ -789,9 +782,13 @@ internal static class TextLayout
 
         // Calculate the position of potential line breaks. A line breaks only between graphemes, so a break inside a
         // grapheme moves to the start of the next grapheme. When another break is at that start, the later one is kept.
+        // A line must also break at the end of each bidi paragraph (UAX #9 P1), so that each line is in one paragraph:
+        // U+001C to U+001E end a paragraph but are no mandatory break of UAX #14. A paragraph ends at a grapheme
+        // boundary, and the last one ends with the text.
         var lineBreakEnumerator = new LineBreakEnumerator(text);
         var breakGraphemeEnumerator = new SpanGraphemeEnumerator(text);
         int graphemeEnd = 0;
+        int paragraphIndex = 0;
         List<LineBreak> lineBreaks = [];
         while (lineBreakEnumerator.MoveNext())
         {
@@ -806,14 +803,20 @@ internal static class TextLayout
                 lineBreak = new(lineBreak.PositionMeasure, graphemeEnd, lineBreak.Required);
             }
 
-            if (lineBreaks.Count > 0 && lineBreaks[^1].PositionWrap == lineBreak.PositionWrap)
+            for (; paragraphIndex < bidiLevels.Paragraphs.Length - 1 && bidiLevels.Paragraphs[paragraphIndex].End <= lineBreak.PositionWrap; paragraphIndex++)
             {
-                lineBreaks[^1] = lineBreak;
+                int paragraphEnd = bidiLevels.Paragraphs[paragraphIndex].End;
+                if (paragraphEnd == lineBreak.PositionWrap)
+                {
+                    lineBreak = new(lineBreak.PositionMeasure, paragraphEnd, true);
+                }
+                else
+                {
+                    AddLineBreak(lineBreaks, new(paragraphEnd, paragraphEnd, true));
+                }
             }
-            else
-            {
-                lineBreaks.Add(lineBreak);
-            }
+
+            AddLineBreak(lineBreaks, lineBreak);
         }
 
         int lineBreakIndex = 0;
@@ -1193,40 +1196,54 @@ internal static class TextLayout
             textLines.Add(textLine);
         }
 
-        // When every level is 0, rule L1 changes none and no line has a run to reverse.
-        if (!bidiLevels.IsLeftToRight)
+        // Each line is in one paragraph, and is ordered and aligned in its direction (UAX #9 P2 and P3 under Auto). Its
+        // glyphs are still in logical order, so the first holds its first codepoint.
+        foreach (TextLine line in textLines)
         {
-            foreach (TextLine line in textLines)
+            sbyte paragraphLevel = bidiLevels.Paragraphs[BidiAlgorithm.FindParagraph(bidiLevels.Paragraphs, line[0].Offset)].Level;
+            line.Direction = (paragraphLevel & 1) == 0 ? TextDirection.LeftToRight : TextDirection.RightToLeft;
+
+            // When every level is 0, rule L1 changes none and no line has a run to reverse.
+            if (!bidiLevels.IsLeftToRight)
             {
-                line.OrderVisually(bidiLevels);
+                line.OrderVisually(bidiLevels, paragraphLevel);
             }
         }
 
-        return new TextBox(options, paragraphDirection, textLines);
+        return new TextBox(options, textLines);
+
+        static void AddLineBreak(List<LineBreak> lineBreaks, LineBreak lineBreak)
+        {
+            if (lineBreaks.Count > 0 && lineBreaks[^1].PositionWrap == lineBreak.PositionWrap)
+            {
+                lineBreaks[^1] = lineBreak;
+            }
+            else
+            {
+                lineBreaks.Add(lineBreak);
+            }
+        }
     }
 
     /// <summary>
-    /// The bidi types and resolved levels of the codepoints of the text. Rule L1 applies to each line, and
-    /// <see cref="TextLine.OrderVisually"/> applies it to the levels of the line in place.
+    /// The bidi types and resolved levels of the codepoints of the text, and its paragraphs. Rule L1 applies to each line,
+    /// and <see cref="TextLine.OrderVisually"/> applies it to the levels of the line in place.
     /// </summary>
     /// <param name="Types">The bidi type of each codepoint.</param>
     /// <param name="Levels">The level of each codepoint, before rule L1 until its line is ordered.</param>
-    /// <param name="ParagraphLevel">The embedding level of the paragraph.</param>
-    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, sbyte ParagraphLevel)
+    /// <param name="Paragraphs">The paragraphs of the text, each with its embedding level (UAX #9 P1 to P3).</param>
+    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, BidiAlgorithm.Paragraph[] Paragraphs)
     {
         /// <summary>
-        /// Gets a value indicating whether the paragraph level and the level of every codepoint are 0.
+        /// Gets a value indicating whether the level of every paragraph and every codepoint is 0.
         /// </summary>
-        public bool IsLeftToRight { get; } = ParagraphLevel == 0 && Array.TrueForAll(Levels, level => level == 0);
+        public bool IsLeftToRight { get; } = Array.TrueForAll(Paragraphs, paragraph => paragraph.Level == 0) && Array.TrueForAll(Levels, level => level == 0);
     }
 
     internal sealed class TextBox
     {
-        private readonly TextDirection paragraphDirection;
-
-        public TextBox(TextOptions options, TextDirection paragraphDirection, IReadOnlyList<TextLine> textLines)
+        public TextBox(TextOptions options, IReadOnlyList<TextLine> textLines)
         {
-            this.paragraphDirection = paragraphDirection;
             this.TextLines = textLines;
             for (int i = 0; i < this.TextLines.Count - 1; i++)
             {
@@ -1242,8 +1259,6 @@ internal static class TextLayout
         /// <returns>The advance.</returns>
         public float ScaledMaxAdvance()
             => this.TextLines.Count == 0 ? 0 : this.TextLines.Max(x => x.ScaledLineAdvance);
-
-        public TextDirection TextDirection() => this.paragraphDirection;
     }
 
     internal sealed class TextLine
@@ -1251,6 +1266,12 @@ internal static class TextLayout
         private readonly List<GlyphLayoutData> data = [];
 
         public int Count => this.data.Count;
+
+        /// <summary>
+        /// Gets or sets the direction of the paragraph that the line is in, which sets the edge that
+        /// <see cref="TextAlignment.Start"/> aligns it to.
+        /// </summary>
+        public TextDirection Direction { get; set; }
 
         public float ScaledLineAdvance { get; private set; } = 0;
 
@@ -1493,14 +1514,15 @@ internal static class TextLayout
         /// of the characters that rule X9 removes, and no two lines hold the same one of those.
         /// </summary>
         /// <param name="bidiLevels">The bidi types and levels of the text, before rule L1 for this line.</param>
-        public void OrderVisually(BidiLevels bidiLevels)
+        /// <param name="paragraphLevel">The embedding level of the paragraph that holds the line.</param>
+        public void OrderVisually(BidiLevels bidiLevels, sbyte paragraphLevel)
         {
             // The glyphs are in logical order, so the line holds the codepoints from the first glyph to the last.
             int lineStart = this.data[0].Offset;
             int lineLength = this.data[^1].Offset + 1 - lineStart;
             ArraySlice<sbyte> lineLevels = new(bidiLevels.Levels, lineStart, lineLength);
             ReadOnlyArraySlice<BidiCharacterType> lineTypes = bidiLevels.Types.Slice(lineStart, lineLength);
-            BidiAlgorithm.ResetWhitespaceLevels(lineTypes, lineLevels, bidiLevels.ParagraphLevel);
+            BidiAlgorithm.ResetWhitespaceLevels(lineTypes, lineLevels, paragraphLevel);
 
             // A character that rule X9 removes at the start of the line has no character before it on the line, and
             // keeps the level of the one before it in the paragraph, which ends the line before. It takes the level of

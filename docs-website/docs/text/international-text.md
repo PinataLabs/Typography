@@ -19,7 +19,7 @@ HTML `dir` attribute do:
 
 | Value | CSS and HTML | Base direction |
 | --- | --- | --- |
-| `Auto` (default) | `dir="auto"` | From the first strong character of the text. |
+| `Auto` (default) | `unicode-bidi: plaintext` | From the first strong character of each paragraph. |
 | `LeftToRight` | `direction: ltr` | Left to right. |
 | `RightToLeft` | `direction: rtl` | Right to left. |
 
@@ -28,7 +28,7 @@ English word `abc` stays `abc`, and it is placed at the right. The base directio
 
 - The order of the runs of each direction.
 - The direction of numbers and punctuation between runs.
-- The edge for `TextAlignment.Start`.
+- The edge for `TextAlignment.Start`, for each line by the direction of its paragraph.
 
 ```csharp
 using PinataLabs.Typography;
@@ -46,8 +46,11 @@ To force characters into one direction, as CSS `unicode-bidi: bidi-override` doe
 direction controls in the text. For example, `"\u202Eabc\u202C"` (RIGHT-TO-LEFT OVERRIDE, then POP
 DIRECTIONAL FORMATTING) comes out as `cba`.
 
-The whole text is one paragraph for the algorithm. Line breaks do not start a new paragraph, so
-`Auto` finds one base direction for all of the lines.
+Each paragraph separator ends a paragraph for the algorithm (UAX #9 rule P1): a line feed, a carriage
+return, CR LF, U+0085 NEXT LINE, U+2029 PARAGRAPH SEPARATOR, and U+001C to U+001E. U+2028 LINE SEPARATOR
+breaks the line but not the paragraph. Each paragraph starts a new line, U+001C to U+001E too. The
+algorithm resolves each paragraph on its own, so `Auto` finds the base direction of each paragraph from
+its own first strong character, as CSS `unicode-bidi: plaintext` does.
 
 Use `TextAlignment.Start` and `TextAlignment.End` rather than left and right. They follow the
 direction of the text, so one set of options works for both directions. See

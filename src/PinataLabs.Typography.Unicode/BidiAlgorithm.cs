@@ -83,7 +83,17 @@ internal sealed class BidiAlgorithm
     private ArrayBuilder<sbyte> resolvedLevelsBuffer;
 
     /// <summary>
-    /// The resolve paragraph embedding level
+    /// The levels of the paragraph being processed, a slice of <see cref="ResolvedLevels"/>
+    /// </summary>
+    private ArraySlice<sbyte> levels;
+
+    /// <summary>
+    /// The paragraphs of the text, as rule P1 splits it
+    /// </summary>
+    private readonly List<Paragraph> paragraphs = [];
+
+    /// <summary>
+    /// The embedding level of the paragraph being processed
     /// </summary>
     private sbyte paragraphEmbeddingLevel;
 
@@ -189,22 +199,25 @@ internal sealed class BidiAlgorithm
     public static ThreadLocal<BidiAlgorithm> Instance { get; } = new ThreadLocal<BidiAlgorithm>(() => new BidiAlgorithm());
 
     /// <summary>
-    /// Gets the resolved levels.
+    /// Gets the resolved level of each code point of the text.
     /// </summary>
     public ArraySlice<sbyte> ResolvedLevels { get; private set; }
 
     /// <summary>
-    /// Gets the resolved paragraph embedding level
+    /// Gets the paragraphs of the text in order, as rule P1 splits it. They cover the text, and empty text is one empty
+    /// paragraph.
     /// </summary>
-    public int ResolvedParagraphEmbeddingLevel => this.paragraphEmbeddingLevel;
+    public IReadOnlyList<Paragraph> Paragraphs => this.paragraphs;
 
     /// <summary>
     /// Process data from a BidiData instance
     /// </summary>
     /// <param name="data">The Bidi Unicode data.</param>
     /// <param name="resetWhitespace">
-    /// <see langword="true"/> to apply rule L1 to all of the data as one line; <see langword="false"/> to leave it to the caller,
-    /// which applies it to each line with <see cref="ResetWhitespaceLevels"/>.
+    /// <see langword="true"/> to apply rule L1 to each paragraph as one line; <see langword="false"/> to leave it to the
+    /// caller, which applies it to each line with
+    /// <see cref="ResetWhitespaceLevels(ReadOnlyArraySlice{BidiCharacterType}, ArraySlice{sbyte}, sbyte)"/> and the level
+    /// of the paragraph that holds the line.
     /// </param>
     public void Process(BidiData data, bool resetWhitespace = true)
         => this.Process(
@@ -215,12 +228,28 @@ internal sealed class BidiAlgorithm
             data.HasBrackets,
             data.HasEmbeddings,
             data.HasIsolates,
-            null,
+            data.ParagraphEnds,
             resetWhitespace);
 
     /// <summary>
-    /// Processes Bidi Data
+    /// Processes Bidi Data, one paragraph at a time (rule P1).
     /// </summary>
+    /// <param name="types">The bidi types of the text.</param>
+    /// <param name="pairedBracketTypes">The paired bracket types of the text.</param>
+    /// <param name="pairedBracketValues">The paired bracket values of the text.</param>
+    /// <param name="paragraphEmbeddingLevel">The level of every paragraph: 0 or 1, or 2 for each to take its level from its text (rules P2 and P3).</param>
+    /// <param name="hasBrackets">Whether the text may hold paired brackets.</param>
+    /// <param name="hasEmbeddings">Whether the text may hold characters that rule X9 removes.</param>
+    /// <param name="hasIsolates">Whether the text may hold isolate controls.</param>
+    /// <param name="paragraphEnds">
+    /// The end of each paragraph, as <see cref="BidiData.ParagraphEnds"/> gives them. Each paragraph separator is the last
+    /// code point of its paragraph.
+    /// </param>
+    /// <param name="resetWhitespace"><see langword="true"/> to apply rule L1 to each paragraph as one line.</param>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="paragraphEnds"/> does not split the types into paragraphs that cover them: an end is not after the
+    /// one before, or the last is not the length of the types. Only empty types are one empty paragraph.
+    /// </exception>
     public void Process(
         ReadOnlyArraySlice<BidiCharacterType> types,
         ReadOnlyArraySlice<BidiPairedBracketType> pairedBracketTypes,
@@ -229,27 +258,85 @@ internal sealed class BidiAlgorithm
         bool? hasBrackets,
         bool? hasEmbeddings,
         bool? hasIsolates,
-        ArraySlice<sbyte>? outLevels,
+        IReadOnlyList<int> paragraphEnds,
         bool resetWhitespace = true)
+    {
+        // Each paragraph holds at least one code point, and the last ends with the types. Empty types are one empty
+        // paragraph.
+        int previousEnd = 0;
+        foreach (int end in paragraphEnds)
+        {
+            if (end < previousEnd || (end == previousEnd && (types.Length > 0 || paragraphEnds.Count > 1)))
+            {
+                throw new ArgumentException("Each paragraph end must be after the one before.", nameof(paragraphEnds));
+            }
+
+            previousEnd = end;
+        }
+
+        if (paragraphEnds.Count == 0 || previousEnd != types.Length)
+        {
+            throw new ArgumentException("The last paragraph end must be the length of the types.", nameof(paragraphEnds));
+        }
+
+        this.resolvedLevelsBuffer.Clear();
+        this.paragraphs.Clear();
+        this.ResolvedLevels = this.resolvedLevelsBuffer.Add(types.Length);
+
+        bool brackets = hasBrackets ?? pairedBracketTypes.Length == types.Length;
+        int start = 0;
+        foreach (int end in paragraphEnds)
+        {
+            int length = end - start;
+            sbyte level = this.ProcessParagraph(
+                types.Slice(start, length),
+                brackets ? pairedBracketTypes.Slice(start, length) : ReadOnlyArraySlice<BidiPairedBracketType>.Empty,
+                brackets ? pairedBracketValues.Slice(start, length) : ReadOnlyArraySlice<int>.Empty,
+                paragraphEmbeddingLevel,
+                brackets,
+                hasEmbeddings ?? true,
+                hasIsolates ?? true,
+                this.ResolvedLevels.Slice(start, length),
+                resetWhitespace);
+
+            this.paragraphs.Add(new Paragraph(start, length, level));
+            start = end;
+        }
+    }
+
+    /// <summary>
+    /// Resolves the levels of one paragraph.
+    /// </summary>
+    /// <returns>The embedding level of the paragraph.</returns>
+    private sbyte ProcessParagraph(
+        ReadOnlyArraySlice<BidiCharacterType> types,
+        ReadOnlyArraySlice<BidiPairedBracketType> pairedBracketTypes,
+        ReadOnlyArraySlice<int> pairedBracketValues,
+        sbyte paragraphEmbeddingLevel,
+        bool hasBrackets,
+        bool hasEmbeddings,
+        bool hasIsolates,
+        ArraySlice<sbyte> levels,
+        bool resetWhitespace)
     {
         // Reset state
         this.isolatePairs.Clear();
         this.workingTypesBuffer.Clear();
         this.levelRuns.Clear();
-        this.resolvedLevelsBuffer.Clear();
 
         // Setup original types and working types
         this.originalTypes = types;
         this.workingTypes = this.workingTypesBuffer.Add(types);
+        this.levels = levels;
 
         // Capture paired bracket values and types
         this.pairedBracketTypes = pairedBracketTypes;
         this.pairedBracketValues = pairedBracketValues;
 
         // Store things we know
-        this.hasBrackets = hasBrackets ?? this.pairedBracketTypes.Length == this.originalTypes.Length;
-        this.hasEmbeddings = hasEmbeddings ?? true;
-        this.hasIsolates = hasIsolates ?? true;
+        this.hasBrackets = hasBrackets;
+        this.hasEmbeddings = hasEmbeddings;
+        this.hasIsolates = hasIsolates;
 
         // Find all isolate pairs
         this.FindIsolatePairs();
@@ -264,21 +351,7 @@ internal sealed class BidiAlgorithm
             this.paragraphEmbeddingLevel = paragraphEmbeddingLevel;
         }
 
-        // Create resolved levels buffer
-        if (outLevels.HasValue)
-        {
-            if (outLevels.Value.Length != this.originalTypes.Length)
-            {
-                throw new ArgumentException("Out levels must be the same length as the input data");
-            }
-
-            this.ResolvedLevels = outLevels.Value;
-        }
-        else
-        {
-            this.ResolvedLevels = this.resolvedLevelsBuffer.Add(this.originalTypes.Length);
-            this.ResolvedLevels.Fill(this.paragraphEmbeddingLevel);
-        }
+        this.levels.Fill(this.paragraphEmbeddingLevel);
 
         // Resolve explicit embedding levels (Rules X1-X8)
         this.ResolveExplicitEmbeddingLevels();
@@ -292,11 +365,13 @@ internal sealed class BidiAlgorithm
         // Clean up
         this.AssignLevelsToCodePointsRemovedByX9();
 
-        // Reset whitespace levels, treating all of the data as one line
+        // Reset whitespace levels, treating the paragraph as one line
         if (resetWhitespace)
         {
-            ResetWhitespaceLevels(this.originalTypes, this.ResolvedLevels, this.paragraphEmbeddingLevel);
+            ResetWhitespaceLevels(this.originalTypes, this.levels, this.paragraphEmbeddingLevel);
         }
+
+        return this.paragraphEmbeddingLevel;
     }
 
     /// <summary>
@@ -385,7 +460,8 @@ internal sealed class BidiAlgorithm
             }
             else if (t == BidiCharacterType.ParagraphSeparator)
             {
-                // A paragraph separator ends every isolate, so no PDI after it matches an initiator before it.
+                // A paragraph separator ends every isolate, so no PDI after it matches an initiator before it. It is the
+                // last code point of its paragraph, unless the caller puts one inside a paragraph.
                 this.pendingIsolateOpenings.Clear();
             }
         }
@@ -430,7 +506,7 @@ internal sealed class BidiAlgorithm
                     if (newLevel <= maxStackDepth && overflowIsolateCount == 0 && overflowEmbeddingCount == 0)
                     {
                         this.statusStack.Push(new Status(newLevel, BidiCharacterType.OtherNeutral, false));
-                        this.ResolvedLevels[i] = newLevel;
+                        this.levels[i] = newLevel;
                     }
                     else if (overflowIsolateCount == 0)
                     {
@@ -447,7 +523,7 @@ internal sealed class BidiAlgorithm
                     if (newLevel < maxStackDepth && overflowIsolateCount == 0 && overflowEmbeddingCount == 0)
                     {
                         this.statusStack.Push(new Status(newLevel, BidiCharacterType.OtherNeutral, false));
-                        this.ResolvedLevels[i] = newLevel;
+                        this.levels[i] = newLevel;
                     }
                     else if (overflowIsolateCount == 0)
                     {
@@ -464,7 +540,7 @@ internal sealed class BidiAlgorithm
                     if (newLevel <= maxStackDepth && overflowIsolateCount == 0 && overflowEmbeddingCount == 0)
                     {
                         this.statusStack.Push(new Status(newLevel, BidiCharacterType.RightToLeft, false));
-                        this.ResolvedLevels[i] = newLevel;
+                        this.levels[i] = newLevel;
                     }
                     else if (overflowIsolateCount == 0)
                     {
@@ -481,7 +557,7 @@ internal sealed class BidiAlgorithm
                     if (newLevel <= maxStackDepth && overflowIsolateCount == 0 && overflowEmbeddingCount == 0)
                     {
                         this.statusStack.Push(new Status(newLevel, BidiCharacterType.LeftToRight, false));
-                        this.ResolvedLevels[i] = newLevel;
+                        this.levels[i] = newLevel;
                     }
                     else if (overflowIsolateCount == 0)
                     {
@@ -502,7 +578,8 @@ internal sealed class BidiAlgorithm
                     {
                         if (!this.isolatePairs.TryGetValue(i, out int endOfIsolate))
                         {
-                            // With no matching PDI, the isolate ends at the end of the paragraph.
+                            // With no matching PDI, the isolate ends at the end of the paragraph, or at a paragraph
+                            // separator that the caller put inside it.
                             endOfIsolate = i + 1;
                             while (endOfIsolate < this.originalTypes.Length
                                 && this.originalTypes[endOfIsolate] != BidiCharacterType.ParagraphSeparator)
@@ -524,7 +601,7 @@ internal sealed class BidiAlgorithm
 
                     // Replace RLI's level with current embedding level
                     Status tos = this.statusStack.Peek();
-                    this.ResolvedLevels[i] = tos.EmbeddingLevel;
+                    this.levels[i] = tos.EmbeddingLevel;
 
                     // Apply override
                     if (tos.OverrideStatus != BidiCharacterType.OtherNeutral)
@@ -568,7 +645,7 @@ internal sealed class BidiAlgorithm
                 {
                     // Rule X6
                     Status tos = this.statusStack.Peek();
-                    this.ResolvedLevels[i] = tos.EmbeddingLevel;
+                    this.levels[i] = tos.EmbeddingLevel;
                     if (tos.OverrideStatus != BidiCharacterType.OtherNeutral)
                     {
                         this.workingTypes[i] = tos.OverrideStatus;
@@ -597,7 +674,7 @@ internal sealed class BidiAlgorithm
                     }
 
                     Status tos = this.statusStack.Peek();
-                    this.ResolvedLevels[i] = tos.EmbeddingLevel;
+                    this.levels[i] = tos.EmbeddingLevel;
                     if (tos.OverrideStatus != BidiCharacterType.OtherNeutral)
                     {
                         this.workingTypes[i] = tos.OverrideStatus;
@@ -626,7 +703,8 @@ internal sealed class BidiAlgorithm
 
                 case BidiCharacterType.ParagraphSeparator:
                 {
-                    // Rule X8: the separator ends every embedding, override and isolate.
+                    // Rule X8: the separator ends every embedding, override and isolate. It is the last code point of its
+                    // paragraph, unless the caller puts one inside a paragraph, as BidiTest.txt does.
                     while (this.statusStack.Count > 1)
                     {
                         this.statusStack.Pop();
@@ -635,7 +713,7 @@ internal sealed class BidiAlgorithm
                     overflowIsolateCount = 0;
                     overflowEmbeddingCount = 0;
                     validIsolateCount = 0;
-                    this.ResolvedLevels[i] = this.paragraphEmbeddingLevel;
+                    this.levels[i] = this.paragraphEmbeddingLevel;
                     break;
                 }
             }
@@ -706,7 +784,7 @@ internal sealed class BidiAlgorithm
             i--;
         }
 
-        sbyte prevLevel = i < 0 ? this.paragraphEmbeddingLevel : this.ResolvedLevels[i];
+        sbyte prevLevel = i < 0 ? this.paragraphEmbeddingLevel : this.levels[i];
         BidiCharacterType sos = DirectionFromLevel(Math.Max(prevLevel, level));
 
         // Work out eos
@@ -726,7 +804,7 @@ internal sealed class BidiAlgorithm
                 i++;
             }
 
-            nextLevel = i >= this.originalTypes.Length ? this.paragraphEmbeddingLevel : this.ResolvedLevels[i];
+            nextLevel = i >= this.originalTypes.Length ? this.paragraphEmbeddingLevel : this.levels[i];
         }
 
         BidiCharacterType eos = DirectionFromLevel(Math.Max(nextLevel, level));
@@ -745,7 +823,7 @@ internal sealed class BidiAlgorithm
         int runStart = 0;
         for (int i = 0; i < this.x9Map.Length; ++i)
         {
-            int level = this.ResolvedLevels[this.MapX9(i)];
+            int level = this.levels[this.MapX9(i)];
             if (level != currentLevel)
             {
                 if (currentLevel != -1)
@@ -856,7 +934,7 @@ internal sealed class BidiAlgorithm
         // Create mappings onto the underlying data
         this.runResolvedTypes = new MappedArraySlice<BidiCharacterType>(this.workingTypes, this.isolatedRunMapping.AsSlice());
         this.runOriginalTypes = new ReadonlyMappedArraySlice<BidiCharacterType>(this.originalTypes, this.isolatedRunMapping.AsSlice());
-        this.runLevels = new MappedArraySlice<sbyte>(this.ResolvedLevels, this.isolatedRunMapping.AsSlice());
+        this.runLevels = new MappedArraySlice<sbyte>(this.levels, this.isolatedRunMapping.AsSlice());
         if (this.hasBrackets)
         {
             this.runBidiPairedBracketTypes = new ReadonlyMappedArraySlice<BidiPairedBracketType>(this.pairedBracketTypes, this.isolatedRunMapping.AsSlice());
@@ -1466,6 +1544,32 @@ internal sealed class BidiAlgorithm
     }
 
     /// <summary>
+    /// Finds the paragraph that holds a code point.
+    /// </summary>
+    /// <param name="paragraphs">The paragraphs of the text, in order.</param>
+    /// <param name="index">The index of the code point.</param>
+    /// <returns>The index of the paragraph, or of the last paragraph when the code point is past the end of the text.</returns>
+    internal static int FindParagraph(IReadOnlyList<Paragraph> paragraphs, int index)
+    {
+        int low = 0;
+        int high = paragraphs.Count - 1;
+        while (low < high)
+        {
+            int middle = (low + high) / 2;
+            if (paragraphs[middle].End <= index)
+            {
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        return low;
+    }
+
+    /// <summary>
     /// Assign levels to any characters that would be have been
     /// removed by rule X9.  The idea is to keep level runs together
     /// that would otherwise be broken by an interfering isolate/embedding
@@ -1487,9 +1591,9 @@ internal sealed class BidiAlgorithm
 
         // Fix up first character. Section 5.2: a removed character with no character before it takes the paragraph level,
         // where rules X2 to X5 gave an embedding control the level that it pushes.
-        if (this.ResolvedLevels[0] < 0 || IsRemovedByX9(this.originalTypes[0]))
+        if (this.levels[0] < 0 || IsRemovedByX9(this.originalTypes[0]))
         {
-            this.ResolvedLevels[0] = this.paragraphEmbeddingLevel;
+            this.levels[0] = this.paragraphEmbeddingLevel;
         }
 
         if (IsRemovedByX9(this.originalTypes[0]))
@@ -1506,7 +1610,7 @@ internal sealed class BidiAlgorithm
             }
         }
 
-        AssignLevelsToRemovedCharacters(this.originalTypes, this.ResolvedLevels);
+        AssignLevelsToRemovedCharacters(this.originalTypes, this.levels);
     }
 
     /// <summary>
@@ -1608,6 +1712,24 @@ internal sealed class BidiAlgorithm
             BidiCharacterType.LeftToRight => BidiCharacterType.LeftToRight,
             _ => BidiCharacterType.OtherNeutral,
         };
+
+    /// <summary>
+    /// A paragraph of the text, as rule P1 splits it: its code points, its paragraph separator last when it has one, and
+    /// its embedding level.
+    /// </summary>
+    /// <param name="Start">The index of the first code point of the paragraph.</param>
+    /// <param name="Length">The number of code points of the paragraph.</param>
+    /// <param name="Level">
+    /// The embedding level of the paragraph: the level the caller asked for, or the level that rules P2 and P3 read from
+    /// the paragraph.
+    /// </param>
+    public readonly record struct Paragraph(int Start, int Length, sbyte Level)
+    {
+        /// <summary>
+        /// Gets the index of the code point after the paragraph.
+        /// </summary>
+        public int End => this.Start + this.Length;
+    }
 
     /// <summary>
     /// Hold the start and end index of a pair of brackets
