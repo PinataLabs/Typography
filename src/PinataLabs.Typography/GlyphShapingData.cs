@@ -46,6 +46,7 @@ internal class GlyphShapingData
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsSubstituted = data.IsSubstituted;
         this.IsDecomposed = data.IsDecomposed;
+        this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
         this.SpaceFallback = data.SpaceFallback;
         this.JamoFeature = data.JamoFeature;
@@ -175,6 +176,12 @@ internal class GlyphShapingData
     /// HarfBuzz, a lookup can skip such a glyph between the glyphs it matches, and the glyph takes no room after shaping.
     /// </summary>
     public bool IsDefaultIgnorable => !this.IsSubstituted && UnicodeUtility.IsHiddenAfterShaping((uint)this.CodePoint.Value);
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is of a COMBINING GRAPHEME JOINER that keeps no mark from moving
+    /// past another. As in HarfBuzz, a lookup may then skip it as any other default-ignorable glyph, in GSUB too.
+    /// </summary>
+    public bool IsUnhiddenJoiner { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution

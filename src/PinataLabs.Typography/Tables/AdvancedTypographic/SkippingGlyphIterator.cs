@@ -154,6 +154,7 @@ internal struct SkippingGlyphIterator
         {
             0x200C => SkippableIgnorables.Zwnj,
             0x200D => SkippableIgnorables.Zwj,
+            0x034F when data.IsUnhiddenJoiner => SkippableIgnorables.Other,
             0x034F or (>= 0x180B and <= 0x180D) or 0x180F or (>= 0xE0020 and <= 0xE007F) => SkippableIgnorables.Hidden,
             _ => SkippableIgnorables.Other,
         };
