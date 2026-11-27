@@ -269,8 +269,8 @@ internal class DefaultShaper : BaseShaper
 
     /// <summary>
     /// Replaces each vowel sign of the range that has parts with the glyphs of its parts, as HarfBuzz decomposes such a
-    /// sign when it normalizes the text. As there, a sign that the font has stays whole when the font lacks one of its
-    /// parts. A sign that the font lacks is split all the same, where HarfBuzz keeps one .notdef, so that a fallback font
+    /// sign when it normalizes the text. As there, a sign stays whole when the font lacks one of its parts. With fallback
+    /// fonts, a sign that the font lacks is split all the same, where HarfBuzz keeps one .notdef, so that a fallback font
     /// draws each part where the shaper puts it, the part in front of the base before the base.
     /// </summary>
     /// <param name="collection">The glyphs of the text.</param>
@@ -284,6 +284,7 @@ internal class DefaultShaper : BaseShaper
             return;
         }
 
+        bool hasFallbackFonts = substitutionCollection.TextOptions.FallbackFontFamilies?.Count > 0;
         Span<ushort> ids = stackalloc ushort[16];
         for (int i = index + count - 1; i >= index; i--)
         {
@@ -300,7 +301,7 @@ internal class DefaultShaper : BaseShaper
                 hasParts &= fontMetrics.TryGetGlyphId(new CodePoint(parts[j]), out ids[j]) && ids[j] != 0;
             }
 
-            if (!hasParts && data.GlyphId != 0)
+            if (!hasParts && (data.GlyphId != 0 || !hasFallbackFonts))
             {
                 continue;
             }
