@@ -78,9 +78,9 @@ The metrics of one glyph. `TrueTypeGlyphMetrics` is the subclass for TrueType ou
 | `AdvanceWidth` | `int` | How far the pen moves after the glyph in horizontal text. Positioning in a layout can make it negative or larger than 65535. |
 | `AdvanceHeight` | `int` | How far the pen moves after the glyph in vertical text. Positioning in a layout can make it negative or larger than 65535. |
 | `LeftSideBearing` | `short` | The space from the pen position to the left edge of the ink. |
-| `RightSideBearing` | `short` | The space from the right edge of the ink to the end of the advance. |
+| `RightSideBearing` | `int` | The space from the right edge of the ink to the end of `AdvanceWidth`. It follows the advance that positioning in a layout gives the glyph. |
 | `TopSideBearing` | `short` | The space above the ink in vertical text. |
-| `BottomSideBearing` | `short` | The space below the ink in vertical text. |
+| `BottomSideBearing` | `int` | The space from the bottom edge of the ink to the end of `AdvanceHeight` in vertical text. It follows the advance that positioning in a layout gives the glyph. |
 | `Width` | `float` | The width of the ink. |
 | `Height` | `float` | The height of the ink. |
 | `TextAttributes` | `TextAttributes` | The attributes that the metrics were made for. |

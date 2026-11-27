@@ -301,3 +301,7 @@ static PinataLabs.Typography.TextShaper.Shape(PinataLabs.Typography.Font! font, 
 *REMOVED*PinataLabs.Typography.GlyphMetrics.AdvanceWidth.get -> ushort
 PinataLabs.Typography.GlyphMetrics.AdvanceHeight.get -> int
 PinataLabs.Typography.GlyphMetrics.AdvanceWidth.get -> int
+*REMOVED*PinataLabs.Typography.GlyphMetrics.BottomSideBearing.get -> short
+*REMOVED*PinataLabs.Typography.GlyphMetrics.RightSideBearing.get -> short
+PinataLabs.Typography.GlyphMetrics.BottomSideBearing.get -> int
+PinataLabs.Typography.GlyphMetrics.RightSideBearing.get -> int

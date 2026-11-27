@@ -393,6 +393,12 @@ Unicode conformance suites to that version.
 
 ### Changed
 
+- **`GlyphMetrics.RightSideBearing` and `GlyphMetrics.BottomSideBearing` are `int`, and follow the positioned advance.**
+  They were `short` values that the constructor computed once from the advance of the font. They are now the space
+  from the ink to the end of `AdvanceWidth` and `AdvanceHeight` as they are, so after GPOS kerning in a layout they
+  match the advance, and an advance above 32767 no longer wraps: an empty glyph 40960 units wide had a right side
+  bearing of -24576. This is a breaking change: code that assigns either property to a `short` stops compiling, and
+  code compiled against an earlier version must be recompiled. (#170)
 - **`GlyphMetrics.AdvanceWidth` and `GlyphMetrics.AdvanceHeight` are `int`.** They were `ushort`. A font gives an
   advance from 0 to 65535, and GPOS positioning in a layout can take it below zero or above 65535, which a `ushort`
   held modulo 65536. This is a breaking change: code that assigns either property to a `ushort` stops compiling, and
@@ -496,8 +502,23 @@ Unicode conformance suites to that version.
   syllables kept its full width where the font narrows it. (#163)
 - `TextLayout` and `TextMeasurer` place the glyph after one whose advance GPOS kerning takes below zero or above 65535
   where HarfBuzz places it. The advance wrapped at 16 bits, so a kern of -700 on an advance of 600 moved the next glyph
-  65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a
-  vertical advance outside 0 to 65535, so its placement is not checked against HarfBuzz. (#162)
+  65436 font units forward instead of 100 back. The vertical advance no longer wraps either. (#162)
+- GPOS positioning in a layout changes the advance of a glyph along the line only, as in HarfBuzz 15.0.0. It set both
+  `AdvanceWidth` and `AdvanceHeight` from the shaping bounds, which hold 0 across the line, so a glyph kerned in
+  horizontal text reported an `AdvanceHeight` of 0, and one kerned in vertical text an `AdvanceWidth` of 0, or the GPOS
+  x advance, which HarfBuzz leaves out. A mark whose advance GPOS or the fallback mark positioning sets to 0 now keeps
+  the advance of the font across the line too, as every other glyph does: HarfBuzz gives no glyph an advance across
+  the line, so the mark of "é" in horizontal text has an `AdvanceWidth` of 0 and the `AdvanceHeight` of the font, where
+  it had 0 for both. A test font checks the places down the line against HarfBuzz, among them an advance below
+  zero. (#170)
+- Vertical text no longer applies the `kern` table, as HarfBuzz 15.0.0, even with `vkrn` turned on. The table changed
+  the advance of the second glyph of a vertical pair, and a positive value pulled the glyphs together. In vertical mixed
+  text a pair of a rotated and an upright glyph, such as U+002D between two ideographs, no longer kerns either, as
+  HarfBuzz shapes each run of one orientation on its own: the rotated glyph took the horizontal kerning along the line,
+  and a base with a GPOS mark moved without the mark. A pair of rotated glyphs still kerns as in horizontal text. (#170)
+- TrueType hinting places the phantom points from the advances of `hmtx` and `vmtx`, as FreeType does. It used the
+  advance that kerning in the layout gave the glyph, so a hinting program that aligns the outline to the end of the
+  advance drew a kerned glyph narrower or wider than the same glyph unkerned. (#170)
 - Rule L1 of the bidi algorithm now leaves a character that rule X9 removes, such as U+00AD, at the paragraph level
   when it is in the whitespace that L1 resets at the end of a line or before a separator, as UAX #9 section 5.2 says.
   The pass that gives each removed character the level of the character before it ran after L1 and overwrote the reset,
