@@ -100,7 +100,7 @@ jobs:
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.cs.vscoveragexml.reportsPaths="**/*coverage.xml"
-          /d:sonar.exclusions="docs-website/**,**/*.ttf,**/*.otf,**/*.ttc,**/*.woff,**/*.woff2,**/*.png,**/*.fuzz"
+          /d:sonar.exclusions="docs-website/**,tests/tools/glyph_names/**,**/*.ttf,**/*.otf,**/*.ttc,**/*.woff,**/*.woff2,**/*.png,**/*.fuzz"
           /d:sonar.coverage.exclusions="tests/**,samples/**,src/PinataLabs.Typography.UnicodeTrieGenerator/**"
 
       - name: Build
