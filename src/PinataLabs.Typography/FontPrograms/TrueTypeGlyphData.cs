@@ -39,6 +39,11 @@ internal sealed class TrueTypeGlyphData
     public int GlyphCount { get; }
 
     /// <summary>
+    /// Gets a value indicating whether 'loca' holds 32-bit offsets. Otherwise it holds 16-bit offsets divided by two.
+    /// </summary>
+    public bool HasLongOffsets => this.longOffsets;
+
+    /// <summary>
     /// Gets the 'glyf' data of a glyph. An empty glyph has no data.
     /// </summary>
     /// <returns><see langword="false"/> if the glyph ID or the location of the glyph is out of range.</returns>

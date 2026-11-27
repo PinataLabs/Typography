@@ -14,23 +14,24 @@ namespace PinataLabs.Typography;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A glyph that is kept keeps its ID and its outline. A glyph that is dropped stays in the font as a lone <c>endchar</c>
-/// and has no outline. The glyph count, the glyph IDs, and so the <c>/CIDToGIDMap /Identity</c> of a PDF font that embeds
-/// the subset, stay as they were.
+/// A glyph that is kept keeps its ID and its outline. A glyph that is dropped stays in the font and has no outline:
+/// a CFF glyph is a lone <c>endchar</c>, and a TrueType glyph has no data. The glyph count, the glyph IDs, and so
+/// the <c>/CIDToGIDMap /Identity</c> of a PDF font that embeds the subset, stay as they were.
 /// </para>
 /// <para>
-/// The subset keeps more than the glyphs that the caller names. It adds the base and the accent of a glyph that ends with
-/// <c>seac</c>. A glyph also needs its subroutines, so a subroutine that a kept glyph calls, directly or
+/// The subset keeps more than the glyphs that the caller names. It adds the glyphs that they draw:
+/// the base and the accent of a CFF glyph that ends with <c>seac</c>, and the components of a composite TrueType glyph,
+/// as far down as the components go. A CFF glyph also needs its subroutines, so a subroutine that a kept glyph calls, directly or
 /// from another subroutine, keeps its body, global or local, in the Font DICT of the glyph. A subroutine that no kept glyph calls
 /// keeps its place in its INDEX and has a lone <c>return</c> for a body, so the biases and the numbers of the
 /// calls do not change.
 /// </para>
 /// <para>
-/// A subset keeps the charset, the encoding, the FDSelect and the strings as they were, so glyph names and CIDs stay the same.
+/// A CFF subset keeps the charset, the encoding, the FDSelect and the strings as they were, so glyph names and CIDs stay the same.
 /// It lays the table out again, so a part of the table that the Top DICT does not reach is not in the subset.
 /// </para>
 /// <para>
-/// The formats are an OpenType file with a 'CFF ' table, and a bare CFF font.
+/// The formats are an sfnt file with TrueType outlines in a 'glyf' table, an OpenType file with a 'CFF ' table, and a bare CFF font.
 /// A subset of an sfnt file is an sfnt file: it has the tables of <see cref="FontSubsetOptions.Tables"/>, the checksum of each table,
 /// and the 'head' checksum adjustment. The data that this class reads can be untrusted, such as a font that a PDF file embeds.
 /// For malformed data it throws <see cref="InvalidFontFileException"/>, or a type that derives from it, and no other type.
@@ -39,16 +40,18 @@ namespace PinataLabs.Typography;
 public static class FontSubsetter
 {
     private const uint Cff = 0x43464620; // 'CFF '
+    private const uint Glyf = 0x676C7966; // 'glyf'
     private const uint Head = 0x68656164; // 'head'
+    private const uint Loca = 0x6C6F6361; // 'loca'
     private const uint Maxp = 0x6D617870; // 'maxp'
 
     /// <summary>
     /// Subsets a font program.
     /// </summary>
     /// <remarks>
-    /// The work for each kept glyph is bounded as drawing the glyph is: a charstring runs at most 1,048,576 operators and calls
-    /// subroutines 10 deep. The font data is not changed.
-    /// A font that is not a CFF font, such as WOFF, a font collection, a TrueType font, a Type 1 font or a CFF2 font, is not supported.
+    /// The work for each kept glyph is bounded as drawing the glyph is: a CFF charstring runs at most 1,048,576 operators and calls
+    /// subroutines 10 deep. The closure never recurses, so a cycle of composite glyphs ends. The font data is not changed.
+    /// A font that is not a CFF font or a TrueType font, such as WOFF, a font collection, a Type 1 font or a CFF2 font, is not supported.
     /// </remarks>
     /// <param name="font">The font file. See <see cref="FontProgram.Load(ReadOnlyMemory{byte})"/> for the formats.</param>
     /// <param name="glyphIds">
@@ -94,7 +97,7 @@ public static class FontSubsetter
             case SfntDirectory.OpenTypeCffVersion:
                 return SubsetOpenTypeCff(directory, glyphIds, tags, ref budget);
             case SfntDirectory.TrueTypeVersion or SfntDirectory.AppleTrueTypeVersion:
-                throw new InvalidFontFileException("A TrueType font program is not supported.");
+                return SubsetTrueType(directory, glyphIds, tags, ref budget);
             case 0x74746366:
                 throw new InvalidFontFileException("A font collection is not a supported font program.");
             case 0x774F4646 or 0x774F4632:
@@ -116,6 +119,16 @@ public static class FontSubsetter
         tags.UnionWith([Cff, Head, Maxp]);
         SfntTableSource[] tables = CopyTables(directory, tags);
         Replace(tables, Cff, CffSubset.Create(cff, glyphIds, ref budget));
+        return Build(directory.Version, tables, ref budget);
+    }
+
+    private static byte[] SubsetTrueType(SfntDirectory directory, IReadOnlyCollection<ushort> glyphIds, SortedSet<uint> tags, ref LoadBudget budget)
+    {
+        TrueTypeSubset glyphs = TrueTypeSubset.Create(directory, glyphIds, ref budget);
+        tags.UnionWith([Glyf, Head, Loca, Maxp]);
+        SfntTableSource[] tables = CopyTables(directory, tags);
+        Replace(tables, Glyf, glyphs.Glyf);
+        Replace(tables, Loca, glyphs.Loca);
         return Build(directory.Version, tables, ref budget);
     }
 

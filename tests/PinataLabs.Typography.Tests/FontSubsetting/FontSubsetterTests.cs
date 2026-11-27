@@ -16,6 +16,7 @@ namespace PinataLabs.Typography.Tests.FontSubsetting;
 public class FontSubsetterTests
 {
     private const string OpenType = "SourceSansPro-Regular.otf";
+    private const string TrueType = "DejaVuSans.ttf";
 
     private static readonly string[] OpenTypeCffFonts =
     [
@@ -51,17 +52,31 @@ public class FontSubsetterTests
         "FontPrograms/bare-SourceSansPro-Regular.cff",
     ];
 
+    private static readonly string[] TrueTypeFonts =
+    [
+        TrueType,
+        "OpenSans-Regular.ttf",
+        "Roboto-Regular.ttf",
+        "EBGaramond-Regular.ttf",
+        "NoOs2-Regular.ttf",
+        "SixLaborsSampleAB.ttf",
+        "Teko/Teko-Variable.ttf",
+        "FontPrograms/tt-composite.ttf",
+        "FontPrograms/tt-names.ttf",
+        "FontPrograms/tt-cmap.ttf",
+    ];
+
     /// <summary>
     /// Gets every font that the tests subset.
     /// </summary>
     public static IEnumerable<object[]> Fonts
-        => OpenTypeCffFonts.Concat(BareCffFonts).Select(font => new object[] { font });
+        => OpenTypeCffFonts.Concat(BareCffFonts).Concat(TrueTypeFonts).Select(font => new object[] { font });
 
     /// <summary>
     /// Gets the fonts that are sfnt files.
     /// </summary>
     public static IEnumerable<object[]> SfntFonts
-        => OpenTypeCffFonts.Select(font => new object[] { font });
+        => OpenTypeCffFonts.Concat(TrueTypeFonts).Select(font => new object[] { font });
 
     [Test]
     [MethodDataSource(nameof(Fonts))]
@@ -104,6 +119,7 @@ public class FontSubsetterTests
 
     [Test]
     [Arguments(OpenType)]
+    [Arguments(TrueType)]
     public async Task ADefaultSubsetKeepsTheTablesOfAPdfReaderAndDropsTheOthers(string fontFile)
     {
         byte[] font = ReadFont(fontFile);
@@ -131,6 +147,7 @@ public class FontSubsetterTests
 
     [Test]
     [Arguments(OpenType, new[] { "CFF ", "head", "maxp" })]
+    [Arguments(TrueType, new[] { "glyf", "head", "loca", "maxp" })]
     public async Task TheTablesOptionChoosesTheTablesAndTheOutlineTablesStay(string fontFile, string[] outlineTables)
     {
         byte[] font = ReadFont(fontFile);
@@ -270,6 +287,8 @@ public class FontSubsetterTests
     [Arguments("FDArrayTest257.otf")]
     [Arguments("FontPrograms/cff-seac.otf")]
     [Arguments("FontPrograms/bare-cff-cid-fdselect3.cff")]
+    [Arguments("OpenSans-Regular.ttf")]
+    [Arguments("FontPrograms/tt-composite.ttf")]
     public async Task ATruncatedFontIsRefusedAsAnInvalidFontOrSubsetsAsFarAsItGoes(string fontFile)
     {
         byte[] font = ReadFont(fontFile);
