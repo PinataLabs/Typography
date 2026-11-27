@@ -12,11 +12,10 @@ Without glyph classes, HarfBuzz gives each glyph the class of its character: a n
 ignorable is a mark, and any other character is a base. A ligature of components that are not all marks is a ligature,
 whatever its first component is. The font has the letters a to g, the combining acute and grave accents, the grave
 accent below U+0316, the combining grapheme joiner U+034F, the spacing mark U+1D165 and the enclosing mark U+20DD, as
-empty glyphs 600 wide. Its
-mark lookup attaches each accent to a, b, d, e, the ligature of acute and a, and the two components of the ligature of
-a and b, and its mkmk lookup attaches each accent to the acute. ccmp makes c d and e and f d and g. liga makes a
-ligature of acute and a, and, skipping marks, one of a and b and one of b and b. feaLib builds a GDEF table for the mark
-class, and the script removes it.
+empty glyphs 600 wide. Its mark lookup attaches each accent to a, b, d, e, the ligature of acute and a, and the two
+components of the ligature of a and b, and its mkmk lookup attaches each accent to the acute. ccmp makes c d and e and f
+d and g. liga makes a ligature of acute and a, and, skipping marks, one of a and b and one of b and b. feaLib builds a
+GDEF table for the mark class, and the script removes it.
 
 * a, acute, grave: mkmk attaches the grave to the acute.
 * a, grave, acute: mark attaches the acute to a past the grave, which is a mark.
