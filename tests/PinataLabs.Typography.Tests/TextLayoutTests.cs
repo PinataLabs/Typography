@@ -1678,6 +1678,28 @@ public class TextLayoutTests
         await Assert.That(Visual([lines[1]])).IsEqualTo(expected);
     }
 
+    // The font ligates the space and the line feed after it, so the line feed has no glyph. The line wraps at the space,
+    // which does not start the next line, so no glyph is on that line at the mandatory break after the line feed. The
+    // break ends no line, and the b starts the second line.
+    [Test]
+    [Arguments(TextDirection.LeftToRight)]
+    [Arguments(TextDirection.RightToLeft)]
+    public async Task MandatoryBreakAfterALineFeedWithNoGlyph_AddsNoEmptyLine(TextDirection direction)
+    {
+        const string text = "aaaa \nb";
+        Font font = ((IFontMetricsCollection)new FontCollection())
+            .AddMetrics(new SpaceLineFeedLigatingFakeFontInstance(text), CultureInfo.InvariantCulture)
+            .CreateFont(12);
+        TextOptions options = new(font) { TextDirection = direction, WordBreaking = WordBreaking.BreakAll };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("aaaa", options).Width + 1;
+        float lineHeight = TextMeasurer.MeasureAdvance("a", options).Height;
+
+        GlyphLayout[][] lines = GetLines(text, options);
+
+        await Assert.That(Visual(lines)).IsEqualTo("aaaa|b");
+        await Assert.That(lines[1][0].PenLocation.Y - lines[0][0].PenLocation.Y).IsEqualTo(lineHeight / options.Dpi).Within(0.0001F);
+    }
+
     private static readonly string Shy = ((char)0xAD).ToString();
 
     // The glyphs of each line, in the order the layout draws them, which is left to right.

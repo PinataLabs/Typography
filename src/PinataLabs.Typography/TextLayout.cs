@@ -969,12 +969,17 @@ internal static class TextLayout
                 bool requiredBreak = false;
                 if (graphemeCodePointIndex == 0)
                 {
-                    // Mandatory wrap at index.
+                    // Mandatory wrap at index. The line is empty only when the line break before the index has no glyph
+                    // of its own, as when a font ligates it, and a line with no glyph has nothing to lay out.
                     if (currentLineBreak.PositionWrap == codePointIndex && currentLineBreak.Required)
                     {
-                        textLines.Add(textLine);
-                        glyphCount += textLine.Count;
-                        textLine = new();
+                        if (textLine.Count > 0)
+                        {
+                            textLines.Add(textLine);
+                            glyphCount += textLine.Count;
+                            textLine = new();
+                        }
+
                         lineAdvance = 0;
                         requiredBreak = true;
                     }

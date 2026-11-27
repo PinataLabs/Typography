@@ -556,6 +556,9 @@ Unicode conformance suites to that version.
   draws a space that the line keeps at its end, as with `WordBreaking.BreakAll`, at the left end of the line, so that
   space took padding and left a gap at the start of the line. With `TextJustification.InterCharacter` in a
   left-to-right paragraph, the letter before that space took padding. (#171)
+- `TextLayout` no longer throws `ArgumentOutOfRangeException` when a line wraps at a space that a font ligates with the
+  line feed after it. The line feed had no glyph, so the mandatory break after it added a line with no glyph, and the
+  bidi reordering read its first glyph. (#171)
 - A wrapped line no longer keeps a trailing space that follows a character outside the Basic Multilingual Plane, such as
   an emoji or a mathematical letter. The line break enumerator measured the text before a break through UTF-16 indexes as
   if they were code point indexes, so after such a character it stopped one position too far and `TextLayout` left the
