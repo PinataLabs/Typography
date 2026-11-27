@@ -1700,6 +1700,26 @@ public class TextLayoutTests
         await Assert.That(lines[1][0].PenLocation.Y - lines[0][0].PenLocation.Y).IsEqualTo(lineHeight / options.Dpi).Within(0.0001F);
     }
 
+    // The layout lays out no variation selector on its own, so text that is only variation selectors has no line, as
+    // empty text has none.
+    [Test]
+    [Arguments("\uFE0F", LayoutMode.HorizontalTopBottom)]
+    [Arguments("\uFE0F\uFE0F", LayoutMode.HorizontalTopBottom)]
+    [Arguments("\uFE0F", LayoutMode.HorizontalBottomTop)]
+    [Arguments("\uFE0F", LayoutMode.VerticalLeftRight)]
+    [Arguments("\uFE0F", LayoutMode.VerticalRightLeft)]
+    [Arguments("\uFE0F", LayoutMode.VerticalMixedLeftRight)]
+    [Arguments("\uFE0F", LayoutMode.VerticalMixedRightLeft)]
+    public async Task TextWithNoGlyphToLayOut_LaysOutAsEmptyText(string text, LayoutMode layoutMode)
+    {
+        Font font = CreateFont("a", 12);
+        TextOptions options = new(font) { LayoutMode = layoutMode, TextAlignment = TextAlignment.Center, WrappingLength = 100 };
+
+        await Assert.That(TextLayout.GenerateLayout(text.AsSpan(), options).Count).IsEqualTo(0);
+        await Assert.That(TextMeasurer.CountLines(text, options)).IsEqualTo(TextMeasurer.CountLines(string.Empty, options));
+        await Assert.That(TextMeasurer.MeasureSize(text, options)).IsEqualTo(TextMeasurer.MeasureSize(string.Empty, options));
+    }
+
     private static readonly string Shy = ((char)0xAD).ToString();
 
     // The glyphs of each line, in the order the layout draws them, which is left to right.
