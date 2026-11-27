@@ -113,6 +113,26 @@ public class ScriptItemizerTests
             new ScriptRun(4, 1, ScriptClass.Latin));
     }
 
+    [Test]
+    public async Task ACharacterWithNoScriptTakesTheScriptOfTheTextAroundIt()
+        => await AssertRuns("a\uE000b", new ScriptRun(0, 3, ScriptClass.Latin));
+
+    [Test]
+    public async Task ACharacterWithNoScriptAtTheStartWaitsForTheFirstLetter()
+        => await AssertRuns("\uE000a", new ScriptRun(0, 2, ScriptClass.Latin));
+
+    [Test]
+    public async Task ACharacterWithNoScriptAfterALetterIsDrawnWithIt()
+        => await AssertRuns(Arabic + "\uE000" + "a", new ScriptRun(0, 5, ScriptClass.Arabic), new ScriptRun(5, 1, ScriptClass.Latin));
+
+    [Test]
+    public async Task TextOfCharactersWithNoScriptIsOneUnknownRun()
+        => await AssertRuns("\uE000\uE001", new ScriptRun(0, 2, ScriptClass.Unknown));
+
+    [Test]
+    public async Task CharactersWithNoScriptAndCommonCharactersAreOneCommonRun()
+        => await AssertRuns("\uE000 1", new ScriptRun(0, 3, ScriptClass.Common));
+
     private static Task AssertRuns(string text, params ScriptRun[] expected)
         => AssertRuns(text, 0, text.Length, expected);
 

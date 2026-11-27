@@ -16,6 +16,14 @@ namespace PinataLabs.Typography.Unicode;
 /// starts with them waits for the first character that has a script, and takes that one.
 /// </para>
 /// <para>
+/// A character that no script owns, such as one in the Private Use Area or an unassigned code point, has the script
+/// Unknown, and is treated in the same way. A private-use icon in the middle of a Latin word is in the Latin run, as
+/// the font that draws the word is the font that draws the icon, and does not cut the word into three runs. Text
+/// that has nothing but such characters is one run of script Unknown, and text that has such characters and Common
+/// or Inherited characters but no letter is one run of script Common. The itemizer of PdfPinata that this replaces
+/// makes a run of its own of the characters that no script owns.
+/// </para>
+/// <para>
 /// A paired bracket is the exception. A closing bracket takes the script of the bracket that opened it, so
 /// <c>a (б) c</c> is Latin, Cyrillic and then Latin again, and not Latin and then a Cyrillic run that holds the
 /// bracket. The pairs are the paired brackets of the bidi algorithm. A closing bracket without an opening bracket
@@ -52,6 +60,7 @@ internal static class ScriptItemizer
 
         List<OpenBracket>? brackets = null;
         ScriptClass script = ScriptClass.Common;
+        bool onlyUnknown = true;
         int from = start;
         for (int index = start; index < end;)
         {
@@ -62,7 +71,12 @@ internal static class ScriptItemizer
                 codePointScript = ResolveBracket(codePoint, script, ref brackets);
             }
 
-            if (codePointScript is not (ScriptClass.Common or ScriptClass.Inherited))
+            if (codePointScript != ScriptClass.Unknown)
+            {
+                onlyUnknown = false;
+            }
+
+            if (codePointScript is not (ScriptClass.Common or ScriptClass.Inherited or ScriptClass.Unknown))
             {
                 if (script == ScriptClass.Common)
                 {
@@ -78,6 +92,11 @@ internal static class ScriptItemizer
             }
 
             index += width;
+        }
+
+        if (script == ScriptClass.Common && onlyUnknown)
+        {
+            script = ScriptClass.Unknown;
         }
 
         runs.Add(new ScriptRun(from, end - from, script));
