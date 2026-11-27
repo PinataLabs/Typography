@@ -38,6 +38,9 @@ Other cases:
 
 * TextShaperLarge.ttf, a font of 16384 units to the em with wide glyphs, so that an advance is above 32767 or below zero,
   and a mark that moves by more than 32767 units.
+* TextShaperArabic.ttf, an Arabic font with the letters beh and alef and their presentation forms, whose GSUB table has the
+  four joining forms for the language system `URD ` of Arabic only, so that HarfBuzz joins the letters with the forms of the
+  font in Urdu, and with the glyphs of the presentation forms in any other language.
 * Features that the caller turns off, and languages: Hebrew points without the `mark` feature, which HarfBuzz composes to
   presentation forms; the reph of Devanagari without `rphf`; Arabic fonts with no joining forms of their own, with each
   of isol, fina, medi and init off; Segoe UI in Turkish, whose language system has no `kern` feature, so that the `kern`
@@ -194,6 +197,24 @@ AUTO_DIRECTION_CASES = [
     ("AutoDirectionStrongArabicAfterDigits", "12 " + U("0628 0627"), {"script": "Arab"}),
     ("AutoDirectionStrongLatin", "ab 123", {"script": "Latn"}),
 ]
+
+# TextShaperArabic.ttf has the beh and the alef with the glyphs of their presentation forms. The GSUB table has isol, fina, init and medi
+# for the language system URD of arab only, and none for the others.
+ARABIC_FONT = "TextShaperArabic.ttf"
+ARABIC_CODE_POINTS = [0x20, 0x0627, 0x0628, 0xFE8D, 0xFE8E, 0xFE8F, 0xFE90, 0xFE91, 0xFE92]
+ARABIC_EXTRA_GLYPHS = ["beh.isol", "beh.fina", "beh.init", "beh.medi"]
+ARABIC_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem arab dflt;
+languagesystem arab URD;
+
+feature isol { script arab; language URD; sub u0628 by beh.isol; } isol;
+feature fina { script arab; language URD; sub u0628 by beh.fina; } fina;
+feature init { script arab; language URD; sub u0628 by beh.init; } init;
+feature medi { script arab; language URD; sub u0628 by beh.medi; } medi;
+"""
+ARABIC_TEXTS = [U("0628 0628 0628"), U("0628 0627 0628 0020 0628")]
+ARABIC_LANGUAGES = [None, ("ur", "URD "), ("ar", "ARA ")]
 
 # Each case is (name, font, text, options). The options can have `script`, `language`, `direction` and `features`.
 SYNTHETIC_CASES = [
@@ -539,6 +560,14 @@ def main():
     hb_font = ref.load_font(path)
     for text in LARGE_TEXTS:
         rows.append(row("LargeUnitsPerEm", LARGE_FONT, hb_font, text, direction="ltr"))
+
+    hb_font = ref.load_font(ref.build_font(ARABIC_FONT, ARABIC_CODE_POINTS, ARABIC_FEATURES, ARABIC_EXTRA_GLYPHS))
+    for language in ARABIC_LANGUAGES:
+        options = {} if language is None else {"language": language}
+        for text in ARABIC_TEXTS:
+            rows.append(row("ArabicLanguage", ARABIC_FONT, hb_font, text, script="Arab", direction="rtl", **options))
+            for feature in JOINING_FEATURES:
+                rows.append(row("ArabicLanguageOff", ARABIC_FONT, hb_font, text, script="Arab", direction="rtl", features={feature: False}, **options))
 
     hb_font = ref.load_font(os.path.join(ref.FONTS, "DejaVuSans.ttf"))
     for name, text, options in AUTO_DIRECTION_CASES:
