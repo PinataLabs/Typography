@@ -59,6 +59,9 @@ The fonts installed on the machine. The library finds them the first time you us
 | `CreateFont(string name, CultureInfo culture, float size)` | As above, matching names in `culture`. |
 | `CreateFont(string name, CultureInfo culture, float size, FontStyle style)` | As above, matching names in `culture`. |
 
+`SystemFonts.CreateFont` does not take variations. For a variable font, get the family with `Get` or
+`TryGet`, then call `FontFamily.CreateFont` with the variations.
+
 ## FontFamily
 
 `public struct FontFamily : IEquatable<FontFamily>`
@@ -70,9 +73,9 @@ valid family; its methods throw.
 | --- | --- |
 | `Name` | The family name. |
 | `Culture` | The culture that the name is in. |
-| `Faces` | The faces in the family, in the order in which they were added. |
-| `CreateFont(float size, FontStyle style = default)` | Makes a font in `style` at `size` points. The default style is regular. |
-| `MatchFace(FontStyle style)` | Gets the face that best matches `style`, as CSS Fonts Level 4 matches fonts: by width, then slope, then weight. It always returns a face. |
+| `Faces` | The faces in the family, in the order in which they were added. The list is a snapshot: a face added to the collection later is not in it. |
+| `CreateFont(float size, FontStyle style = default, params ReadOnlySpan<FontVariation> variations)` | Makes a font in `style` at `size` points. The default style is regular. `variations` set the axes of a variable font. See [Variable fonts](../fonts/variable-fonts.md). |
+| `MatchFace(FontStyle style)` | Gets the face that best matches `style`, as CSS Fonts Level 4 matches fonts: by width, then slope, then weight. It always returns a face, and of faces that match equally well, the one added first. It gives the face, not a variation instance. See [Font matching](../fonts/font-matching.md). |
 | `TryGetPaths(out IEnumerable<string> paths)` | Gets the files of the fonts in the family. Returns `false` if they were loaded from streams. |
 
 ## FontDescription

@@ -3,7 +3,7 @@ title: TextShaper
 description: API reference for TextShaper, ShapingOptions, ShapingFeature and ShapedGlyph.
 ---
 
-Namespace: `PinataLabs.Typography`. Guide: [OpenType features](../text/opentype-features.md).
+Namespace: `PinataLabs.Typography`. Guides: [Shape text](../text/shaping-text.md) and [OpenType features](../text/opentype-features.md).
 
 ## TextShaper
 
@@ -72,7 +72,7 @@ left to right, so the first glyph has the highest cluster.
 
 | Property | Description |
 | --- | --- |
-| `Script` | The `ScriptClass` of the run, or `null`. The shaper and the lookups of the font follow it, as they follow the script of a HarfBuzz buffer. When it is `null`, each character has the script that Unicode gives it, and the characters of no script of their own join the script next to them. `Common`, `Inherited` and `Unknown` count as `null`. |
+| `Script` | The `ScriptClass` of the run, or `null`. The shaper and the lookups of the font follow it, as they follow the script of a HarfBuzz buffer. When it is `null`, each character has the script that Unicode gives it, and the characters of no script of their own join the script next to them. A lookup of the font matches only the glyphs of one script run, as in HarfBuzz, so a ligature or a `kern` pair across a change of script, such as between Han and Hiragana, does not apply. Set `Script` to shape the text as one run. `Common`, `Inherited` and `Unknown` count as `null`. |
 | `Language` | The `Tag` of the OpenType language system, such as `Tag.Parse("TRK ")`, or `null`. The lookups of that language system apply, and those of the default language system when the font has none with the tag. |
 | `Direction` | The `TextDirection` of every character of the run. The run is not split by the Unicode Bidirectional Algorithm, so shape the runs of a text of both directions one at a time. `Auto`, the default, takes the direction of the first character that has one, anywhere in the run: a paragraph separator, such as a line feed, does not end the search, because the run is one paragraph. A run with none, such as digits and brackets, takes the direction of `Script`, as HarfBuzz does for a buffer, and runs from left to right without a script. A value that `TextDirection` does not name makes `Shape` throw `ArgumentOutOfRangeException`. |
 | `Features` | A list of `ShapingFeature`, to turn features on or off. A feature that the list does not name is as the shaper of the script plans it. It is empty by default, and setting it to `null` throws `ArgumentNullException`. |

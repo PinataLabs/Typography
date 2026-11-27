@@ -56,6 +56,10 @@ font's vertical kerning feature (`vkrn`) is not applied by default either. Add i
 [`FeatureTags`](./opentype-features.md#turn-on-more-features) if you want it. The older `kern`
 table of a font kerns rotated glyphs only, as HarfBuzz does, even with `vkrn` turned on.
 
+In `VerticalMixedLeftRight` and `VerticalMixedRightLeft`, the library applies the font's `vrtr`
+feature to the glyphs that it turns. The feature replaces a glyph with a form that the font designed
+to be turned, and the library still turns it. A font without `vrtr` turns its horizontal glyphs.
+
 The font must have vertical metrics (`vhea` and `vmtx` tables) for good results. Fonts made for
 Chinese, Japanese and Korean have them. For other fonts the library makes vertical metrics from the
 horizontal ones.

@@ -17,8 +17,13 @@ image library or a GPU renderer.
   TrueType (`.ttf`), OpenType with CFF1 and CFF2 outlines (`.otf`), TrueType collections (`.ttc`),
   and [WOFF](https://www.w3.org/Submission/WOFF/) and [WOFF2](https://www.w3.org/TR/WOFF2) web
   fonts. See [Loading fonts](./fonts/loading-fonts.md) and [System fonts](./fonts/system-fonts.md).
+- **Choose a face and an instance**: the library picks the nearest face for a weight, width and
+  slope by the CSS font matching rules, and draws variable fonts at any point on their axes. See
+  [Font matching](./fonts/font-matching.md) and [Variable fonts](./fonts/variable-fonts.md).
 - **Read font information** such as the family name, the style, the version and the copyright,
-  without loading the whole font. See [Font descriptions](./fonts/font-descriptions.md).
+  without loading the whole font. Read the metrics a PDF font descriptor needs, and the font's
+  embedding permissions. See [Font descriptions](./fonts/font-descriptions.md) and
+  [Font metrics](./fonts/font-metrics.md).
 - **Measure text**: its size, its advance, its ink bounds, the number of lines, and the position of
   each character. See [Measuring text](./text/measuring-text.md).
 - **Lay out paragraphs**: wrap lines at a width, align and justify them, set line spacing and tab
@@ -35,8 +40,17 @@ image library or a GPU renderer.
   the font's [GSUB](https://learn.microsoft.com/typography/opentype/spec/gsub) and
   [GPOS](https://learn.microsoft.com/typography/opentype/spec/gpos) tables. See
   [OpenType features](./text/opentype-features.md).
+- **Shape text** into glyph IDs, clusters, advances and offsets, for a PDF writer or your own
+  layout. See [Shaping text](./text/shaping-text.md).
 - **Get glyph outlines** as lines and Bézier curves, including the layers of color emoji. See
   [Glyph renderers](./rendering/glyph-renderers.md) and [Color fonts](./rendering/color-fonts.md).
+- **Embed fonts in documents**: read TrueType, CFF and Type 1 font programs by glyph ID, subset them
+  with their glyph IDs kept, and map glyph names and PDF standard encodings to Unicode. See
+  [Font programs](./fonts/font-programs.md), [Subsetting](./fonts/subsetting.md) and
+  [Glyph names and encodings](./unicode/glyph-names-and-encodings.md).
+- **Use the Unicode algorithms on their own**: line breaking, bidi paragraphs and script
+  itemization. See [Line breaking](./unicode/line-breaking.md) and
+  [Bidi and scripts](./unicode/bidi-and-scripts.md).
 
 ## How the parts fit together
 

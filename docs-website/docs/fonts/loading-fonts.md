@@ -11,12 +11,13 @@ a `FontFamily` from it by name.
 | Format | Extensions | Notes |
 | --- | --- | --- |
 | TrueType | `.ttf` | TrueType (`glyf`) outlines. |
-| OpenType | `.otf` | CFF1 and CFF2 outlines. CFF2 fonts render at their default instance. |
+| OpenType | `.otf` | CFF1 and CFF2 outlines. |
 | TrueType collection | `.ttc` | More than one font in one file. Use `AddCollection`. |
 | WOFF | `.woff` | Web font, compressed with zlib. |
 | WOFF2 | `.woff2` | Web font, compressed with Brotli. |
 
-The library reads the format from the file data, not from the extension.
+The library reads the format from the file data, not from the extension. A TrueType or CFF2
+variable font in any of these formats draws at any instance. See [Variable fonts](./variable-fonts.md).
 
 ## Add a font file
 
@@ -138,11 +139,11 @@ Font italic = regular.WithStyle(FontStyle.Italic);    // Same family and size, n
 `family.Faces` lists the faces that the family has, and the `Description.StyleRange` of each face says
 which weights, widths and slopes it covers. The font uses the face that best matches the style, which
 `family.MatchFace(style)` also gives. If the family does not have the style, the face is the nearest one
-in the order that CSS Fonts Level 4 gives for matching fonts: width first, then slope, then weight. A
-weight from 400 to 500 tries the weights up to 500, then the lighter ones, then the heavier ones. A
-lighter weight tries the lighter ones first, and a heavier weight the heavier ones first.
-The library does not make a synthetic bold or italic. Compare `font.Style` with
-`font.FontMetrics.Description.StyleRange` to see whether the face has the style you asked for.
+in the order that CSS Fonts Level 4 gives. The library does not make a synthetic bold or italic. See
+[Font matching](./font-matching.md) for the rules.
+
+A variable font takes more parameters after the style: the values of its axes. See
+[Variable fonts](./variable-fonts.md).
 
 ## Add the system fonts to your collection
 
