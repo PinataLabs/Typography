@@ -153,6 +153,7 @@ public class FontSubsetterCffTests
         ushort[] requested = [.. new[] { '한', '글', 'A', '가', '힣' }.Select(c => program.TryGetGlyphIdFromCmap(3, 10, c, out ushort id) || program.TryGetGlyphIdFromCmap(3, 1, c, out id) ? id : (ushort)1)];
 
         byte[] subset = FontSubsetter.Subset(font, requested);
+        SubsetExport.Write("NotoSansKR-Regular.otf", requested, subset);
 
         // The font keeps one offset in its CharStrings INDEX for each of its 24,869 glyphs, and its cmap, and that is most of what is left.
         await Assert.That(subset.Length).IsLessThan(font.Length / 10);

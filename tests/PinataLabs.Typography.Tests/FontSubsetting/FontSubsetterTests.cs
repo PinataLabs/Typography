@@ -96,6 +96,7 @@ public class FontSubsetterTests
         foreach (ushort[] requested in choices.Where(c => c.All(id => id < glyphCount)))
         {
             byte[] subset = FontSubsetter.Subset(font, requested);
+            SubsetExport.Write(fontFile, requested, subset);
             foreach (string difference in SubsetComparison.Compare(font, subset, requested, out _))
             {
                 failures.Add($"{requested.Length} glyphs from {requested.FirstOrDefault()}: {difference}");

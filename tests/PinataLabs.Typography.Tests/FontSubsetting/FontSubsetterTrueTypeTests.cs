@@ -148,6 +148,7 @@ public class FontSubsetterTrueTypeTests
         ushort[] requested = [.. new[] { 'A', '中', '文', '漢' }.Select(c => program.TryGetGlyphIdFromCmap(3, 1, c, out ushort id) ? id : (ushort)1)];
 
         byte[] subset = FontSubsetter.Subset(font, requested);
+        SubsetExport.Write("kaiu.ttf", requested, subset);
 
         List<string> differences = SubsetComparison.Compare(font, subset, requested, out int dropped);
         await Assert.That(differences).IsEmpty();
