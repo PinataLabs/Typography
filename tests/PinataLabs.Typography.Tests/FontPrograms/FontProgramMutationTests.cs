@@ -24,6 +24,7 @@ public class FontProgramMutationTests
     [Test]
     [Arguments(FontProgramOracle.Program)]
     [Arguments(FontProgramOracle.Type1Plain)]
+    [Arguments(FontSubsetterOracle.Target)]
     public async Task EveryCorpusInputMeetsTheContract(string target)
     {
         List<string> failures = [];
@@ -40,6 +41,7 @@ public class FontProgramMutationTests
     [Test]
     [Arguments(FontProgramOracle.Program, 3000, 74)]
     [Arguments(FontProgramOracle.Type1Plain, 1500, 75)]
+    [Arguments(FontSubsetterOracle.Target, 1500, 155)]
     public async Task MutatedSeedsMeetTheContract(string target, int mutations, int seed)
     {
         byte[][] seeds = [.. CorpusFiles(target).Where(file => Path.GetFileName(file).StartsWith("seed-", StringComparison.Ordinal)).Select(File.ReadAllBytes)];

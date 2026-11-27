@@ -51,14 +51,14 @@ internal static class FontProgramOracle
 
     private const long FixedRetainedBytes = 32 * 1024;
 
-    public static readonly string[] Targets = [Program, Type1Plain, ItemVariationStoreOracle.Target, MetricsVariationOracle.Target, TupleVariationStoreOracle.Target];
+    public static readonly string[] Targets = [Program, Type1Plain, ItemVariationStoreOracle.Target, MetricsVariationOracle.Target, TupleVariationStoreOracle.Target, FontSubsetterOracle.Target];
 
     public static bool IsKnown(string target) => Array.IndexOf(Targets, target) >= 0;
 
     /// <summary>
     /// Runs the input.
     /// </summary>
-    /// <param name="target">The target, <see cref="Program"/>, <see cref="Type1Plain"/>, <see cref="ItemVariationStoreOracle.Target"/>, <see cref="MetricsVariationOracle.Target"/> or <see cref="TupleVariationStoreOracle.Target"/>.</param>
+    /// <param name="target">The target, <see cref="Program"/>, <see cref="Type1Plain"/>, <see cref="ItemVariationStoreOracle.Target"/>, <see cref="MetricsVariationOracle.Target"/>, <see cref="TupleVariationStoreOracle.Target"/> or <see cref="FontSubsetterOracle.Target"/>.</param>
     /// <param name="data">The input.</param>
     /// <returns>What happened, for replay: a rejection or a summary of the loaded program.</returns>
     /// <exception cref="FuzzFindingException">The input broke the contract.</exception>
@@ -70,6 +70,7 @@ internal static class FontProgramOracle
             ItemVariationStoreOracle.Target => ItemVariationStoreOracle.Run(data),
             MetricsVariationOracle.Target => MetricsVariationOracle.Run(data),
             TupleVariationStoreOracle.Target => TupleVariationStoreOracle.Run(data),
+            FontSubsetterOracle.Target => FontSubsetterOracle.Run(data),
             _ => throw new ArgumentException($"Unknown fuzz target '{target}'.", nameof(target)),
         };
 

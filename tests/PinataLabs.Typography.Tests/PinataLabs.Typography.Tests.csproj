@@ -18,6 +18,7 @@
   <!-- The oracle and the mutator of the fuzz harness, and its corpus, for the deterministic mutation tests. -->
   <ItemGroup>
     <Compile Include="..\PinataLabs.Typography.Fuzz\FontProgramOracle.cs" Link="FontPrograms\Fuzz\FontProgramOracle.cs" />
+    <Compile Include="..\PinataLabs.Typography.Fuzz\FontSubsetterOracle.cs" Link="FontPrograms\Fuzz\FontSubsetterOracle.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\ItemVariationStoreOracle.cs" Link="FontPrograms\Fuzz\ItemVariationStoreOracle.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\MetricsVariationOracle.cs" Link="FontPrograms\Fuzz\MetricsVariationOracle.cs" />
     <Compile Include="..\PinataLabs.Typography.Fuzz\TupleVariationStoreOracle.cs" Link="FontPrograms\Fuzz\TupleVariationStoreOracle.cs" />
