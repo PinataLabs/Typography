@@ -159,12 +159,14 @@ public class NormalizationTests
         await Assert.That(glyphs).IsEquivalentTo([(0xC5, CaseFont)], CollectionOrdering.Matching);
     }
 
+    // The primary font sorts the marks as HarfBuzz does, the acute (class 230) after the dot below (class 220), and the
+    // fallback font draws the acute where the primary font put it.
     [Test]
-    public async Task MarkThatThePrimaryFontLacksKeepsItsPlaceForTheFallbackFont()
+    public async Task MarkThatThePrimaryFontLacksIsSortedWithTheOtherMarks()
     {
         (int CodePoint, string Font)[] glyphs = ShapeWithFallback("q̣́");
 
-        await Assert.That(glyphs).IsEquivalentTo([(0x71, BaseFont), (0x301, CaseFont), (0x323, BaseFont)], CollectionOrdering.Matching);
+        await Assert.That(glyphs).IsEquivalentTo([(0x71, BaseFont), (0x323, BaseFont), (0x301, CaseFont)], CollectionOrdering.Matching);
     }
 
     // The Hangul shaper composes a syllable before GSUB, so a fallback font must not compose a vowel into a lead
