@@ -531,6 +531,73 @@ Unicode conformance suites to that version.
   and after a ZWJ the marks went on the ZWJ, not on the syllable. A default-ignorable glyph that a fallback font draws
   stops no placement either: with `MarksWithoutGlyphClassesFallback.ttf`, which lacks U+034F, and the fallback
   `MarksWithoutGlyphClasses.ttf`, a, grave, U+034F, acute left both accents unplaced. (#184)
+- Fallback mark placement places a cluster whose base and marks come from different fonts. Each font places its own
+  marks around the base and on the marks before them, whatever font draws those, and converts between the units of
+  the two fonts. Such a cluster kept its marks unplaced: with `MarksWithoutGlyphClassesBase.ttf`, which has f and the
+  grave, and the fallback `MarksWithoutGlyphClassesFallback.ttf`, f, grave, acute drew both accents at the start of f
+  on the baseline, where each font alone places them over f, the acute on the grave. (#191)
+- The dotted circle that the Indic, Khmer, Myanmar and Universal shapers insert in a broken cluster has no glyph
+  class, as in HarfBuzz 15.0.0, which inserts it after it gives each glyph its class. It took the class of U+25CC, a
+  base. So a lookup that ignores base glyphs skipped it, and in a font without GDEF its ligature with a sign was the
+  ligature of a base and a mark, which takes no ligature class, where HarfBuzz makes a ligature. A ligature gives the
+  circle a class, and in a font with glyph classes so does any substitution. Its Unicode properties stay those of
+  U+25CC: HarfBuzz gives it none, the general category Cc, which no check after the insertion tells from So. (#191)
+- A mark that a ligature skips, and that has no component, goes on the last component of the glyph before it, as in
+  HarfBuzz 15.0.0. It went on the first, which differs when that glyph is itself a ligature: in
+  `LigaturePropertiesNested.ttf`, where a and b ligate and then a_b and c, a, b, acute, c put the acute on the
+  component of a, where HarfBuzz puts it on the component of b. (#191)
+- A fallback font that keeps whole a Khmer vowel sign, such as U+17BE, that the font of the text split draws the whole
+  sign once, also when the font drew the first part. The second part of the split sign has the code point of the
+  sign, so the glyph of the whole sign took the place of that part alone, and the first part was drawn twice. With
+  `FontFallbackPartsPre.ttf`, which has U+17C1 and lacks U+17BE, and the fallback `FontFallbackPartsWhole.ttf`, ka,
+  U+17BE drew U+17C1, ka and the whole sign. (#191)
+- A glyph gives a ligature as many components as in HarfBuzz 15.0.0: those of a ligature, none for a glyph after the
+  first that a multiple substitution made, and one for any other glyph, whatever characters it holds. The library
+  counted the characters. In `LigaturePropertiesComponents.ttf`, where e and the acute ligate into eacute, the ligature
+  of a base and a mark, and eacute and f then ligate, e, acute, grave, f put the grave on the second component of
+  eacute_f, where HarfBuzz puts it on the first. Fallback mark placement splits a ligature into that many parts, so in
+  `LigaturePropertiesComponentsFallback.ttf` it split eacute_f into three, and the ligature of the two glyphs that a
+  multiple substitution made of a into two, where HarfBuzz splits them into two and one. A ligature keeps the number
+  in four bits, as in HarfBuzz, so a ligature of sixteen components has none, and fallback mark placement does not
+  split it: in `LigaturePropertiesComponentsFallback.ttf`, which ligates sixteen f into f16, sixteen f, grave put the
+  grave over the last sixteenth of f16, at x 580, where HarfBuzz puts it over the middle, at x 300. (#191)
+- Mark-to-ligature takes the number of components of a ligature from the font, as HarfBuzz 15.0.0 does, not from the
+  number of characters that the ligature holds. A mark of another ligature goes on the last component. In
+  `LigaturePropertiesComponents.ttf`, which gives a12, the ligature of the two glyphs that a multiple substitution made
+  of a, three components, a, grave put the grave on the second, where HarfBuzz puts it on the third. A glyph that the
+  font calls a ligature and that no substitution made, as in `GposLookupType5Format1.ttf`, put a mark on its first
+  component. (#191)
+- A ligature moves the marks after its last component to itself up to a glyph of no component, as HarfBuzz 15.0.0
+  does. It took such a glyph for a mark on the first component and moved it too. In
+  `LigaturePropertiesComponents.ttf`, which substitutes the ligature x_y by p1 and the mark p2 and then ligates z and
+  p1, z, x, y put p2 on the second component of z_p1, where HarfBuzz puts it on the last. (#191, #196)
+- A mark of a fallback font goes on the component of a ligature that the font of the text gave its place. With
+  `MarksWithoutGlyphClassesLigature.ttf`, which ligates a and b, skipping marks, and lacks the acute, and the fallback
+  `MarksWithoutGlyphClassesFallback.ttf`, a, acute, b put the acute on the last component of a_b, where the font alone
+  puts the `.notdef` of the acute on the first. Each font numbers its ligatures from one, so the ligatures of a fallback
+  font now take ids that those of the font do not have, and a mark of one font cannot take a ligature of the other
+  for its own. (#191)
+- A fallback font with GPOS attaches a mark where it alone does. A glyph that a fallback font drew in horizontal text
+  kept its vertical advance in its bounds, which GPOS took for an advance across the line between a base and its mark,
+  so the mark went down by an em. With `MarksWithoutGlyphClassesGposAcute.ttf` and the fallback
+  `MarksWithoutGlyphClassesGpos.ttf`, which attaches the grave to f at y 700, f, grave put the grave at y -300. (#191)
+- The marks of a cluster whose base and marks come from different fonts are placed once every font has positioned its
+  own glyphs, and each stacks on the marks before it where they are. Each font placed its own marks and stacked them on
+  where it would have placed the marks of the other font. So a mark of a font without GPOS stacked under a mark that
+  GPOS attached higher: with `MarksWithoutGlyphClassesGpos.ttf`, which attaches the grave to f at y 700, and the
+  fallback `MarksWithoutGlyphClassesFallback.ttf`, f, grave, acute put the acute at y 124, where it now goes over the
+  grave, at y 762. A font with GPOS placed no mark on a base of another font, as its GPOS cannot attach one there, so
+  the mark stayed at the pen: with `MarksWithoutGlyphClassesBase.ttf`, which has f and no GPOS, and the fallback
+  `MarksWithoutGlyphClassesGposAcute.ttf`, which has the acute and GPOS, f, acute drew the acute after f on the
+  baseline, where it now goes over f, as the font alone places the `.notdef` of the acute. Such a mark also goes there
+  when the GPOS of its font attached it to a glyph of the other font whose glyph ID is that of a base of its own. A
+  mark that the GPOS of its font attached to a glyph of that font keeps its place, and moves with that glyph: with
+  `MarksWithoutGlyphClassesBase.ttf` and the fallback `MarksWithoutGlyphClassesGposAcute.ttf`, which attaches an acute
+  to an acute 50 units right and 900 up, f, acute, acute puts the first acute over f, at x 300 and y 62, and the second
+  at x 350 and y 962. A glyph that the GDEF table of its font calls a base keeps its advance and its place, and the
+  marks after it go back over the base, as HarfBuzz moves them back past a glyph that it does not place: with
+  `MarksWithoutGlyphClassesBase.ttf` and the fallback `MarksWithoutGlyphClassesGdefBaseAcute.ttf`, f, acute, grave puts
+  the grave over f, at x 300, not over the acute. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

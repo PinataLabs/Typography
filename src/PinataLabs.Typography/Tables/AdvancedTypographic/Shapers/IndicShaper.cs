@@ -256,7 +256,7 @@ internal sealed class IndicShaper : DefaultShaper
                 CodePoint dottedCircle = new(DottedCircle);
 
                 // After a syllable of only repha, the glyph at the place of the circle is of the next syllable.
-                substitutionCollection.InsertGlyph(i, i < end ? i : end - 1, id, dottedCircle);
+                substitutionCollection.InsertBrokenClusterCircle(i, i < end ? i : end - 1, id);
                 substitutionCollection[i].IndicShapingEngineInfo = new(
                     (Categories)(1 << IndicShapingCategory(dottedCircle)),
                     (Positions)IndicShapingPosition(dottedCircle),

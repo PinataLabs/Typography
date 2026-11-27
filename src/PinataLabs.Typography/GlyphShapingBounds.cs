@@ -18,6 +18,8 @@ internal class GlyphShapingBounds
     private int y;
     private int width;
     private int height;
+    private int takenX;
+    private int takenY;
 
     public GlyphShapingBounds(int x, int y, int width, int height)
     {
@@ -79,4 +81,17 @@ internal class GlyphShapingBounds
 
     private string DebuggerDisplay
         => FormattableString.Invariant($"{this.X} : {this.Y} : {this.Width} : {this.Height} : {this.IsDirtyXY} : {this.IsDirtyWH}");
+
+    /// <summary>
+    /// Gets how far the offset moved since the glyph last took it. A pass may set the offset outright after another pass
+    /// gave the glyph one, so the glyph takes only the difference.
+    /// </summary>
+    /// <returns>The change along and across the line.</returns>
+    public (int X, int Y) TakeOffsetChange()
+    {
+        (int X, int Y) change = (this.x - this.takenX, this.y - this.takenY);
+        this.takenX = this.x;
+        this.takenY = this.y;
+        return change;
+    }
 }

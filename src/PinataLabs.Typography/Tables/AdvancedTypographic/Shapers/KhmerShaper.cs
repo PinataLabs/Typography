@@ -158,7 +158,7 @@ internal sealed class KhmerShaper : DefaultShaper
         }
 
         IndicShapingEngineInfo info = first.IndicShapingEngineInfo!;
-        collection.InsertGlyph(start, start, id, new(DottedCircle));
+        collection.InsertBrokenClusterCircle(start, start, id);
         collection[start].IndicShapingEngineInfo = new(Categories.Dotted_Circle, Positions.End, info.SyllableType, info.Syllable);
         return true;
     }

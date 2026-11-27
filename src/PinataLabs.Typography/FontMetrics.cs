@@ -291,6 +291,12 @@ public abstract class FontMetrics
     internal abstract GSubTable GetGSubTable();
 
     /// <summary>
+    /// Gets the GPOS table that the font is positioned with, if it has one.
+    /// </summary>
+    /// <returns>The GPOS table, or <see langword="null"/>.</returns>
+    internal abstract GPosTable? GetGPosTable();
+
+    /// <summary>
     /// Gets the delta that the GDEF Item Variation Store gives to the <c>VariationIndex</c> device table of a GPOS value
     /// record or anchor, for the coordinates of this font. The face of a variable font has no delta, because its
     /// coordinates are the default ones.

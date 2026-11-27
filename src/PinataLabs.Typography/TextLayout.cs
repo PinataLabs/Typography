@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -224,12 +225,21 @@ internal static class TextLayout
             }
         }
 
+        // The glyphs come from more than one font only when text runs of two fonts or a fallback font drew them.
+        bool hasManyFonts = positioned.Count > 1 || !complete;
         foreach (Font font in fallbackFonts)
         {
             if (positioned.Add(font.FontMetrics))
             {
                 font.FontMetrics.UpdatePositions(positionings);
             }
+        }
+
+        // A cluster whose base and marks come from two fonts takes the places of its marks once both fonts have
+        // positioned their own glyphs.
+        if (hasManyFonts)
+        {
+            FallbackMarkPositioner.PlaceMarksAcrossFonts(positionings);
         }
 
         return BreakLines(text, options, bidiLevels, positionings, layoutMode);

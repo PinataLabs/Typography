@@ -199,10 +199,13 @@ public class GPosTableTests
         var renderer = new ColorGlyphRenderer();
         string testStr = "\u0012\u0013"; // "\u0012\u0013" characters should overlap.
         int[] expectedGlyphIndices = { 20, 21 };
+
+        // The mark has no ligature id of the ligature, so it goes on the last of its two components, at the anchor
+        // (101, 151), as in HarfBuzz 15.0.0, which gives it the offset (-99, -79).
         FontRectangle[] expectedFontRectangles =
         {
             new(475, 1085.9999F, 825, 719),
-            new(375, 1164.9999F, 825, 709),
+            new(376, 1163.9999F, 825, 709),
         };
 
         // act

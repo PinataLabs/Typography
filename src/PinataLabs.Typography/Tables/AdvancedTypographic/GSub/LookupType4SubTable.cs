@@ -203,7 +203,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             int ligatureId = isLigature ? collection.LigatureId++ : isMarkLigature ? data.LigatureId : 0;
             int firstComponent = data.LigatureComponent;
             int lastLigatureId = data.LigatureId;
-            int lastComponentCount = data.CodePointCount;
+            int lastComponentCount = AdvancedTypographicUtils.GetLigatureComponentCount(fontMetrics, data);
             int currentComponentCount = lastComponentCount;
             int idx = index + 1;
 
@@ -220,8 +220,9 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                 {
                     while (idx < matchIndex)
                     {
+                        // As in HarfBuzz, a mark of no component goes on the last component of the glyph before it.
                         GlyphShapingData current = collection[idx];
-                        int currentLC = current.LigatureComponent == -1 ? 1 : current.LigatureComponent;
+                        int currentLC = current.LigatureComponent <= 0 ? lastComponentCount : current.LigatureComponent;
                         int ligatureComponent = currentComponentCount - lastComponentCount + Math.Min(currentLC, lastComponentCount);
                         current.LigatureId = ligatureId;
                         current.LigatureComponent = ligatureComponent;
@@ -230,31 +231,31 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                     }
                 }
 
+                // As in HarfBuzz, a glyph after the first that a multiple substitution made gives no component of its own.
                 GlyphShapingData last = collection[idx];
                 lastLigatureId = last.LigatureId;
-                lastComponentCount = last.CodePointCount;
+                lastComponentCount = last.IsMultiplied && last.LigatureComponent > 0
+                    ? 0
+                    : AdvancedTypographicUtils.GetLigatureComponentCount(fontMetrics, last);
                 currentComponentCount += lastComponentCount;
                 idx++; // Skip base glyph
             }
 
-            // Adjust ligature components for any marks following
+            // Adjust ligature components for any marks following. As in HarfBuzz, they end at a glyph of no component,
+            // such as a glyph of the last ligature that a multiple substitution made.
             if (lastLigatureId > 0 && !isMarkLigature)
             {
                 // Only check glyphs managed by current shaper.
                 for (int j = idx; j < index + count; j++)
                 {
                     GlyphShapingData current = collection[j];
-                    if (current.LigatureId == lastLigatureId)
-                    {
-                        int currentLC = current.LigatureComponent == -1 ? 1 : current.LigatureComponent;
-                        int ligatureComponent = currentComponentCount - lastComponentCount + Math.Min(currentLC, lastComponentCount);
-                        current.LigatureId = ligatureId;
-                        current.LigatureComponent = ligatureComponent;
-                    }
-                    else
+                    if (current.LigatureId != lastLigatureId || current.LigatureComponent <= 0)
                     {
                         break;
                     }
+
+                    current.LigatureComponent = currentComponentCount - lastComponentCount + Math.Min(current.LigatureComponent, lastComponentCount);
+                    current.LigatureId = ligatureId;
                 }
             }
 
@@ -267,6 +268,10 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             else if (isLigature)
             {
                 GlyphShapingData ligature = collection[index];
+
+                // HarfBuzz keeps the number in four bits (_hb_glyph_info_set_lig_props_for_ligature), so a ligature of
+                // sixteen components has none.
+                ligature.LigatureComponentCount = currentComponentCount & 0x0F;
                 ligature.SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
                 ligature.IsOtherLetter |= CodePoint.GetGeneralCategory(ligature.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark;
             }

@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Numerics;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -66,7 +67,7 @@ internal static class FallbackMarkPositioner
 
             if (places)
             {
-                PlaceMarks(fontMetrics, collection, start, end);
+                PlaceMarks(collection, script, start, end, fontMetrics);
             }
 
             if (zeroes || places)
@@ -74,6 +75,23 @@ internal static class FallbackMarkPositioner
                 UpdatePositions(fontMetrics, collection, start, end);
             }
 
+            start = end;
+        }
+    }
+
+    /// <summary>
+    /// Places the marks of each cluster whose marks come from another font than its base, once every font has positioned
+    /// its own glyphs. A font positions only its own glyphs, so it cannot stack its marks on where another font put its
+    /// own, and its GPOS cannot attach them to the base of another font.
+    /// </summary>
+    /// <param name="collection">The glyphs of the text.</param>
+    public static void PlaceMarksAcrossFonts(GlyphPositioningCollection collection)
+    {
+        int start = 0;
+        while (start < collection.Count)
+        {
+            int end = GetScriptRunEnd(collection, start, out ScriptClass script);
+            PlaceMarks(collection, script, start, end, null);
             start = end;
         }
     }
@@ -107,7 +125,11 @@ internal static class FallbackMarkPositioner
     private static bool IsUnicodeMark(GlyphShapingData data)
         => !data.IsOtherLetter && CodePoint.IsMark(data.UnicodePropertiesCodePoint);
 
-    private static void PlaceMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
+    /// <summary>
+    /// Places the marks of the clusters of a run that a font draws alone, or, without a font, of the clusters whose marks
+    /// come from another font than the base.
+    /// </summary>
+    private static void PlaceMarks(GlyphPositioningCollection collection, ScriptClass script, int start, int end, FontMetrics? drawnBy)
     {
         int index = start;
         while (index < end)
@@ -118,42 +140,52 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
-            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph. Such a glyph takes no advance and no
-            // place, so it may come from another font.
+            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph. Such a glyph takes no place, so it
+            // may come from any font.
+            FontMetrics baseFont = collection.GetMetrics(index).FontMetrics;
             int marksEnd = index + 1;
-            bool canPlace = collection.ShouldProcess(fontMetrics, index) && IsPlaceable(collection, collection[index]);
+            bool isMixed = false;
             while (marksEnd < end && (IsUnicodeMark(collection[marksEnd]) || collection[marksEnd].IsDefaultIgnorable))
             {
-                canPlace &= collection[marksEnd].IsDefaultIgnorable || collection.ShouldProcess(fontMetrics, marksEnd);
+                isMixed |= !collection[marksEnd].IsDefaultIgnorable && collection.GetMetrics(marksEnd).FontMetrics != baseFont;
                 marksEnd++;
             }
 
-            if (canPlace && marksEnd > index + 1)
+            bool isDrawn = drawnBy is null ? isMixed : !isMixed && baseFont == drawnBy;
+            if (isDrawn && IsPlaceable(collection, collection[index]))
             {
-                PlaceAroundBase(fontMetrics, collection, index, marksEnd);
+                PlaceAroundBase(collection, script, index, marksEnd);
             }
 
             index = marksEnd;
         }
     }
 
-    private static void PlaceAroundBase(FontMetrics fontMetrics, GlyphPositioningCollection collection, int baseIndex, int end)
+    /// <summary>
+    /// Places the marks that follow a base, as HarfBuzz places them in a font without GPOS. A mark whose font positions it
+    /// with GPOS, or does not place marks, stays where it is, and the marks after it stack on it there. A mark that the GPOS
+    /// of its font attached to a mark that moves goes with it. The places are in units of the font of the base until each
+    /// mark takes its own.
+    /// </summary>
+    private static void PlaceAroundBase(GlyphPositioningCollection collection, ScriptClass script, int baseIndex, int end)
     {
         GlyphShapingData baseData = collection[baseIndex];
         GlyphMetrics baseMetrics = collection.GetMetrics(baseIndex);
+        FontMetrics baseFont = baseMetrics.FontMetrics;
+        Vector2 baseUnit = collection.GetUnitSize(baseIndex);
         bool isForward = baseData.Direction == TextDirection.LeftToRight;
-        int gap = fontMetrics.UnitsPerEm / GapDivisor;
+        int gap = baseFont.UnitsPerEm / GapDivisor;
 
         // The advance of the base, not its box, aligns the mark across the line. So a base without ink also works.
         // It is the advance that the font gives the base. Kerning moves the base and leaves its marks in place.
         Box baseBox = Box.Of(baseMetrics);
         baseBox.Top += baseData.Bounds.Y;
         baseBox.Left = 0;
-        baseBox.Width = GetFontAdvance(fontMetrics, collection, baseData);
+        baseBox.Width = GetFontAdvance(baseFont, collection, baseData);
 
         // The pen is after the base in text that runs forward, and still before it in text that runs backward.
         int penOffset = isForward ? -GetAdvance(collection, baseIndex) : 0;
-        int components = GetComponentCount(fontMetrics, baseData);
+        int components = AdvancedTypographicUtils.GetLigatureComponentCount(baseFont, baseData);
         int lastComponent = -1;
         Box componentBox = baseBox;
         Box stack = baseBox;
@@ -161,6 +193,7 @@ internal static class FallbackMarkPositioner
         for (int i = baseIndex + 1; i < end; i++)
         {
             GlyphShapingData data = collection[i];
+            Vector2 scale = collection.GetUnitSize(i) / baseUnit;
             uint placement = UnicodeData.GetCombiningClassData((uint)data.UnicodePropertiesCodePoint.Value);
             MarkAlignment alignment = (MarkAlignment)((placement >> CanonicalMappingData.MarkAlignmentShift) & CanonicalMappingData.MarkPlacementMask);
             MarkSide side = (MarkSide)((placement >> CanonicalMappingData.MarkSideShift) & CanonicalMappingData.MarkPlacementMask);
@@ -169,15 +202,16 @@ internal static class FallbackMarkPositioner
                 // HarfBuzz has taken the advance of a default-ignorable glyph away by now, and the layout does so later.
                 if (!data.IsDefaultIgnorable)
                 {
-                    penOffset += isForward ? -GetAdvance(collection, i) : GetAdvance(collection, i);
+                    penOffset += GetPenStep(collection, i, scale, isForward);
                 }
 
                 continue;
             }
 
-            // A mark of a ligature goes on its own component, an equal part of the ligature.
+            // A mark of a ligature goes on its own component, an equal part of the ligature. As in HarfBuzz, a glyph of one
+            // component or none is not split.
             int component = GetComponent(baseData, data, components);
-            if (component != lastComponent)
+            if (components > 1 && component != lastComponent)
             {
                 lastComponent = component;
                 componentBox = baseBox;
@@ -193,19 +227,95 @@ internal static class FallbackMarkPositioner
                 stack = componentBox;
             }
 
-            Box mark = Box.Of(collection.GetMetrics(i));
-            data.Bounds.X = penOffset + Align(stack, mark, alignment, isForward);
-            data.Bounds.Y = Stack(ref stack, mark, side, gap);
+            Box mark = Box.Of(collection.GetMetrics(i)).Scale(scale);
+            FontMetrics markFont = collection.GetMetrics(i).FontMetrics;
+            if (!PlacesAroundBase(collection, script, baseIndex, i))
+            {
+                // The mark keeps any advance that its font left it, which moves the pen as for a glyph that is not placed.
+                mark.Top += Scale(data.Bounds.Y, scale.Y);
+                Seat(ref stack, mark, side);
+                penOffset += GetPenStep(collection, i, scale, isForward);
+                continue;
+            }
+
+            int x = Scale(penOffset + Align(stack, mark, alignment, isForward), 1 / scale.X);
+            int y = Scale(Stack(ref stack, mark, side, gap), 1 / scale.Y);
+            int dx = x - data.Bounds.X;
+            int dy = y - data.Bounds.Y;
+            data.Bounds.X = x;
+            data.Bounds.Y = y;
             data.Bounds.Width = 0;
             data.Bounds.Height = 0;
+            collection.UpdatePosition(markFont, i);
+            MoveAttachedMarks(collection, i, end, dx, dy);
         }
     }
 
-    // Only a ligature of components has parts for marks. A base that GSUB composed with marks is still one base.
-    private static int GetComponentCount(FontMetrics fontMetrics, GlyphShapingData baseData)
-        => baseData.LigatureId > 0 && AdvancedTypographicUtils.GetGlyphShapingClass(fontMetrics, baseData.GlyphId, baseData).IsLigature
-            ? Math.Max(baseData.CodePointCount, 1)
-            : 1;
+    /// <summary>
+    /// Gets a value indicating whether a mark goes around its base as in a font without GPOS. A font places its marks so,
+    /// unless its shaper does not or its GPOS positions them. Its GPOS can attach a mark only to a glyph of the font, so
+    /// a mark that it calls one and that has no glyph of its font before it in the cluster goes around the base too. A
+    /// glyph that its GDEF calls a base keeps its advance and its place.
+    /// </summary>
+    private static bool PlacesAroundBase(GlyphPositioningCollection collection, ScriptClass script, int baseIndex, int index)
+    {
+        FontMetrics markFont = collection.GetMetrics(index).FontMetrics;
+        if (!ShaperFactory.HasFallbackPositioning(script, markFont.GetGSubTable().GetScriptTag(script)))
+        {
+            return false;
+        }
+
+        if (markFont.GetGPosTable()?.PositionsScript(script) != true)
+        {
+            return true;
+        }
+
+        if (!AdvancedTypographicUtils.IsMarkGlyph(markFont, collection[index]))
+        {
+            return false;
+        }
+
+        for (int i = baseIndex; i < index; i++)
+        {
+            if (!collection[i].IsDefaultIgnorable && collection.GetMetrics(i).FontMetrics == markFont)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Moves the marks that the GPOS of their font attached to a mark that moved, directly or through another mark, with it.
+    /// </summary>
+    private static void MoveAttachedMarks(GlyphPositioningCollection collection, int parent, int end, int dx, int dy)
+    {
+        FontMetrics font = collection.GetMetrics(parent).FontMetrics;
+        for (int i = parent + 1; i < end; i++)
+        {
+            GlyphShapingData data = collection[i];
+            if (data.MarkAttachment == parent && collection.GetMetrics(i).FontMetrics == font)
+            {
+                data.Bounds.X += dx;
+                data.Bounds.Y += dy;
+                collection.UpdatePosition(font, i);
+                MoveAttachedMarks(collection, i, end, dx, dy);
+            }
+        }
+    }
+
+    // Gets how far the pen offset of the marks after a glyph that keeps its advance moves, in units of the font of the base:
+    // back in text that runs forward, as the pen moved forward past the glyph.
+    private static int GetPenStep(GlyphPositioningCollection collection, int index, Vector2 scale, bool isForward)
+    {
+        int advance = Scale(GetAdvance(collection, index), scale.X);
+        return isForward ? -advance : advance;
+    }
+
+    // Converts a length to the units of another font, given the size of a unit of its font in those units.
+    private static int Scale(int value, float scale)
+        => (int)MathF.Round(value * scale);
 
     // A mark that GSUB did not give a component of this ligature, such as a mark after the ligature, goes on its last component.
     private static int GetComponent(GlyphShapingData baseData, GlyphShapingData mark, int components)
@@ -277,6 +387,27 @@ internal static class FallbackMarkPositioner
 
             default:
                 return 0;
+        }
+    }
+
+    /// <summary>
+    /// Adds a mark that stays where it is to the stack, so that the marks after it on its side stack on it.
+    /// </summary>
+    private static void Seat(ref Box stack, Box mark, MarkSide side)
+    {
+        switch (side)
+        {
+            case MarkSide.Below:
+            case MarkSide.AttachedBelow:
+                stack.Height = Math.Min(stack.Height, mark.Top + mark.Height - stack.Top);
+                break;
+
+            case MarkSide.Above:
+            case MarkSide.AttachedAbove:
+                int top = Math.Max(stack.Top, mark.Top);
+                stack.Height -= top - stack.Top;
+                stack.Top = top;
+                break;
         }
     }
 
@@ -369,5 +500,14 @@ internal static class FallbackMarkPositioner
                 Height = (int)(bounds.Min.Y - bounds.Max.Y),
             };
         }
+
+        public readonly Box Scale(Vector2 scale)
+            => scale == Vector2.One ? this : new Box
+            {
+                Left = FallbackMarkPositioner.Scale(this.Left, scale.X),
+                Top = FallbackMarkPositioner.Scale(this.Top, scale.Y),
+                Width = FallbackMarkPositioner.Scale(this.Width, scale.X),
+                Height = FallbackMarkPositioner.Scale(this.Height, scale.Y),
+            };
     }
 }

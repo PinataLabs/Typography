@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -48,6 +49,14 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <param name="index">The zero-based index of the element.</param>
     /// <returns>The metrics, which belong to this layout alone.</returns>
     public GlyphMetrics GetMetrics(int index) => this.glyphs[index].Metrics[0];
+
+    /// <summary>
+    /// Gets the size of a unit of the font that draws the glyph at the index, in inches: the layout scales font units by the
+    /// point size over 72 times the units per em. Glyphs of two fonts in one cluster have units of different sizes.
+    /// </summary>
+    /// <param name="index">The zero-based index of the element.</param>
+    /// <returns>The size along and across the line.</returns>
+    public Vector2 GetUnitSize(int index) => new Vector2(this.glyphs[index].PointSize) / this.GetMetrics(index).ScaleFactor;
 
     /// <inheritdoc />
     public void AddShapingFeature(int index, TagEntry feature)
@@ -188,6 +197,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             hasFallBacks |= !this.TryReplaceCharacter(font.FontMetrics, character, replacements);
         }
 
+        this.TakeLigatureProperties(replacements);
+
         List<GlyphPositioningData> updated = new(this.glyphs.Count);
         for (int i = 0; i < this.glyphs.Count; i++)
         {
@@ -208,10 +219,45 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
 
+    /// <summary>
+    /// Gives the glyphs of a fallback font ligature ids that no glyph here has, as each font numbers its own ligatures. A
+    /// glyph that no ligature of the fallback font skipped takes the ligature id and the component of the glyph whose
+    /// place it takes, if a ligature of the font skipped that glyph: a mark then goes on the component of that ligature.
+    /// </summary>
+    /// <param name="replacements">The glyphs that replace each glyph, by index.</param>
+    private void TakeLigatureProperties(Dictionary<int, GlyphPositioningData[]> replacements)
+    {
+        int lastLigatureId = 0;
+        foreach (GlyphPositioningData glyph in this.glyphs)
+        {
+            lastLigatureId = Math.Max(lastLigatureId, glyph.Data.LigatureId);
+        }
+
+        foreach (KeyValuePair<int, GlyphPositioningData[]> replacement in replacements)
+        {
+            GlyphShapingData place = this.glyphs[replacement.Key].Data;
+            foreach (GlyphPositioningData glyph in replacement.Value)
+            {
+                GlyphShapingData data = glyph.Data;
+                if (data.LigatureId > 0)
+                {
+                    data.LigatureId += lastLigatureId;
+                }
+                else if (data.LigatureComponent == -1 && place.LigatureId > 0 && place.LigatureComponent > 0)
+                {
+                    data.LigatureId = place.LigatureId;
+                    data.LigatureComponent = place.LigatureComponent;
+                }
+            }
+        }
+    }
+
     // Two glyphs of a character draw the same part when a shaper inserted both or neither, as it inserts a dotted circle,
-    // and they have the same code point, as each part of a vowel sign that a shaper split has its own.
+    // split both or neither from a vowel sign, and they have the same code point, as each part of a split sign has its own.
     private static bool IsSamePart(GlyphShapingData glyph, GlyphShapingData other)
-        => glyph.IsInserted == other.IsInserted && glyph.CodePoint == other.CodePoint;
+        => glyph.IsInserted == other.IsInserted
+            && glyph.IsVowelSignPart == other.IsVowelSignPart
+            && glyph.CodePoint == other.CodePoint;
 
     /// <summary>
     /// Plans the glyphs that replace the glyphs of one character. Each missing glyph takes the glyphs of the fallback font
@@ -336,7 +382,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                 metrics.Add(gm.CloneForRendering(shape.TextRun, codePoint));
             }
 
-            SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm));
+            bool isVertical = AdvancedTypographicUtils.IsVerticalGlyph(codePoint, layoutMode, shape.HasVerticalForm);
+            SpaceFallback.SetAdvance(metrics, shape, fontMetrics, this.TextOptions, isVertical);
             int maxAdvancedWidth = 0;
             int maxAdvancedHeight = 0;
             for (int k = 0; k < metrics.Count; k++)
@@ -346,10 +393,11 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
 
             // The glyphs at an offset each take an advance only when one of them is decomposed. So a new glyph keeps that
-            // of the glyph whose place it takes, which a shaper may have put at the offset of another glyph.
+            // of the glyph whose place it takes, which a shaper may have put at the offset of another glyph. As for a glyph
+            // of the font, its bounds hold the advance along the line only, which positioning changes.
             GlyphShapingData data = new(shape, true)
             {
-                Bounds = new(0, 0, maxAdvancedWidth, maxAdvancedHeight),
+                Bounds = isVertical ? new(0, 0, 0, maxAdvancedHeight) : new(0, 0, maxAdvancedWidth, 0),
                 IsDecomposed = shape.IsDecomposed || place.Data.IsDecomposed,
             };
 
@@ -415,7 +463,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Updates the position of the glyph at the specified index.
+    /// Updates the position of the glyph at the specified index, if the font draws it. The glyph moves by the change to its
+    /// offset since the last update, so a pass can set the offset of a glyph that an earlier pass positioned.
     /// </summary>
     /// <param name="fontMetrics">The font metrics.</param>
     /// <param name="index">The zero-based index of the element.</param>
@@ -424,11 +473,13 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         GlyphShapingData data = this[index];
         bool isDirtyXY = data.Bounds.IsDirtyXY;
         bool isDirtyWH = data.Bounds.IsDirtyWH;
-        if (!isDirtyXY && !isDirtyWH)
+        if ((!isDirtyXY && !isDirtyWH) || !this.ShouldProcess(fontMetrics, index))
         {
             return;
         }
 
+        // The glyph takes the change only when a metric of it does, so an update that moves none leaves it for the next.
+        (int X, int Y)? change = null;
         ushort glyphId = data.GlyphId;
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         foreach (GlyphMetrics m in this.glyphs[index].Metrics)
@@ -437,7 +488,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             {
                 if (isDirtyXY)
                 {
-                    m.ApplyOffset(data.Bounds.X, data.Bounds.Y);
+                    change ??= data.Bounds.TakeOffsetChange();
+                    m.ApplyOffset(change.Value.X, change.Value.Y);
                 }
 
                 // As in HarfBuzz, positioning changes the advance along the line only. Across the line the glyph keeps

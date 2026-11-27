@@ -85,6 +85,56 @@ public class MarksWithoutGlyphClassesTests
         await Assert.That(actual).IsEqualTo(expected);
     }
 
+    // A cluster with a base of one font and marks of another. Where neither font has GPOS, each alone places the .notdef
+    // of the mark that it lacks where the other font places the glyph, in rows of the reference. A mark of either font
+    // goes to that place, on the base of the other font and on the marks before it, and on the component of a ligature
+    // that the font of the base gives the place of the mark. A font with GPOS cannot attach its marks to a glyph of
+    // another font, so those marks go where a font without GPOS places them, and stack on a mark that GPOS attached
+    // where GPOS put it: MarksWithoutGlyphClassesGpos.ttf attaches the grave at y 700, and an acute goes over it, at
+    // y 762. A fallback font with GPOS attaches its mark to its own base where it alone does, and a mark to its own mark:
+    // MarksWithoutGlyphClassesGposAcute.ttf puts a second acute on the first, 50 units right and 900 up, wherever the
+    // first goes. An acute that the GDEF table of MarksWithoutGlyphClassesGdefBaseAcute.ttf calls a base keeps its
+    // advance and its place, and the marks after it go back over the base, as HarfBuzz moves them back by the advance of
+    // a glyph that it does not place. P is a glyph of the font and F a glyph of the fallback font. Places are in units of
+    // the font: MarksWithoutGlyphClassesLarge.ttf has an em of 2000 units.
+    [Test]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesFallback.ttf", "f̀́", "2P@0,0 3P@300,62 4F@300,124")]
+    [Arguments("MarksWithoutGlyphClassesFallback.ttf", "MarksWithoutGlyphClassesBase.ttf", "f̀", "2F@0,0 3P@300,62")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesLarge.ttf", "f̖́", "2P@0,0 2F@300,-62 1F@300,62")]
+    [Arguments("MarksWithoutGlyphClassesLarge.ttf", "MarksWithoutGlyphClassesBase.ttf", "f̀́", "2F@0,0 3F@600,124 1P@600,248")]
+    [Arguments("MarksWithoutGlyphClassesLigature.ttf", "MarksWithoutGlyphClassesFallback.ttf", "áb", "3P@0,0 4F@150,62")]
+    [Arguments("MarksWithoutGlyphClassesGpos.ttf", "MarksWithoutGlyphClassesFallback.ttf", "f̀́", "2P@0,0 3P@300,700 4F@300,762")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "f́", "2P@0,0 2F@300,62")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "á", "1P@0,0 2F@300,62")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesBase.ttf", "f́", "2F@0,0 2P@300,62")]
+    [Arguments("MarksWithoutGlyphClassesGpos.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "f̀́", "2P@0,0 3P@300,700 2F@300,762")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesGpos.ttf", "f̀", "2F@0,0 3F@300,700")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesGpos.ttf", "f̀́", "2F@0,0 3F@300,700 2P@300,762")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGdefBaseAcute.ttf", "f́̀", "2P@0,0 2F@600,0 3P@300,62")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "f́́", "2P@0,0 2F@300,62 2F@350,962")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesBase.ttf", "f́́", "2F@0,0 2P@300,62 2P@350,962")]
+    public async Task MarksOfOneFontGoOnABaseOfAnother(string fontName, string fallbackName, string text, string expected)
+    {
+        FontCollection collection = new();
+        FontFamily family = collection.Add(TestFonts.GetPath(fontName));
+        TextOptions options = new(family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm))
+        {
+            FallbackFontFamilies = [collection.Add(TestFonts.GetPath(fallbackName))],
+        };
+
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        string actual = string.Join(' ', layout.Select(g =>
+        {
+            GlyphMetrics metrics = g.Glyph.GlyphMetrics;
+            string drawnBy = metrics.FontMetrics.Description.FontFamilyInvariantCulture == family.Name ? "P" : "F";
+            float x = g.PenLocation.X - layout[0].PenLocation.X + (metrics.Offset.X * options.Font.Size / metrics.ScaleFactor.X);
+            float y = metrics.Offset.Y * options.Font.Size / metrics.ScaleFactor.Y;
+            return $"{metrics.GlyphId}{drawnBy}@{MathF.Round(x)},{MathF.Round(y)}";
+        }));
+
+        await Assert.That(actual).IsEqualTo(expected);
+    }
+
     private sealed class Reference
     {
         public JsonElement[][] Rows { get; set; } = [];

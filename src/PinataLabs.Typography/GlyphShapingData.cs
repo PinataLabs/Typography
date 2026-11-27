@@ -36,6 +36,7 @@ internal class GlyphShapingData
         this.CodePoint = data.CodePoint;
         this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
         this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
+        this.IsUnclassified = data.IsUnclassified;
         this.IsOtherLetter = data.IsOtherLetter;
         this.CodePointCount = data.CodePointCount;
         this.HoldsInsertedGlyph = data.HoldsInsertedGlyph;
@@ -46,10 +47,12 @@ internal class GlyphShapingData
         this.LigatureId = data.LigatureId;
         this.IsLigated = data.IsLigated;
         this.LigatureComponent = data.LigatureComponent;
+        this.LigatureComponentCount = data.LigatureComponentCount;
         this.MarkAttachment = data.MarkAttachment;
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsSubstituted = data.IsSubstituted;
         this.IsDecomposed = data.IsDecomposed;
+        this.IsVowelSignPart = data.IsVowelSignPart;
         this.IsMultiplied = data.IsMultiplied;
         this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
@@ -122,6 +125,13 @@ internal class GlyphShapingData
     public GlyphClassDef? SubstitutedGlyphClass { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the glyph has no class: the dotted circle of a broken cluster. HarfBuzz
+    /// inserts it after it gives each glyph its class, and gives it none, so it is no base, ligature or mark, and no
+    /// lookup flag skips it. A ligature gives it a class, and in a font with glyph classes so does any substitution.
+    /// </summary>
+    public bool IsUnclassified { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the glyph has the general category Lo where the character whose properties
     /// it has is Mn. As in HarfBuzz, a ligature of components that are not all marks takes it in any font, and the glyphs
     /// that a substitution makes of the ligature keep it, whatever class they get.
@@ -185,6 +195,13 @@ internal class GlyphShapingData
     public int LigatureComponent { get; set; } = -1;
 
     /// <summary>
+    /// Gets or sets the number of components of the ligature that formed the glyph, as HarfBuzz counts them, which need
+    /// not be the number of characters that it holds. It counts while the glyph is a ligature: see
+    /// <see cref="Tables.AdvancedTypographic.AdvancedTypographicUtils.GetLigatureComponentCount"/>.
+    /// </summary>
+    public int LigatureComponentCount { get; set; } = 1;
+
+    /// <summary>
     /// Gets or sets the index of any mark attachment.
     /// </summary>
     public int MarkAttachment { get; set; } = -1;
@@ -225,6 +242,12 @@ internal class GlyphShapingData
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution
     /// </summary>
     public bool IsDecomposed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is a part of a vowel sign that a shaper split. A part can have the
+    /// code point of the whole sign, as the second part of Khmer U+17BE has, so the code point alone does not tell them apart.
+    /// </summary>
+    public bool IsVowelSignPart { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the glyph is one of the glyphs that a multiple substitution made of one.

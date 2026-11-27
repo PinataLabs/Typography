@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) PinataLabs.
 # Licensed under the Apache License, Version 2.0.
-"""Builds the five fonts of the fallback rows of FontFallbackTests that draw a character in parts, and prints the
+"""Builds the six fonts of the fallback rows of FontFallbackTests that draw a character in parts, and prints the
 glyphs that HarfBuzz gives each font alone.
 
 Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
@@ -20,6 +20,9 @@ and U+25CC. So HarfBuzz splits o into e and aa, and U+17BE into U+17C1 and U+17B
 
 FontFallbackPartsCircle.ttf is a font of the text that has Bengali ka and U+25CC, and lacks Bengali e, aa and o. So
 HarfBuzz keeps o whole, one .notdef, and gives a lone o a dotted circle.
+
+FontFallbackPartsPre.ttf is a font of the text that has Khmer ka, U+17C1 and U+25CC, and lacks U+17BE. So HarfBuzz
+keeps U+17BE whole, one .notdef.
 
 FontFallbackPartsNoCircle.ttf is a fallback font that has Bengali ka and o, and lacks Bengali e and aa, and U+25CC. So
 HarfBuzz keeps o whole and gives a lone o no dotted circle.
@@ -48,9 +51,10 @@ feature blws { sub u25CC u0941 by u25CC_u0941; } blws;
     ("FontFallbackPartsSplit.ttf", [0x0995, 0x09BE, 0x09C7, 0x09CB, 0x1780, 0x17BE, 0x17C1, 0x25CC], [], LANGUAGES),
     ("FontFallbackPartsCircle.ttf", [0x0995, 0x25CC], [], LANGUAGES),
     ("FontFallbackPartsNoCircle.ttf", [0x0995, 0x09CB], [], LANGUAGES),
+    ("FontFallbackPartsPre.ttf", [0x1780, 0x17C1, 0x25CC], [], LANGUAGES),
 ]
 
-TEXTS = ["fi", "gh", "ig", "ु", "কো", "ো", "កើ"]
+TEXTS = ["fi", "gh", "ig", "ु", "কো", "ো", "កើ", "កេ"]
 
 
 def main():

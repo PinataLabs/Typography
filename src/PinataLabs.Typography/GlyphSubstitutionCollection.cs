@@ -250,6 +250,19 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
+    /// Inserts the dotted circle of a broken cluster before the glyph at the specified index, as
+    /// <see cref="InsertGlyph"/> does. It has no class until a substitution gives it one.
+    /// </summary>
+    /// <param name="index">The zero-based index to insert the circle at. It can equal the count to append.</param>
+    /// <param name="sourceIndex">The zero-based index of the glyph to copy, before the insertion.</param>
+    /// <param name="glyphId">The id of the glyph of U+25CC.</param>
+    public void InsertBrokenClusterCircle(int index, int sourceIndex, ushort glyphId)
+    {
+        this.InsertGlyph(index, sourceIndex, glyphId, new CodePoint(0x25CC));
+        this.glyphs[index].Data.IsUnclassified = true;
+    }
+
+    /// <summary>
     /// Gives the glyphs in the range the lowest cluster among them, as HarfBuzz does when a ligature, a reordering or a
     /// composition joins glyphs. The glyphs next to the range that share the cluster of its first or last glyph join it,
     /// so that no cluster is split between two ranges.
@@ -430,6 +443,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.MarkAttachment = -1;
         current.CursiveAttachment = 0;
         current.IsSubstituted = true;
+        this.TakeGlyphClass(current);
     }
 
     /// <summary>
@@ -465,6 +479,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.GlyphId = glyphId;
         current.LigatureId = ligatureId;
         current.IsLigated = true;
+        current.IsUnclassified = false;
         current.IsMultiplied = false;
         current.LigatureComponent = -1;
         current.MarkAttachment = -1;
@@ -502,6 +517,10 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.IsSubstituted = true;
     }
 
+    // As in HarfBuzz, a substitution in a font with glyph classes gives the glyph the class of its new glyph.
+    private void TakeGlyphClass(GlyphShapingData data)
+        => data.IsUnclassified &= !this.GetFontMetrics(data).TryGetGlyphClass(data.GlyphId, out _);
+
     /// <summary>
     /// Replaces a single glyph id with a collection of glyph ids. As in HarfBuzz, each glyph is a component of the glyph it
     /// replaces, unless that glyph has a ligature id, as a ligature or a mark that a ligature skipped has: then each glyph
@@ -535,6 +554,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             current.CursiveAttachment = 0;
             current.IsSubstituted = true;
             current.IsDecomposed = true;
+            this.TakeGlyphClass(current);
 
             // Add additional glyphs from the rest of the sequence.
             glyphIds = glyphIds.Slice(1);

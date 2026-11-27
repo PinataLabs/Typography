@@ -140,6 +140,12 @@ public class FontFallbackTests
     [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "1780 17BE", "0 0", "9 10", "9F 10F")]
     [Arguments("FontFallbackParts.ttf", "FontFallbackPartsSplit.ttf", "1780 17BE", "0 0", "7 5 6", "7F 5F 6F")]
 
+    // The font has the first part of U+17BE and lacks the sign. The second part has the code point of the sign, U+17BE.
+    // A fallback font that keeps the sign whole draws it in the place of that part, and the first part goes, as it is in
+    // the glyph of the sign. A fallback font that splits the sign draws only the second part.
+    [Arguments("FontFallbackPartsPre.ttf", "FontFallbackPartsWhole.ttf", "1780 17BE", "1 0", "9 10", "1P 10F")]
+    [Arguments("FontFallbackPartsPre.ttf", "FontFallbackPartsSplit.ttf", "1780 17BE", "1 0", "7 5 6", "2P 1P 6F")]
+
     // A lone o: the font gives it a dotted circle. The fallback font, which has no circle, keeps o whole and draws it
     // after the circle of the font.
     [Arguments("FontFallbackPartsCircle.ttf", "FontFallbackPartsNoCircle.ttf", "09CB", "2 0", "2", "2P 2F")]
