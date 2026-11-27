@@ -557,7 +557,10 @@ Unicode conformance suites to that version.
   of a base and a mark, and eacute and f then ligate, e, acute, grave, f put the grave on the second component of
   eacute_f, where HarfBuzz puts it on the first. Fallback mark placement splits a ligature into that many parts, so in
   `LigaturePropertiesComponentsFallback.ttf` it split eacute_f into three, and the ligature of the two glyphs that a
-  multiple substitution made of a into two, where HarfBuzz splits them into two and one. (#191)
+  multiple substitution made of a into two, where HarfBuzz splits them into two and one. A ligature keeps the number
+  in four bits, as in HarfBuzz, so a ligature of sixteen components has none, and fallback mark placement does not
+  split it: in `LigaturePropertiesComponentsFallback.ttf`, which ligates sixteen f into f16, sixteen f, grave put the
+  grave over the last sixteenth of f16, at x 580, where HarfBuzz puts it over the middle, at x 300. (#191)
 - Mark-to-ligature takes the number of components of a ligature from the font, as HarfBuzz 15.0.0 does, not from the
   number of characters that the ligature holds. A mark of another ligature goes on the last component. In
   `LigaturePropertiesComponents.ttf`, which gives a12, the ligature of the two glyphs that a multiple substitution made
@@ -566,8 +569,8 @@ Unicode conformance suites to that version.
   component. (#191)
 - A ligature moves the marks after its last component to itself up to a glyph of no component, as HarfBuzz 15.0.0
   does. It took such a glyph for a mark on the first component and moved it too. In
-  `LigaturePropertiesComponents.ttf`, which substitutes the ligature x_y by p1 and the mark p2 and then ligates z and p1,
-  z, x, y put p2 on the second component of z_p1, where HarfBuzz puts it on the last. (#191, #196)
+  `LigaturePropertiesComponents.ttf`, which substitutes the ligature x_y by p1 and the mark p2 and then ligates z and
+  p1, z, x, y put p2 on the second component of z_p1, where HarfBuzz puts it on the last. (#191, #196)
 - A mark of a fallback font goes on the component of a ligature that the font of the text gave its place. With
   `MarksWithoutGlyphClassesLigature.ttf`, which ligates a and b, skipping marks, and lacks the acute, and the fallback
   `MarksWithoutGlyphClassesFallback.ttf`, a, acute, b put the acute on the last component of a_b, where the font alone
@@ -588,7 +591,13 @@ Unicode conformance suites to that version.
   `MarksWithoutGlyphClassesGposAcute.ttf`, which has the acute and GPOS, f, acute drew the acute after f on the
   baseline, where it now goes over f, as the font alone places the `.notdef` of the acute. Such a mark also goes there
   when the GPOS of its font attached it to a glyph of the other font whose glyph ID is that of a base of its own. A
-  glyph that the GDEF table of its font calls a base keeps its advance and its place. (#191)
+  mark that the GPOS of its font attached to a glyph of that font keeps its place, and moves with that glyph: with
+  `MarksWithoutGlyphClassesBase.ttf` and the fallback `MarksWithoutGlyphClassesGposAcute.ttf`, which attaches an acute
+  to an acute 50 units right and 900 up, f, acute, acute puts the first acute over f, at x 300 and y 62, and the second
+  at x 350 and y 962. A glyph that the GDEF table of its font calls a base keeps its advance and its place, and the
+  marks after it go back over the base, as HarfBuzz moves them back past a glyph that it does not place: with
+  `MarksWithoutGlyphClassesBase.ttf` and the fallback `MarksWithoutGlyphClassesGdefBaseAcute.ttf`, f, acute, grave puts
+  the grave over f, at x 300, not over the acute. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the
