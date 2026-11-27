@@ -35,9 +35,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     private int[] normalizedOffsets = [];
 
-    // The syllable numbers that the shapers of the script runs have taken.
-    private int syllableNumbers;
-
     // The glyphs before and after the script run that the table shapes. Substitutions add and remove glyphs of the run
     // only, so the glyphs after it keep their number, and the end of the run follows the substitutions.
     private int runStart;
@@ -97,20 +94,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => this.glyphs[index].Data;
-    }
-
-    /// <summary>
-    /// Takes syllable numbers for a script run, as many as the run has glyphs, which is the most syllables it can have.
-    /// A per-syllable lookup matches only glyphs of the syllable of its first glyph, and its context can reach the
-    /// glyphs of another run, which HarfBuzz shapes in a buffer of its own. So no two runs share a number.
-    /// </summary>
-    /// <param name="count">The number of glyphs of the run.</param>
-    /// <returns>The number before the first one taken.</returns>
-    public int TakeSyllableNumbers(int count)
-    {
-        int last = this.syllableNumbers;
-        this.syllableNumbers += count;
-        return last;
     }
 
     /// <summary>
@@ -423,7 +406,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         this.glyphs.Clear();
         this.regionalIndicators = 0;
         this.LigatureId = 1;
-        this.syllableNumbers = 0;
         this.SetRun(0, 0);
         this.PreContext.Clear();
         this.PostContext.Clear();

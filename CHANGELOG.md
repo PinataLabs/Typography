@@ -709,7 +709,7 @@ Unicode conformance suites to that version.
   which a caller gives each script run in a buffer of its own. The Indic, Khmer, Myanmar and universal shapers each
   numbered the syllables of a run from 1, so after a run of one syllable, a lookup of the first syllable of the next
   run matched its glyph as context: Devanagari ka after Brahmi A, or Bengali ka after Devanagari kha, took a `locl`
-  form that the font gives after that letter. No two runs of a text now share a syllable number. (#175)
+  form that the font gives after that letter. A lookup now matches only glyphs of its own script run. (#175, #194)
 - The Indic shaper turns `liga` off, and the Khmer shaper turns `clig` on and `liga` off, whatever the caller asks for,
   as the override functions of HarfBuzz 15.0.0 do. Both shapers applied `liga`, so a `liga` lookup of a `dev2` font
   made a ligature of ka and kha where HarfBuzz keeps the two letters. The Khmer shaper also left out `clig` when the
