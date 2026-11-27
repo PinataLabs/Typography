@@ -25,11 +25,18 @@
 
   <!--
     The Unicode algorithms and character properties live in PinataLabs.Typography.Unicode, which has no font code.
-    This assembly reads that one's internals, so the package pins it to the exact version of this one.
+    This assembly reads that one's internals, so the package depends on the exact version of it that was packed with
+    this one. Pack writes a project reference as a minimum version, "1.2.3", and an exact one is "[1.2.3]".
   -->
   <ItemGroup>
     <ProjectReference Include="..\PinataLabs.Typography.Unicode\PinataLabs.Typography.Unicode.csproj" />
   </ItemGroup>
+
+  <Target Name="PinUnicodeDependencyVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Condition="'%(Filename)' == 'PinataLabs.Typography.Unicode'" ProjectVersion="[%(ProjectVersion)]" />
+    </ItemGroup>
+  </Target>
 
   <!--
     README.md here is the package readme shown on nuget.org. It is a copy of the repository README
