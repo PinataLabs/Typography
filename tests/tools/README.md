@@ -884,18 +884,22 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 ## Script run context reference
 
 `generate_script_run_context_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ScriptRunContext.ttf` and
-writes `ScriptRunContext.harfbuzz.json` next to it. A caller of HarfBuzz shapes each script run in a buffer of its
-own, so no lookup matches or attaches a glyph of the run next to it. Each case of the font has a GSUB or GPOS lookup
-that applies only with a glyph of another script next to the glyph it changes: a chained context, a context, a
-reverse chaining and a ligature lookup, a pair, mark-to-base, mark-to-mark, mark-to-ligature and cursive lookup, and
-lookups across Han, Hiragana and Katakana. The script splits each text into script runs as the library does, with
-Common and Inherited characters in the run before them, and shapes each run in its own buffer. For each case that
-crosses a boundary it also shapes the text in one buffer of one script, where the lookup applies. Other cases check
-where the nested lookups of a context lookup apply: not at a second input glyph that a ligature of the first nested
-lookup took, and at the glyph after a ZWJ that the input names, not the one after it. The reference holds the glyph ID
-and the place of each glyph.
+writes `ScriptRunContext.harfbuzz.json` next to it. A caller of HarfBuzz shapes each run of one script, one direction
+and, in vertical text, one orientation in a buffer of its own, so no lookup matches or attaches a glyph of the run next
+to it. Each case of the font has a GSUB or GPOS lookup that applies only with a glyph of another script next to the
+glyph it changes: a chained context, a context, a reverse chaining and a ligature lookup, a pair, mark-to-base,
+mark-to-mark, mark-to-ligature and cursive lookup, and lookups across Han, Hiragana and Katakana. Two more cases
+apply only with a digit next to a Hebrew letter, which the Unicode Bidirectional Algorithm gives the other direction,
+one gives a digit an alternate only in the Hebrew script, and one applies only with an upright Han character next to
+a sideways hyphen-minus. The script splits each text into script
+runs as the library does, with Common and Inherited characters in the run before them, the Hebrew texts into runs of
+one direction too, which keep the Hebrew script, and the vertical text into runs of one orientation, and shapes each
+run in its own buffer. For each case that crosses a boundary it also shapes the text in one buffer, where the lookup
+applies. Other cases check where the nested lookups of a context lookup apply: not at a second input glyph that a
+ligature of the first nested lookup took, and at the glyph after a ZWJ that the input names, not the one after it. The
+reference holds the glyph ID and the place of each glyph, and only the glyph ID for vertical text.
 
-`ScriptRunContextTests` checks that the library gives the same glyphs in the same places.
+`ScriptRunContextTests` checks that `TextShaper.Shape` and the layout give the same glyphs in the same places.
 
 To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
 repository root:
