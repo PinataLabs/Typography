@@ -51,8 +51,11 @@ MarksWithoutGlyphClassesLigature.ttf has a and b, and ligates them into a_b, ski
 a, acute, b HarfBuzz puts the .notdef of the acute on the first component of a_b, which MarksWithoutGlyphClassesTests
 checks for the acute of a fallback font too. MarksWithoutGlyphClassesGpos.ttf has a, f and the grave, and a GPOS table
 that attaches the grave to a and f at x 300 and y 700. MarksWithoutGlyphClassesGposAcute.ttf has a and the acute, and a
-GPOS table that attaches the acute to a at x 100 and y 500. Each lacks a glyph of the other fonts, and a font with GPOS
-places no mark around its base itself, so HarfBuzz leaves the .notdef of the mark that it lacks where it is.
+GPOS table that attaches the acute to a at x 100 and y 500, and an acute to an acute at x 50 and y 900. Each lacks a
+glyph of the other fonts, and a font with GPOS places no mark around its base itself, so HarfBuzz leaves the .notdef of
+the mark that it lacks where it is. MarksWithoutGlyphClassesTests checks that in f, acute, acute, where f comes from
+another font, the first acute goes where that font places it and the second stays where the mkmk lookup puts it, on
+the first.
 
 MarksWithoutGlyphClassesGdefBaseAcute.ttf has a and the acute, a GPOS table that kerns a and a, and a GDEF table that
 calls the acute a base. So the acute keeps its advance and its place: in f, acute, grave it stays after the .notdef of
@@ -135,7 +138,7 @@ def build_font_without_gdef(file_name, code_points, features, extra_glyphs):
     return load_font(path)
 
 
-MIXED_TEXTS = ["f̀", "f̀́", "f̖́", "á", "áb", "f́̀"]
+MIXED_TEXTS = ["f̀", "f̀́", "f̖́", "á", "áb", "f́̀", "f́́"]
 
 LIGATURE_FEATURES = """
 languagesystem DFLT dflt; languagesystem latn dflt;
@@ -152,6 +155,7 @@ GPOS_ACUTE_FEATURES = """
 languagesystem DFLT dflt; languagesystem latn dflt;
 markClass [u0301] <anchor 0 0> @Accent;
 feature mark { pos base u0061 <anchor 100 500> mark @Accent; } mark;
+feature mkmk { pos mark u0301 <anchor 50 900> mark @Accent; } mkmk;
 """
 
 GDEF_BASE_ACUTE_FEATURES = """
