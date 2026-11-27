@@ -504,6 +504,12 @@ Unicode conformance suites to that version.
   character but ZWJ follows them, as HarfBuzz 15.0.0 does. It gave `blwf` only when ZWJ followed them, so ta, virama,
   ra, virama, ka took the half form of ra where HarfBuzz gives its below-base form, and with ZWJ the eyelash ra took
   its below-base form. (#175)
+- A GSUB lookup that a feature matched per syllable and another feature of the same stage did not takes the flag
+  that HarfBuzz 15.0.0 keeps. HarfBuzz adds the lookups of the required feature first, and then those of each feature
+  in the order of the tags, sorts them by index, and keeps the flag of the first. The lookup took the flag of any of
+  its features, so a lookup that the Indic shaper shared between `pres` and `calt` did not match across syllables
+  where HarfBuzz matches it, and neither did a lookup of a required feature. With more than 24 lookups in a stage,
+  HarfBuzz sorts them with a quicksort that is not stable, and the library sorts them the same way. (#175)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
