@@ -542,6 +542,10 @@ Unicode conformance suites to that version.
   ligature of a base and a mark, which takes no ligature class, where HarfBuzz makes a ligature. A ligature gives the
   circle a class, and in a font with glyph classes so does any substitution. Its Unicode properties stay those of
   U+25CC: HarfBuzz gives it none, the general category Cc, which no check after the insertion tells from So. (#191)
+- A mark that a ligature skips, and that has no component, goes on the last component of the glyph before it, as in
+  HarfBuzz 15.0.0. It went on the first, which differs when that glyph is itself a ligature: in
+  `LigaturePropertiesNested.ttf`, where a and b ligate and then a_b and c, a, b, acute, c put the acute on the
+  component of a, where HarfBuzz puts it on the component of b. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

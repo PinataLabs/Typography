@@ -220,8 +220,9 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                 {
                     while (idx < matchIndex)
                     {
+                        // As in HarfBuzz, a mark of no component goes on the last component of the glyph before it.
                         GlyphShapingData current = collection[idx];
-                        int currentLC = current.LigatureComponent == -1 ? 1 : current.LigatureComponent;
+                        int currentLC = current.LigatureComponent <= 0 ? lastComponentCount : current.LigatureComponent;
                         int ligatureComponent = currentComponentCount - lastComponentCount + Math.Min(currentLC, lastComponentCount);
                         current.LigatureId = ligatureId;
                         current.LigatureComponent = ligatureComponent;
