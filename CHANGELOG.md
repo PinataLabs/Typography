@@ -558,6 +558,12 @@ Unicode conformance suites to that version.
   eacute_f, where HarfBuzz puts it on the first. Fallback mark placement splits a ligature into that many parts, so in
   `LigaturePropertiesComponentsFallback.ttf` it split eacute_f into three, and the ligature of the two glyphs that a
   multiple substitution made of a into two, where HarfBuzz splits them into two and one. (#191)
+- Mark-to-ligature takes the number of components of a ligature from the font, as HarfBuzz 15.0.0 does, not from the
+  number of characters that the ligature holds. A mark of another ligature goes on the last component. In
+  `LigaturePropertiesComponents.ttf`, which gives a12, the ligature of the two glyphs that a multiple substitution made
+  of a, three components, a, grave put the grave on the second, where HarfBuzz puts it on the third. A glyph that the
+  font calls a ligature and that no substitution made, as in `GposLookupType5Format1.ttf`, put a mark on its first
+  component. (#191)
 - A ligature moves the marks after its last component to itself up to a glyph of no component, as HarfBuzz 15.0.0
   does. It took such a glyph for a mark on the first component and moved it too. In
   `LigaturePropertiesComponents.ttf`, which substitutes the ligature x_y by p1 and the mark p2 and then ligates z and p1,

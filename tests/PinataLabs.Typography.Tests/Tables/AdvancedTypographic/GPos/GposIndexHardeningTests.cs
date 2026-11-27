@@ -98,14 +98,14 @@ public class GposIndexHardeningTests
     }
 
     [Test]
-    public async Task MarkToLigatureWithZeroCodePointsDoesNotApplyOrThrow()
+    public async Task MarkToLigatureWithZeroCodePointsAttachesToLastComponent()
     {
-        // compIndex would be -1.
+        // As in HarfBuzz, the font gives the components, so a ligature of inserted glyphs still has them.
         (Font font, GlyphPositioningCollection collection) = Setup("AB");
         collection[0].CodePointCount = 0;
         LookupType5SubTable.LookupType5Format1SubTable subTable = CreateType5(markIndex: 0, ligatureIndex: 0);
 
-        await Assert.That(subTable.TryUpdatePosition(font.FontMetrics, null!, collection, default, 1, 2)).IsFalse();
+        await Assert.That(subTable.TryUpdatePosition(font.FontMetrics, null!, collection, default, 1, 2)).IsTrue();
     }
 
     [Test]

@@ -131,28 +131,20 @@ internal static class LookupType5SubTable
                 return false;
             }
 
-            // We must now check whether the ligature ID of the current mark glyph
-            // is identical to the ligature ID of the found ligature.
-            // If yes, we can directly use the component index. If not, we attach the mark
-            // glyph to the last component of the ligature.
-            LigatureAttachTable ligatureAttach = this.ligatureArrayTable.LigatureAttachTables[ligatureIndex];
-            GlyphShapingData markGlyph = collection[index];
-            GlyphShapingData ligGlyph = collection[baseGlyphIndex];
-            int compIndex = ligGlyph.LigatureId > 0 && ligGlyph.LigatureId == markGlyph.LigatureId && markGlyph.LigatureComponent > 0
-                ? Math.Min(markGlyph.LigatureComponent, ligGlyph.CodePointCount) - 1
-                : ligGlyph.CodePointCount - 1;
-
-            // The component index comes from the code point count, which is not bounded by the
-            // number of components in the font. A ligature with fewer components than code points
-            // attaches the mark to its last component. A negative index or a ligature without
+            // As in HarfBuzz, a mark of the ligature goes on its own component, and any other mark on the last. The font
+            // gives the number of components, whatever number of characters the ligature holds. A ligature without
             // components means the subtable does not apply.
-            ComponentRecord[] components = ligatureAttach.ComponentRecords;
-            if (compIndex < 0 || components.Length == 0)
+            ComponentRecord[] components = this.ligatureArrayTable.LigatureAttachTables[ligatureIndex].ComponentRecords;
+            if (components.Length == 0)
             {
                 return false;
             }
 
-            compIndex = Math.Min(compIndex, components.Length - 1);
+            GlyphShapingData markGlyph = collection[index];
+            GlyphShapingData ligGlyph = collection[baseGlyphIndex];
+            int compIndex = ligGlyph.LigatureId > 0 && ligGlyph.LigatureId == markGlyph.LigatureId && markGlyph.LigatureComponent > 0
+                ? Math.Min(markGlyph.LigatureComponent, components.Length) - 1
+                : components.Length - 1;
 
             MarkRecord markRecord = this.markArrayTable.MarkRecords[markIndex];
             AnchorTable[] ligatureAnchors = components[compIndex].LigatureAnchorTables;
