@@ -31,7 +31,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macOS runners cost ten times as much as Linux ones, so pull requests and main build on
+        # Linux and Windows only. The tests that need macOS system fonts (OS_OSX) do not run here.
+        os: [ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
