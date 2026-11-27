@@ -13,7 +13,8 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 /// LookupFlags.ttf has a case for each way that a lookup can apply where HarfBuzz does not, or apply elsewhere: a nested
 /// lookup of a chained context positioning lookup past a skipped mark (#118), a mark-to-mark attachment past a mark
 /// outside the mark filtering set (#119), a lookup at a first glyph that its flags skip (#120), a reverse chaining
-/// substitution called from a contextual lookup (#121), and cursive chains with and without the RightToLeft flag (#139).
+/// substitution called from a contextual lookup (#121), cursive chains with and without the RightToLeft flag (#139), and
+/// cursive chains past a mark that the lookup flags or the mark filtering set skip (#147).
 /// tests/tools/generate_lookup_flags_reference.py writes the font and the glyphs that HarfBuzz gives for each case.
 /// </summary>
 public class LookupFlagsTests
@@ -36,6 +37,12 @@ public class LookupFlagsTests
     [Arguments("CursiveRightToLeftFlag")]
     [Arguments("CursiveRightToLeftText")]
     [Arguments("CursiveRightToLeftTextAndFlag")]
+    [Arguments("CursiveIgnoreMarks")]
+    [Arguments("CursiveIgnoreMarksRightToLeftFlag")]
+    [Arguments("CursiveIgnoreMarksRightToLeftText")]
+    [Arguments("CursiveIgnoreMarksRightToLeftTextAndFlag")]
+    [Arguments("CursivePastFilteredMark")]
+    [Arguments("CursiveAtMarkInFilteringSet")]
     public async Task GlyphsAreWhereHarfBuzzPutsThem(string name)
     {
         JsonElement[] row = HarfBuzz.Rows.Single(r => r[0].GetString() == name);

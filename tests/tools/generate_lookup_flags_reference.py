@@ -19,6 +19,10 @@ Bases are empty glyphs 600 wide and marks are empty glyphs with no advance. Each
 * `ReverseFromContext` (#121): a chained context substitution calls a reverse chaining lookup, which does not apply.
 * `Cursive*` (#139): chains of three cursive glyphs, in a lookup with and without the RightToLeft flag, in left to
   right Latin text and right to left Hebrew text. The exit anchor is 100 above the entry anchor.
+* `CursiveIgnoreMarks*` (#147): the same chains, in a lookup with IgnoreMarks, with a mark between each two cursive
+  glyphs. The mark is skipped, so the glyphs on each side of it join.
+* `CursivePastFilteredMark` and `CursiveAtMarkInFilteringSet` (#147): a cursive lookup with the mark filtering set [u]
+  skips the mark q between two cursive glyphs, and does not skip u, which ends the chain.
 
 The reference holds, for each case, its name, its text and the glyph ID and place of each glyph in font units from
 the start of the line, as HarfBuzz gives them. LookupFlagsTests reads it.
@@ -39,9 +43,11 @@ from fontTools.ttLib.tables._g_l_y_f import Glyph
 OUT = os.path.join(ref.FONTS, "LookupFlags.ttf")
 REFERENCE = os.path.join(ref.FONTS, "LookupFlags.harfbuzz.json")
 
-BASES = ["a1", "b1", "a2", "b2", "a3", "b3", "base", "x", "s", "t", "c", "r"]
-MARKS = ["m", "k1", "k2", "k3", "n", "p"]
-RTL = {"e": 0x05D0, "er": 0x05D1}
+BASES = ["a1", "b1", "a2", "b2", "a3", "b3", "base", "x", "s", "t", "c", "r", "ci", "ri", "cf"]
+MARKS = ["m", "k1", "k2", "k3", "n", "p", "q", "u"]
+RTL_BASES = {"e": 0x05D0, "er": 0x05D1, "ei": 0x05D2, "eri": 0x05D3}
+RTL_MARKS = {"sheva": 0x05B0}
+RTL = RTL_BASES | RTL_MARKS
 UNMAPPED = ["n.alt", "s.alt"]
 GLYPHS = [".notdef"] + BASES + MARKS + list(RTL) + UNMAPPED
 CMAP = {name: 0xE000 + i for i, name in enumerate(BASES + MARKS)} | RTL
@@ -52,7 +58,7 @@ languagesystem latn dflt;
 languagesystem hebr dflt;
 
 table GDEF {
-    GlyphClassDef [%s e er s.alt], , [%s n.alt], ;
+    GlyphClassDef [%s %s s.alt], , [%s %s n.alt], ;
 } GDEF;
 
 lookup MOVE {
@@ -117,8 +123,25 @@ feature curs {
         pos cursive r <anchor 0 0> <anchor 600 100>;
         pos cursive er <anchor 600 0> <anchor 0 100>;
     } CURSIVE_RTL_FLAG;
+
+    lookup CURSIVE_IGNORE_MARKS {
+        lookupflag IgnoreMarks;
+        pos cursive ci <anchor 0 0> <anchor 600 100>;
+        pos cursive ei <anchor 600 0> <anchor 0 100>;
+    } CURSIVE_IGNORE_MARKS;
+
+    lookup CURSIVE_IGNORE_MARKS_RTL_FLAG {
+        lookupflag RightToLeft IgnoreMarks;
+        pos cursive ri <anchor 0 0> <anchor 600 100>;
+        pos cursive eri <anchor 600 0> <anchor 0 100>;
+    } CURSIVE_IGNORE_MARKS_RTL_FLAG;
+
+    lookup CURSIVE_FILTERED {
+        lookupflag UseMarkFilteringSet [u];
+        pos cursive cf <anchor 0 0> <anchor 600 100>;
+    } CURSIVE_FILTERED;
 } curs;
-""" % (" ".join(BASES), " ".join(MARKS))
+""" % (" ".join(BASES), " ".join(RTL_BASES), " ".join(MARKS), " ".join(RTL_MARKS))
 
 # The chained context lookup whose first input glyph is the key is built in the subtable format of the value.
 CHAIN_FORMAT = {"a1": 1, "a2": 2, "a3": 3}
@@ -135,6 +158,12 @@ CASES = {
     "CursiveRightToLeftFlag": ["r", "r", "r"],
     "CursiveRightToLeftText": ["e", "e", "e"],
     "CursiveRightToLeftTextAndFlag": ["er", "er", "er"],
+    "CursiveIgnoreMarks": ["ci", "q", "ci", "q", "ci"],
+    "CursiveIgnoreMarksRightToLeftFlag": ["ri", "q", "ri", "q", "ri"],
+    "CursiveIgnoreMarksRightToLeftText": ["ei", "sheva", "ei", "sheva", "ei"],
+    "CursiveIgnoreMarksRightToLeftTextAndFlag": ["eri", "sheva", "eri", "sheva", "eri"],
+    "CursivePastFilteredMark": ["cf", "q", "cf", "q", "cf"],
+    "CursiveAtMarkInFilteringSet": ["cf", "u", "cf", "q", "cf"],
 }
 
 
