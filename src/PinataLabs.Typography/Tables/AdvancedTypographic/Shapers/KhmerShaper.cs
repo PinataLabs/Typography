@@ -37,6 +37,10 @@ internal sealed class KhmerShaper : DefaultShaper
     private static readonly Tag BlwsTag = Tag.Parse("blws");
     private static readonly Tag PstsTag = Tag.Parse("psts");
 
+    // As in HarfBuzz, the basic and the presentation features keep both joiners.
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
+        ManualJoiners.Both, PrefTag, BlwfTag, AbvfTag, PstfTag, CfarTag, PresTag, AbvsTag, BlwsTag, PstsTag);
+
     // The two-part vowel signs that have no Unicode decomposition. The part in front of the base comes first.
     private static readonly Dictionary<int, int[]> Decompositions = new()
     {
@@ -48,7 +52,7 @@ internal sealed class KhmerShaper : DefaultShaper
     };
 
     public KhmerShaper(ScriptClass script, TextOptions textOptions)
-        : base(script, MarkZeroingMode.None, textOptions)
+        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures)
     {
     }
 

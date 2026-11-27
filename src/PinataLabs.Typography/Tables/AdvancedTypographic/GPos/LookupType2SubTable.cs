@@ -33,9 +33,9 @@ internal static class LookupType2SubTable
     }
 
     // The second glyph of a pair is the next glyph that the lookup flags do not skip, so a lookup that ignores marks
-    // kerns the letters on both sides of a mark.
-    private static int GetSecondIndex(FontMetrics fontMetrics, GlyphPositioningCollection collection, LookupFlags lookupFlags, int index)
-        => new SkippingGlyphIterator(fontMetrics, collection, index, lookupFlags).Next();
+    // kerns the letters on both sides of a mark. As in HarfBuzz, it is also past the joiners that the lookup skips.
+    private static int GetSecondIndex(FontMetrics fontMetrics, GlyphPositioningCollection collection, LookupFlags lookupFlags, LookupFeatures features, int index)
+        => new SkippingGlyphIterator(fontMetrics, collection, index, lookupFlags, features.InputIgnorables).Next();
 
     internal sealed class LookupType2Format1SubTable : LookupSubTable
     {
@@ -116,7 +116,7 @@ internal static class LookupType2SubTable
             if (coverage > -1 && coverage < this.pairSets.Length)
             {
                 PairSetTable pairSet = this.pairSets[coverage];
-                int second = GetSecondIndex(fontMetrics, collection, this.LookupFlags, index);
+                int second = GetSecondIndex(fontMetrics, collection, this.LookupFlags, features, index);
                 if (second >= index + count)
                 {
                     return false;
@@ -287,7 +287,7 @@ internal static class LookupType2SubTable
             if (coverage > -1)
             {
                 int classDef1 = this.classDefinitionTable1.ClassIndexOf(glyphId);
-                int second = GetSecondIndex(fontMetrics, collection, this.LookupFlags, index);
+                int second = GetSecondIndex(fontMetrics, collection, this.LookupFlags, features, index);
                 if (second >= index + count)
                 {
                     return false;

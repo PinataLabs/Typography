@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
@@ -39,6 +40,10 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly Tag PstsTag = Tag.Parse("psts");
     private static readonly Tag HalnTag = Tag.Parse("haln");
 
+    // As in HarfBuzz, the basic and the presentation features keep both joiners.
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
+        ManualJoiners.Both, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag);
+
     private const int DottedCircle = 0x25cc;
 
     private readonly TextOptions textOptions;
@@ -46,7 +51,7 @@ internal sealed class IndicShaper : DefaultShaper
     private readonly bool isOldSpec;
 
     public IndicShaper(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
-        : base(script, MarkZeroingMode.None, textOptions)
+        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures)
     {
         this.textOptions = textOptions;
 
@@ -794,7 +799,7 @@ internal sealed class IndicShaper : DefaultShaper
             fontMetrics,
             collection,
             ref iterator,
-            [featureTag],
+            [this.Plan(featureTag)],
             false,
             this.ScriptClass,
             index,

@@ -109,7 +109,7 @@ internal static class LookupType6SubTable
             // As in HarfBuzz, the previous mark is found with the mark attachment type and the mark filtering set of the
             // lookup, and without its Ignore flags.
             const LookupFlags ignoreFlags = LookupFlags.IgnoreBaseGlyphs | LookupFlags.IgnoreLigatures | LookupFlags.IgnoreMarks;
-            SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags & ~ignoreFlags);
+            SkippingGlyphIterator iterator = new(fontMetrics, collection, index, this.LookupFlags & ~ignoreFlags, features.InputIgnorables);
             int prevIdx = iterator.Increment(-1);
             if (prevIdx < 0)
             {

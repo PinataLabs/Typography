@@ -204,7 +204,7 @@ internal class GSubTable : Table
                     fontMetrics,
                     collection,
                     ref iterator,
-                    stage.FeatureTags,
+                    stage.Features,
                     s == requiredFeatureStage,
                     current,
                     index,
@@ -245,8 +245,8 @@ internal class GSubTable : Table
         }
 
         Tag vert = Tag.Parse("vert");
-        Tag[] vertOnly = [vert];
-        if (!table.TryGetFeatureLookups(vertOnly, script, out _))
+        PlannedFeature[] vertOnly = [new(vert)];
+        if (!table.TryGetFeatureLookups(vert, script, out _))
         {
             return;
         }
@@ -283,7 +283,7 @@ internal class GSubTable : Table
         FontMetrics fontMetrics,
         GlyphSubstitutionCollection collection,
         ref SkippingGlyphIterator iterator,
-        IReadOnlyList<Tag> featureTags,
+        IReadOnlyList<PlannedFeature> features,
         bool withRequiredFeature,
         ScriptClass current,
         int index,
@@ -294,12 +294,12 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, featureTags, current, withRequiredFeature, out List<(ushort Index, LookupFeatures Features)>? lookups))
+        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, positioning: false, out List<(ushort Index, LookupFeatures Features)>? lookups))
         {
             return;
         }
 
-        foreach ((ushort lookupIndex, LookupFeatures features) in lookups)
+        foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
         {
             LookupTable lookupTable = this.LookupList.LookupTables[lookupIndex];
             if (lookupTable.IsReverse)
@@ -314,9 +314,9 @@ internal class GSubTable : Table
                         return;
                     }
 
-                    if (features.AnyEnabledOn(collection[iterator.Index].Features))
+                    if (lookupFeatures.AnyEnabledOn(collection[iterator.Index].Features))
                     {
-                        lookupTable.TrySubstitution(fontMetrics, this, collection, features, iterator.Index, count - (iterator.Index - index));
+                        lookupTable.TrySubstitution(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
                     }
                 }
 
@@ -331,14 +331,14 @@ internal class GSubTable : Table
                     return;
                 }
 
-                if (!features.AnyEnabledOn(collection[iterator.Index].Features))
+                if (!lookupFeatures.AnyEnabledOn(collection[iterator.Index].Features))
                 {
                     iterator.Next();
                     continue;
                 }
 
                 collectionCount = collection.Count;
-                lookupTable.TrySubstitution(fontMetrics, this, collection, features, iterator.Index, count - (iterator.Index - index));
+                lookupTable.TrySubstitution(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
                 iterator.Next();
 
                 // Account for substitutions changing the length of the collection.
@@ -359,7 +359,15 @@ internal class GSubTable : Table
         IReadOnlyList<Tag> stageFeatures,
         ScriptClass script,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
-        => LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, stageFeatures, script, false, out value);
+    {
+        PlannedFeature[] features = new PlannedFeature[stageFeatures.Count];
+        for (int i = 0; i < features.Length; i++)
+        {
+            features[i] = new(stageFeatures[i]);
+        }
+
+        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, script, false, positioning: false, out value);
+    }
 
     /// <summary>
     /// Gets the tag of the script that the table has for text of a Unicode script. The shaper of the text

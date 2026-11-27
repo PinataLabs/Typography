@@ -36,8 +36,12 @@ internal sealed class MyanmarShaper : DefaultShaper
     private static readonly Tag BlwsTag = Tag.Parse("blws");
     private static readonly Tag PstsTag = Tag.Parse("psts");
 
+    // As in HarfBuzz, the basic and the presentation features keep ZWJ.
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
+        ManualJoiners.Zwj, RphfTag, PrefTag, BlwfTag, PstfTag, PresTag, AbvsTag, BlwsTag, PstsTag);
+
     public MyanmarShaper(ScriptClass script, TextOptions textOptions)
-       : base(script, MarkZeroingMode.PreGPos, textOptions)
+       : base(script, MarkZeroingMode.PreGPos, textOptions, ManualJoinerFeatures)
     {
     }
 
