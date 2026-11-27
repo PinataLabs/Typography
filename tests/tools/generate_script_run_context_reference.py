@@ -26,6 +26,13 @@ the start of the text. Each case of the font has a lookup that applies only when
   Latin g after Greek epsilon and h before Greek zeta, and widens n of the input n theta.
 * MarkToBase, MarkToMark and MarkToLigature: a Cyrillic mark after a Latin base, a Latin mark, and a Latin ligature.
 * Cursive: Latin m and Greek eta join.
+* ShrunkInputAtEnd and ShrunkInputBeforeRun: a chained context lookup whose input is Latin o and p, after u, ligates
+  them with its first nested lookup, and gives p or Greek omega an alternate with its second, at the second glyph of
+  the input. The ligature leaves an input of one glyph, so HarfBuzz skips the second, at the end of the text and before
+  the Greek run.
+* JoinerInput and JoinerPosition: the input of a context lookup names ZWJ, Latin q, ZWJ and r in GSUB and s, ZWJ and t
+  in GPOS, and a nested lookup changes the glyph after ZWJ. HarfBuzz changes the first r or t, where the input
+  matched, not the one after it (issue #203).
 
 Each text is shaped as the script runs of a caller, and, for the cases that a script names, also in one buffer of that
 script, which shows that the lookup applies. Each row holds the case, the text, the ISO 15924 code of the script of one
@@ -64,6 +71,10 @@ CASES = [
     ("MarkToMark", [0x006A, 0x0301, 0x0484], "Latn"),
     ("MarkToLigature", [0x006B, 0x006C, 0x0487], "Latn"),
     ("Cursive", [0x006D, 0x03B7], "Latn"),
+    ("ShrunkInputAtEnd", [0x03C9, 0x0075, 0x006F, 0x0070], None),
+    ("ShrunkInputBeforeRun", [0x0075, 0x006F, 0x0070, 0x03C9], "Latn"),
+    ("JoinerInput", [0x0071, 0x200D, 0x0072, 0x0072], None),
+    ("JoinerPosition", [0x0073, 0x200D, 0x0074, 0x0074], None),
 ]
 
 MARKS = [0x0301, 0x0483, 0x0484, 0x0487]
@@ -89,6 +100,22 @@ lookup B_ALT {
 lookup N_MOVE {
     pos u006E 100;
 } N_MOVE;
+
+lookup LIGATE_OP {
+    sub u006F u0070 by u006F_u0070;
+} LIGATE_OP;
+
+lookup P_ALT {
+    sub [u0070 u03C9] by [u0070.alt u03C9.alt];
+} P_ALT;
+
+lookup R_ALT {
+    sub u0072 by u0072.alt;
+} R_ALT;
+
+lookup T_MOVE {
+    pos u0074 <0 100 0 0>;
+} T_MOVE;
 
 feature calt {
     lookup ISSUE {
@@ -123,6 +150,14 @@ feature calt {
     lookup LIGATE_KL {
         sub u006B u006C by u006B_u006C;
     } LIGATE_KL;
+
+    lookup SHRUNK_INPUT {
+        sub u0075 u006F' lookup LIGATE_OP u0070' lookup P_ALT;
+    } SHRUNK_INPUT;
+
+    lookup JOINER_INPUT {
+        sub u0071' u200D' u0072' lookup R_ALT;
+    } JOINER_INPUT;
 } calt;
 
 feature kern {
@@ -138,6 +173,10 @@ feature kern {
     lookup CHAINED_INPUT {
         pos u006E' lookup N_MOVE u03B8';
     } CHAINED_INPUT;
+
+    lookup JOINER_POSITION {
+        pos u0073' u200D' u0074' lookup T_MOVE;
+    } JOINER_POSITION;
 } kern;
 
 markClass u0483 <anchor 0 500> @TOP;
@@ -171,7 +210,7 @@ feature curs {
 
 EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
-    "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C",
+    "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u006F_u0070", "u0070.alt", "u03C9.alt", "u0072.alt",
 ]
 
 
@@ -217,12 +256,12 @@ def main():
     path = build_font(FILE_NAME, code_points, FEATURES, extra_glyphs=EXTRA_GLYPHS)
 
     # Check that the lookups have the types that the cases test.
-    # The lookups of type 1 are B_ALT, N_MOVE and those of the inline substitutions and positions.
+    # The lookups of type 1 are B_ALT, P_ALT, R_ALT, N_MOVE, T_MOVE and those of the inline substitutions and positions.
     font = TTFont(path)
     types = [lookup.LookupType for lookup in font["GSUB"].table.LookupList.Lookup]
-    assert types == [1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4], types
+    assert types == [1, 4, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5], types
     types = [lookup.LookupType for lookup in font["GPOS"].table.LookupList.Lookup]
-    assert types == [1, 2, 8, 1, 8, 4, 5, 6, 3], types
+    assert types == [1, 1, 2, 8, 1, 8, 8, 4, 5, 6, 3], types
 
     font = load_font(path)
     rows = []

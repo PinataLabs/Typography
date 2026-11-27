@@ -890,8 +890,10 @@ that applies only with a glyph of another script next to the glyph it changes: a
 reverse chaining and a ligature lookup, a pair, mark-to-base, mark-to-mark, mark-to-ligature and cursive lookup, and
 lookups across Han, Hiragana and Katakana. The script splits each text into script runs as the library does, with
 Common and Inherited characters in the run before them, and shapes each run in its own buffer. For each case that
-crosses a boundary it also shapes the text in one buffer of one script, where the lookup applies. The reference holds
-the glyph ID and the place of each glyph.
+crosses a boundary it also shapes the text in one buffer of one script, where the lookup applies. Other cases check
+where the nested lookups of a context lookup apply: not at a second input glyph that a ligature of the first nested
+lookup took, and at the glyph after a ZWJ that the input names, not the one after it. The reference holds the glyph ID
+and the place of each glyph.
 
 `ScriptRunContextTests` checks that the library gives the same glyphs in the same places.
 

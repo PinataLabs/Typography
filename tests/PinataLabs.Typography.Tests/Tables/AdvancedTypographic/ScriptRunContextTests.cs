@@ -15,7 +15,8 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 /// ScriptRunContext.ttf has GSUB and GPOS lookups that apply only when a glyph of another script is next to the glyph
 /// they change: a context, a ligature, a pair, a mark and its base, and a cursive join. A caller of HarfBuzz shapes each
 /// script run in a buffer of its own, so none of them applies across the boundary of two runs (issue #194). In one
-/// buffer of one script, each of them applies.
+/// buffer of one script, each of them applies. The nested lookups of a context lookup apply at the glyphs that its
+/// input matched, and not past a ligature that an earlier one formed (issue #203).
 /// </summary>
 public class ScriptRunContextTests
 {
@@ -45,7 +46,16 @@ public class ScriptRunContextTests
             string text = row[1].GetString()!;
             string script = row[2].GetString()!;
             ShapingOptions options = new() { Script = script == ScriptRuns ? null : Scripts[script] };
-            string actual = Describe(Places(TextShaper.Shape(font, text, options)));
+            string actual;
+            try
+            {
+                actual = Describe(Places(TextShaper.Shape(font, text, options)));
+            }
+            catch (Exception exception)
+            {
+                actual = exception.GetType().Name;
+            }
+
             if (Describe(row[3]) != actual)
             {
                 different.Add($"{row[0].GetString()} {(script == ScriptRuns ? "runs" : script)} expected [{Describe(row[3])}] actual [{actual}]");
@@ -65,11 +75,20 @@ public class ScriptRunContextTests
         foreach (JsonElement[] row in Rows.Where(row => row[2].GetString() == ScriptRuns))
         {
             string text = row[1].GetString()!;
-            IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font));
-            string actual = Describe(layout.Select(g => (
-                (int)g.Glyph.GlyphMetrics.GlyphId,
-                (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
-                (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y))));
+            string actual;
+            try
+            {
+                IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font));
+                actual = Describe(layout.Select(g => (
+                    (int)g.Glyph.GlyphMetrics.GlyphId,
+                    (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
+                    (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y))));
+            }
+            catch (Exception exception)
+            {
+                actual = exception.GetType().Name;
+            }
+
             if (Describe(row[3]) != actual)
             {
                 different.Add($"{row[0].GetString()} expected [{Describe(row[3])}] actual [{actual}]");
