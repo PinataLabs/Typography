@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -150,6 +151,34 @@ public class FontFallbackTests
         await Assert.That(Glyphs(text, font)).IsEqualTo(fontAlone);
         await Assert.That(Glyphs(text, fallback)).IsEqualTo(fallbackAlone);
         await Assert.That(Glyphs(text, font, fallback)).IsEqualTo(expected);
+    }
+
+    // A fallback font that keeps a vowel sign whole draws it after ka, where it draws it alone, and not over ka. Every
+    // glyph of the fonts is 600 units wide.
+    [Test]
+    [Arguments("0995 09CB")]
+    [Arguments("1780 17BE")]
+    public async Task FallbackFontDrawsAWholeCharacterWithItsAdvance(string codePoints)
+    {
+        string text = string.Concat(codePoints.Split(' ').Select(c => char.ConvertFromUtf32(Convert.ToInt32(c, 16))));
+
+        await Assert.That(PenPositions(text, "FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf"))
+            .IsEqualTo(PenPositions(text, "FontFallbackPartsWhole.ttf"));
+    }
+
+    // Gives the place of each glyph of the text, in font units from the first.
+    private static string PenPositions(string text, string font, string? fallback = null)
+    {
+        FontCollection collection = new();
+        FontFamily family = collection.Add(TestFonts.GetPath(font));
+        TextOptions options = new(family.CreateFont(72 * family.CreateFont(1).FontMetrics.UnitsPerEm));
+        if (fallback is not null)
+        {
+            options.FallbackFontFamilies = [collection.Add(TestFonts.GetPath(fallback))];
+        }
+
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        return string.Join(' ', layout.Select(g => MathF.Round(g.PenLocation.X - layout[0].PenLocation.X)));
     }
 
     // Gives the glyph ID of each glyph of the text, and, with a fallback font, the font that draws it.
