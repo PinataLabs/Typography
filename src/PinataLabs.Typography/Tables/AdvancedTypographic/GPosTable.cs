@@ -132,59 +132,20 @@ internal class GPosTable : Table
 
     public bool TryUpdatePositions(FontMetrics fontMetrics, GlyphPositioningCollection collection)
     {
-        // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
-        int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
+        // Set max constraints to prevent infinite loops from attacks.
         int maxOperationsCount = AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(collection.Count);
         int currentOperations = 0;
         bool maxOperationsReached = false;
 
         bool updated = false;
-        for (int i = 0; i < collection.Count; i++)
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
         {
-            if (!collection.ShouldProcess(fontMetrics, i))
+            ScriptClass current = runs.Script;
+            int index = runs.Start;
+            int count = runs.Count;
+            if (!HasGlyphOf(fontMetrics, collection, index, count) || !this.PositionsScript(current))
             {
-                continue;
-            }
-
-            ScriptClass current = collection.TextOptions.GetScriptClass(collection[i].CodePoint);
-
-            int index = i;
-            int count = 1;
-            while (i < collection.Count - 1)
-            {
-                // We want to assign the same feature lookups to individual sections of the text rather
-                // than the text as a whole to ensure that different language shapers do not interfere
-                // with each other when the text contains multiple languages.
-                GlyphShapingData nextData = collection[i + 1];
-                ScriptClass next = collection.TextOptions.GetScriptClass(nextData.CodePoint);
-                if (next != current &&
-                    current is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited &&
-                    next is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited)
-                {
-                    break;
-                }
-
-                if (current is ScriptClass.Common or ScriptClass.Unknown or ScriptClass.Inherited)
-                {
-                    current = next;
-                }
-
-                i++;
-                count++;
-
-                if (i >= maxCount)
-                {
-                    break;
-                }
-            }
-
-            if (!this.PositionsScript(current))
-            {
-                if (i >= maxCount)
-                {
-                    return updated;
-                }
-
                 continue;
             }
 
@@ -215,7 +176,7 @@ internal class GPosTable : Table
             IReadOnlyList<PlannedFeature> enabledFeatures = LookupFeatures.WithoutDisabled(features, shaper.DisabledFeatureTags);
             if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, enabledFeatures, current, collection.TextOptions.Language, withRequiredFeature, positioning: true, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
-                // As in HarfBuzz, which shapes each script run in a buffer of its own, lookups apply within the run.
+                // As in HarfBuzz, which shapes each run in a buffer of its own, lookups apply within the run.
                 collection.SetRun(index, count);
                 collection.NestingLimitReached = SubstitutionReachedNestingLimit(fontMetrics, collection, index, count);
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
@@ -259,13 +220,26 @@ internal class GPosTable : Table
             FixMarkAttachment(collection, index, count);
             UpdatePositions(fontMetrics, collection, index, count);
 
-            if (i >= maxCount || maxOperationsReached)
+            if (maxOperationsReached)
             {
                 return updated;
             }
         }
 
         return updated;
+    }
+
+    private static bool HasGlyphOf(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index, int count)
+    {
+        for (int i = index; i < index + count; i++)
+        {
+            if (collection.ShouldProcess(fontMetrics, i))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

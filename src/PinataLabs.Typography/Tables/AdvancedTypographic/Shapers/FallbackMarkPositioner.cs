@@ -26,17 +26,15 @@ internal static class FallbackMarkPositioner
     /// <param name="gpos">The GPOS table of the font, if it has one.</param>
     public static void ZeroMarksBeforeKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection, GPosTable? gpos)
     {
-        int start = 0;
-        while (start < collection.Count)
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
         {
-            int end = GetScriptRunEnd(collection, start, out ScriptClass script);
+            ScriptClass script = runs.Script;
             if (gpos?.PositionsScript(script) != true && GetMarkZeroingMode(fontMetrics, script, collection.TextOptions) == MarkZeroingMode.PreGPos)
             {
-                ZeroMarks(fontMetrics, collection, start, end);
-                UpdatePositions(fontMetrics, collection, start, end);
+                ZeroMarks(fontMetrics, collection, runs.Start, runs.End);
+                UpdatePositions(fontMetrics, collection, runs.Start, runs.End);
             }
-
-            start = end;
         }
     }
 
@@ -48,13 +46,14 @@ internal static class FallbackMarkPositioner
     /// <param name="gpos">The GPOS table of the font, if it has one.</param>
     public static void PlaceMarksAfterKerning(FontMetrics fontMetrics, GlyphPositioningCollection collection, GPosTable? gpos)
     {
-        int start = 0;
-        while (start < collection.Count)
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
         {
-            int end = GetScriptRunEnd(collection, start, out ScriptClass script);
+            ScriptClass script = runs.Script;
+            int start = runs.Start;
+            int end = runs.End;
             if (gpos?.PositionsScript(script) == true)
             {
-                start = end;
                 continue;
             }
 
@@ -74,8 +73,6 @@ internal static class FallbackMarkPositioner
             {
                 UpdatePositions(fontMetrics, collection, start, end);
             }
-
-            start = end;
         }
     }
 
@@ -87,12 +84,10 @@ internal static class FallbackMarkPositioner
     /// <param name="collection">The glyphs of the text.</param>
     public static void PlaceMarksAcrossFonts(GlyphPositioningCollection collection)
     {
-        int start = 0;
-        while (start < collection.Count)
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
         {
-            int end = GetScriptRunEnd(collection, start, out ScriptClass script);
-            PlaceMarks(collection, script, start, end, null);
-            start = end;
+            PlaceMarks(collection, runs.Script, runs.Start, runs.End, null);
         }
     }
 
@@ -445,36 +440,6 @@ internal static class FallbackMarkPositioner
             }
         }
     }
-
-    /// <summary>
-    /// Gets the end of the run of glyphs that one shaper positions. Characters of no script of their own join the
-    /// script before or after them, as in <see cref="GPosTable.TryUpdatePositions"/>.
-    /// </summary>
-    public static int GetScriptRunEnd(GlyphPositioningCollection collection, int start, out ScriptClass script)
-    {
-        script = collection.TextOptions.GetScriptClass(collection[start].CodePoint);
-        int end = start + 1;
-        while (end < collection.Count)
-        {
-            ScriptClass next = collection.TextOptions.GetScriptClass(collection[end].CodePoint);
-            if (next != script && HasOwnScript(script) && HasOwnScript(next))
-            {
-                break;
-            }
-
-            if (!HasOwnScript(script))
-            {
-                script = next;
-            }
-
-            end++;
-        }
-
-        return end;
-    }
-
-    private static bool HasOwnScript(ScriptClass script)
-        => script is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited;
 
     /// <summary>
     /// The box of a glyph as HarfBuzz measures it: from its top left corner, with a height that goes down.

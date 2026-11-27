@@ -77,10 +77,12 @@ internal sealed class KerningTable : Table
             return;
         }
 
-        int start = 0;
-        while (start < collection.Count)
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
         {
-            int end = FallbackMarkPositioner.GetScriptRunEnd(collection, start, out ScriptClass script);
+            ScriptClass script = runs.Script;
+            int start = runs.Start;
+            int end = runs.End;
             Tag substitutionScript = fontMetrics.GetGSubTable().GetScriptTag(script);
             if (ShaperFactory.HasFallbackPositioning(script, substitutionScript)
                 && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag, collection.TextOptions.Language, ShaperFactory.Create(script, substitutionScript, collection.TextOptions).DisabledFeatureTags)))
@@ -110,8 +112,6 @@ internal sealed class KerningTable : Table
                     MoveAttachedMarks(fontMetrics, collection, start, advances, offsets);
                 }
             }
-
-            start = end;
         }
     }
 
