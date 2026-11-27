@@ -5,7 +5,7 @@
     <AssemblyTitle>PinataLabs.Typography.Unicode</AssemblyTitle>
     <RootNamespace>PinataLabs.Typography.Unicode</RootNamespace>
     <PackageId>PinataLabs.Typography.Unicode</PackageId>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0 AND BSD-3-Clause</PackageLicenseExpression>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/PinataLabs/Typography</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageTags>unicode;code-point;grapheme;uax29;script;uax24</PackageTags>

@@ -1,7 +1,8 @@
 # WinAnsiEncoding, MacRomanEncoding and MacExpertEncoding of ISO 32000-1 Annex D: one `code glyph-name` line each.
 #
-# Source: the encoding tables of Mozilla pdf.js, src/core/encodings.js (Copyright 2012 Mozilla Foundation, Apache-2.0),
-# checked entry by entry against the tables of Apache PDFBox (PDFBox transcribes Annex D, Apache-2.0).
+# Source: converted by PinataLabs from the encoding tables of Mozilla pdf.js, src/core/encodings.js at tag v6.5.438
+# (Copyright 2012 Mozilla Foundation, Apache-2.0), reformatted to one entry per line and annotated. The entries are
+# the same as the pdf.js entries at that tag. The tables are also checked entry by entry against the tables of Apache PDFBox (PDFBox transcribes Annex D, Apache-2.0).
 # generate_glyph_names.py checks WinAnsi and MacRoman a second time against the Python cp1252 and mac_roman codecs.
 #
 # Where this file and Annex D differ, the Annex D note decides, and the entry says so:

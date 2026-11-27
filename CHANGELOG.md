@@ -40,7 +40,7 @@ Unicode conformance suites to that version.
   name. The tables follow the notes of Annex D: in `WinAnsi` every unused code above 0x20 is `bullet` and 0xA0 and
   0xAD are `space` and `hyphen`, and in `MacRoman` 0xCA is `space`. `MacRoman` also keeps the 15 symbols of Mac OS
   Roman that Annex D leaves out, such as `notequal`, because PDF readers resolve them. Every name has text in
-  `AdobeGlyphList`. (#158)
+  `AdobeGlyphList`, except the ZapfDingbats names (`a1` and so on), which `TryGetZapfDingbatsUnicode` reads. (#158)
 - **`AdobeGlyphList`, the Adobe Glyph List in `PinataLabs.Typography.Unicode`.** `TryGetUnicode(glyphName, out text)`
   maps a glyph name to text as the Adobe Glyph List Specification says: the part after the first period is dropped,
   the name is split at underscores into components, and each component is a name of the list (4,281 names, several of
