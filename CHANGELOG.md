@@ -303,6 +303,9 @@ An additive or breaking public API change needs all of these:
   from `hhea`, and `head.macStyle` gives the weight (400 or bold 700), the width (100%, condensed 75% or expanded
   125%) and the slope. The subscript and superscript sizes are 10/12 em, their y offsets 1/5 em, the strikeout
   thickness 1/18 em and the strikeout position half the ascender (#148).
+- A cursive attachment joins a glyph to the next glyph that the lookup flags and the mark filtering set do not skip,
+  as HarfBuzz 15.0.0 does. Before, it joined only the glyph right after it, so a mark between two Arabic letters
+  broke the cursive chain in a lookup with IgnoreMarks. (#146, #147)
 - GSUB and GPOS lookups match their glyphs across ZWJ, ZWNJ and the other default-ignorable characters where HarfBuzz
   15.0.0 does. Such a character between the matched glyphs is skipped unless the lookup matches it there. GSUB skips
   ZWNJ only in the backtrack and the lookahead, GPOS always skips it, and both skip ZWJ unless the feature keeps it in
