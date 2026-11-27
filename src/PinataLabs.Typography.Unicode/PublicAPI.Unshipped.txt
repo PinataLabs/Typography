@@ -89,3 +89,4 @@ PinataLabs.Typography.Unicode.BidiParagraphDirection.RightToLeft = 1 -> PinataLa
 static PinataLabs.Typography.Unicode.BidiLevelRun.operator !=(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
 static PinataLabs.Typography.Unicode.BidiLevelRun.operator ==(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
 static PinataLabs.Typography.Unicode.BidiParagraph.Resolve(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.BidiParagraph!
+static PinataLabs.Typography.Unicode.CodePoint.GetScriptClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.ScriptClass

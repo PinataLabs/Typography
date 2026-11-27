@@ -92,6 +92,9 @@ Unicode conformance suites to that version.
   them, because they decide how the letters on either side join. Every other character that rule X9 removes is in no
   run and ends the run before it. `TextLayout` runs the same engine. The API passes all of `BidiTest.txt` and
   `BidiCharacterTest.txt` of Unicode 18.0.0, levels and visual order. (#152)
+- **`CodePoint.GetScriptClass` is public.** It gives the Script property of `Scripts.txt` for a code point, and
+  `Unknown` for a code point that no script owns. A test compares it with `Scripts.txt` of Unicode 18.0.0 for every
+  code point. Script_Extensions is not read. (#154)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
