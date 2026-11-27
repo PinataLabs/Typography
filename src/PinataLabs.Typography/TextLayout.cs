@@ -1380,58 +1380,68 @@ internal static class TextLayout
                 return;
             }
 
-            // Increase the advance for all non zero-width glyphs but the last.
-            if (options.TextJustification == TextJustification.InterCharacter)
+            // The whitespace at the logical end of the line takes no padding, whichever side of the line rule L1 draws
+            // it on. The glyphs are in visual order, and padding goes after a glyph, so the last glyph before that
+            // whitespace, or before the end of the line, takes none either.
+            int contentEnd = -1;
+            foreach (GlyphLayoutData glyph in this.data)
             {
-                int nonZeroCount = 0;
-                for (int i = 0; i < this.data.Count - 1; i++)
+                if (!CodePoint.IsWhiteSpace(glyph.CodePoint))
                 {
-                    GlyphLayoutData glyph = this.data[i];
-                    if (!CodePoint.IsZeroWidthJoiner(glyph.CodePoint) && !CodePoint.IsZeroWidthNonJoiner(glyph.CodePoint))
-                    {
-                        nonZeroCount++;
-                    }
+                    contentEnd = Math.Max(contentEnd, glyph.Offset);
                 }
+            }
 
-                float padding = delta / nonZeroCount;
-                for (int i = 0; i < this.data.Count - 1; i++)
+            int last = this.data.Count - 1;
+            while (last >= 0 && CodePoint.IsWhiteSpace(this.data[last].CodePoint) && this.data[last].Offset > contentEnd)
+            {
+                last--;
+            }
+
+            bool interWord = options.TextJustification == TextJustification.InterWord;
+            int count = 0;
+            for (int i = 0; i < last; i++)
+            {
+                if (TakesPadding(this.data[i], contentEnd, interWord))
                 {
-                    GlyphLayoutData glyph = this.data[i];
-                    if (!CodePoint.IsZeroWidthJoiner(glyph.CodePoint) && !CodePoint.IsZeroWidthNonJoiner(glyph.CodePoint))
-                    {
-                        glyph.ScaledAdvance += padding;
-                        this.data[i] = glyph;
-                    }
+                    count++;
                 }
+            }
 
+            if (count == 0)
+            {
                 return;
             }
 
-            // Increase the advance for all spaces but the last.
-            if (options.TextJustification == TextJustification.InterWord)
+            float padding = delta / count;
+            for (int i = 0; i < last; i++)
             {
-                // Count all the whitespace characters.
-                int whiteSpaceCount = 0;
-                for (int i = 0; i < this.data.Count - 1; i++)
+                GlyphLayoutData glyph = this.data[i];
+                if (TakesPadding(glyph, contentEnd, interWord))
                 {
-                    GlyphLayoutData glyph = this.data[i];
-                    if (CodePoint.IsWhiteSpace(glyph.CodePoint))
-                    {
-                        whiteSpaceCount++;
-                    }
-                }
-
-                float padding = delta / whiteSpaceCount;
-                for (int i = 0; i < this.data.Count - 1; i++)
-                {
-                    GlyphLayoutData glyph = this.data[i];
-                    if (CodePoint.IsWhiteSpace(glyph.CodePoint))
-                    {
-                        glyph.ScaledAdvance += padding;
-                        this.data[i] = glyph;
-                    }
+                    glyph.ScaledAdvance += padding;
+                    this.data[i] = glyph;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether justification pads the glyph: whitespace before the end of the content of the
+        /// line, or with <see cref="TextJustification.InterCharacter"/> any glyph but a ZWJ or ZWNJ.
+        /// </summary>
+        /// <param name="glyph">The glyph.</param>
+        /// <param name="contentEnd">The offset of the last codepoint of the line that is not whitespace.</param>
+        /// <param name="interWord">Whether only whitespace takes padding.</param>
+        /// <returns><see langword="true"/> if the glyph takes padding.</returns>
+        private static bool TakesPadding(GlyphLayoutData glyph, int contentEnd, bool interWord)
+        {
+            CodePoint codePoint = glyph.CodePoint;
+            if (CodePoint.IsWhiteSpace(codePoint))
+            {
+                return glyph.Offset < contentEnd;
+            }
+
+            return !interWord && !CodePoint.IsZeroWidthJoiner(codePoint) && !CodePoint.IsZeroWidthNonJoiner(codePoint);
         }
 
         /// <summary>

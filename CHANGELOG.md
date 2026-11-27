@@ -547,6 +547,11 @@ Unicode conformance suites to that version.
   was drawn after the b, not at the left end of the line. A space at the end of a wrapped line moves the same way when
   the line keeps it, as with `WordBreaking.BreakAll`. Each line now has the levels that `BidiParagraph.GetVisualRuns`
   gives it. Shaping still takes the levels of the whole text, so no glyph takes another form. (#171)
+- `TextJustification` gives no padding to the whitespace at the end of a wrapped line, or to the last glyph before it,
+  in either paragraph direction. It padded every glyph but the one drawn last. In a right-to-left paragraph, rule L1
+  draws a space that the line keeps at its end, as with `WordBreaking.BreakAll`, at the left end of the line, so that
+  space took padding and left a gap at the start of the line. With `TextJustification.InterCharacter` in a
+  left-to-right paragraph, the letter before that space took padding. (#171)
 - A wrapped line no longer keeps a trailing space that follows a character outside the Basic Multilingual Plane, such as
   an emoji or a mathematical letter. The line break enumerator measured the text before a break through UTF-16 indexes as
   if they were code point indexes, so after such a character it stopped one position too far and `TextLayout` left the

@@ -1620,6 +1620,36 @@ public class TextLayoutTests
         await Assert.That(Visual(lines)).IsEqualTo(string.Join("|", "cd", $"{Shy}ab"));
     }
 
+    // With WordBreaking.BreakAll the first line keeps the space it ends with. That space is at the logical end of the
+    // line, so justification gives it no padding, whichever side of the line rule L1 draws it on: the right in a
+    // left-to-right paragraph, the left in a right-to-left one. Padding goes after a glyph, so the d, the last glyph
+    // before that space or the line end, takes none either.
+    [Test]
+    [Arguments(TextDirection.LeftToRight, TextJustification.InterWord)]
+    [Arguments(TextDirection.RightToLeft, TextJustification.InterWord)]
+    [Arguments(TextDirection.LeftToRight, TextJustification.InterCharacter)]
+    [Arguments(TextDirection.RightToLeft, TextJustification.InterCharacter)]
+    public async Task Justification_GivesNoPaddingToTheSpaceThatEndsAWrappedLine(TextDirection direction, TextJustification justification)
+    {
+        Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(24);
+        TextOptions options = new(font) { TextDirection = direction, WordBreaking = WordBreaking.BreakAll };
+        options.WrappingLength = TextMeasurer.MeasureAdvance("ab cd e", options).Width - 1;
+
+        GlyphLayout[] line = GetLines("ab cd efg", options)[0];
+        options.TextJustification = justification;
+        GlyphLayout[] justified = GetLines("ab cd efg", options)[0];
+
+        // In visual order the line is "ab cd " in a left-to-right paragraph and " ab cd" in a right-to-left one.
+        int trailing = direction == TextDirection.LeftToRight ? line.Length - 1 : 0;
+        int between = direction == TextDirection.LeftToRight ? 2 : 3;
+        int d = direction == TextDirection.LeftToRight ? line.Length - 2 : line.Length - 1;
+        await Assert.That(Visual([justified])).IsEqualTo(direction == TextDirection.LeftToRight ? "ab cd " : " ab cd");
+        await Assert.That(justified[trailing].AdvanceX).IsEqualTo(line[trailing].AdvanceX);
+        await Assert.That(justified[d].AdvanceX).IsEqualTo(line[d].AdvanceX);
+        await Assert.That(justified[between].AdvanceX).IsGreaterThan(line[between].AdvanceX);
+        await Assert.That(Math.Round(justified.Sum(x => x.AdvanceX) * options.Dpi, 3)).IsEqualTo(Math.Round(options.WrappingLength, 3));
+    }
+
     private static readonly string Shy = ((char)0xAD).ToString();
 
     // The glyphs of each line, in the order the layout draws them, which is left to right.
