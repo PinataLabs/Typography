@@ -1542,6 +1542,19 @@ public class TextLayoutTests
         await Assert.That(Math.Round(rightEdges[1], 4)).IsEqualTo(Math.Round(rightEdges[0], 4));
     }
 
+    // A line feed ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its direction from its own first
+    // strong character (P2, P3). The first paragraph runs right to left, so its Latin word, written last, is drawn left
+    // of the Arabic. The second runs left to right, so its Latin word, written first, is drawn left of the Arabic too.
+    [Test]
+    public async Task TextDirection_Auto_OrdersEachParagraphInItsOwnDirection()
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+
+        GlyphLayout[][] lines = GetLines("كتب abc\nabc كتب", new TextOptions(font));
+
+        await Assert.That(Visual(lines)).IsEqualTo("abc بتك|abc بتك");
+    }
+
     // Rule L1 gives a joiner at the end of the line, or before a tab, the paragraph level, so it is in no level run
     // with the beh before it. The beh still joins to it, so it takes its initial form, as before another beh.
     [Test]

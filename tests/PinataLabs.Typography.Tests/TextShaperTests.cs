@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Unicode;
+using TUnit.Assertions.Enums;
 
 namespace PinataLabs.Typography.Tests;
 
@@ -185,6 +186,20 @@ public class TextShaperTests
         await Assert.That(hebrew.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 });
         await Assert.That(latin.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 });
         await Assert.That(unset.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 });
+    }
+
+    [Test]
+    public async Task FirstParagraphOfTheRunDecidesTheDirection()
+    {
+        Font font = GetFont("DejaVuSans.ttf");
+
+        // A line feed ends a paragraph (UAX #9 P1). The first paragraph has no strong character, so it runs left to
+        // right, and with a script, in the direction of the script. The Hebrew after the line feed does not count.
+        ShapedGlyph[] unset = TextShaper.Shape(font, "\n\u05D0\u05D1");
+        ShapedGlyph[] arabic = TextShaper.Shape(font, "123\n\u05D0", new() { Script = ScriptClass.Arabic });
+
+        await Assert.That(unset.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2 }, CollectionOrdering.Matching);
+        await Assert.That(arabic.Select(g => g.Cluster)).IsEquivalentTo(new[] { 4, 3, 2, 1, 0 }, CollectionOrdering.Matching);
     }
 
     [Test]

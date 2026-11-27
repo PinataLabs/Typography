@@ -231,6 +231,30 @@ public class BidiAlgorithmTests
         await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
+    // UAX #9 P1: each paragraph separator ends a paragraph, and the rules after it see one paragraph at a time. Rule W2
+    // does not read the AL before the line feed, so the EN stays EN, and W7 makes it L at sos. Rule N1 does not read the
+    // R before the line feed, so the ON takes sos. With Auto, P2 and P3 give each paragraph its own level from its own
+    // text, skipping its own isolates, and L1 resets its whitespace to that level. CR LF is one separator. ICU 72
+    // (ubidi, as Windows ships it) gives the same levels.
+    [Test]
+    [Arguments("\u0627\n1", 0, new sbyte[] { 1, 0, 0 })]
+    [Arguments("\u05D0\n!\u05D1", 0, new sbyte[] { 1, 0, 0, 1 })]
+    [Arguments("\n\u05D0", 2, new sbyte[] { 0, 1 })]
+    [Arguments("abc\n\u05D0!a", 2, new sbyte[] { 0, 0, 0, 0, 1, 1, 2 })]
+    [Arguments("abc\n\u05D0 ", 2, new sbyte[] { 0, 0, 0, 0, 1, 1 })]
+    [Arguments("\u2067\u05D0\u2069a\n\u2066a\u2069\u05D0", 2, new sbyte[] { 0, 1, 0, 0, 0, 1, 2, 1, 1 })]
+    [Arguments("\u05D0\r\nb", 2, new sbyte[] { 1, 1, 1, 0 })]
+    public async Task EachParagraphIsResolvedOnItsOwn(string text, int paragraphEmbeddingLevel, sbyte[] expected)
+    {
+        var data = new BidiData();
+        data.Init(text, (sbyte)paragraphEmbeddingLevel);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data);
+
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
     // Rule X5c reads the text of an FSI and rule P2 the text of the paragraph, and both skip each isolate pair in it. The
     // FSI holds the pair LRI a PDI, then an R, so it resolves right to left. With paragraph level 2, P2 skips the pair
     // and finds the R. Types that are a slice of a longer array resolve to the levels of the same types in an array of
