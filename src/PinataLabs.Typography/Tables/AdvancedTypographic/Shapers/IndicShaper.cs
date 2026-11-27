@@ -117,38 +117,7 @@ internal sealed class IndicShaper : DefaultShaper
     }
 
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
-    {
-        if (collection is not GlyphSubstitutionCollection substitutionCollection)
-        {
-            return;
-        }
-
-        // Decompose split matras
-        Span<ushort> buffer = stackalloc ushort[16];
-        int end = index + count;
-        for (int i = end - 1; i >= 0; i--)
-        {
-            GlyphShapingData data = substitutionCollection[i];
-            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
-
-            if (UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions))
-            {
-                Span<ushort> ids = buffer.Slice(0, decompositions.Length);
-                for (int j = 0; j < decompositions.Length; j++)
-                {
-                    // Font should always contain the decomposed glyph.
-                    fontMetrics.TryGetGlyphId(new CodePoint(decompositions[j]), out ushort id);
-                    ids[j] = id;
-                }
-
-                substitutionCollection.Replace(i, ids);
-                for (int j = 0; j < decompositions.Length; j++)
-                {
-                    substitutionCollection[i + j].CodePoint = new(decompositions[j]);
-                }
-            }
-        }
-    }
+        => SplitVowelSigns(collection, index, count, UniversalShapingData.Decompositions);
 
     private static void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
     {

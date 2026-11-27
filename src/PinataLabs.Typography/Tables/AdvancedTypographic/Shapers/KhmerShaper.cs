@@ -86,35 +86,7 @@ internal sealed class KhmerShaper : DefaultShaper
     protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
 
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)
-    {
-        if (collection is not GlyphSubstitutionCollection substitutionCollection)
-        {
-            return;
-        }
-
-        // Split the two-part vowel signs.
-        Span<ushort> ids = stackalloc ushort[2];
-        for (int i = index + count - 1; i >= index; i--)
-        {
-            GlyphShapingData data = substitutionCollection[i];
-            if (!Decompositions.TryGetValue(data.CodePoint.Value, out int[]? parts))
-            {
-                continue;
-            }
-
-            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
-            for (int j = 0; j < parts.Length; j++)
-            {
-                fontMetrics.TryGetGlyphId(new CodePoint(parts[j]), out ids[j]);
-            }
-
-            substitutionCollection.Replace(i, ids);
-            for (int j = 0; j < parts.Length; j++)
-            {
-                substitutionCollection[i + j].CodePoint = new(parts[j]);
-            }
-        }
-    }
+        => SplitVowelSigns(collection, index, count, Decompositions);
 
     private static void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
     {

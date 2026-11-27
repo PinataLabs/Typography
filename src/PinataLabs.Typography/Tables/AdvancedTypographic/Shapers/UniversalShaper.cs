@@ -125,45 +125,7 @@ internal sealed class UniversalShaper : DefaultShaper
             ArabicShaper.AssignJoiningForms(collection, index, count);
         }
 
-        DecomposeSplitVowels(collection, index, count);
-    }
-
-    private static void DecomposeSplitVowels(IGlyphShapingCollection collection, int index, int count)
-    {
-        if (collection is not GlyphSubstitutionCollection substitutionCollection)
-        {
-            return;
-        }
-
-        Span<ushort> buffer = stackalloc ushort[16];
-        int end = index + count;
-        for (int i = end - 1; i >= 0; i--)
-        {
-            GlyphShapingData data = substitutionCollection[i];
-            FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
-            if (UniversalShapingData.Decompositions.TryGetValue(data.CodePoint.Value, out int[]? decompositions) && decompositions != null)
-            {
-                Span<ushort> ids = buffer.Slice(0, decompositions.Length);
-                bool hasParts = true;
-                for (int j = 0; j < decompositions.Length; j++)
-                {
-                    hasParts &= fontMetrics.TryGetGlyphId(new CodePoint(decompositions[j]), out ushort id);
-                    ids[j] = id;
-                }
-
-                // As in HarfBuzz, a vowel sign stays whole when the font lacks one of its parts.
-                if (!hasParts)
-                {
-                    continue;
-                }
-
-                substitutionCollection.Replace(i, ids);
-                for (int j = 0; j < decompositions.Length; j++)
-                {
-                    substitutionCollection[i + j].CodePoint = new(decompositions[j]);
-                }
-            }
-        }
+        SplitVowelSigns(collection, index, count, UniversalShapingData.Decompositions);
     }
 
     private void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
