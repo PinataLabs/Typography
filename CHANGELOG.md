@@ -465,6 +465,10 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- In an Indic syllable with two or more vowel signs that go before the base, the Indic shaper writes them in the
+  reverse order of the text, each with the marks after it, as HarfBuzz 15.0.0 does. It kept the order of the text, so
+  Bengali dha, i, e gave i, e, dha where HarfBuzz gives e, i, dha, and Tamil sha, ee, au put ee before the e of au.
+  (#163)
 - `TextShaper` gives the clusters of HarfBuzz 15.0.0 for an Indic syllable whose vowel sign is written before its
   consonant. The Indic shaper merged the cluster of every glyph that the sign moved past, so in Sumana, Marathi, ta,
   virama, ra, i had the clusters 0, 0, 0, 0. As in HarfBuzz, the initial reordering merges no clusters before the base,

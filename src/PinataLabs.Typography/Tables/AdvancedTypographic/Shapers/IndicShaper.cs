@@ -621,13 +621,42 @@ internal sealed class IndicShaper : DefaultShaper
 
             SortByPosition(substitutionCollection, start, end, sources);
 
-            // Find base again
+            // Find base again, and the left matras before it.
+            int firstLeftMatra = end;
+            int lastLeftMatra = end;
             for (int i = start; i < end; i++)
             {
-                if (substitutionCollection[i].IndicShapingEngineInfo?.Position == Positions.Base_C)
+                Positions? position = substitutionCollection[i].IndicShapingEngineInfo?.Position;
+                if (position == Positions.Base_C)
                 {
                     basePosition = i;
                     break;
+                }
+
+                if (position == Positions.Pre_M)
+                {
+                    if (firstLeftMatra == end)
+                    {
+                        firstLeftMatra = i;
+                    }
+
+                    lastLeftMatra = i;
+                }
+            }
+
+            // As in HarfBuzz, left matras go in the reverse order of the text, each with the marks after it. See
+            // https://github.com/harfbuzz/harfbuzz/issues/3863.
+            if (firstLeftMatra < lastLeftMatra)
+            {
+                ReverseKeepingClusters(substitutionCollection, start, firstLeftMatra, lastLeftMatra + 1, sources);
+                int groupStart = firstLeftMatra;
+                for (int i = firstLeftMatra; i <= lastLeftMatra; i++)
+                {
+                    if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.M)
+                    {
+                        ReverseKeepingClusters(substitutionCollection, start, groupStart, i + 1, sources);
+                        groupStart = i + 1;
+                    }
                 }
             }
 
@@ -812,6 +841,18 @@ internal sealed class IndicShaper : DefaultShaper
     }
 
     private static int PositionOf(GlyphShapingData data) => (int)(data.IndicShapingEngineInfo?.Position ?? 0);
+
+    // Reverses the glyphs from start to end of a syllable that begins at syllableStart, with the indexes that the sort
+    // gave them, and merges no clusters.
+    private static void ReverseKeepingClusters(GlyphSubstitutionCollection collection, int syllableStart, int start, int end, Span<int> sources)
+    {
+        for (int i = start; i < end - 1; i++)
+        {
+            collection.MoveGlyphKeepingClusters(end - 1, i);
+        }
+
+        sources[(start - syllableStart)..(end - syllableStart)].Reverse();
+    }
 
     // As HarfBuzz merges the clusters after a sort of a syllable in the new spec: the glyphs that took each other's places
     // form a cycle, and a cycle with a glyph from the base on merges from the base, or its first glyph after the base, to
