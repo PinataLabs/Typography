@@ -64,7 +64,8 @@ internal static class AdvancedTypographicUtils
     /// <summary>
     /// Applies the nested lookups of a context rule at the input glyphs that it matched, as HarfBuzz does in apply_lookup.
     /// A record whose sequence index is past the input, or past the run, is skipped. A nested lookup that adds or removes
-    /// glyphs moves the input glyphs after it. As in HarfBuzz, no record applies past <see cref="MaxNestingLevel"/>.
+    /// glyphs moves the input glyphs after it. As in HarfBuzz, no record applies past <see cref="MaxNestingLevel"/>, or
+    /// after a nested lookup reached it.
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <param name="table">The GSUB table.</param>
@@ -82,12 +83,6 @@ internal static class AdvancedTypographicUtils
         Span<int> positions,
         int count)
     {
-        if (collection.NestingLevel == MaxNestingLevel)
-        {
-            return;
-        }
-
-        collection.NestingLevel++;
         int end = positions[count - 1] + 1;
         foreach (SequenceLookupRecord lookupRecord in records)
         {
@@ -105,9 +100,15 @@ internal static class AdvancedTypographicUtils
                 continue;
             }
 
+            if (!TryEnterNestedLookup(collection))
+            {
+                break;
+            }
+
             int position = positions[sequenceIndex];
             int length = collection.Count;
             lookup.TrySubstitution(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            collection.NestingLevel--;
             int delta = collection.Count - length;
             if (delta == 0)
             {
@@ -150,14 +151,12 @@ internal static class AdvancedTypographicUtils
                 positions[next] += delta;
             }
         }
-
-        collection.NestingLevel--;
     }
 
     /// <summary>
     /// Applies the nested lookups of a context rule at the input glyphs that it matched, as HarfBuzz does. A record
     /// whose sequence index is past the input is skipped. Positioning neither adds nor removes glyphs. As in HarfBuzz,
-    /// no record applies past <see cref="MaxNestingLevel"/>.
+    /// no record applies past <see cref="MaxNestingLevel"/>, or after a nested lookup reached it.
     /// </summary>
     /// <param name="fontMetrics">The font.</param>
     /// <param name="table">The GPOS table.</param>
@@ -175,12 +174,6 @@ internal static class AdvancedTypographicUtils
         ReadOnlySpan<int> positions,
         int count)
     {
-        if (collection.NestingLevel == MaxNestingLevel)
-        {
-            return;
-        }
-
-        collection.NestingLevel++;
         foreach (SequenceLookupRecord lookupRecord in records)
         {
             if (lookupRecord.SequenceIndex >= count)
@@ -188,12 +181,34 @@ internal static class AdvancedTypographicUtils
                 continue;
             }
 
+            if (!TryEnterNestedLookup(collection))
+            {
+                break;
+            }
+
             int position = positions[lookupRecord.SequenceIndex];
             LookupTable lookup = table.LookupList.LookupTables[lookupRecord.LookupListIndex];
             lookup.TryUpdatePosition(fontMetrics, table, collection, features, position, collection.RunEnd - position);
+            collection.NestingLevel--;
+        }
+    }
+
+    // As HarfBuzz does in recurse: a nested lookup past the limit puts the run in error, and no lookup applies after it.
+    private static bool TryEnterNestedLookup(IGlyphShapingCollection collection)
+    {
+        if (collection.NestingLimitReached)
+        {
+            return false;
         }
 
-        collection.NestingLevel--;
+        if (collection.NestingLevel == MaxNestingLevel)
+        {
+            collection.NestingLimitReached = true;
+            return false;
+        }
+
+        collection.NestingLevel++;
+        return true;
     }
 
     /// <summary>

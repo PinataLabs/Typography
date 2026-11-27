@@ -231,6 +231,12 @@ internal class GPosTable : Table
                             goto EndLookups;
                         }
 
+                        // As in HarfBuzz, no lookup applies to the run after a nested lookup reached the limit.
+                        if (collection.NestingLimitReached)
+                        {
+                            goto EndLookups;
+                        }
+
                         if (lookupFeatures.AnyEnabledOn(collection[iterator.Index].Features))
                         {
                             updated |= lookupTable.TryUpdatePosition(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
