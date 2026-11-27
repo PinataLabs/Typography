@@ -482,9 +482,6 @@ Unicode conformance suites to that version.
   ligature leaves with no glyph, at the first codepoint after it that it lays out. A break at such a codepoint, such as
   after a space or a line feed that a variation selector follows, stayed the next break, so it and every break after it
   in the text were lost, mandatory breaks too: `a` U+000A U+FE0F `b` was one line. (#181)
-- `ArraySlice<T>.Slice` and `ReadOnlyArraySlice<T>.Slice` start the new slice at the start of the slice plus `start`.
-  They started it at `start` in the array, so a slice of a slice that did not begin at 0 held the wrong items. Every
-  caller sliced a slice that begins at 0, so no output changes. (#180)
 - The Hangul shaper puts the jamo of a syllable that does not compose in one cluster, as HarfBuzz 15.0.0 does: a lead,
   a vowel and an optional trail that have no precomposed glyph, and a precomposed LV syllable that it takes apart because
   the trail after it does not compose, with that trail. It kept one cluster for each jamo, so `TextShaper` split the
