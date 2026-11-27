@@ -299,7 +299,7 @@ internal class GPosTable : Table
             return false;
         }
 
-        foreach (Tag tag in UnicodeScriptTagMap.Instance[script])
+        foreach (Tag tag in OpenTypeScriptTags.GetTags(script))
         {
             if (this.ScriptList.ContainsKey(tag))
             {

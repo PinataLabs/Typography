@@ -39,13 +39,24 @@ public class ScriptTagTests
         string[] mismatches = HarfBuzz.Scripts
             .Select(s => (s.Name, Expected: string.Join(",", s.Tags), Actual: string.Join(
                 ",",
-                UnicodeScriptTagMap.Instance[Enum.Parse<ScriptClass>(s.Name)].Select(t => t.ToString()))))
+                OpenTypeScriptTags.GetTags(Enum.Parse<ScriptClass>(s.Name)).ToArray().Select(t => t.ToString()))))
             .Where(s => s.Expected != s.Actual)
             .Select(s => $"{s.Name}: expected [{s.Expected}], got [{s.Actual}]")
             .ToArray();
 
         await Assert.That(mismatches).IsEmpty();
     }
+
+    [Test]
+    public async Task GetTags_GivesTheNewestTableFirst()
+    {
+        await Assert.That(OpenTypeScriptTags.GetTags(ScriptClass.Devanagari).ToArray().Select(t => t.ToString()))
+            .IsEquivalentTo(new[] { "dev3", "dev2", "deva" }, CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task GetTags_OfAnUndefinedScript_Throws()
+        => await Assert.That(() => OpenTypeScriptTags.GetTags((ScriptClass)1000)).Throws<ArgumentOutOfRangeException>();
 
     [Test]
     [Arguments("Nko")]

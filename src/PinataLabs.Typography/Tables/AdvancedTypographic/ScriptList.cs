@@ -73,7 +73,7 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
     public ScriptListTable? ChooseScript(ScriptClass script)
     {
         ScriptListTable? table;
-        Tag[] tags = UnicodeScriptTagMap.Instance[script];
+        ReadOnlySpan<Tag> tags = OpenTypeScriptTags.GetTags(script);
         for (int i = 0; i < tags.Length; i++)
         {
             if (this.TryGetValue(tags[i], out table))
