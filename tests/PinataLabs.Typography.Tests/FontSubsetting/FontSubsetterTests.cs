@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tests.FontPrograms;
 
 namespace PinataLabs.Typography.Tests.FontSubsetting;
 
@@ -158,6 +159,27 @@ public class FontSubsetterTests
 
         await Assert.That(some).IsEquivalentTo(outlineTables.Concat(["GSUB", "cmap", "name"]));
         await Assert.That(none).IsEquivalentTo(outlineTables);
+    }
+
+    [Test]
+    [Arguments(OpenType, new[] { "glyf", "loca" }, "CFF ")]
+    [Arguments(TrueType, new[] { "CFF " }, "glyf")]
+    public async Task ADefaultSubsetDropsTheOutlinesOfTheOtherFormatUnlessTheCallerNamesThem(string fontFile, string[] leftover, string kept)
+    {
+        // A font with the outlines of both formats keeps those of its own, as the version of the file says.
+        byte[] font = ReadFont(fontFile);
+        byte[] both = SfntRewriter.Rewrite(font, leftover.ToDictionary(tag => tag, _ => (byte[]?)new byte[16]));
+
+        List<string> defaults = SfntFileChecks.GetTags(FontSubsetter.Subset(both, [1]));
+        List<string> named = SfntFileChecks.GetTags(FontSubsetter.Subset(both, [1], new FontSubsetOptions { Tables = [.. leftover] }));
+
+        await Assert.That(SfntFileChecks.GetTags(both)).Contains(leftover[0]);
+        await Assert.That(defaults).Contains(kept);
+        foreach (string tag in leftover)
+        {
+            await Assert.That(defaults).DoesNotContain(tag);
+            await Assert.That(named).Contains(tag);
+        }
     }
 
     [Test]

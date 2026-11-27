@@ -34,14 +34,16 @@ public sealed class FontSubsetOptions
     /// (<c>CFF </c>, or <c>glyf</c> and <c>loca</c>), the tables that a PDF reader and PDF/A validators read
     /// (<c>cmap</c>, <c>OS/2</c>, <c>head</c>, <c>hhea</c>, <c>hmtx</c>, <c>maxp</c>, <c>name</c> and <c>post</c>), and the
     /// tables that TrueType hinting runs (<c>cvt </c>, <c>fpgm</c> and <c>prep</c>).
-    /// Every other table is dropped. That includes the layout tables <c>GSUB</c>, <c>GPOS</c> and <c>GDEF</c>, which a PDF does not use,
+    /// A subset keeps only the outline tables of its own format: an OpenType font with a <c>CFF </c> table drops <c>glyf</c> and <c>loca</c>,
+    /// and a TrueType font drops <c>CFF </c>. Every other table is dropped. That includes the layout tables <c>GSUB</c>, <c>GPOS</c> and <c>GDEF</c>, which a PDF does not use,
     /// and <c>DSIG</c>, whose signature a subset would break.
     /// </summary>
     public static IReadOnlyCollection<string> DefaultTables => DefaultTableTags;
 
     /// <summary>
     /// Gets the tags of the tables that the subset keeps, each of 4 characters, such as <c>"cmap"</c> and <c>"OS/2"</c>.
-    /// A tag that the font does not have is ignored. <see langword="null"/> keeps <see cref="DefaultTables"/>.
+    /// A tag that the font does not have is ignored. <see langword="null"/> keeps <see cref="DefaultTables"/>, without the outline tables of the
+    /// other format. A tag that is named here is kept, whatever format the outlines have.
     /// </summary>
     /// <remarks>
     /// The subset always keeps the tables that make it a font program: the outline tables, 'head' and 'maxp'.

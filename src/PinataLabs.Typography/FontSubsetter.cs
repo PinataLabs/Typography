@@ -73,6 +73,7 @@ public static class FontSubsetter
     {
         ArgumentNullException.ThrowIfNull(glyphIds);
         SortedSet<uint> tags = SelectTags(options);
+        bool tablesNamed = options?.Tables is not null;
 
         LoadBudget budget = new(font.Length, options?.ProgramOptions?.MaxRetainedBytes);
         ReadOnlySpan<byte> span = font.Span;
@@ -95,9 +96,9 @@ public static class FontSubsetter
         switch (directory.Version)
         {
             case SfntDirectory.OpenTypeCffVersion:
-                return SubsetOpenTypeCff(directory, glyphIds, tags, ref budget);
+                return SubsetOpenTypeCff(directory, glyphIds, tags, tablesNamed, ref budget);
             case SfntDirectory.TrueTypeVersion or SfntDirectory.AppleTrueTypeVersion:
-                return SubsetTrueType(directory, glyphIds, tags, ref budget);
+                return SubsetTrueType(directory, glyphIds, tags, tablesNamed, ref budget);
             case 0x74746366:
                 throw new InvalidFontFileException("A font collection is not a supported font program.");
             case 0x774F4646 or 0x774F4632:
@@ -107,7 +108,7 @@ public static class FontSubsetter
         }
     }
 
-    private static byte[] SubsetOpenTypeCff(SfntDirectory directory, IReadOnlyCollection<ushort> glyphIds, SortedSet<uint> tags, ref LoadBudget budget)
+    private static byte[] SubsetOpenTypeCff(SfntDirectory directory, IReadOnlyCollection<ushort> glyphIds, SortedSet<uint> tags, bool tablesNamed, ref LoadBudget budget)
     {
         if (!directory.TryGetTable(Cff, out ReadOnlyMemory<byte> cff))
         {
@@ -116,15 +117,26 @@ public static class FontSubsetter
                 : "The font has no 'CFF ' table.");
         }
 
+        // The default tables hold the outlines of both formats, and a font keeps those of its own. A caller that names tables gets what it names.
+        if (!tablesNamed)
+        {
+            tags.ExceptWith([Glyf, Loca]);
+        }
+
         tags.UnionWith([Cff, Head, Maxp]);
         SfntTableSource[] tables = CopyTables(directory, tags);
         Replace(tables, Cff, CffSubset.Create(cff, glyphIds, ref budget));
         return Build(directory.Version, tables, ref budget);
     }
 
-    private static byte[] SubsetTrueType(SfntDirectory directory, IReadOnlyCollection<ushort> glyphIds, SortedSet<uint> tags, ref LoadBudget budget)
+    private static byte[] SubsetTrueType(SfntDirectory directory, IReadOnlyCollection<ushort> glyphIds, SortedSet<uint> tags, bool tablesNamed, ref LoadBudget budget)
     {
         TrueTypeSubset glyphs = TrueTypeSubset.Create(directory, glyphIds, ref budget);
+        if (!tablesNamed)
+        {
+            tags.Remove(Cff);
+        }
+
         tags.UnionWith([Glyf, Head, Loca, Maxp]);
         SfntTableSource[] tables = CopyTables(directory, tags);
         Replace(tables, Glyf, glyphs.Glyf);
