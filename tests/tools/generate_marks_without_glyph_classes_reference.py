@@ -47,6 +47,13 @@ font of this script draws, so a cluster of the text takes its base from one font
 alone places the .notdef of a mark where the other font places its glyph. MarksWithoutGlyphClassesTests checks that a
 mark of a fallback font goes to the same place on a base of the font, and stacks on a mark of the font.
 
+MarksWithoutGlyphClassesLigature.ttf has a and b, and ligates them into a_b, skipping marks. It lacks the acute, so in
+a, acute, b HarfBuzz puts the .notdef of the acute on the first component of a_b, which MarksWithoutGlyphClassesTests
+checks for the acute of a fallback font too. MarksWithoutGlyphClassesGpos.ttf has a, f and the grave, and a GPOS table
+that attaches the grave to a and f at x 300 and y 700. MarksWithoutGlyphClassesGposAcute.ttf has a and the acute, and a
+GPOS table that attaches the acute to a at x 100 and y 500. Each lacks a glyph of the other fonts, and a font with GPOS
+places no mark around its base itself, so HarfBuzz leaves the .notdef of the mark that it lacks where it is.
+
 The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the line, as
 HarfBuzz gives them. MarksWithoutGlyphClassesTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
@@ -123,7 +130,24 @@ def build_font_without_gdef(file_name, code_points, features, extra_glyphs):
     return load_font(path)
 
 
-MIXED_TEXTS = ["f̀", "f̀́", "f̖́"]
+MIXED_TEXTS = ["f̀", "f̀́", "f̖́", "á", "áb"]
+
+LIGATURE_FEATURES = """
+languagesystem DFLT dflt; languagesystem latn dflt;
+feature liga { lookupflag IgnoreMarks; sub u0061 u0062 by a_b; } liga;
+"""
+
+GPOS_FEATURES = """
+languagesystem DFLT dflt; languagesystem latn dflt;
+markClass [u0300] <anchor 0 0> @Accent;
+feature mark { pos base [u0061 u0066] <anchor 300 700> mark @Accent; } mark;
+"""
+
+GPOS_ACUTE_FEATURES = """
+languagesystem DFLT dflt; languagesystem latn dflt;
+markClass [u0301] <anchor 0 0> @Accent;
+feature mark { pos base u0061 <anchor 100 500> mark @Accent; } mark;
+"""
 
 
 def main():
@@ -137,6 +161,12 @@ def main():
             ("MarksWithoutGlyphClassesBase.ttf", [0x61, 0x66, 0x0300], 1000),
             ("MarksWithoutGlyphClassesLarge.ttf", [0x0301, 0x0316], 2000)]:
         hb_font = load_font(build_font(file_name, code_points, units_per_em=units_per_em))
+        rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in MIXED_TEXTS)
+    for file_name, code_points, features, extra_glyphs in [
+            ("MarksWithoutGlyphClassesLigature.ttf", [0x61, 0x62], LIGATURE_FEATURES, ["a_b"]),
+            ("MarksWithoutGlyphClassesGpos.ttf", [0x61, 0x66, 0x0300], GPOS_FEATURES, []),
+            ("MarksWithoutGlyphClassesGposAcute.ttf", [0x61, 0x0301], GPOS_ACUTE_FEATURES, [])]:
+        hb_font = build_font_without_gdef(file_name, code_points, features, extra_glyphs)
         rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in MIXED_TEXTS)
     write_reference(REFERENCE, rows)
 

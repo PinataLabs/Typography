@@ -85,15 +85,26 @@ public class MarksWithoutGlyphClassesTests
         await Assert.That(actual).IsEqualTo(expected);
     }
 
-    // A cluster with a base of one font and marks of another. Neither font has GPOS, and each alone places the .notdef of
-    // the mark that it lacks where the other font places the glyph, in rows of the reference. A mark of either font goes
-    // to that place, on the base of the other font and on the marks before it. P is a glyph of the font and F a glyph of
-    // the fallback font. Places are in units of the font: MarksWithoutGlyphClassesLarge.ttf has an em of 2000 units.
+    // A cluster with a base of one font and marks of another. Where neither font has GPOS, each alone places the .notdef
+    // of the mark that it lacks where the other font places the glyph, in rows of the reference. A mark of either font
+    // goes to that place, on the base of the other font and on the marks before it, and on the component of a ligature
+    // that the font of the base gives the place of the mark. A font with GPOS cannot attach its marks to a glyph of
+    // another font, so those marks go where a font without GPOS places them, and stack on a mark that GPOS attached
+    // where GPOS put it: MarksWithoutGlyphClassesGpos.ttf attaches the grave at y 700, and an acute goes over it, at
+    // y 762. P is a glyph of the font and F a glyph of the fallback font. Places are in units of the font:
+    // MarksWithoutGlyphClassesLarge.ttf has an em of 2000 units.
     [Test]
     [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesFallback.ttf", "f̀́", "2P@0,0 3P@300,62 4F@300,124")]
     [Arguments("MarksWithoutGlyphClassesFallback.ttf", "MarksWithoutGlyphClassesBase.ttf", "f̀", "2F@0,0 3P@300,62")]
     [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesLarge.ttf", "f̖́", "2P@0,0 2F@300,-62 1F@300,62")]
     [Arguments("MarksWithoutGlyphClassesLarge.ttf", "MarksWithoutGlyphClassesBase.ttf", "f̀́", "2F@0,0 3F@600,124 1P@600,248")]
+    [Arguments("MarksWithoutGlyphClassesLigature.ttf", "MarksWithoutGlyphClassesFallback.ttf", "áb", "3P@0,0 4F@150,62")]
+    [Arguments("MarksWithoutGlyphClassesGpos.ttf", "MarksWithoutGlyphClassesFallback.ttf", "f̀́", "2P@0,0 3P@300,700 4F@300,762")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "f́", "2P@0,0 2F@300,62")]
+    [Arguments("MarksWithoutGlyphClassesBase.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "á", "1P@0,0 2F@300,62")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesBase.ttf", "f́", "2F@0,0 2P@300,62")]
+    [Arguments("MarksWithoutGlyphClassesGpos.ttf", "MarksWithoutGlyphClassesGposAcute.ttf", "f̀́", "2P@0,0 3P@300,700 2F@300,762")]
+    [Arguments("MarksWithoutGlyphClassesGposAcute.ttf", "MarksWithoutGlyphClassesGpos.ttf", "f̀́", "2F@0,0 3F@300,700 2P@300,762")]
     public async Task MarksOfOneFontGoOnABaseOfAnother(string fontName, string fallbackName, string text, string expected)
     {
         FontCollection collection = new();
