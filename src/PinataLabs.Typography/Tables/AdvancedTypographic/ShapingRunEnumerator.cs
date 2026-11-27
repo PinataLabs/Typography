@@ -10,15 +10,20 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// one direction, in vertical mixed text one orientation, and, for positioning, one font. A character of the scripts
 /// Common, Inherited or Unknown joins the script before it, or the script after it at the start of the text. A caller
 /// itemizes text by script first, so each piece of a script run keeps the script of the run, also a piece of digits that
-/// runs the other way or of characters that a fallback font draws. A default-ignorable glyph of another font does not
-/// end a run: HarfBuzz hides such a character that a font lacks, so its caller takes no other font for it. A mark keeps the orientation of its base, as a
-/// grapheme cluster does in CSS. The orientation of a Tr glyph is <see cref="GlyphShapingData.HasVerticalForm"/>, which
-/// GSUB resolves before it shapes the runs.
+/// runs the other way or of characters that a fallback font draws.
 /// </summary>
 /// <remarks>
+/// <para>
+/// A mark keeps the orientation of its base, as a grapheme cluster does in CSS. The orientation of a Tr glyph is
+/// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A default-ignorable
+/// glyph of another font does not end a run: HarfBuzz hides such a character that a font lacks, so its caller takes no
+/// other font for it.
+/// </para>
+/// <para>
 /// The end of a run is kept as the number of glyphs after it, as <see cref="IGlyphShapingCollection.RunEnd"/> is, so a
 /// substitution that adds or removes glyphs of the current run moves it, and the next run starts after the glyphs that
 /// the substitution left.
+/// </para>
 /// </remarks>
 internal struct ShapingRunEnumerator
 {

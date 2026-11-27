@@ -209,8 +209,8 @@ internal class GSubTable : Table
             return;
         }
 
-        // The runs end where a glyph that is not yet resolved is rotated, which is fine, as each glyph is probed alone
-        // with the script of its run.
+        // These runs end at orientations that are not yet resolved. Each glyph is probed alone, with the script of its
+        // script run, so that does not change what it resolves to.
         ShapingRunEnumerator runs = new(collection);
         while (runs.MoveNext())
         {

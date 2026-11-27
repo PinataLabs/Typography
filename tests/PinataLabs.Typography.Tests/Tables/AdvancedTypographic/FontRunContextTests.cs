@@ -47,24 +47,15 @@ public class FontRunContextTests
             };
 
             IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
-            string actual = Describe(layout.Select(g => (
-                (int)g.Glyph.GlyphMetrics.GlyphId,
-                (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
-                (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y))));
-            if (Describe(row[3]) != actual)
+            string actual = GlyphPlaces.Describe(layout);
+            if (GlyphPlaces.Describe(row[3]) != actual)
             {
-                different.Add($"{row[0].GetString()} {fonts} expected [{Describe(row[3])}] actual [{actual}]");
+                different.Add($"{row[0].GetString()} {fonts} expected [{GlyphPlaces.Describe(row[3])}] actual [{actual}]");
             }
         }
 
         await Assert.That(different).IsEmpty();
     }
-
-    private static string Describe(JsonElement glyphs)
-        => Describe(glyphs.EnumerateArray().Select(g => (g[0].GetInt32(), g[1].GetInt32(), g[2].GetInt32())));
-
-    private static string Describe(IEnumerable<(int Id, int X, int Y)> glyphs)
-        => string.Join(' ', glyphs.Select(g => $"{g.Id}@{g.X},{g.Y}"));
 
     private sealed class Reference
     {

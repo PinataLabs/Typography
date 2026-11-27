@@ -35,7 +35,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     private int[] normalizedOffsets = [];
 
-    // The glyphs before and after the script run that the table shapes. Substitutions add and remove glyphs of the run
+    // The glyphs before and after the run that the table shapes. Substitutions add and remove glyphs of the run
     // only, so the glyphs after it keep their number, and the end of the run follows the substitutions.
     private int runStart;
     private int glyphsAfterRun;
@@ -103,7 +103,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Sets the script run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
+    /// Sets the run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph of the run.</param>
     /// <param name="count">The number of glyphs of the run.</param>

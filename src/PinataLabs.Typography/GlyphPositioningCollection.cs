@@ -24,7 +24,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// </summary>
     private readonly List<GlyphPositioningData> glyphs = [];
 
-    // The glyphs before and after the script run that the table positions. GPOS neither adds nor removes glyphs.
+    // The glyphs before and after the run that the table positions. GPOS neither adds nor removes glyphs.
     private int runStart;
     private int glyphsAfterRun;
 
@@ -60,7 +60,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Sets the script run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
+    /// Sets the run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph of the run.</param>
     /// <param name="count">The number of glyphs of the run.</param>

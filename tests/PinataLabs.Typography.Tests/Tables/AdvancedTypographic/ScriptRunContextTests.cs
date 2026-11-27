@@ -56,16 +56,16 @@ public class ScriptRunContextTests
             string actual;
             try
             {
-                actual = Describe(Places(TextShaper.Shape(font, text, options)));
+                actual = GlyphPlaces.Describe(Places(TextShaper.Shape(font, text, options)));
             }
             catch (Exception exception)
             {
                 actual = exception.GetType().Name;
             }
 
-            if (Describe(row[3]) != actual)
+            if (GlyphPlaces.Describe(row[3]) != actual)
             {
-                different.Add($"{row[0].GetString()} {(script == ScriptRuns ? "runs" : script)} expected [{Describe(row[3])}] actual [{actual}]");
+                different.Add($"{row[0].GetString()} {(script == ScriptRuns ? "runs" : script)} expected [{GlyphPlaces.Describe(row[3])}] actual [{actual}]");
             }
         }
 
@@ -86,19 +86,16 @@ public class ScriptRunContextTests
             try
             {
                 IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font));
-                actual = Describe(layout.Select(g => (
-                    (int)g.Glyph.GlyphMetrics.GlyphId,
-                    (int)MathF.Round(g.PenLocation.X - layout[0].PenLocation.X + g.Glyph.GlyphMetrics.Offset.X),
-                    (int)MathF.Round(g.Glyph.GlyphMetrics.Offset.Y))));
+                actual = GlyphPlaces.Describe(layout);
             }
             catch (Exception exception)
             {
                 actual = exception.GetType().Name;
             }
 
-            if (Describe(row[3]) != actual)
+            if (GlyphPlaces.Describe(row[3]) != actual)
             {
-                different.Add($"{row[0].GetString()} {row[2].GetString()} expected [{Describe(row[3])}] actual [{actual}]");
+                different.Add($"{row[0].GetString()} {row[2].GetString()} expected [{GlyphPlaces.Describe(row[3])}] actual [{actual}]");
             }
         }
 
@@ -136,12 +133,6 @@ public class ScriptRunContextTests
             pen += glyph.XAdvance;
         }
     }
-
-    private static string Describe(JsonElement glyphs)
-        => Describe(glyphs.EnumerateArray().Select(g => (g[0].GetInt32(), g[1].GetInt32(), g[2].GetInt32())));
-
-    private static string Describe(IEnumerable<(int Id, int X, int Y)> glyphs)
-        => string.Join(' ', glyphs.Select(g => $"{g.Id}@{g.X},{g.Y}"));
 
     private sealed class Reference
     {
