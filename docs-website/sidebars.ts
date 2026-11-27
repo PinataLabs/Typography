@@ -56,6 +56,7 @@ const sidebars: SidebarsConfig = {
             'api/font',
             'api/text-options',
             'api/text-measurer',
+            'api/text-shaper',
             'api/text-renderer',
             'api/metrics',
             'api/geometry',

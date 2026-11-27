@@ -30,6 +30,7 @@ The build fails if the public API differs from them, so they are always up to da
 | Make a font | [`Font`, `FontStyle`, `FontStyleRange`](./font.md) |
 | Set up a layout | [`TextOptions`, `TextRun`](./text-options.md) |
 | Measure text | [`TextMeasurer`, `GlyphBounds`](./text-measurer.md) |
+| Shape text into glyphs and clusters | [`TextShaper`, `ShapedGlyph`, `ShapingOptions`, `ShapingFeature`](./text-shaper.md) |
 | Get glyph outlines | [`TextRenderer`, `IGlyphRenderer`, `IColorGlyphRenderer`, `GlyphRendererParameters`](./text-renderer.md) |
 | Read metrics | [`FontMetrics`, `HorizontalMetrics`, `VerticalMetrics`, `Glyph`, `GlyphMetrics`](./metrics.md) |
 | Rectangles and colors | [`FontRectangle`, `GlyphColor`](./geometry.md) |
