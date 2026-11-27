@@ -580,6 +580,13 @@ internal sealed class IndicShaper : DefaultShaper
                     }
                     else if (info.Position != Positions.SMVD)
                     {
+                        // As in HarfBuzz, a syllable modifier before a post-base matra takes the place of the matra, so
+                        // that the sort keeps it before the matra.
+                        if (info.Category == Categories.MPst && i > start && substitutionCollection[i - 1].IndicShapingEngineInfo is { Category: Categories.SM } modifier)
+                        {
+                            modifier.Position = info.Position;
+                        }
+
                         lastPosition = info.Position;
                     }
                 }
@@ -607,7 +614,7 @@ internal sealed class IndicShaper : DefaultShaper
 
                         last = i;
                     }
-                    else if (info.Category == Categories.M)
+                    else if ((info.Category & MatraFlags) != 0)
                     {
                         last = i;
                     }
@@ -652,7 +659,7 @@ internal sealed class IndicShaper : DefaultShaper
                 int groupStart = firstLeftMatra;
                 for (int i = firstLeftMatra; i <= lastLeftMatra; i++)
                 {
-                    if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.M)
+                    if ((substitutionCollection[i].IndicShapingEngineInfo?.Category & MatraFlags) != 0)
                     {
                         ReverseKeepingClusters(substitutionCollection, start, groupStart, i + 1, sources);
                         groupStart = i + 1;
@@ -1099,7 +1106,7 @@ internal sealed class IndicShaper : DefaultShaper
                 {
                     while (true)
                     {
-                        while (newPos > start && (substitutionCollection[newPos].IndicShapingEngineInfo?.Category & (Categories.M | HalantOrCoengFlags)) == 0)
+                        while (newPos > start && (substitutionCollection[newPos].IndicShapingEngineInfo?.Category & (MatraFlags | HalantOrCoengFlags)) == 0)
                         {
                             newPos--;
                         }
@@ -1293,7 +1300,7 @@ internal sealed class IndicShaper : DefaultShaper
                     {
                         for (int i = basePosition + 1; i < newRephPos; i++)
                         {
-                            if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.M)
+                            if ((substitutionCollection[i].IndicShapingEngineInfo?.Category & MatraFlags) != 0)
                             {
                                 newRephPos--;
                             }
@@ -1345,7 +1352,7 @@ internal sealed class IndicShaper : DefaultShaper
                             // We want to position matra after them.
                             if (this.ScriptClass is not ScriptClass.Malayalam and not ScriptClass.Tamil)
                             {
-                                while (newPos > start && (substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category & (Categories.M | HalantOrCoengFlags)) == 0)
+                                while (newPos > start && (substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category & (MatraFlags | HalantOrCoengFlags)) == 0)
                                 {
                                     newPos--;
                                 }

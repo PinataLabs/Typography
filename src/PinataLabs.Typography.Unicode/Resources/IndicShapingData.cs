@@ -12,6 +12,7 @@ internal static partial class IndicShapingData
     public const Categories ConsonantFlags = Categories.C | Categories.Ra | Categories.CM | Categories.V | Categories.Placeholder | Categories.Dotted_Circle;
     public const Categories JoinerFlags = Categories.ZWJ | Categories.ZWNJ;
     public const Categories HalantOrCoengFlags = Categories.H | Categories.Coeng;
+    public const Categories MatraFlags = Categories.M | Categories.MPst;
 
     // Categories used in the OpenType spec:
     // https://www.microsoft.com/typography/otfntdev/devanot/shaping.aspx
@@ -46,7 +47,11 @@ internal static partial class IndicShapingData
         VPst = 1 << 22, // Vowel sign after the base.
         Robatic = 1 << 23, // ROBAT and the register shifters, which can follow a consonant.
         Xgroup = 1 << 24, // Signs that go between the consonants and the vowel signs.
-        Ygroup = 1 << 25 // Signs that end a syllable.
+        Ygroup = 1 << 25, // Signs that end a syllable.
+
+        // A matra after the base that a syllable modifier can come before, as HarfBuzz gives U+0A40 GURMUKHI VOWEL SIGN II,
+        // which can follow U+0A02 GURMUKHI SIGN BINDI.
+        MPst = 1 << 26
     }
 
     // Visual positions in a syllable from left to right.

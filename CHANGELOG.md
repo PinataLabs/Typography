@@ -465,6 +465,10 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- A Gurmukhi bindi before the vowel sign ii (U+0A02, U+0A40) is one syllable with its consonant, as in HarfBuzz 15.0.0,
+  and keeps its place before the sign. The Indic syllable grammar ended the syllable at the bindi, so the sign started a
+  broken cluster and took a dotted circle. As in HarfBuzz, U+0A40 has a category of its own, a post-base matra that a
+  bindi or a visarga can come before. (#163)
 - The Indic shaper applies `init` to a vowel sign that goes before its consonant only at the start of a word, as
   HarfBuzz 15.0.0 does: at the start of the run, or after a character that is not a letter, a mark, a format character,
   or an unassigned, private use or surrogate code point. It applied `init` after any character but a non-spacing mark or
