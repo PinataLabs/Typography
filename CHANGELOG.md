@@ -469,6 +469,25 @@ Unicode conformance suites to that version.
   where HarfBuzz places it. The advance wrapped at 16 bits, so a kern of -700 on an advance of 600 moved the next glyph
   65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a
   vertical advance outside 0 to 65535, so its placement is not checked against HarfBuzz. (#162)
+- Rule L1 of the bidi algorithm now leaves a character that rule X9 removes, such as U+00AD, at the paragraph level
+  when it is in the whitespace that L1 resets at the end of a line or before a separator, as UAX #9 section 5.2 says.
+  The pass that gives each removed character the level of the character before it ran after L1 and overwrote the reset,
+  so in `"ab"` + U+00AD in a right-to-left paragraph the soft hyphen took level 2, not 1. `BidiAlgorithm.Process`,
+  `BidiParagraph.Levels` and `BidiParagraph.GetVisualRuns` all have the fix. In `TextLayout`, a soft hyphen at the end
+  of the text is now drawn at the end of the line in the paragraph direction, not next to the letter before it. It has
+  no advance, so no other glyph moves. (#165)
+- Rule L1 of the bidi algorithm now leaves a character that rule X9 removes, such as U+00AD or an embedding control,
+  at the paragraph level when it is in the whitespace that L1 resets at the end of a line or before a separator, as
+  UAX #9 section 5.2 says. The pass that gives each removed character the level of the character before it ran after
+  L1 and overwrote the reset, so in `"ab"` + U+00AD in a right-to-left paragraph the soft hyphen took level 2, not 1.
+  `BidiParagraph.Levels` and `BidiParagraph.GetVisualRuns` have the fix. `TextLayout` applies L1 to the whole text as
+  one line, so a soft hyphen at the end of the text, or before a tab, now takes the paragraph level and is drawn on
+  the paragraph side of the letter before it. A soft hyphen at the end of a wrapped line that is not the last does not
+  move. A ZWJ or ZWNJ moves the same way, and the letter before it still joins to it, because shaping splits a font
+  run by script, not by direction. None of these characters has an advance, so no other glyph moves. (#165)
+- A character that rule X9 removes at the start of a paragraph now takes the paragraph level, as UAX #9 section 5.2
+  says. Rules X2 to X5 gave an RLE, LRE, RLO or LRO there the level that it pushes, so in RLE + `abc` in a
+  left-to-right paragraph `BidiParagraph.Levels` gave the RLE level 1, not 0. (#165)
 - A wrapped line no longer keeps a trailing space that follows a character outside the Basic Multilingual Plane, such as
   an emoji or a mathematical letter. The line break enumerator measured the text before a break through UTF-16 indexes as
   if they were code point indexes, so after such a character it stopped one position too far and `TextLayout` left the

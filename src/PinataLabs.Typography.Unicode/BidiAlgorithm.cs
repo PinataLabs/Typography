@@ -204,7 +204,7 @@ internal sealed class BidiAlgorithm
     /// <param name="data">The Bidi Unicode data.</param>
     /// <param name="resetWhitespace">
     /// <see langword="true"/> to apply rule L1 to all of the data as one line; <see langword="false"/> to leave it to the caller,
-    /// which applies it to each line with <see cref="ResetWhitespaceLevels"/> and then <see cref="AssignLevelsToRemovedCharacters"/>.
+    /// which applies it to each line with <see cref="ResetWhitespaceLevels"/>.
     /// </param>
     public void Process(BidiData data, bool resetWhitespace = true)
         => this.Process(
@@ -289,14 +289,14 @@ internal sealed class BidiAlgorithm
         // Process all isolated run sequences
         this.ProcessIsolatedRunSequences();
 
+        // Clean up
+        this.AssignLevelsToCodePointsRemovedByX9();
+
         // Reset whitespace levels, treating all of the data as one line
         if (resetWhitespace)
         {
             ResetWhitespaceLevels(this.originalTypes, this.ResolvedLevels, this.paragraphEmbeddingLevel);
         }
-
-        // Clean up
-        this.AssignLevelsToCodePointsRemovedByX9();
     }
 
     /// <summary>
@@ -1362,8 +1362,14 @@ internal sealed class BidiAlgorithm
     }
 
     /// <summary>
-    /// Resets whitespace levels. Implements rule L1
+    /// Resets whitespace levels. Implements rule L1, as UAX #9 section 5.2 extends it to the characters that rule X9 removes.
     /// </summary>
+    /// <remarks>
+    /// A removed character in a sequence that L1 resets takes the paragraph level. Every other removed character takes
+    /// the level of the character before it after L1, so one after a separator takes the reset level. A removed character
+    /// at the start of the line keeps the level that <see cref="Process(BidiData, bool)"/> gave it: that of the character
+    /// before it in the paragraph, or the paragraph level at the start of the paragraph.
+    /// </remarks>
     /// <param name="types">The bidi types of the line.</param>
     /// <param name="levels">The resolved levels of the line, which this resets in place.</param>
     /// <param name="paragraphEmbeddingLevel">The embedding level of the paragraph that the line belongs to.</param>
@@ -1408,6 +1414,35 @@ internal sealed class BidiAlgorithm
                 break;
             }
         }
+
+        // Section 5.2: a removed character outside the sequences reset above takes the level of the character before it.
+        int k = 1;
+        while (k < levels.Length)
+        {
+            if (!IsRemovedByX9(types[k]))
+            {
+                k++;
+                continue;
+            }
+
+            int end = k + 1;
+            while (end < levels.Length && IsWhitespace(types[end]))
+            {
+                end++;
+            }
+
+            bool resetByL1 = end == levels.Length
+                || types[end] is BidiCharacterType.ParagraphSeparator or BidiCharacterType.SegmentSeparator;
+            for (; !resetByL1 && k < end; k++)
+            {
+                if (IsRemovedByX9(types[k]))
+                {
+                    levels[k] = levels[k - 1];
+                }
+            }
+
+            k = end;
+        }
     }
 
     /// <summary>
@@ -1430,8 +1465,9 @@ internal sealed class BidiAlgorithm
             return;
         }
 
-        // Fix up first character
-        if (this.ResolvedLevels[0] < 0)
+        // Fix up first character. Section 5.2: a removed character with no character before it takes the paragraph level,
+        // where rules X2 to X5 gave an embedding control the level that it pushes.
+        if (this.ResolvedLevels[0] < 0 || IsRemovedByX9(this.originalTypes[0]))
         {
             this.ResolvedLevels[0] = this.paragraphEmbeddingLevel;
         }
@@ -1454,15 +1490,11 @@ internal sealed class BidiAlgorithm
     }
 
     /// <summary>
-    /// Gives each character that rule X9 removes the level of the character before it. The first character of the
-    /// line keeps its level.
+    /// Gives each character that rule X9 removes the level of the character before it. The first character keeps its level.
     /// </summary>
-    /// <remarks>
-    /// This follows rule L1, so that a removed character after a separator that L1 reset takes the reset level.
-    /// </remarks>
-    /// <param name="types">The bidi types of the line.</param>
-    /// <param name="levels">The levels of the line, which this sets in place.</param>
-    internal static void AssignLevelsToRemovedCharacters(ReadOnlyArraySlice<BidiCharacterType> types, ArraySlice<sbyte> levels)
+    /// <param name="types">The bidi types of the text.</param>
+    /// <param name="levels">The levels of the text, which this sets in place.</param>
+    private static void AssignLevelsToRemovedCharacters(ReadOnlyArraySlice<BidiCharacterType> types, ArraySlice<sbyte> levels)
     {
         for (int i = 1; i < levels.Length; i++)
         {

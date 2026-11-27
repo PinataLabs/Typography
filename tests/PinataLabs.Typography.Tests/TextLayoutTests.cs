@@ -1542,6 +1542,25 @@ public class TextLayoutTests
         await Assert.That(Math.Round(rightEdges[1], 4)).IsEqualTo(Math.Round(rightEdges[0], 4));
     }
 
+    // Rule L1 gives a joiner at the end of the line, or before a tab, the paragraph level, so it is in no level run
+    // with the beh before it. The beh still joins to it, so it takes its initial form, as before another beh.
+    [Test]
+    [Arguments("abc \u0628\u200D")]
+    [Arguments("abc \u0628\u200D\tdef")]
+    public async Task JoinerThatRuleL1ResetsStillJoinsTheLetterBeforeIt(string text)
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        ushort joined = TextShaper.Shape(font, "\u0628\u0628", new() { Direction = TextDirection.RightToLeft })
+            .Single(g => g.Cluster == 0).GlyphId;
+        ushort isolated = TextShaper.Shape(font, "\u0628", new() { Direction = TextDirection.RightToLeft })[0].GlyphId;
+
+        ushort beh = TextLayout.GenerateLayout(text.AsSpan(), new TextOptions(font) { TextDirection = TextDirection.LeftToRight })
+            .Single(g => g.CodePoint == new CodePoint(0x0628)).Glyph.GlyphMetrics.GlyphId;
+
+        await Assert.That(joined).IsNotEqualTo(isolated);
+        await Assert.That(beh).IsEqualTo(joined);
+    }
+
     private static string GetVisualOrder(string text, TextOptions options)
     {
         TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);

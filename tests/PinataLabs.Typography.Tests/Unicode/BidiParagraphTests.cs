@@ -25,6 +25,9 @@ public class BidiParagraphTests
     private const string Zwj = "\U0000200D";
     private const string Zwnj = "\U0000200C";
     private const string SoftHyphen = "\U000000AD";
+    private const string Lre = "\U0000202A";
+    private const string Rle = "\U0000202B";
+    private const string Pdf = "\U0000202C";
 
     private static readonly Dictionary<BidiCharacterType, string> ClassRepresentatives = new()
     {
@@ -292,6 +295,29 @@ public class BidiParagraphTests
         BidiParagraph paragraph = BidiParagraph.Resolve("abc\t" + SoftHyphen + "def", BidiParagraphDirection.RightToLeft);
 
         await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 2, 2, 2, 1, 1, 2, 2, 2 }, CollectionOrdering.Matching);
+    }
+
+    [Test]
+    [Arguments("ab" + SoftHyphen, new byte[] { 2, 2, 1 })]
+    [Arguments("ab " + SoftHyphen, new byte[] { 2, 2, 1, 1 })]
+    [Arguments("ab" + SoftHyphen + " ", new byte[] { 2, 2, 1, 1 })]
+    [Arguments("ab" + SoftHyphen + "\tcd", new byte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab" + Pdf, new byte[] { 2, 2, 1 })]
+    [Arguments("ab" + Lre + "\tcd", new byte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab" + Pdf + "cd", new byte[] { 2, 2, 2, 2, 2 })]
+    public async Task RuleL1ResetsARemovedCharacterInTheSequenceItResets(string text, byte[] expected)
+    {
+        BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.RightToLeft);
+
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(expected, CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task ARemovedCharacterAtTheStartTakesTheParagraphLevel()
+    {
+        BidiParagraph paragraph = BidiParagraph.Resolve(Rle + "abc", BidiParagraphDirection.LeftToRight);
+
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 0, 2, 2, 2 }, CollectionOrdering.Matching);
     }
 
     [Test]
