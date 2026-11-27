@@ -56,6 +56,7 @@ internal class GlyphShapingData
         this.IsMultiplied = data.IsMultiplied;
         this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
+        this.SubstitutionReachedNestingLimit = data.SubstitutionReachedNestingLimit;
         this.SpaceFallback = data.SpaceFallback;
         this.JamoFeature = data.JamoFeature;
         if (data.UniversalShapingEngineInfo != null)
@@ -262,6 +263,13 @@ internal class GlyphShapingData
     /// and rotated, with horizontal features and metrics, otherwise.
     /// </summary>
     public bool HasVerticalForm { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a nested GSUB lookup of the glyph's script run would have gone past
+    /// <see cref="AdvancedTypographicUtils.MaxNestingLevel"/>. HarfBuzz keeps the buffer in error, so no GPOS lookup
+    /// applies to the run either.
+    /// </summary>
+    public bool SubstitutionReachedNestingLimit { get; set; }
 
     /// <summary>
     /// Gets or sets the space that this glyph of U+0020 stands for, when the font lacks that space.

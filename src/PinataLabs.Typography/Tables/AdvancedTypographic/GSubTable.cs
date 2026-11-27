@@ -228,6 +228,15 @@ internal class GSubTable : Table
                 i += delta;
             }
 
+            // GPOS reads it when it positions the glyphs of the run.
+            if (collection.NestingLimitReached)
+            {
+                for (int g = collection.RunStart; g < collection.RunEnd; g++)
+                {
+                    collection[g].SubstitutionReachedNestingLimit = true;
+                }
+            }
+
             collection.SetRun(0, collection.Count);
         }
     }

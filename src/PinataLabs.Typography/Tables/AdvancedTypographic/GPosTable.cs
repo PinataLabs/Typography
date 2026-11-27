@@ -217,6 +217,7 @@ internal class GPosTable : Table
             {
                 // As in HarfBuzz, which shapes each script run in a buffer of its own, lookups apply within the run.
                 collection.SetRun(index, count);
+                collection.NestingLimitReached = SubstitutionReachedNestingLimit(fontMetrics, collection, index, count);
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
                 {
@@ -419,6 +420,21 @@ internal class GPosTable : Table
                 data.Bounds.Height = 0;
             }
         }
+    }
+
+    // As in HarfBuzz, whose buffer stays in error after GSUB went past the nesting limit, GPOS applies no lookup to the
+    // run. Only the glyphs of the font count, since each font substitutes its own glyphs.
+    private static bool SubstitutionReachedNestingLimit(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index, int count)
+    {
+        for (int i = index; i < index + count; i++)
+        {
+            if (collection.ShouldProcess(fontMetrics, i) && collection[i].SubstitutionReachedNestingLimit)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void UpdatePositions(FontMetrics fontMetrics, GlyphPositioningCollection collection, int index, int count)
