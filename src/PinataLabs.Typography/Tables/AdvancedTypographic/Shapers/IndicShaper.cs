@@ -993,7 +993,7 @@ internal sealed class IndicShaper : DefaultShaper
                             GlyphShapingData current = substitutionCollection[i];
                             if (current.Features.FindIndex(x => x.Tag == PrefTag && x.Enabled) >= 0)
                             {
-                                if (!current.IsSubstituted && current.IsLigated && !current.IsDecomposed)
+                                if (!(current.IsSubstituted && current.IsLigated && !current.IsMultiplied))
                                 {
                                     // Ok, this was a 'pref' candidate but didn't form any.
                                     // Base is around here...
@@ -1177,7 +1177,7 @@ internal sealed class IndicShaper : DefaultShaper
             GlyphShapingData original = substitutionCollection[start];
             if (start + 1 < end &&
                 original.IndicShapingEngineInfo?.Position == Positions.Ra_To_Become_Reph &&
-                (original.IndicShapingEngineInfo?.Category == Categories.Repha != (original.IsLigated && !original.IsDecomposed)))
+                (original.IndicShapingEngineInfo?.Category == Categories.Repha != (original.IsLigated && !original.IsMultiplied)))
             {
                 int newRephPos = start;
                 Positions rephPos = this.indicConfiguration.RephPosition;
@@ -1329,7 +1329,7 @@ internal sealed class IndicShaper : DefaultShaper
                         // the <pref> feature actually did it...
                         //
                         // Reorder pref only if it ligated.
-                        if (current.IsLigated && !current.IsDecomposed)
+                        if (current.IsLigated && !current.IsMultiplied)
                         {
                             // 2. Try to find a target position the same way as for pre-base matra.
                             //    If it is found, reorder pre-base consonant glyph.

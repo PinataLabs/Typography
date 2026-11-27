@@ -417,7 +417,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Performs a 1:1 replacement of a glyph id at the given position.
+    /// Performs a 1:1 replacement of a glyph id at the given position. As in HarfBuzz, the glyph keeps its ligature id and
+    /// component, so a mark that a ligature skipped still attaches to its component.
     /// </summary>
     /// <param name="index">The zero-based index of the element to replace.</param>
     /// <param name="glyphId">The replacement glyph id.</param>
@@ -425,8 +426,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     {
         GlyphShapingData current = this.glyphs[index].Data;
         current.GlyphId = glyphId;
-        current.LigatureId = 0;
-        current.LigatureComponent = -1;
         current.MarkAttachment = -1;
         current.CursiveAttachment = 0;
         current.IsSubstituted = true;
@@ -500,7 +499,9 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Replaces a single glyph id with a collection of glyph ids.
+    /// Replaces a single glyph id with a collection of glyph ids. As in HarfBuzz, each glyph is a component of the glyph it
+    /// replaces, unless that glyph has a ligature id, as a ligature or a mark that a ligature skipped has: then each glyph
+    /// keeps the id and the component. A ligature gives glyphs of the base class.
     /// </summary>
     /// <param name="index">The zero-based index of the element to replace.</param>
     /// <param name="glyphIds">The collection of replacement glyph ids.</param>
@@ -510,8 +511,18 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         {
             OffsetGlyphDataPair pair = this.glyphs[index];
             GlyphShapingData current = pair.Data;
+            bool isComponent = current.LigatureId == 0;
+            if (current.SubstitutedGlyphClass == GlyphClassDef.LigatureGlyph)
+            {
+                current.SubstitutedGlyphClass = GlyphClassDef.BaseGlyph;
+            }
+
             current.GlyphId = glyphIds[0];
-            current.LigatureComponent = 0;
+            if (isComponent)
+            {
+                current.LigatureComponent = 0;
+            }
+
             current.MarkAttachment = -1;
             current.CursiveAttachment = 0;
             current.IsSubstituted = true;
@@ -526,7 +537,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
                     GlyphShapingData data = new(current, false)
                     {
                         GlyphId = glyphIds[i],
-                        LigatureComponent = i + 1
+                        LigatureComponent = isComponent ? i + 1 : current.LigatureComponent
                     };
 
                     this.glyphs.Insert(++index, new(pair.Offset, data));

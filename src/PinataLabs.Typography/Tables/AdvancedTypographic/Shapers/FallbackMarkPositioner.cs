@@ -104,11 +104,12 @@ internal static class FallbackMarkPositioner
         }
     }
 
-    // As in HarfBuzz, a ligature of components that are not all marks has the general category Lo where it was Mn.
+    // As in HarfBuzz, a ligature of components that are not all marks has the general category Lo where it was Mn, and a
+    // dotted circle that a shaper inserted has the Unicode properties that it copied.
     private static bool IsUnicodeMark(GlyphShapingData data)
-        => CodePoint.IsMark(data.CodePoint)
+        => CodePoint.IsMark(data.UnicodePropertiesCodePoint)
             && !(data.SubstitutedGlyphClass == GlyphClassDef.LigatureGlyph
-                && CodePoint.GetGeneralCategory(data.CodePoint) == UnicodeCategory.NonSpacingMark);
+                && CodePoint.GetGeneralCategory(data.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark);
 
     private static void PlaceMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
     {
@@ -163,7 +164,7 @@ internal static class FallbackMarkPositioner
         for (int i = baseIndex + 1; i < end; i++)
         {
             GlyphShapingData data = collection[i];
-            uint placement = UnicodeData.GetCombiningClassData((uint)data.CodePoint.Value);
+            uint placement = UnicodeData.GetCombiningClassData((uint)data.UnicodePropertiesCodePoint.Value);
             MarkAlignment alignment = (MarkAlignment)((placement >> CanonicalMappingData.MarkAlignmentShift) & CanonicalMappingData.MarkPlacementMask);
             MarkSide side = (MarkSide)((placement >> CanonicalMappingData.MarkSideShift) & CanonicalMappingData.MarkPlacementMask);
             if (alignment == MarkAlignment.None)

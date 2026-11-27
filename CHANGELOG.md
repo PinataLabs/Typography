@@ -488,6 +488,18 @@ Unicode conformance suites to that version.
 - `TextLayout` keeps a grapheme on one line. A line break opportunity inside a grapheme, such as after a space that
   a combining mark extends, moves to the end of the grapheme: `a` U+0020 U+0301 `bbbb` wrapped after the space, and
   the next line began with the acute on its own. (#181)
+- A single substitution keeps the ligature id and the component of a glyph, and a multiple substitution of a glyph that
+  has a ligature id keeps them on each of its glyphs, as HarfBuzz 15.0.0 does. So a mark that a ligature skipped still
+  attaches to its component of the ligature after a later lookup substitutes it. In `LigatureProperties.ttf`, a single
+  substitution of the acute between a and b put it on the last component of their ligature, and a multiple substitution
+  of the grave put the first of its glyphs there, where HarfBuzz puts them on the first. (#186)
+- In a font without glyph classes, the glyphs that a multiple substitution makes of a ligature are bases, as in
+  HarfBuzz 15.0.0, so a lookup that ignores ligatures applies to them. They kept the ligature class. (#186)
+- The Indic shaper takes a ligature that did not multiply for a reph or a pre-base form, as HarfBuzz 15.0.0 does. It
+  took a ligature of a glyph of a one-glyph sequence substitution for one that multiplied, so such a reph stayed first.
+  It also finds the base again after a pre-base-reordering consonant whose `pref` ligature did not form, as HarfBuzz
+  does, so Devanagari ka, virama, ta, i in `LigaturePropertiesIndic.ttf` gives the matra after the virama, where it
+  stayed before ka. (#186)
 - Fallback mark placement goes on past a default-ignorable glyph and takes no advance from it, as HarfBuzz 15.0.0 does.
   In `TextShaperHangulColr.ttf`, U+AC00 U+FE00 U+302E put the tone mark and its dotted circle at x offset -900,
   where HarfBuzz gives -300, because the 600 wide `.notdef` of the hidden U+FE00 moved them back. U+034F did the same,
