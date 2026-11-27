@@ -53,7 +53,8 @@ In vertical text the library applies the font's `vert` feature. It replaces glyp
 vertical forms, for example brackets and the long vowel mark `ー` turned for vertical text.
 Horizontal-only features such as ligatures and `kern` are not applied to vertical glyphs. The
 font's vertical kerning feature (`vkrn`) is not applied by default either. Add it to
-[`FeatureTags`](./opentype-features.md#turn-on-more-features) if you want it.
+[`FeatureTags`](./opentype-features.md#turn-on-more-features) if you want it. The older `kern`
+table of a font kerns rotated glyphs only, as HarfBuzz does, even with `vkrn` turned on.
 
 The font must have vertical metrics (`vhea` and `vmtx` tables) for good results. Fonts made for
 Chinese, Japanese and Korean have them. For other fonts the library makes vertical metrics from the
