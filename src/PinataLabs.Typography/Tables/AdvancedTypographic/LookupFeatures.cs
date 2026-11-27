@@ -49,6 +49,51 @@ internal readonly struct LookupFeatures
     public static LookupFeatures ForShaperSubstitution() => new([], 0, 0, true, ManualJoiners.None, false);
 
     /// <summary>
+    /// Gets the features without the ones that the caller turned off. A shaper still plans them, so the actions of its
+    /// stages run, but their lookups do not apply.
+    /// </summary>
+    /// <param name="features">The features, in the order in which the shaper planned them.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <returns>The features that stay on.</returns>
+    public static IReadOnlyList<PlannedFeature> WithoutDisabled(IReadOnlyList<PlannedFeature> features, IReadOnlyList<Tag> disabled)
+    {
+        if (disabled.Count == 0)
+        {
+            return features;
+        }
+
+        List<PlannedFeature> enabled = new(features.Count);
+        foreach (PlannedFeature feature in features)
+        {
+            if (!IsDisabled(disabled, feature.Tag))
+            {
+                enabled.Add(feature);
+            }
+        }
+
+        return enabled;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the caller turned a feature off.
+    /// </summary>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <param name="tag">The tag of the feature.</param>
+    /// <returns><see langword="true"/> if the feature is off.</returns>
+    public static bool IsDisabled(IReadOnlyList<Tag> disabled, Tag tag)
+    {
+        for (int i = 0; i < disabled.Count; i++)
+        {
+            if (disabled[i] == tag)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Gets the lookups that the given features reference for a script, in LookupList order, as the
     /// OpenType specification requires them to be applied. Each lookup appears once, with all the
     /// features that reference it.
@@ -58,6 +103,7 @@ internal readonly struct LookupFeatures
     /// <param name="lookupCount">The number of lookups in the LookupList of the table.</param>
     /// <param name="features">The features, in the order in which the shaper planned them.</param>
     /// <param name="script">The script of the text.</param>
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
     /// <param name="withRequiredFeature">Whether the lookups of the required feature of the language system are included.</param>
     /// <param name="positioning">Whether the lookups are those of GPOS, which skips more default-ignorable glyphs than GSUB.</param>
     /// <param name="value">The lookups, when the features reference any.</param>
@@ -68,12 +114,13 @@ internal readonly struct LookupFeatures
         int lookupCount,
         IReadOnlyList<PlannedFeature> features,
         ScriptClass script,
+        Tag? language,
         bool withRequiredFeature,
         bool positioning,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
-        // No language is requested, so only one language system applies. A script without one has no features but vert.
-        LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
+        // A script without a language system has no features but vert.
+        LangSysTable? langSysTable = scriptList?.GetLangSys(script, language);
         value = GetLookups(featureList, lookupCount, features, langSysTable, withRequiredFeature, positioning);
         return value.Count > 0;
     }
@@ -85,15 +132,17 @@ internal readonly struct LookupFeatures
     /// <param name="scriptList">The script list of the GSUB table.</param>
     /// <param name="featureList">The feature list of the table.</param>
     /// <param name="script">The script of the text.</param>
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
     /// <param name="stages">The shaping stages.</param>
     /// <returns>The index of the stage.</returns>
     public static int GetRequiredFeatureStage(
         ScriptList? scriptList,
         FeatureListTable featureList,
         ScriptClass script,
+        Tag? language,
         IReadOnlyList<ShapingStage> stages)
     {
-        LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
+        LangSysTable? langSysTable = scriptList?.GetLangSys(script, language);
         if (langSysTable is null || langSysTable.RequiredFeatureIndex >= featureList.FeatureTables.Length)
         {
             return 0;

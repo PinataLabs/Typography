@@ -315,12 +315,12 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             {
                 if (isDirtyXY)
                 {
-                    m.ApplyOffset((short)data.Bounds.X, (short)data.Bounds.Y);
+                    m.ApplyOffset(data.Bounds.X, data.Bounds.Y);
                 }
 
                 if (isDirtyWH)
                 {
-                    m.SetAdvanceWidth((ushort)data.Bounds.Width);
+                    m.SetAdvanceWidth(data.Bounds.Width);
                     m.SetAdvanceHeight((ushort)data.Bounds.Height);
                 }
             }

@@ -143,7 +143,7 @@ internal class GSubTable : Table
         {
             // Choose a shaper based on the script.
             // This determines which features to apply to which glyphs.
-            ScriptClass current = CodePoint.GetScriptClass(collection[i].CodePoint);
+            ScriptClass current = collection.TextOptions.GetScriptClass(collection[i].CodePoint);
 
             int index = i;
             int count = 1;
@@ -152,7 +152,7 @@ internal class GSubTable : Table
                 // We want to assign the same feature lookups to individual sections of the text rather
                 // than the text as a whole to ensure that different language shapers do not interfere
                 // with each other when the text contains multiple languages.
-                ScriptClass next = CodePoint.GetScriptClass(collection[i + 1].CodePoint);
+                ScriptClass next = collection.TextOptions.GetScriptClass(collection[i + 1].CodePoint);
                 if (next != current &&
                     current is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited &&
                     next is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited)
@@ -187,7 +187,7 @@ internal class GSubTable : Table
             count += delta;
 
             IReadOnlyList<ShapingStage> stages = shaper.GetShapingStages();
-            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, current, stages);
+            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, current, collection.TextOptions.Language, stages);
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
             for (int s = 0; s < stages.Count; s++)
             {
@@ -246,7 +246,8 @@ internal class GSubTable : Table
 
         Tag vert = Tag.Parse("vert");
         PlannedFeature[] vertOnly = [new(vert)];
-        if (!table.TryGetFeatureLookups(vert, script, out _))
+        TextOptions options = collection.TextOptions;
+        if (!table.TryGetFeatureLookups(vert, script, options.Language, options.DisabledFeatureTags, out _))
         {
             return;
         }
@@ -261,7 +262,7 @@ internal class GSubTable : Table
 
             // Probe the vert lookups with the glyph on its own.
             GlyphSubstitutionCollection probe = new(collection.TextOptions) { FontMetrics = fontMetrics };
-            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0);
+            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0, data.Cluster);
             probe.AddShapingFeature(0, new TagEntry(vert, true));
 
             SkippingGlyphIterator iterator = new(fontMetrics, probe, 0, default);
@@ -294,7 +295,8 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, positioning: false, out List<(ushort Index, LookupFeatures Features)>? lookups))
+        features = LookupFeatures.WithoutDisabled(features, collection.TextOptions.DisabledFeatureTags);
+        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, collection.TextOptions.Language, withRequiredFeature, positioning: false, out List<(ushort Index, LookupFeatures Features)>? lookups))
         {
             return;
         }
@@ -349,15 +351,38 @@ internal class GSubTable : Table
         }
     }
 
+    /// <summary>
+    /// Gets the lookups that a feature references in the language system of the text, which tells whether the font has
+    /// the feature for the text. A feature that the caller turned off has none, as in HarfBuzz, which does not plan it.
+    /// </summary>
+    /// <param name="feature">The tag of the feature.</param>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <param name="value">The lookups, when the feature references any.</param>
+    /// <returns><see langword="true"/> when the feature is on and references a lookup.</returns>
     internal bool TryGetFeatureLookups(
         in Tag feature,
         ScriptClass script,
+        Tag? language,
+        IReadOnlyList<Tag> disabled,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
-        => this.TryGetFeatureLookups([feature], script, out value);
+        => this.TryGetFeatureLookups([feature], script, language, disabled, out value);
 
+    /// <summary>
+    /// Gets the lookups that any of the features references in the language system of the text.
+    /// </summary>
+    /// <param name="stageFeatures">The tags of the features.</param>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off, which have no lookups.</param>
+    /// <param name="value">The lookups, when a feature that is on references any.</param>
+    /// <returns><see langword="true"/> when a feature that is on references a lookup.</returns>
     internal bool TryGetFeatureLookups(
         IReadOnlyList<Tag> stageFeatures,
         ScriptClass script,
+        Tag? language,
+        IReadOnlyList<Tag> disabled,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
         PlannedFeature[] features = new PlannedFeature[stageFeatures.Count];
@@ -366,7 +391,7 @@ internal class GSubTable : Table
             features[i] = new(stageFeatures[i]);
         }
 
-        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, script, false, positioning: false, out value);
+        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, LookupFeatures.WithoutDisabled(features, disabled), script, language, false, positioning: false, out value);
     }
 
     /// <summary>

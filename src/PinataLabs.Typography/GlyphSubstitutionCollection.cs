@@ -23,6 +23,14 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// </summary>
     private readonly List<OffsetGlyphDataPair> glyphs = [];
 
+    private const int ZeroWidthNonJoiner = 0x200C;
+
+    private const int ZeroWidthJoiner = 0x200D;
+
+    // The number of regional indicators in a row at the end of the characters added so far. The second of each pair joins
+    // the cluster of the first.
+    private int regionalIndicators;
+
     // Scratch space of ReplaceNormalized, kept so that normalizing a long text does not allocate for each cluster.
     private OffsetGlyphDataPair[] normalizedSources = [];
 
@@ -177,13 +185,21 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <param name="direction">The resolved text direction for the codepoint.</param>
     /// <param name="textRun">The text run this glyph belongs to.</param>
     /// <param name="offset">The zero-based index within the input codepoint collection.</param>
-    public void AddGlyph(ushort glyphId, CodePoint codePoint, TextDirection direction, TextRun textRun, int offset)
-        => this.glyphs.Add(new(offset, new(textRun)
+    /// <param name="charIndex">The zero-based UTF-16 index of the codepoint in the text.</param>
+    public void AddGlyph(ushort glyphId, CodePoint codePoint, TextDirection direction, TextRun textRun, int offset, int charIndex)
+    {
+        // A variation selector that the cmap table folds into its base has no glyph of its own, so a mark after it joins
+        // the cluster of the base.
+        int cluster = this.ContinuesCluster(codePoint) ? this.glyphs[^1].Data.Cluster : charIndex;
+
+        this.glyphs.Add(new(offset, new(textRun)
         {
             CodePoint = codePoint,
             Direction = direction,
             GlyphId = glyphId,
+            Cluster = cluster,
         }));
+    }
 
     /// <summary>
     /// Inserts a glyph before the glyph at the specified index. The new glyph copies the shaping data
@@ -216,6 +232,65 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
+    /// Gives the glyphs in the range the lowest cluster among them, as HarfBuzz does when a ligature, a reordering or a
+    /// composition joins glyphs. The glyphs next to the range that share the cluster of its first or last glyph join it,
+    /// so that no cluster is split between two ranges.
+    /// </summary>
+    /// <param name="start">The zero-based index of the first glyph.</param>
+    /// <param name="end">The zero-based index after the last glyph.</param>
+    internal void MergeClusters(int start, int end)
+    {
+        if (end - start < 2)
+        {
+            return;
+        }
+
+        int cluster = this.glyphs[start].Data.Cluster;
+        for (int i = start + 1; i < end; i++)
+        {
+            cluster = Math.Min(cluster, this.glyphs[i].Data.Cluster);
+        }
+
+        while (end < this.glyphs.Count && this.glyphs[end - 1].Data.Cluster == this.glyphs[end].Data.Cluster)
+        {
+            end++;
+        }
+
+        while (start > 0 && this.glyphs[start - 1].Data.Cluster == this.glyphs[start].Data.Cluster)
+        {
+            start--;
+        }
+
+        for (int i = start; i < end; i++)
+        {
+            this.glyphs[i].Data.Cluster = cluster;
+        }
+    }
+
+    // As HarfBuzz does at its default cluster level, a character shares the cluster of the character before it when it is
+    // a mark, or has the grapheme cluster class Extend: Grapheme_Extend and the emoji modifiers, which are the tag
+    // characters, the halfwidth katakana sound marks and a few signs that Unicode keeps for canonical equivalence. The
+    // zero width non-joiner is Extend too, but it ends a cluster. A zero width joiner, the second of a pair of regional
+    // indicators, and an emoji after a joiner share it as well. The count of regional indicators in a row tells which
+    // of a pair a character is, so call this once for each character that is added.
+    private bool ContinuesCluster(CodePoint codePoint)
+    {
+        GraphemeClusterClass graphemeClass = CodePoint.GetGraphemeClusterClass(codePoint);
+        bool isRegionalIndicator = graphemeClass == GraphemeClusterClass.RegionalIndicator;
+        this.regionalIndicators = isRegionalIndicator ? this.regionalIndicators + 1 : 0;
+        if (this.glyphs.Count == 0)
+        {
+            return false;
+        }
+
+        return CodePoint.IsMark(codePoint)
+            || (graphemeClass == GraphemeClusterClass.Extend && codePoint.Value != ZeroWidthNonJoiner)
+            || graphemeClass == GraphemeClusterClass.ZeroWidthJoiner
+            || (isRegionalIndicator && (this.regionalIndicators & 1) == 0)
+            || (this.glyphs[^1].Data.CodePoint.Value == ZeroWidthJoiner && graphemeClass == GraphemeClusterClass.ExtendedPictographic);
+    }
+
+    /// <summary>
     /// Moves the specified glyph to the specified position.
     /// </summary>
     /// <param name="fromIndex">The index to move from.</param>
@@ -227,6 +302,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             return;
         }
 
+        this.MergeClusters(Math.Min(fromIndex, toIndex), Math.Max(fromIndex, toIndex) + 1);
         GlyphShapingData data = this[fromIndex];
         if (fromIndex > toIndex)
         {
@@ -280,6 +356,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     public void Clear()
     {
         this.glyphs.Clear();
+        this.regionalIndicators = 0;
         this.LigatureId = 1;
         this.PreContext.Clear();
         this.PostContext.Clear();
@@ -367,6 +444,12 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <param name="ligatureId">The ligature id.</param>
     public void Replace(int index, ReadOnlySpan<int> removalIndices, ushort glyphId, int ligatureId)
     {
+        // The ligature takes the cluster of its components and of the glyphs between them.
+        if (removalIndices.Length > 0)
+        {
+            this.MergeClusters(index, removalIndices[^1] + 1);
+        }
+
         // Remove the glyphs at each index.
         int codePointCount = 0;
         for (int i = removalIndices.Length - 1; i >= 0; i--)
@@ -396,6 +479,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <param name="glyphId">The replacement glyph id.</param>
     public void Replace(int index, int count, ushort glyphId)
     {
+        this.MergeClusters(index, index + count + 1);
+
         // Remove the glyphs at each index.
         int codePointCount = 0;
         for (int i = count; i > 0; i--)

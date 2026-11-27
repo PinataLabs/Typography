@@ -83,6 +83,16 @@ TextOptions options = new(font);
 FontRectangle size = TextMeasurer.MeasureSize("Hello, world!", options);
 ```
 
+### Shape text
+
+```csharp
+using PinataLabs.Typography;
+
+// The glyphs of the run, in visual order. The advances and offsets are in font design units, and each
+// glyph has the UTF-16 index of its first character, so the "ffi" of "office" is one glyph at index 1.
+ShapedGlyph[] glyphs = TextShaper.Shape(font, "office");
+```
+
 ## Build and test
 
 ```bash

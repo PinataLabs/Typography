@@ -96,7 +96,7 @@ internal ref struct GlyphNormalizer
             this.runEnd = GetScriptRunEnd(this.collection, index, out ScriptClass script);
             Tag scriptTag = this.fontMetrics.GetGSubTable().GetScriptTag(script);
             this.profile = ShaperFactory.GetNormalizationProfile(script, scriptTag);
-            this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script);
+            this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script, this.collection.TextOptions);
             if (this.profile.SplitsVowels)
             {
                 this.SplitVowels();
@@ -510,12 +510,12 @@ internal ref struct GlyphNormalizer
     /// </summary>
     private static int GetScriptRunEnd(GlyphSubstitutionCollection collection, int start, out ScriptClass script)
     {
-        script = CodePoint.GetScriptClass(collection[start].CodePoint);
+        script = collection.TextOptions.GetScriptClass(collection[start].CodePoint);
         int end = start + 1;
         while (end < collection.Count)
         {
             CodePoint codePoint = collection[end].CodePoint;
-            ScriptClass next = CodePoint.GetScriptClass(codePoint);
+            ScriptClass next = collection.TextOptions.GetScriptClass(codePoint);
             if (next != script && HasOwnScript(script) && HasOwnScript(next) && !CodePoint.IsMark(codePoint))
             {
                 break;

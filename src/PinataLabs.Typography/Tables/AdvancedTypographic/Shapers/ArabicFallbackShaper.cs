@@ -3,13 +3,15 @@
 
 using System;
 using PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 
 /// <summary>
-/// Shapes Arabic in a font whose GSUB table has none of the joining form features for Arabic, as HarfBuzz does. Each
-/// letter takes the presentation form that the font has for its place in the word, and then the forms that make one
-/// of the ligatures of <see cref="ArabicFallbackTable"/> ligate, as do a shadda and a vowel mark.
+/// Shapes Arabic in a font whose GSUB table has none of the joining form features for Arabic in the language of the
+/// run, as HarfBuzz does. Each letter takes the presentation form that the font has for its place in the word, and
+/// then the forms that make one of the ligatures of <see cref="ArabicFallbackTable"/> ligate, as do a shadda and a vowel
+/// mark.
 /// </summary>
 internal static class ArabicFallbackShaper
 {
@@ -29,11 +31,13 @@ internal static class ArabicFallbackShaper
             return;
         }
 
-        ArabicFallbackPlan plan = fontMetrics.GetArabicFallbackPlan();
-        if (!plan.IsNeeded)
+        GSubTable gsub = fontMetrics.GetGSubTable();
+        if (!NeedsFallback(gsub, substitution.TextOptions))
         {
             return;
         }
+
+        ArabicFallbackPlan plan = fontMetrics.GetArabicFallbackPlan();
 
         // A form replaces the glyph of its letter, so a glyph that an earlier lookup gave the letter is replaced too.
         for (int i = index; i < index + count; i++)
@@ -46,10 +50,25 @@ internal static class ArabicFallbackShaper
             }
         }
 
-        GSubTable gsub = fontMetrics.GetGSubTable();
         LookupFeatures features = LookupFeatures.ForShaperSubstitution();
         count = Ligate(fontMetrics, gsub, substitution, features, index, count, plan.LetterLigatures);
         Ligate(fontMetrics, gsub, substitution, features, index, count, plan.MarkLigatures);
+    }
+
+    // As in HarfBuzz, a run falls back only when the font lacks every one of the four joining forms for the language of the
+    // run. HarfBuzz plans a form for the fallback only while the caller leaves it on, so a form that the caller turned off
+    // ends the fallback, and the letters keep their glyphs.
+    private static bool NeedsFallback(GSubTable gsub, TextOptions options)
+    {
+        foreach (Tag tag in FormTags)
+        {
+            if (LookupFeatures.IsDisabled(options.DisabledFeatureTags, tag))
+            {
+                return false;
+            }
+        }
+
+        return !gsub.TryGetFeatureLookups(FormTags, ScriptClass.Arabic, options.Language, options.DisabledFeatureTags, out _);
     }
 
     private static int GetForm(GlyphShapingData data)

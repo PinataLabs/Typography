@@ -260,3 +260,40 @@ PinataLabs.Typography.FontSubsetOptions.Tables.init -> void
 PinataLabs.Typography.FontSubsetter
 static PinataLabs.Typography.FontSubsetOptions.DefaultTables.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 static PinataLabs.Typography.FontSubsetter.Subset(System.ReadOnlyMemory<byte> font, System.Collections.Generic.IReadOnlyCollection<ushort>! glyphIds, PinataLabs.Typography.FontSubsetOptions? options = null) -> byte[]!
+override PinataLabs.Typography.ShapedGlyph.Equals(object? obj) -> bool
+override PinataLabs.Typography.ShapedGlyph.GetHashCode() -> int
+override PinataLabs.Typography.ShapedGlyph.ToString() -> string!
+override PinataLabs.Typography.ShapingFeature.Equals(object? obj) -> bool
+override PinataLabs.Typography.ShapingFeature.GetHashCode() -> int
+override PinataLabs.Typography.ShapingFeature.ToString() -> string!
+PinataLabs.Typography.ShapedGlyph
+PinataLabs.Typography.ShapedGlyph.Cluster.get -> int
+PinataLabs.Typography.ShapedGlyph.Equals(PinataLabs.Typography.ShapedGlyph other) -> bool
+PinataLabs.Typography.ShapedGlyph.GlyphId.get -> ushort
+PinataLabs.Typography.ShapedGlyph.ShapedGlyph() -> void
+PinataLabs.Typography.ShapedGlyph.ShapedGlyph(ushort glyphId, int cluster, int xAdvance, int xOffset, int yOffset) -> void
+PinataLabs.Typography.ShapedGlyph.XAdvance.get -> int
+PinataLabs.Typography.ShapedGlyph.XOffset.get -> int
+PinataLabs.Typography.ShapedGlyph.YOffset.get -> int
+PinataLabs.Typography.ShapingFeature
+PinataLabs.Typography.ShapingFeature.Enabled.get -> bool
+PinataLabs.Typography.ShapingFeature.Equals(PinataLabs.Typography.ShapingFeature other) -> bool
+PinataLabs.Typography.ShapingFeature.ShapingFeature() -> void
+PinataLabs.Typography.ShapingFeature.ShapingFeature(PinataLabs.Typography.Tables.AdvancedTypographic.Tag tag, bool enabled) -> void
+PinataLabs.Typography.ShapingFeature.Tag.get -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag
+PinataLabs.Typography.ShapingOptions
+PinataLabs.Typography.ShapingOptions.Direction.get -> PinataLabs.Typography.TextDirection
+PinataLabs.Typography.ShapingOptions.Direction.init -> void
+PinataLabs.Typography.ShapingOptions.Features.get -> System.Collections.Generic.IReadOnlyList<PinataLabs.Typography.ShapingFeature>!
+PinataLabs.Typography.ShapingOptions.Features.init -> void
+PinataLabs.Typography.ShapingOptions.Language.get -> PinataLabs.Typography.Tables.AdvancedTypographic.Tag?
+PinataLabs.Typography.ShapingOptions.Language.init -> void
+PinataLabs.Typography.ShapingOptions.Script.get -> PinataLabs.Typography.Unicode.ScriptClass?
+PinataLabs.Typography.ShapingOptions.Script.init -> void
+PinataLabs.Typography.ShapingOptions.ShapingOptions() -> void
+PinataLabs.Typography.TextShaper
+static PinataLabs.Typography.ShapedGlyph.operator !=(PinataLabs.Typography.ShapedGlyph left, PinataLabs.Typography.ShapedGlyph right) -> bool
+static PinataLabs.Typography.ShapedGlyph.operator ==(PinataLabs.Typography.ShapedGlyph left, PinataLabs.Typography.ShapedGlyph right) -> bool
+static PinataLabs.Typography.ShapingFeature.operator !=(PinataLabs.Typography.ShapingFeature left, PinataLabs.Typography.ShapingFeature right) -> bool
+static PinataLabs.Typography.ShapingFeature.operator ==(PinataLabs.Typography.ShapingFeature left, PinataLabs.Typography.ShapingFeature right) -> bool
+static PinataLabs.Typography.TextShaper.Shape(PinataLabs.Typography.Font! font, System.ReadOnlySpan<char> text, PinataLabs.Typography.ShapingOptions? options = null) -> PinataLabs.Typography.ShapedGlyph[]!

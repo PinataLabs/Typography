@@ -45,6 +45,12 @@ using (MemoryStream stream = new(ReadResource("OpenSans-Regular.ttf")))
     bool ok = size.Width > 0 && size.Height > 0;
     Console.WriteLine($"TextMeasurer.MeasureSize: {size.Width} x {size.Height}: {(ok ? "ok" : "FAIL")}");
     failures += ok ? 0 : 1;
+
+    // An e and its acute accent are one glyph or two that share the cluster of the e, at the index 11.
+    ShapedGlyph[] glyphs = TextShaper.Shape(font, "Hello, AOT e" + (char)0x0301);
+    ok = glyphs.Length >= 12 && glyphs[^1].Cluster == 11 && glyphs[0].XAdvance > 0;
+    Console.WriteLine($"TextShaper.Shape: {glyphs.Length} glyphs, the last at the cluster {glyphs[^1].Cluster}: {(ok ? "ok" : "FAIL")}");
+    failures += ok ? 0 : 1;
 }
 
 return failures;

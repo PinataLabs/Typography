@@ -307,7 +307,7 @@ internal sealed class IndicShaper : DefaultShaper
             // base consonants.
             if (start + 3 <= end &&
                 indicConfiguration.RephPosition != Positions.Ra_To_Become_Reph &&
-                gSubTable.TryGetFeatureLookups(in RphfTag, this.ScriptClass, out _) &&
+                this.HasFeature(gSubTable, in RphfTag, substitutionCollection) &&
                 ((indicConfiguration.RephMode == RephMode.Implicit && !IsJoiner(substitutionCollection[start + 2])) ||
                  (indicConfiguration.RephMode == RephMode.Explicit && substitutionCollection[start + 2].IndicShapingEngineInfo?.Category == Categories.ZWJ)))
             {
@@ -696,7 +696,7 @@ internal sealed class IndicShaper : DefaultShaper
 
             int prefLen = 2;
             if (basePosition + prefLen < end &&
-                gSubTable.TryGetFeatureLookups(in PrefTag, this.ScriptClass, out _))
+                this.HasFeature(gSubTable, in PrefTag, substitutionCollection))
             {
                 // Find a Halant,Ra sequence and mark it for pre-base reordering processing.
                 for (int i = basePosition + 1; i + prefLen - 1 < end; i++)
@@ -770,6 +770,11 @@ internal sealed class IndicShaper : DefaultShaper
 
         return Positions.Base_C;
     }
+
+    // As in HarfBuzz, the font has a feature for the run when the language system of its language lists it and the caller
+    // left it on.
+    private bool HasFeature(GSubTable gSubTable, in Tag featureTag, GlyphSubstitutionCollection collection)
+        => gSubTable.TryGetFeatureLookups(in featureTag, this.ScriptClass, collection.TextOptions.Language, collection.TextOptions.DisabledFeatureTags, out _);
 
     private bool WouldSubstitute(GlyphSubstitutionCollection collection, in Tag featureTag, ReadOnlySpan<GlyphShapingData> buffer)
     {
@@ -862,7 +867,7 @@ internal sealed class IndicShaper : DefaultShaper
             GlyphShapingData data = substitutionCollection[start];
             FontMetrics fontMetrics = substitutionCollection.GetFontMetrics(data);
             GSubTable gSubTable = fontMetrics.GetGSubTable();
-            bool tryPref = gSubTable.TryGetFeatureLookups(in PrefTag, this.ScriptClass, out _);
+            bool tryPref = this.HasFeature(gSubTable, in PrefTag, substitutionCollection);
 
             // Find base consonant again.
             int basePosition = start;

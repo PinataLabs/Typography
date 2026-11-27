@@ -277,7 +277,7 @@ internal static class FallbackMarkPositioner
     private static int GetAdvance(GlyphPositioningCollection collection, int index)
     {
         GlyphShapingData data = collection[index];
-        return data.Bounds.IsDirtyWH ? data.Bounds.Width : collection.GetMetrics(index).AdvanceWidth;
+        return data.Bounds.IsDirtyWH ? data.Bounds.Width : collection.GetMetrics(index).XAdvance;
     }
 
     private static int GetFontAdvance(FontMetrics fontMetrics, GlyphPositioningCollection collection, GlyphShapingData data)
@@ -310,11 +310,11 @@ internal static class FallbackMarkPositioner
     /// </summary>
     public static int GetScriptRunEnd(GlyphPositioningCollection collection, int start, out ScriptClass script)
     {
-        script = CodePoint.GetScriptClass(collection[start].CodePoint);
+        script = collection.TextOptions.GetScriptClass(collection[start].CodePoint);
         int end = start + 1;
         while (end < collection.Count)
         {
-            ScriptClass next = CodePoint.GetScriptClass(collection[end].CodePoint);
+            ScriptClass next = collection.TextOptions.GetScriptClass(collection[end].CodePoint);
             if (next != script && HasOwnScript(script) && HasOwnScript(next))
             {
                 break;

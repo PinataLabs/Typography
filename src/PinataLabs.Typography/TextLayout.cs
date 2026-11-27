@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using PinataLabs.Typography.Tables.AdvancedTypographic;
-using PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
@@ -155,7 +153,7 @@ internal static class TextLayout
         {
             // The runs follow each other, so each starts where the one before it ends.
             ReadOnlySpan<char> runText = textRun.Slice(text);
-            if (!DoFontRun(
+            if (!FontRunShaper.Shape(
                 runText,
                 text[..runCharStart],
                 text[(runCharStart + runText.Length)..],
@@ -186,7 +184,7 @@ internal static class TextLayout
                 textRunIndex = 0;
                 codePointIndex = 0;
                 bidiRunIndex = 0;
-                if (DoFontRun(
+                if (FontRunShaper.Shape(
                     text,
                     [],
                     [],
@@ -769,169 +767,6 @@ internal static class TextLayout
         }
 
         return glyphs;
-    }
-
-    private static bool DoFontRun(
-        ReadOnlySpan<char> text,
-        ReadOnlySpan<char> textBefore,
-        ReadOnlySpan<char> textAfter,
-        int start,
-        IReadOnlyList<TextRun> textRuns,
-        ref int textRunIndex,
-        ref int codePointIndex,
-        ref int bidiRunIndex,
-        bool isFallbackRun,
-        Font font,
-        BidiRun[] bidiRuns,
-        Dictionary<int, int> bidiMap,
-        GlyphSubstitutionCollection substitutions,
-        GlyphPositioningCollection positionings)
-    {
-        // For each run we start with a fresh substitution collection to avoid
-        // overwriting the glyph ids.
-        substitutions.Clear();
-        substitutions.SetContext(textBefore, textAfter);
-        substitutions.UnresolvedOffsets = isFallbackRun ? positionings.GetUnresolvedOffsets() : null;
-
-        // Enumerate through each grapheme in the text.
-        int graphemeIndex = start;
-        var graphemeEnumerator = new SpanGraphemeEnumerator(text);
-        while (graphemeEnumerator.MoveNext())
-        {
-            int graphemeMax = graphemeEnumerator.Current.Length - 1;
-            int graphemeCodePointIndex = 0;
-            int charIndex = 0;
-
-            if (graphemeIndex == textRuns[textRunIndex].End)
-            {
-                textRunIndex++;
-            }
-
-            // Now enumerate through each codepoint in the grapheme.
-            bool skipNextCodePoint = false;
-            var codePointEnumerator = new SpanCodePointEnumerator(graphemeEnumerator.Current);
-            while (codePointEnumerator.MoveNext())
-            {
-                if (codePointIndex == bidiRuns[bidiRunIndex].End)
-                {
-                    bidiRunIndex++;
-                }
-
-                if (skipNextCodePoint)
-                {
-                    codePointIndex++;
-                    graphemeCodePointIndex++;
-                    continue;
-                }
-
-                bidiMap[codePointIndex] = bidiRunIndex;
-
-                int charsConsumed = 0;
-                CodePoint current = codePointEnumerator.Current;
-                charIndex += current.Utf16SequenceLength;
-                CodePoint? next = graphemeCodePointIndex < graphemeMax
-                    ? CodePoint.DecodeFromUtf16At(graphemeEnumerator.Current, charIndex, out charsConsumed)
-                    : null;
-
-                charIndex += charsConsumed;
-
-                // Get the glyph id for the codepoint and add to the collection.
-                font.FontMetrics.TryGetGlyphId(current, next, out ushort glyphId, out skipNextCodePoint);
-                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex);
-
-                codePointIndex++;
-                graphemeCodePointIndex++;
-            }
-
-            graphemeIndex++;
-        }
-
-        // Apply the simple and complex substitutions.
-        GlyphNormalizer.Normalize(
-            font.FontMetrics,
-            substitutions,
-            substitutions.TextOptions.FallbackFontFamilies?.Count > 0);
-        SubstituteBidiMirrors(font.FontMetrics, substitutions);
-        SubstituteVerticalForms(font.FontMetrics, substitutions);
-        font.FontMetrics.ApplySubstitution(substitutions);
-
-        return !isFallbackRun
-            ? positionings.TryAdd(font, substitutions)
-            : positionings.TryUpdate(font, substitutions);
-    }
-
-    private static void SubstituteBidiMirrors(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
-    {
-        for (int i = 0; i < collection.Count; i++)
-        {
-            GlyphShapingData data = collection[i];
-
-            if (data.Direction != TextDirection.RightToLeft)
-            {
-                continue;
-            }
-
-            if (!CodePoint.TryGetBidiMirror(data.CodePoint, out CodePoint mirror))
-            {
-                continue;
-            }
-
-            if (fontMetrics.TryGetGlyphId(mirror, out ushort glyphId))
-            {
-                collection.Replace(i, glyphId);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Substitutes cmap vertical presentation forms for fonts that do not provide a <c>vert</c> feature.
-    /// The substitution only applies to vertical layouts and glyphs that are laid out upright; when the
-    /// font has a <c>vert</c> feature that feature is authoritative.
-    /// </summary>
-    private static void SubstituteVerticalForms(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
-    {
-        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        if (!(layoutMode.IsVertical() || layoutMode.IsVerticalMixed()) || HasVertFeature(fontMetrics))
-        {
-            return;
-        }
-
-        for (int i = 0; i < collection.Count; i++)
-        {
-            GlyphShapingData data = collection[i];
-            bool isTransformRotate = CodePoint.GetVerticalOrientationType(data.CodePoint) is VerticalOrientationType.TransformRotate;
-            if (!isTransformRotate && !AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, false))
-            {
-                continue;
-            }
-
-            if (!CodePoint.TryGetVerticalMirror(data.CodePoint, out CodePoint mirror))
-            {
-                continue;
-            }
-
-            if (fontMetrics.TryGetGlyphId(mirror, out ushort glyphId))
-            {
-                collection.Replace(i, glyphId);
-
-                // A Tr glyph with a cmap vertical presentation form is laid out upright.
-                data.HasVerticalForm |= isTransformRotate;
-            }
-        }
-    }
-
-    private static bool HasVertFeature(FontMetrics fontMetrics)
-    {
-        Tag vert = Tag.Parse("vert");
-        foreach (FeatureTable feature in fontMetrics.GetGSubTable().FeatureList.FeatureTables)
-        {
-            if (feature.FeatureTag == vert)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static TextBox BreakLines(

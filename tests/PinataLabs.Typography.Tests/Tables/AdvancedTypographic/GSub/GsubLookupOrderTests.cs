@@ -88,7 +88,7 @@ public class GsubLookupOrderTests
         Font font = FakeFont.CreateFont(text);
         TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalRightLeft };
         GlyphSubstitutionCollection collection = new(options);
-        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.RightToLeft, new TextRun { Start = 0, End = 1, Font = font }, 0);
+        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.RightToLeft, new TextRun { Start = 0, End = 1, Font = font }, 0, 0);
 
         new ArabicShaper(ScriptClass.Arabic, options).Plan(collection, 0, 1);
 

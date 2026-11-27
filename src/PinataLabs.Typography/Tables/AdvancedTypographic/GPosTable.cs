@@ -146,7 +146,7 @@ internal class GPosTable : Table
                 continue;
             }
 
-            ScriptClass current = CodePoint.GetScriptClass(collection[i].CodePoint);
+            ScriptClass current = collection.TextOptions.GetScriptClass(collection[i].CodePoint);
 
             int index = i;
             int count = 1;
@@ -156,7 +156,7 @@ internal class GPosTable : Table
                 // than the text as a whole to ensure that different language shapers do not interfere
                 // with each other when the text contains multiple languages.
                 GlyphShapingData nextData = collection[i + 1];
-                ScriptClass next = CodePoint.GetScriptClass(nextData.CodePoint);
+                ScriptClass next = collection.TextOptions.GetScriptClass(nextData.CodePoint);
                 if (next != current &&
                     current is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited &&
                     next is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited)
@@ -210,9 +210,10 @@ internal class GPosTable : Table
             }
 
             bool withRequiredFeature = collection.TextOptions.KerningMode != KerningMode.None
-                || !this.RequiredFeatureIsKerning(current);
+                || !this.RequiredFeatureIsKerning(current, collection.TextOptions.Language);
 
-            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, positioning: true, out List<(ushort Index, LookupFeatures Features)>? lookups))
+            IReadOnlyList<PlannedFeature> enabledFeatures = LookupFeatures.WithoutDisabled(features, collection.TextOptions.DisabledFeatureTags);
+            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, enabledFeatures, current, collection.TextOptions.Language, withRequiredFeature, positioning: true, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
@@ -267,15 +268,19 @@ internal class GPosTable : Table
         => !ShaperFactory.NeedsOwnGposScript(script) || this.HasScriptOf(script);
 
     /// <summary>
-    /// Gets a value indicating whether the language system that the table uses for the script lists the feature.
+    /// Gets a value indicating whether the table has a feature for the text: the language system that it uses for the
+    /// script and the language lists the feature, and the caller did not turn the feature off. As in HarfBuzz, a feature
+    /// that is off counts as absent.
     /// </summary>
     /// <param name="script">The script of the text.</param>
     /// <param name="feature">The tag of the feature.</param>
-    /// <returns><see langword="true"/> if the language system lists a feature with the tag.</returns>
-    public bool HasFeature(ScriptClass script, Tag feature)
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <returns><see langword="true"/> if the language system lists a feature with the tag and the feature is on.</returns>
+    public bool HasFeature(ScriptClass script, Tag feature, Tag? language, IReadOnlyList<Tag> disabled)
     {
-        LangSysTable? langSysTable = this.ScriptList?.GetDefaultLangSys(script);
-        if (langSysTable is null)
+        LangSysTable? langSysTable = this.ScriptList?.GetLangSys(script, language);
+        if (langSysTable is null || LookupFeatures.IsDisabled(disabled, feature))
         {
             return false;
         }
@@ -418,9 +423,9 @@ internal class GPosTable : Table
 
     // KerningMode.None promises no kerning. HarfBuzz still applies a required kern feature, but here the caller's
     // explicit request wins, so a font that makes kern or vkrn its required feature is not kerned then.
-    private bool RequiredFeatureIsKerning(ScriptClass script)
+    private bool RequiredFeatureIsKerning(ScriptClass script, Tag? language)
     {
-        LangSysTable? langSysTable = this.ScriptList?.GetDefaultLangSys(script);
+        LangSysTable? langSysTable = this.ScriptList?.GetLangSys(script, language);
         if (langSysTable is null || langSysTable.RequiredFeatureIndex >= this.FeatureList.FeatureTables.Length)
         {
             return false;

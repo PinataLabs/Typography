@@ -93,12 +93,16 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
     }
 
     /// <summary>
-    /// Gets the language system that applies to text of a script when no language is requested.
+    /// Gets the language system that applies to text of a script in a language.
     /// </summary>
     /// <param name="script">The script of the text.</param>
-    /// <returns>The language system, or <see langword="null"/> when no script or language system applies.</returns>
-    public LangSysTable? GetDefaultLangSys(ScriptClass script)
-        => this.ChooseScript(script)?.GetDefaultLangSys();
+    /// <param name="language">The tag of the language system, or <see langword="null"/> when no language is requested.</param>
+    /// <returns>
+    /// The language system with the tag, or the one that applies when no language is requested if the script has none
+    /// with the tag, or <see langword="null"/> when no script or language system applies.
+    /// </returns>
+    public LangSysTable? GetLangSys(ScriptClass script, Tag? language)
+        => this.ChooseScript(script)?.GetLangSys(language);
 }
 
 internal sealed class ScriptListTable
@@ -134,6 +138,28 @@ internal sealed class ScriptListTable
         }
 
         return this.DefaultLangSysTable;
+    }
+
+    /// <summary>
+    /// Gets the language system that applies to text in a language. As in HarfBuzz, a script that has no language
+    /// system with the tag of the language gives the one that applies when no language is requested.
+    /// </summary>
+    /// <param name="language">The tag of the language system, or <see langword="null"/> when no language is requested.</param>
+    /// <returns>The language system, or <see langword="null"/> when the script has none to give.</returns>
+    public LangSysTable? GetLangSys(Tag? language)
+    {
+        if (language is Tag tag)
+        {
+            for (int i = 0; i < this.LangSysTables.Length; i++)
+            {
+                if (this.LangSysTables[i].LangSysTag == tag.Value)
+                {
+                    return this.LangSysTables[i];
+                }
+            }
+        }
+
+        return this.GetDefaultLangSys();
     }
 
     public static ScriptListTable Load(Tag scriptTag, BigEndianBinaryReader reader, long offset)

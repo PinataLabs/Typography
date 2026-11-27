@@ -33,6 +33,7 @@ internal class GlyphShapingData
         this.GlyphId = data.GlyphId;
         this.CodePoint = data.CodePoint;
         this.CodePointCount = data.CodePointCount;
+        this.Cluster = data.Cluster;
         this.Direction = data.Direction;
         this.TextRun = data.TextRun;
         this.LigatureId = data.LigatureId;
@@ -92,6 +93,13 @@ internal class GlyphShapingData
     /// Gets or sets the codepoint count represented by this glyph.
     /// </summary>
     public int CodePointCount { get; set; } = 1;
+
+    /// <summary>
+    /// Gets or sets the cluster of the glyph, as HarfBuzz keeps it at its default cluster level: the UTF-16 index in
+    /// the text of the first character that the glyph stands for. A glyph that a ligature, a reordering or a mark
+    /// joins shares the lowest cluster of the glyphs it joins, so the clusters of a run never decrease.
+    /// </summary>
+    public int Cluster { get; set; }
 
     /// <summary>
     /// Gets or sets the text direction.
