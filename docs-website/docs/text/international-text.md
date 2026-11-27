@@ -56,6 +56,9 @@ Use `TextAlignment.Start` and `TextAlignment.End` rather than left and right. Th
 direction of the text, so one set of options works for both directions. See
 [Wrapping and alignment](./wrapping-and-alignment.md).
 
+To run the same algorithm in your own layout code, see
+[Bidirectional text and scripts](../unicode/bidi-and-scripts.md).
+
 ## Complex scripts
 
 Some scripts need more than one glyph for each character, glyphs in a different order from the
@@ -73,6 +76,13 @@ characters, or marks stacked above and below. The library has a shaper for each 
 
 The library picks the shaper from the script of each run of text. You do not choose it.
 
+Each run of one script is shaped on its own, as HarfBuzz shapes each run in its own buffer. A
+ligature, a contextual alternate or a kerning pair of the font does not match across a change of
+script. Han, Hiragana and Katakana are separate scripts, so in Japanese text a `kern` or `calt`
+lookup between a kanji and a kana does not apply. A character of the Common script, such as `!` or
+the long vowel mark `ー`, joins the run before it. To shape a run yourself, see
+[Shape text](./shaping-text.md).
+
 Shaping uses the OpenType tables in the font. A font must support a script for the text to look
 right: a Latin-only font cannot show Devanagari, even with a correct shaper. Use
 [fallback fonts](./fallback-fonts.md) to cover more scripts.
@@ -86,6 +96,11 @@ stop punctuation from starting a line.
 `WordBreaking.KeepAll` keeps Chinese, Japanese and Korean words together, which is what Korean
 usually wants. `WordBreaking.BreakAll` lets lines break inside words of other scripts. See
 [Wrapping and alignment](./wrapping-and-alignment.md#break-long-words).
+
+Thai, Lao, Khmer and Myanmar do not put spaces between words, and UAX #14 leaves the breaks inside
+them to a dictionary. The layout has no dictionary, so with `WordBreaking.Standard` a run of these
+letters breaks only at spaces and punctuation. In your own layout code, `LineBreakTailoring.SouthEastAsianAsIdeographs` allows
+breaks between their syllables. See [Line breaking](../unicode/line-breaking.md#tailor-the-rules-for-a-language).
 
 ## Justification for East Asian text
 

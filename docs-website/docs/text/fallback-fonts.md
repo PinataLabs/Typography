@@ -36,6 +36,16 @@ The library makes each fallback font at the same size and the same requested sty
 Each fallback font is shaped with its own metrics and its own OpenType tables, so a Japanese
 fallback font gets correct Japanese shaping inside Latin text.
 
+A base and its marks can come from different fonts. The main font can have a letter and lack an
+accent on it, for example. The library places the marks of such a cluster after every font has
+positioned its own glyphs:
+
+- A mark of the fallback font goes over or under the base of the main font, not after the base
+  on the baseline.
+- Each mark stacks on the marks before it in the cluster, where they are, whichever font drew them.
+- A mark on a ligature of the main font goes on the component of the ligature that the mark
+  follows.
+
 ## When no font has the character
 
 If no font in the list has the character, the library uses the missing-glyph box (glyph 0) of the

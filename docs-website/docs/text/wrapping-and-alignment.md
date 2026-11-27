@@ -23,6 +23,17 @@ TextOptions options = new(font)
 };
 ```
 
+A line ends at the last break opportunity before the character that does not fit. A grapheme stays
+on one line: a break opportunity inside a grapheme, such as between a space and a combining mark
+after it, moves to the end of the grapheme. A break at a character that has no glyph, such as a
+variation selector after a line feed, moves to the next character that has one.
+
+Each paragraph separator starts a new line, also when wrapping is off: a line feed, a carriage
+return, CR LF, U+0085, U+2029 and U+001C to U+001E. Each paragraph has its own
+[base direction](#text-direction).
+
+To break lines in your own layout code, see [Line breaking](../unicode/line-breaking.md).
+
 ## Break long words
 
 A word that is longer than the line does not fit. `WordBreaking` says what to do:
