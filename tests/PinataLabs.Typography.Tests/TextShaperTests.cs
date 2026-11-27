@@ -178,6 +178,44 @@ public class TextShaperTests
     }
 
     [Test]
+    public async Task DirectionThatIsNoValueOfTheEnumThrows()
+        => await Assert.That(() => TextShaper.Shape(GetFont("TextShaper.ttf"), "a", new() { Direction = (TextDirection)7 })).Throws<ArgumentOutOfRangeException>();
+
+    [Test]
+    public async Task DirectionThatIsNoValueOfTheEnumThrowsForEmptyText()
+        => await Assert.That(() => TextShaper.Shape(GetFont("TextShaper.ttf"), string.Empty, new() { Direction = (TextDirection)(-1) })).Throws<ArgumentOutOfRangeException>();
+
+    [Test]
+    public async Task FeaturesAreNotNull()
+        => await Assert.That(() => new ShapingOptions { Features = null! }).Throws<ArgumentNullException>();
+
+    [Test]
+    public async Task RunWithNoStrongCharacterHasTheDirectionOfItsScript()
+    {
+        Font font = GetFont("DejaVuSans.ttf");
+
+        // Digits and brackets have no direction of their own. The glyphs of a run from right to left start with the last character.
+        ShapedGlyph[] arabic = TextShaper.Shape(font, "123 ()", new() { Script = ScriptClass.Arabic });
+        ShapedGlyph[] hebrew = TextShaper.Shape(font, "123 ()", new() { Script = ScriptClass.Hebrew });
+        ShapedGlyph[] latin = TextShaper.Shape(font, "123 ()", new() { Script = ScriptClass.Latin });
+        ShapedGlyph[] unset = TextShaper.Shape(font, "123 ()");
+
+        await Assert.That(arabic.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 });
+        await Assert.That(hebrew.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 });
+        await Assert.That(latin.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 });
+        await Assert.That(unset.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 });
+    }
+
+    [Test]
+    public async Task StrongCharacterDecidesTheDirectionOverTheScript()
+    {
+        // The caller names Arabic for Latin letters. The letters decide, where HarfBuzz would follow the script.
+        ShapedGlyph[] glyphs = TextShaper.Shape(GetFont("DejaVuSans.ttf"), "abc", new() { Script = ScriptClass.Arabic });
+
+        await Assert.That(glyphs.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2 });
+    }
+
+    [Test]
     public async Task CommonScriptCountsAsNoScript()
     {
         Font font = GetFont("TextShaper.ttf");
@@ -295,7 +333,7 @@ public class TextShaperTests
         {
             Script = withScript && row.Script is not null ? Scripts[row.Script] : null,
             Language = row.Language is null ? null : Tag.Parse(row.Language),
-            Direction = row.Direction == "rtl" ? TextDirection.RightToLeft : TextDirection.LeftToRight,
+            Direction = row.Auto ? TextDirection.Auto : row.Direction == "rtl" ? TextDirection.RightToLeft : TextDirection.LeftToRight,
             Features = row.Features?.Select(f => new ShapingFeature(Tag.Parse(f.Key), f.Value)).ToArray() ?? [],
         };
 
@@ -368,6 +406,8 @@ public class TextShaperTests
         public string? Language { get; set; }
 
         public string Direction { get; set; } = "ltr";
+
+        public bool Auto { get; set; }
 
         public Dictionary<string, bool>? Features { get; set; }
 

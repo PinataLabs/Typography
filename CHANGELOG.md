@@ -178,7 +178,12 @@ Unicode conformance suites to that version.
   Cyrillic, Hebrew, Arabic, Indic, Khmer, Myanmar, Balinese and Hangul faces of the tests, and for the variable test fonts at
   three weights. Ten runs differ in their glyphs, and the layout shapes them with the same glyphs: two vowel signs on one
   consonant of Bengali, Gurmukhi and Tamil, a Gujarati ra with a virama, and the space between Hangul syllables of NotoSansKR,
-  which the Hangul shaper keeps wide by turning off `calt`. (#156)
+  which the Hangul shaper keeps wide by turning off `calt`. A feature that the caller turns off counts as absent, and a
+  language looks up its own language system, as in HarfBuzz: this decides whether a Hebrew letter composes with its point,
+  whether an Arabic font without joining forms falls back to the presentation forms, and whether the `kern` table applies.
+  An advance or an offset is not limited to 16 bits, so a font of 16384 units to the em has advances above 32767 and
+  offsets beyond it. `Direction` of `Auto` takes the direction of the script for a run with no strong character, a
+  direction that is no `TextDirection` throws `ArgumentOutOfRangeException`, and `Features` cannot be `null`. (#156)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.

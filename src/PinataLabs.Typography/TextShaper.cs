@@ -37,17 +37,24 @@ public static class TextShaper
     /// font gives their scale. An empty text gives no glyphs.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="font"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The direction of <paramref name="options"/> is not a value of <see cref="TextDirection"/>.</exception>
     public static ShapedGlyph[] Shape(Font font, ReadOnlySpan<char> text, ShapingOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(font);
+        options ??= new();
+        if (options.Direction is not (TextDirection.LeftToRight or TextDirection.RightToLeft or TextDirection.Auto))
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), options.Direction, "The direction is not left to right, right to left or automatic.");
+        }
+
         if (text.IsEmpty)
         {
             return [];
         }
 
-        options ??= new();
-        TextDirection direction = options.Direction == TextDirection.Auto ? GetFirstStrongDirection(text) : options.Direction;
-        GlyphPositioningCollection positionings = FontRunShaper.Shape(font, text, CreateTextOptions(font, options), direction);
+        ScriptClass? script = options.Script is ScriptClass.Common or ScriptClass.Inherited or ScriptClass.Unknown ? null : options.Script;
+        TextDirection direction = options.Direction == TextDirection.Auto ? GetAutoDirection(text, script) : options.Direction;
+        GlyphPositioningCollection positionings = FontRunShaper.Shape(font, text, CreateTextOptions(font, options, script), direction);
 
         ShapedGlyph[] glyphs = new ShapedGlyph[positionings.Count];
         for (int i = 0; i < glyphs.Length; i++)
@@ -66,16 +73,51 @@ public static class TextShaper
         return glyphs;
     }
 
-    private static TextDirection GetFirstStrongDirection(ReadOnlySpan<char> text)
+    // The first strong character decides, as the Unicode Bidirectional Algorithm has it. A run with none, such as digits and
+    // brackets, has the direction that HarfBuzz gives a buffer of its script, and runs from left to right without a script.
+    private static TextDirection GetAutoDirection(ReadOnlySpan<char> text, ScriptClass? script)
     {
         BidiAlgorithm bidi = BidiAlgorithm.Instance.Value!;
         BidiData bidiData = new();
         bidiData.Init(text, (sbyte)TextDirection.Auto);
         bidi.Process(bidiData);
-        return (bidi.ResolvedParagraphEmbeddingLevel & 1) == 0 ? TextDirection.LeftToRight : TextDirection.RightToLeft;
+        if ((bidi.ResolvedParagraphEmbeddingLevel & 1) != 0)
+        {
+            return TextDirection.RightToLeft;
+        }
+
+        return script is ScriptClass named && IsRightToLeft(named) && !HasStrongCharacter(text)
+            ? TextDirection.RightToLeft
+            : TextDirection.LeftToRight;
     }
 
-    private static TextOptions CreateTextOptions(Font font, ShapingOptions options)
+    private static bool HasStrongCharacter(ReadOnlySpan<char> text)
+    {
+        foreach (CodePoint codePoint in new SpanCodePointEnumerator(text))
+        {
+            if (CodePoint.GetBidiClass(codePoint).CharacterType is BidiCharacterType.LeftToRight or BidiCharacterType.RightToLeft or BidiCharacterType.ArabicLetter)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // The scripts that HarfBuzz sets from right to left. It leaves the direction of Old Hungarian, Old Italic, Runic and
+    // Tifinagh open, and a buffer of them runs from left to right.
+    private static bool IsRightToLeft(ScriptClass script)
+        => script is ScriptClass.Adlam or ScriptClass.Arabic or ScriptClass.Avestan or ScriptClass.Chorasmian or ScriptClass.Cypriot
+            or ScriptClass.Elymaic or ScriptClass.Garay or ScriptClass.HanifiRohingya or ScriptClass.Hatran or ScriptClass.Hebrew
+            or ScriptClass.ImperialAramaic or ScriptClass.InscriptionalPahlavi or ScriptClass.InscriptionalParthian
+            or ScriptClass.Kharoshthi or ScriptClass.Lydian or ScriptClass.Mandaic or ScriptClass.Manichaean
+            or ScriptClass.MendeKikakui or ScriptClass.MeroiticCursive or ScriptClass.MeroiticHieroglyphs or ScriptClass.Nabataean
+            or ScriptClass.Nko or ScriptClass.OldNorthArabian or ScriptClass.OldSogdian or ScriptClass.OldSouthArabian
+            or ScriptClass.OldTurkic or ScriptClass.OldUyghur or ScriptClass.Palmyrene or ScriptClass.Phoenician
+            or ScriptClass.PsalterPahlavi or ScriptClass.Samaritan or ScriptClass.Sidetic or ScriptClass.Sogdian
+            or ScriptClass.Syriac or ScriptClass.Thaana or ScriptClass.Yezidi;
+
+    private static TextOptions CreateTextOptions(Font font, ShapingOptions options, ScriptClass? script)
     {
         // The last entry of a feature wins, and the features keep the order of their first entry.
         List<Tag> tags = [];
@@ -98,8 +140,6 @@ public static class TextShaper
         {
             (enabled[tag] ? on : off).Add(tag);
         }
-
-        ScriptClass? script = options.Script is ScriptClass.Common or ScriptClass.Inherited or ScriptClass.Unknown ? null : options.Script;
 
         return new TextOptions(font)
         {

@@ -38,9 +38,16 @@ Other cases:
 
 * TextShaperLarge.ttf, a font of 16384 units to the em with wide glyphs, so that an advance is above 32767 or below zero,
   and a mark that moves by more than 32767 units.
+* Features that the caller turns off, and languages: Hebrew points without the `mark` feature, which HarfBuzz composes to
+  presentation forms; the reph of Devanagari without `rphf`; Arabic fonts with no joining forms of their own, with each
+  of isol, fina, medi and init off; Segoe UI in Turkish, whose language system has no `kern` feature, so that the `kern`
+  table applies; and Sumana in the language systems of Marathi and Nepali, which have no Indic features.
+* Runs with no direction, so that HarfBuzz guesses it from the script: digits and brackets in an Arabic, a Hebrew and a
+  Latin run, and runs with a strong character.
 * Variable fonts at three weights each, with the advances and the GPOS deltas that the weight gives.
 * Emoji with a variation selector, a skin tone, a joiner, a tag sequence and regional indicators.
-* Characters that a face has no glyph for, to show which of them HarfBuzz keeps in the cluster before them.
+* Characters that a face has no glyph for, to show which of them HarfBuzz keeps in the cluster before them, among them the
+  halfwidth katakana sound marks and the other characters of the grapheme cluster class Extend.
 
 The cases leave out a run in a direction that is not the one of its script, such as Latin text from right to left. HarfBuzz
 shapes such a run in the native direction and then reverses it, so a lookup that matches "f i" does not match it. The
@@ -175,6 +182,18 @@ table GDEF {
 } GDEF;
 """
 LARGE_TEXTS = ["Wi", "io", "oi", "WW", "Wio", "WiW", "o" + U("0301"), "W" + U("0301"), "W" + U("0301 0301"), "W o"]
+
+# A run of digits and brackets has no strong character, so HarfBuzz gives it the direction of its script. The runs that have a
+# strong character are as the first character says. These cases give no direction.
+AUTO_DIRECTION_CASES = [
+    ("AutoDirectionNoStrongArabic", "123 ()", {"script": "Arab"}),
+    ("AutoDirectionNoStrongHebrew", "123 ()", {"script": "Hebr"}),
+    ("AutoDirectionNoStrongLatin", "123 ()", {"script": "Latn"}),
+    ("AutoDirectionNoStrongNoScript", "123 ()", {}),
+    ("AutoDirectionStrongHebrew", U("05D0 05D1") + " 123", {"script": "Hebr"}),
+    ("AutoDirectionStrongArabicAfterDigits", "12 " + U("0628 0627"), {"script": "Arab"}),
+    ("AutoDirectionStrongLatin", "ab 123", {"script": "Latn"}),
+]
 
 # Each case is (name, font, text, options). The options can have `script`, `language`, `direction` and `features`.
 SYNTHETIC_CASES = [
@@ -398,16 +417,17 @@ def utf16_indexes(text):
 def shape(font, text, script=None, language=None, direction=None, features=None, **_):
     """Gives the glyphs in visual order as [glyph ID, cluster, x advance, x offset, y offset], and the direction that
     HarfBuzz shaped with. A language is the BCP 47 tag that HarfBuzz takes and the OpenType tag of the language system
-    that it maps to."""
+    that it maps to. A direction of None is the one that HarfBuzz guesses from the script, and from the text when there
+    is no script."""
     buffer = hb.Buffer()
     buffer.add_str(text)
-    buffer.guess_segment_properties()
     if script is not None:
         buffer.script = script
     if direction is not None:
         buffer.direction = direction
     if language is not None:
         buffer.language = language[0]
+    buffer.guess_segment_properties()
     hb.shape(font, buffer, features or {})
     indexes = utf16_indexes(text)
     glyphs = [[i.codepoint, indexes[i.cluster], p.x_advance, p.x_offset, p.y_offset]
@@ -416,7 +436,8 @@ def shape(font, text, script=None, language=None, direction=None, features=None,
 
 
 def row(name, font_name, hb_font, text, **options):
-    """Gives the row of a case: the inputs that the case set, and the direction that HarfBuzz shaped with."""
+    """Gives the row of a case: the inputs that the case set, and the direction that HarfBuzz shaped with. A case with
+    no direction (None) has `auto`, and the direction is the one that HarfBuzz guessed."""
     glyphs, direction = shape(hb_font, text, **options)
     result = {"name": name, "font": font_name, "text": text}
     if "script" in options:
@@ -424,6 +445,8 @@ def row(name, font_name, hb_font, text, **options):
     if "language" in options:
         result["language"] = options["language"][1]
     result["direction"] = direction
+    if options.get("direction", "") is None:
+        result["auto"] = True
     if "features" in options:
         result["features"] = options["features"]
     if "variations" in options:
@@ -516,6 +539,10 @@ def main():
     hb_font = ref.load_font(path)
     for text in LARGE_TEXTS:
         rows.append(row("LargeUnitsPerEm", LARGE_FONT, hb_font, text, direction="ltr"))
+
+    hb_font = ref.load_font(os.path.join(ref.FONTS, "DejaVuSans.ttf"))
+    for name, text, options in AUTO_DIRECTION_CASES:
+        rows.append(row(name, "DejaVuSans.ttf", hb_font, text, direction=None, **options))
 
     for text in HEBREW_POINTS:
         hb_font = ref.load_font(os.path.join(ref.FONTS, "DejaVuSans.ttf"))
