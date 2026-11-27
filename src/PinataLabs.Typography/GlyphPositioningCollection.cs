@@ -51,8 +51,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public GlyphMetrics GetMetrics(int index) => this.glyphs[index].Metrics[0];
 
     /// <summary>
-    /// Gets the size of a unit of the font that draws the glyph at the index, in points. Glyphs of two fonts in one
-    /// cluster have units of different sizes.
+    /// Gets the size of a unit of the font that draws the glyph at the index, in inches: the layout scales font units by the
+    /// point size over 72 times the units per em. Glyphs of two fonts in one cluster have units of different sizes.
     /// </summary>
     /// <param name="index">The zero-based index of the element.</param>
     /// <returns>The size along and across the line.</returns>
