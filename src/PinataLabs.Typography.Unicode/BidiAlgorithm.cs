@@ -307,6 +307,9 @@ internal sealed class BidiAlgorithm
     /// <returns>The resolved embedding level</returns>
     public sbyte ResolveEmbeddingLevel(ReadOnlyArraySlice<BidiCharacterType> data)
     {
+        // The isolatePairs map holds indices into originalTypes, and data is a slice of it.
+        int offset = data.Start - this.originalTypes.Start;
+
         // P2
         for (int i = 0; i < data.Length; ++i)
         {
@@ -325,11 +328,9 @@ internal sealed class BidiAlgorithm
                 case BidiCharacterType.LeftToRightIsolate:
                 case BidiCharacterType.RightToLeftIsolate:
                     // Skip isolate pairs
-                    // (Because we're working with a slice, we need to adjust the indices
-                    //  we're using for the isolatePairs map)
-                    if (this.isolatePairs.TryGetValue(data.Start + i, out i))
+                    if (this.isolatePairs.TryGetValue(offset + i, out i))
                     {
-                        i -= data.Start;
+                        i -= offset;
                     }
                     else
                     {
