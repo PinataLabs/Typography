@@ -102,7 +102,7 @@ public class HintedVariableMetricsTablesTests
         Font font = CreateFont(maximum, 12);
         int r = Array.IndexOf(FreeType.Glyphs, "R");
 
-        await Assert.That(GetMetrics(font, r).AdvanceWidth).IsEqualTo((ushort)788);
+        await Assert.That(GetMetrics(font, r).AdvanceWidth).IsEqualTo(788);
         await Assert.That(maximum.HarfBuzz["R"].LeftSideBearing).IsEqualTo(32);
     }
 

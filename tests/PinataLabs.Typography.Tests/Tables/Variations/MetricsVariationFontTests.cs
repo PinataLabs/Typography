@@ -30,10 +30,10 @@ public class MetricsVariationFontTests
 
         // The advance width of A is 600, and HVAR adds 40 at wght 900. Its advance height is 900, and VVAR adds 50.
         await Assert.That(face.FontMetrics).IsSameReferenceAs(family.Faces[0]);
-        await Assert.That(GetMetrics(face, A).AdvanceWidth).IsEqualTo((ushort)600);
-        await Assert.That(GetMetrics(face, A).AdvanceHeight).IsEqualTo((ushort)900);
-        await Assert.That(GetMetrics(heavy, A).AdvanceWidth).IsEqualTo((ushort)640);
-        await Assert.That(GetMetrics(heavy, A).AdvanceHeight).IsEqualTo((ushort)950);
+        await Assert.That(GetMetrics(face, A).AdvanceWidth).IsEqualTo(600);
+        await Assert.That(GetMetrics(face, A).AdvanceHeight).IsEqualTo(900);
+        await Assert.That(GetMetrics(heavy, A).AdvanceWidth).IsEqualTo(640);
+        await Assert.That(GetMetrics(heavy, A).AdvanceHeight).IsEqualTo(950);
     }
 
     [Test]
@@ -60,8 +60,8 @@ public class MetricsVariationFontTests
         GlyphMetrics metrics = GetMetrics(heavy, A);
 
         // The metrics that the broken table varies stay as the face has them, and the others change as they do in the intact font.
-        await Assert.That(metrics.AdvanceWidth).IsEqualTo(table == "HVAR" ? (ushort)600 : (ushort)640);
-        await Assert.That(metrics.AdvanceHeight).IsEqualTo(table == "VVAR" ? (ushort)900 : (ushort)950);
+        await Assert.That(metrics.AdvanceWidth).IsEqualTo(table == "HVAR" ? 600 : 640);
+        await Assert.That(metrics.AdvanceHeight).IsEqualTo(table == "VVAR" ? 900 : 950);
     }
 
     [Test]

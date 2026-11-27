@@ -297,3 +297,7 @@ static PinataLabs.Typography.ShapedGlyph.operator ==(PinataLabs.Typography.Shape
 static PinataLabs.Typography.ShapingFeature.operator !=(PinataLabs.Typography.ShapingFeature left, PinataLabs.Typography.ShapingFeature right) -> bool
 static PinataLabs.Typography.ShapingFeature.operator ==(PinataLabs.Typography.ShapingFeature left, PinataLabs.Typography.ShapingFeature right) -> bool
 static PinataLabs.Typography.TextShaper.Shape(PinataLabs.Typography.Font! font, System.ReadOnlySpan<char> text, PinataLabs.Typography.ShapingOptions? options = null) -> PinataLabs.Typography.ShapedGlyph[]!
+*REMOVED*PinataLabs.Typography.GlyphMetrics.AdvanceHeight.get -> ushort
+*REMOVED*PinataLabs.Typography.GlyphMetrics.AdvanceWidth.get -> ushort
+PinataLabs.Typography.GlyphMetrics.AdvanceHeight.get -> int
+PinataLabs.Typography.GlyphMetrics.AdvanceWidth.get -> int

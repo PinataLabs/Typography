@@ -186,7 +186,7 @@ public class HintedVariableFontTests
         GlyphMetrics m = GetMetrics(font, Array.IndexOf(GlyphNames, "M"));
         GlyphMetrics n = GetMetrics(font, Array.IndexOf(GlyphNames, "N"));
 
-        await Assert.That(l.AdvanceWidth).IsEqualTo((ushort)704);
+        await Assert.That(l.AdvanceWidth).IsEqualTo(704);
         await Assert.That(m.AdvanceWidth).IsEqualTo(l.AdvanceWidth);
         await Assert.That(n.AdvanceWidth).IsEqualTo(l.AdvanceWidth);
         await Assert.That(m.AdvanceHeight).IsEqualTo(l.AdvanceHeight);
@@ -221,7 +221,7 @@ public class HintedVariableFontTests
         GlyphMetrics defaults = GetMetrics(face, space);
         GlyphMetrics varied = GetMetrics(instance, space);
 
-        await Assert.That(varied.AdvanceWidth).IsEqualTo((ushort)(defaults.AdvanceWidth - 32));
+        await Assert.That(varied.AdvanceWidth).IsEqualTo(defaults.AdvanceWidth - 32);
         await Assert.That(varied.LeftSideBearing).IsEqualTo(defaults.LeftSideBearing);
         await Assert.That(varied.TopSideBearing).IsEqualTo(defaults.TopSideBearing);
         await Assert.That(varied.Bounds).IsEqualTo(defaults.Bounds);

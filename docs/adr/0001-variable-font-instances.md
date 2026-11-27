@@ -240,7 +240,7 @@ The face keeps a `ConcurrentDictionary<NormalizedCoordinates, WeakReference<Stre
 
 Decision 3 makes non-default instances the common case. A regular request on either test font is an instance. The per-instance cost is therefore part of the normal path, and the face's dictionary is what keeps the `family.CreateFont(size)` per draw pattern cheap.
 
-Varied values that the public types store as integers are rounded once, after all deltas are summed. That rule covers `GlyphMetrics.AdvanceWidth` (`ushort`), `LeftSideBearing` (`short`) and the `HorizontalMetrics` fields (`short`). Outline points stay `float`.
+Varied values that the public types store as integers are rounded once, after all deltas are summed. That rule covers `GlyphMetrics.AdvanceWidth` (`int`), `LeftSideBearing` (`short`) and the `HorizontalMetrics` fields (`short`). Outline points stay `float`.
 
 Memory per instance is small and fixed, apart from the caches. It is the coordinates, at 2 bytes per axis, the region scalars, at 4 bytes per region per store, and the metric fields. The glyph cache grows with the glyphs drawn, as it does for a static face today. A varied TrueType `GlyphMetrics` computes its varied points once and keeps them, the same way `TrueTypeGlyphMetrics.hintedVectorCache` keeps hinted points. Without that cache, every draw would decode `gvar` and run the IUP step again.
 

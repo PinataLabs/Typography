@@ -61,7 +61,7 @@ public static class TextShaper
         {
             GlyphShapingData data = positionings[i];
             GlyphMetrics metrics = positionings.GetMetrics(i);
-            glyphs[i] = new(data.GlyphId, data.Cluster, metrics.XAdvance, (int)MathF.Round(metrics.Offset.X), (int)MathF.Round(metrics.Offset.Y));
+            glyphs[i] = new(data.GlyphId, data.Cluster, metrics.AdvanceWidth, (int)MathF.Round(metrics.Offset.X), (int)MathF.Round(metrics.Offset.Y));
         }
 
         // The glyphs are in the order of the characters. A run from right to left draws the last character first.

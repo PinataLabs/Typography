@@ -55,7 +55,7 @@ public class MvarFontTests
         Font heavy = family.CreateFont(1000, default, Heavy);
 
         await Assert.That(heavy.FontMetrics.HorizontalMetrics.Ascender).IsEqualTo((short)800);
-        await Assert.That(GetMetrics(heavy, A).AdvanceWidth).IsEqualTo((ushort)640);
+        await Assert.That(GetMetrics(heavy, A).AdvanceWidth).IsEqualTo(640);
     }
 
     [Test]

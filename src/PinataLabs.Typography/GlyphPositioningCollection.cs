@@ -208,8 +208,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                         }
 
                         // Track the number of inserted glyphs at the offset so we can correctly increment our position.
-                        ushort maxAdvancedWidth = 0;
-                        ushort maxAdvancedHeight = 0;
+                        int maxAdvancedWidth = 0;
+                        int maxAdvancedHeight = 0;
                         for (int k = 0; k < metrics.Count; k++)
                         {
                             maxAdvancedWidth = Math.Max(maxAdvancedWidth, metrics[k].AdvanceWidth);
@@ -321,7 +321,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                 if (isDirtyWH)
                 {
                     m.SetAdvanceWidth(data.Bounds.Width);
-                    m.SetAdvanceHeight((ushort)data.Bounds.Height);
+                    m.SetAdvanceHeight(data.Bounds.Height);
                 }
             }
         }

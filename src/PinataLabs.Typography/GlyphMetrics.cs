@@ -17,10 +17,6 @@ public abstract class GlyphMetrics
 {
     private static readonly Vector2 YInverter = new(1, -1);
 
-    // The advance width that positioning adds to. A glyph that the font pulls back past its own width has less than zero,
-    // and a wide glyph that it widens has more than 65535, so the field is an int. AdvanceWidth is the same value modulo 65536.
-    private int advanceWidth;
-
     internal GlyphMetrics(
         StreamFontMetrics font,
         ushort glyphId,
@@ -43,7 +39,7 @@ public abstract class GlyphMetrics
         this.Width = bounds.Max.X - bounds.Min.X;
         this.Height = bounds.Max.Y - bounds.Min.Y;
         this.UnitsPerEm = unitsPerEM;
-        this.advanceWidth = advanceWidth;
+        this.AdvanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
         this.RightSideBearing = (short)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
@@ -78,8 +74,8 @@ public abstract class GlyphMetrics
         ushort glyphId,
         CodePoint codePoint,
         Bounds bounds,
-        ushort advanceWidth,
-        ushort advanceHeight,
+        int advanceWidth,
+        int advanceHeight,
         short leftSideBearing,
         short topSideBearing,
         ushort unitsPerEM,
@@ -97,7 +93,7 @@ public abstract class GlyphMetrics
         this.Width = bounds.Max.X - bounds.Min.X;
         this.Height = bounds.Max.Y - bounds.Min.Y;
         this.UnitsPerEm = unitsPerEM;
-        this.advanceWidth = advanceWidth;
+        this.AdvanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
         this.RightSideBearing = (short)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
@@ -123,21 +119,16 @@ public abstract class GlyphMetrics
     public CodePoint CodePoint { get; private set; }
 
     /// <summary>
-    /// Gets the advance width for horizontal layout, expressed in font units.
+    /// Gets the advance width for horizontal layout, expressed in font units. The font gives a value from 0 to 65535, and
+    /// the positioning of the glyph in a layout can take it below zero or above 65535.
     /// </summary>
-    public ushort AdvanceWidth => (ushort)this.advanceWidth;
+    public int AdvanceWidth { get; private set; }
 
     /// <summary>
-    /// Gets the advance width in whole font units, as a signed value. The positioning of the glyph adds to it without
-    /// wrapping, so it can be below zero or above <see cref="ushort.MaxValue"/>, where <see cref="AdvanceWidth"/> is the
-    /// same value modulo 65536.
+    /// Gets the advance height for vertical layout, expressed in font units. The font gives a value from 0 to 65535, and
+    /// the positioning of the glyph in a layout can take it below zero or above 65535.
     /// </summary>
-    internal int XAdvance => this.advanceWidth;
-
-    /// <summary>
-    /// Gets the advance height for vertical layout, expressed in font units.
-    /// </summary>
-    public ushort AdvanceHeight { get; private set; }
+    public int AdvanceHeight { get; private set; }
 
     /// <summary>
     /// Gets the left side bearing for horizontal layout, expressed in font units.
@@ -265,23 +256,23 @@ public abstract class GlyphMetrics
     /// <param name="y">The y-advance.</param>
     internal void ApplyAdvance(short x, short y)
     {
-        this.advanceWidth += x;
+        this.AdvanceWidth += x;
 
         // AdvanceHeight values grow downward but font-space grows upward, hence negation
-        this.AdvanceHeight = (ushort)(this.AdvanceHeight - y);
+        this.AdvanceHeight -= y;
     }
 
     /// <summary>
     /// Sets a new advance width.
     /// </summary>
     /// <param name="x">The x-advance.</param>
-    internal void SetAdvanceWidth(int x) => this.advanceWidth = x;
+    internal void SetAdvanceWidth(int x) => this.AdvanceWidth = x;
 
     /// <summary>
     /// Sets a new advance height.
     /// </summary>
     /// <param name="y">The y-advance.</param>
-    internal void SetAdvanceHeight(ushort y) => this.AdvanceHeight = y;
+    internal void SetAdvanceHeight(int y) => this.AdvanceHeight = y;
 
     internal FontRectangle GetBoundingBox(GlyphLayoutMode mode, Vector2 origin, float scaledPointSize)
     {

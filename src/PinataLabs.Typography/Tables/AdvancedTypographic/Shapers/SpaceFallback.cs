@@ -105,7 +105,7 @@ internal static class SpaceFallback
         for (int i = 0; i < metrics.Count; i++)
         {
             GlyphMetrics glyph = metrics[i];
-            ushort advance = GetAdvance(data, fontMetrics, options, isVertical, isVertical ? glyph.AdvanceHeight : glyph.AdvanceWidth);
+            int advance = GetAdvance(data, fontMetrics, options, isVertical, isVertical ? glyph.AdvanceHeight : glyph.AdvanceWidth);
             if (isVertical)
             {
                 glyph.SetAdvanceHeight(advance);
@@ -117,22 +117,22 @@ internal static class SpaceFallback
         }
     }
 
-    private static ushort GetAdvance(GlyphShapingData data, FontMetrics fontMetrics, TextOptions options, bool isVertical, ushort spaceAdvance)
+    private static int GetAdvance(GlyphShapingData data, FontMetrics fontMetrics, TextOptions options, bool isVertical, int spaceAdvance)
     {
         int em = fontMetrics.UnitsPerEm;
         SpaceFallbackKind kind = data.SpaceFallback;
         switch (kind)
         {
             case SpaceFallbackKind.MediumMathematical:
-                return (ushort)(em * 4 / 18);
+                return em * 4 / 18;
 
             case SpaceFallbackKind.Narrow:
-                return (ushort)(spaceAdvance / 2);
+                return spaceAdvance / 2;
 
             case SpaceFallbackKind.Figure:
                 for (uint digit = '0'; digit <= '9'; digit++)
                 {
-                    if (TryGetAdvance(digit, data, fontMetrics, options, isVertical, out ushort advance))
+                    if (TryGetAdvance(digit, data, fontMetrics, options, isVertical, out int advance))
                     {
                         return advance;
                     }
@@ -141,18 +141,18 @@ internal static class SpaceFallback
                 return spaceAdvance;
 
             case SpaceFallbackKind.Punctuation:
-                return TryGetAdvance('.', data, fontMetrics, options, isVertical, out ushort stop)
+                return TryGetAdvance('.', data, fontMetrics, options, isVertical, out int stop)
                     || TryGetAdvance(',', data, fontMetrics, options, isVertical, out stop)
                     ? stop
                     : spaceAdvance;
 
             default:
                 int divisor = (int)kind;
-                return (ushort)((em + (divisor / 2)) / divisor);
+                return (em + (divisor / 2)) / divisor;
         }
     }
 
-    private static bool TryGetAdvance(uint codePoint, GlyphShapingData data, FontMetrics fontMetrics, TextOptions options, bool isVertical, out ushort advance)
+    private static bool TryGetAdvance(uint codePoint, GlyphShapingData data, FontMetrics fontMetrics, TextOptions options, bool isVertical, out int advance)
     {
         CodePoint character = new(codePoint);
         if (!fontMetrics.TryGetGlyphId(character, out ushort glyphId) || glyphId == 0)

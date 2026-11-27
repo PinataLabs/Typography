@@ -395,6 +395,10 @@ Unicode conformance suites to that version.
 
 ### Changed
 
+- **`GlyphMetrics.AdvanceWidth` and `GlyphMetrics.AdvanceHeight` are `int`.** They were `ushort`. A font gives an
+  advance from 0 to 65535, and GPOS positioning in a layout can take it below zero or above 65535, which a `ushort`
+  held modulo 65536. This is a breaking change: code that assigns either property to a `ushort` stops compiling, and
+  code compiled against an earlier version must be recompiled. (#162)
 - **`PinataLabs.Typography` depends on `PinataLabs.Typography.Unicode`, at exactly its own version.** It reads internals
   of the Unicode assembly, so the package depends on `[x.y.z]` and the two are released together. The types that moved
   are forwarded, so code compiled against an earlier `PinataLabs.Typography` runs without recompiling. The Unicode data
@@ -461,6 +465,10 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- `TextLayout` and `TextMeasurer` place the glyph after one whose advance GPOS kerning takes below zero or above 65535
+  where HarfBuzz places it. The advance wrapped at 16 bits, so a kern of -700 on an advance of 600 moved the next glyph
+  65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a
+  vertical advance outside 0 to 65535, so its placement is not checked against HarfBuzz. (#162)
 - A wrapped line no longer keeps a trailing space that follows a character outside the Basic Multilingual Plane, such as
   an emoji or a mathematical letter. The line break enumerator measured the text before a break through UTF-16 indexes as
   if they were code point indexes, so after such a character it stopped one position too far and `TextLayout` left the

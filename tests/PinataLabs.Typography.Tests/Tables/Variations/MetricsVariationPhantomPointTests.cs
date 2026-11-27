@@ -131,7 +131,7 @@ public class MetricsVariationPhantomPointTests
         {
             Font font = CreateFont(VariationFontBytes.Load(SfntRewriter.Remove(VariationFontBytes.Read(FontFile), removed)), reference.Locations[index]);
 
-            await Assert.That(Enumerable.Range(0, expected.Length).Select(glyph => (int)GetMetrics(font, (ushort)glyph).AdvanceHeight)).IsEquivalentTo(expected);
+            await Assert.That(Enumerable.Range(0, expected.Length).Select(glyph => GetMetrics(font, (ushort)glyph).AdvanceHeight)).IsEquivalentTo(expected);
         }
     }
 
