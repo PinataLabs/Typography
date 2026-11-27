@@ -36,6 +36,7 @@ internal class GlyphShapingData
         this.CodePoint = data.CodePoint;
         this.UnicodePropertiesCodePoint = data.UnicodePropertiesCodePoint;
         this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
+        this.IsOtherLetter = data.IsOtherLetter;
         this.CodePointCount = data.CodePointCount;
         this.SourceOffset = data.SourceOffset;
         this.Cluster = data.Cluster;
@@ -115,9 +116,16 @@ internal class GlyphShapingData
     /// <summary>
     /// Gets or sets the class that GSUB gave the glyph, which a font without glyph classes takes in place of the class of
     /// its character. As in HarfBuzz, a ligature of components that are not all marks is a ligature glyph, even when its
-    /// first component is a mark, and in any font its general category is Lo where it was Mn.
+    /// first component is a mark.
     /// </summary>
     public GlyphClassDef? SubstitutedGlyphClass { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph has the general category Lo where the character whose properties
+    /// it has is Mn. As in HarfBuzz, a ligature of components that are not all marks takes it in any font, and the glyphs
+    /// that a substitution makes of the ligature keep it, whatever class they get.
+    /// </summary>
+    public bool IsOtherLetter { get; set; }
 
     /// <summary>
     /// Gets or sets the codepoint count represented by this glyph.

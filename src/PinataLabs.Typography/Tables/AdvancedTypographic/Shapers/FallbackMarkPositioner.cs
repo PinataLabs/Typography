@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using System.Globalization;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
 
@@ -104,12 +103,9 @@ internal static class FallbackMarkPositioner
         }
     }
 
-    // As in HarfBuzz, a ligature of components that are not all marks has the general category Lo where it was Mn, and a
-    // dotted circle that a shaper inserted has the Unicode properties that it copied.
+    // As in HarfBuzz, a dotted circle that a shaper inserted has the Unicode properties that it copied.
     private static bool IsUnicodeMark(GlyphShapingData data)
-        => CodePoint.IsMark(data.UnicodePropertiesCodePoint)
-            && !(data.SubstitutedGlyphClass == GlyphClassDef.LigatureGlyph
-                && CodePoint.GetGeneralCategory(data.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark);
+        => !data.IsOtherLetter && CodePoint.IsMark(data.UnicodePropertiesCodePoint);
 
     private static void PlaceMarks(FontMetrics fontMetrics, GlyphPositioningCollection collection, int start, int end)
     {

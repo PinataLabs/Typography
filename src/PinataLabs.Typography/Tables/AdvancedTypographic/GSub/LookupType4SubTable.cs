@@ -3,7 +3,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Globalization;
 using System.IO;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.GSub;
 
@@ -260,7 +262,9 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             }
             else if (isLigature)
             {
-                collection[index].SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
+                GlyphShapingData ligature = collection[index];
+                ligature.SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
+                ligature.IsOtherLetter |= CodePoint.GetGeneralCategory(ligature.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark;
             }
 
             return true;
