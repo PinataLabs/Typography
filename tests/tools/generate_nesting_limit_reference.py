@@ -29,6 +29,11 @@ nested or not. Each case after the limit shows a part of that:
 * LaterGlyph: the lookup of SelfGpos moves the first x and not the second.
 * LaterLookup: the lookup of SelfGpos moves x, and the next lookup of kern, which moves Latin y up 5 units, does not
   move y. PlainControl shows that it moves y without x before it.
+* KernAfterGsub: the lookup of SelfGsub steps a, and the error stops GPOS too, so the kern pair lookup does not move the
+  Latin y after it. KernControl shows that the pair lookup moves y after the last alternate of d.
+* ReverseAtLimit: a GSUB context lookup gives Latin e the next of 64 alternates and names itself, and at the last
+  alternate, 64 levels deep, names a reverse chaining substitution. HarfBuzz checks the nesting levels before it turns
+  down the reverse lookup, so it runs out of levels there and the lookup of NaturalEnd does not step the Latin d after it.
 
 feaLib does not let a lookup name itself, or a lookup defined after it, so the feature code names a placeholder lookup,
 and the script points each record that names a placeholder at the context lookup it stands for.
@@ -60,10 +65,13 @@ CASES = [
     ("LaterGlyph", "xx"),
     ("LaterLookup", "xy"),
     ("PlainControl", "y"),
+    ("KernAfterGsub", "ay"),
+    ("KernControl", "dy"),
+    ("ReverseAtLimit", "ed"),
 ]
 
 # The number of alternates of each letter that steps through them.
-STEPS = {0x61: 70, 0x62: 70, 0x64: 10}
+STEPS = {0x61: 70, 0x62: 70, 0x64: 10, 0x65: 64}
 
 
 def chain(code_point):
@@ -83,7 +91,8 @@ def input_class(code_point, last=True):
     return "[%s]" % " ".join(glyphs if last else glyphs[:-1])
 
 
-# GSUB lookups 0 to 4 are standalone, 5 to 7 are those of calt. GPOS lookups 0 to 4 are standalone, 5 to 9 those of kern.
+# GSUB lookups 0 to 6 are standalone, 7 to 10 are those of calt. GPOS lookups 0 to 4 are standalone, 5 to 10 those of
+# kern.
 FEATURES = f"""
 languagesystem DFLT dflt;
 languagesystem latn dflt;
@@ -97,6 +106,9 @@ lookup B_SECOND useExtension {{
     sub {input_class(0x62)}' lookup B_STEP lookup PLACEHOLDER;
 }} B_SECOND;
 
+lookup E_STEP {{ {step(0x65)} }} E_STEP;
+lookup E_REVERSE {{ rsub u0065.64' by u0065; }} E_REVERSE;
+
 feature calt {{
     lookup A_SELF {{
         sub {input_class(0x61)}' lookup A_STEP lookup PLACEHOLDER;
@@ -105,6 +117,11 @@ feature calt {{
     lookup B_FIRST {{
         sub {input_class(0x62)}' lookup B_STEP lookup B_SECOND;
     }} B_FIRST;
+
+    lookup E_SELF {{
+        sub {input_class(0x65, last=False)}' lookup E_STEP lookup PLACEHOLDER;
+        sub u0065.64' lookup E_REVERSE;
+    }} E_SELF;
 
     lookup D_SELF {{
         sub {input_class(0x64, last=False)}' lookup D_STEP lookup PLACEHOLDER;
@@ -137,13 +154,17 @@ feature kern {{
     lookup Y_PLAIN {{
         pos u0079 <0 5 0 0>;
     }} Y_PLAIN;
+
+    lookup AD_KERN {{
+        pos [{" ".join(chain(0x61) + chain(0x64))}] u0079 -100;
+    }} AD_KERN;
 }} kern;
 """
 
 EXTRA_GLYPHS = [name for code_point in STEPS for name in chain(code_point)[1:]]
 
 # The placeholder of each table. A record that names it stands for the context lookup that holds the record, except in
-# B_SECOND, lookup 4, where it stands for B_FIRST, lookup 6.
+# B_SECOND, lookup 4, where it stands for B_FIRST, lookup 8.
 GSUB_PLACEHOLDER = 3
 GPOS_PLACEHOLDER = 4
 
@@ -196,12 +217,12 @@ def main():
 
     # The lookups have the types that the cases test: B_SECOND is an extension of a context lookup.
     types = [lookup.LookupType for lookup in gsub.LookupList.Lookup]
-    assert types == [1, 1, 1, 1, 7, 5, 5, 5], types
+    assert types == [1, 1, 1, 1, 7, 1, 8, 5, 5, 5, 5], types
     types = [lookup.LookupType for lookup in gpos.LookupList.Lookup]
-    assert types == [1, 1, 1, 1, 1, 8, 8, 8, 8, 1], types
+    assert types == [1, 1, 1, 1, 1, 8, 8, 8, 8, 1, 2], types
 
     # A_SELF, B_SECOND and D_SELF in GSUB, and X_SELF, V_SELF_FIRST and the two records of W_TREE in GPOS.
-    assert point_placeholders(gsub, GSUB_PLACEHOLDER, {4: 6}) == 3
+    assert point_placeholders(gsub, GSUB_PLACEHOLDER, {4: 8}) == 4
     assert point_placeholders(gpos, GPOS_PLACEHOLDER) == 4
     font.save(path)
 

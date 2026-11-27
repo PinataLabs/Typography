@@ -1,15 +1,18 @@
 {
   "harfbuzz": "15.0.0",
   "rows": [
-    ["SelfGsub","a",true,[[72,0,0]]],
-    ["MutualGsub","b",true,[[142,0,0]]],
-    ["SelfGpos","x",true,[[6,0,640]]],
-    ["NaturalEnd","d",false,[[158,0,0]]],
-    ["TwoRecords","z",false,[[8,0,20]]],
-    ["Tree","w",true,[[5,0,64]]],
-    ["SelfFirst","v",true,[[4,0,0]]],
-    ["LaterGlyph","xx",true,[[6,0,640],[6,600,0]]],
-    ["LaterLookup","xy",true,[[6,0,640],[7,600,0]]],
-    ["PlainControl","y",false,[[7,0,5]]]
+    ["SelfGsub","a",true,[[73,0,0]]],
+    ["MutualGsub","b",true,[[143,0,0]]],
+    ["SelfGpos","x",true,[[7,0,640]]],
+    ["NaturalEnd","d",false,[[159,0,0]]],
+    ["TwoRecords","z",false,[[9,0,20]]],
+    ["Tree","w",true,[[6,0,64]]],
+    ["SelfFirst","v",true,[[5,0,0]]],
+    ["LaterGlyph","xx",true,[[7,0,640],[7,600,0]]],
+    ["LaterLookup","xy",true,[[7,0,640],[8,600,0]]],
+    ["PlainControl","y",false,[[8,0,5]]],
+    ["KernAfterGsub","ay",true,[[73,0,0],[8,600,0]]],
+    ["KernControl","dy",false,[[159,0,0],[8,500,5]]],
+    ["ReverseAtLimit","ed",true,[[223,0,0],[3,600,0]]]
   ]
 }
