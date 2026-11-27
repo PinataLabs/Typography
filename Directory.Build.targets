@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    SPDX software bill of materials, embedded in each .nupkg as _manifest/spdx_2.2/manifest.spdx.json.
+    Off by default, so a PR build neither restores the package nor pays for the generation. The release
+    build turns it on in release-publish.yml, for the restore and the pack. The restore needs the
+    property too, because the package reference below exists only when it is on.
+    This is a targets file because IsPackable, which keeps it out of the test and sample projects,
+    is not known while a props file is evaluated.
+  -->
+  <PropertyGroup>
+    <GenerateSBOM Condition="'$(GenerateSBOM)' == ''">false</GenerateSBOM>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(GenerateSBOM)' == 'true' And '$(IsPackable)' != 'false'">
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!--
+    The package takes the SBOM's version from Version when the project is evaluated, which is before MinVer
+    sets it, so every SBOM would say 0.0.1. PackageVersion is what names the .nupkg, so use it.
+  -->
+  <Target Name="SetSbomPackageVersion" BeforeTargets="GenerateSbomTarget" Condition="'$(GenerateSBOM)' == 'true'">
+    <PropertyGroup>
+      <SbomGenerationPackageVersion>$(PackageVersion)</SbomGenerationPackageVersion>
+    </PropertyGroup>
+  </Target>
+
+</Project>
