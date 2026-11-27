@@ -129,10 +129,11 @@ internal sealed class KerningTable : Table
         if (AdvancedTypographicUtils.IsVerticalGlyph(leftData.CodePoint, layoutMode, leftData.HasVerticalForm)
             || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm))
         {
-            // A glyph that advances down the line takes the whole kerning, which HarfBuzz does not do.
+            // HarfBuzz does not kern vertical text with this table. Here the first glyph of the pair takes the whole
+            // kerning, so that the space between the two changes, and a positive value moves them apart.
             if (this.TryGetKerningOffset(leftData.GlyphId, rightData.GlyphId, out Vector2 vertical))
             {
-                collection.Advance(fontMetrics, right, rightData.GlyphId, (short)vertical.X, (short)vertical.Y);
+                collection.Advance(fontMetrics, left, leftData.GlyphId, (short)vertical.X, (short)vertical.Y);
             }
 
             return false;

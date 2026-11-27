@@ -253,13 +253,11 @@ public abstract class GlyphMetrics
     /// Applies an advance to the glyph.
     /// </summary>
     /// <param name="x">The x-advance.</param>
-    /// <param name="y">The y-advance.</param>
+    /// <param name="y">The y-advance. A positive value makes the advance down the line longer, as a GPOS y advance does.</param>
     internal void ApplyAdvance(short x, short y)
     {
         this.AdvanceWidth += x;
-
-        // AdvanceHeight values grow downward but font-space grows upward, hence negation
-        this.AdvanceHeight -= y;
+        this.AdvanceHeight += y;
     }
 
     /// <summary>
