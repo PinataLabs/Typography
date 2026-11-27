@@ -71,15 +71,18 @@ public ref struct LineBreakEnumerator
         DottedCircle = 1 << 3,
         ExtendedPictographicUnassigned = 1 << 4,
 
+        // A Thai or Lao vowel that is written before its consonant, after which SouthEastAsianAsIdeographs allows no break.
+        LeadingVowel = 1 << 5,
+
         // Context of a unit, from the units before it.
-        OpeningQuote = 1 << 5,
-        HyphenAfterBreak = 1 << 6,
-        HyphenAfterHebrew = 1 << 7,
-        QuoteAfterNonEastAsian = 1 << 8,
-        ViramaAfterAksara = 1 << 9,
-        OddRegionalIndicator = 1 << 10,
-        Number = 1 << 11,
-        ClosedNumber = 1 << 12,
+        OpeningQuote = 1 << 6,
+        HyphenAfterBreak = 1 << 7,
+        HyphenAfterHebrew = 1 << 8,
+        QuoteAfterNonEastAsian = 1 << 9,
+        ViramaAfterAksara = 1 << 10,
+        OddRegionalIndicator = 1 << 11,
+        Number = 1 << 12,
+        ClosedNumber = 1 << 13,
     }
 
     private enum Decision
@@ -157,6 +160,20 @@ public ref struct LineBreakEnumerator
         return false;
     }
 
+    // The vowels of Thai (U+0E30, U+0E32, U+0E33, U+0E45) and Lao (U+0EB0, U+0EB2, U+0EB3, U+0EBD) that follow their
+    // consonant and are letters of class SA, not marks.
+    private static bool IsFollowingVowel(int value)
+        => value is 0x0E30 or 0x0E32 or 0x0E33 or 0x0E45 or 0x0EB0 or 0x0EB2 or 0x0EB3 or 0x0EBD;
+
+    // The vowels of Thai (U+0E40 to U+0E44) and Lao (U+0EC0 to U+0EC4) that are written before their consonant and
+    // encoded before it.
+    private static bool IsLeadingVowel(int value)
+        => value is (>= 0x0E40 and <= 0x0E44) or (>= 0x0EC0 and <= 0x0EC4);
+
+    // The Hangul letters that LB1 leaves as ideographs: the compatibility jamo and the halfwidth jamo.
+    private static bool IsHangulCompatibilityJamo(int value)
+        => value is (>= 0x3131 and <= 0x318E) or (>= 0xFFA0 and <= 0xFFDC);
+
     private static bool IsAksara(Unit unit)
         => unit.Class is LineBreakClass.AK or LineBreakClass.AS || unit.Has(Flags.DottedCircle);
 
@@ -210,6 +227,12 @@ public ref struct LineBreakEnumerator
         Unit a = Unit.Create(next, b);
         LineBreakClass bc = b.Class;
         LineBreakClass ac = a.Class;
+
+        // The tailoring that keeps a Thai or Lao syllable whole: no break after a vowel that is written before its consonant.
+        if (b.Has(Flags.LeadingVowel))
+        {
+            return Decision.NoBreak;
+        }
 
         // LB11, LB12, LB12a
         if (ac == LineBreakClass.WJ || bc is LineBreakClass.WJ or LineBreakClass.GL)
@@ -440,13 +463,36 @@ public ref struct LineBreakEnumerator
                 break;
 
             case LineBreakClass.SA:
-                cls = CodePoint.GetGeneralCategory(cp) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark
-                    ? LineBreakClass.CM
-                    : (this.tailoring & LineBreakTailoring.SouthEastAsianAsIdeographs) != 0 ? LineBreakClass.ID : LineBreakClass.AL;
+                if (CodePoint.GetGeneralCategory(cp) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark)
+                {
+                    cls = LineBreakClass.CM;
+                }
+                else if ((this.tailoring & LineBreakTailoring.SouthEastAsianAsIdeographs) == 0)
+                {
+                    cls = LineBreakClass.AL;
+                }
+                else if (IsFollowingVowel(cp.Value))
+                {
+                    cls = LineBreakClass.CM;
+                }
+                else
+                {
+                    cls = LineBreakClass.ID;
+                    if (IsLeadingVowel(cp.Value))
+                    {
+                        flags |= Flags.LeadingVowel;
+                    }
+                }
+
                 break;
 
             case LineBreakClass.JL or LineBreakClass.JV or LineBreakClass.JT or LineBreakClass.H2 or LineBreakClass.H3
                 when (this.tailoring & LineBreakTailoring.HangulAsAlphabetic) != 0:
+                cls = LineBreakClass.AL;
+                break;
+
+            case LineBreakClass.ID
+                when (this.tailoring & LineBreakTailoring.HangulAsAlphabetic) != 0 && IsHangulCompatibilityJamo(cp.Value):
                 cls = LineBreakClass.AL;
                 break;
 

@@ -56,7 +56,10 @@ Unicode conformance suites to that version.
   `Required` set for a mandatory break. The positions are indexes of code points, as `TextLayout` reads them. The new
   `LineBreakTailoring` flags change the class of the characters they name, and of no others. `SouthEastAsianAsIdeographs`
   treats the letters of class SA (Thai, Lao, Khmer, Myanmar) as ideographs, so a break is allowed between them, and the SA
-  marks stay combining marks. `HangulAsAlphabetic` treats Hangul syllables and jamo as letters, so Korean breaks at its
+  marks stay combining marks. A Thai or Lao vowel that follows its consonant (U+0E30, U+0E32, U+0E33, U+0E45, U+0EB0,
+  U+0EB2, U+0EB3, U+0EBD) is a combining mark too, and no break follows a Thai or Lao vowel that is written before its
+  consonant (U+0E40 to U+0E44, U+0EC0 to U+0EC4), so a syllable is not broken inside. `HangulAsAlphabetic` treats Hangul
+  syllables, conjoining jamo and compatibility jamo (U+3131 to U+318E, U+FFA0 to U+FFDC) as letters, so Korean breaks at its
   spaces. `LineBreakTailoring.None`, the default, is the algorithm as published, which passes `LineBreakTest.txt`.
   `LineBreakAlgorithm.IsBreakAllowedBetween(before, after, tailoring)` answers whether a line may break where `before`
   ends and `after` begins, for a layout engine that holds text in runs. It runs the enumerator over the two spans as one

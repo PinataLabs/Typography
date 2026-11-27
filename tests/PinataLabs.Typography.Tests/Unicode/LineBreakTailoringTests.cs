@@ -59,6 +59,101 @@ public class LineBreakTailoringTests
         await Assert.That(Breaks(text, LineBreakTailoring.None)).IsNotEqualTo(Breaks(text, Both));
     }
 
+    // A vowel that follows its consonant stays with it, and one that is written before its consonant stays with that.
+    // A line may still end before the vowel that is written first, and after the syllable.
+    [Test]
+    [Arguments("กา", new[] { 2 })]
+    [Arguments("กะ", new[] { 2 })]
+    [Arguments("น้ำ", new[] { 3 })]
+    [Arguments("กๅ", new[] { 2 })]
+    [Arguments("เก", new[] { 2 })]
+    [Arguments("เกาะ", new[] { 4 })]
+    [Arguments("แมว", new[] { 2, 3 })]
+    [Arguments("ไปไป", new[] { 2, 4 })]
+    [Arguments("กเก", new[] { 1, 3 })]
+    [Arguments("กาเกา", new[] { 2, 5 })]
+    [Arguments("ກາ", new[] { 2 })]
+    [Arguments("ກະ", new[] { 2 })]
+    [Arguments("ກຳ", new[] { 2 })]
+    [Arguments("ກຽ", new[] { 2 })]
+    [Arguments("ເກ", new[] { 2 })]
+    [Arguments("ໄກ", new[] { 2 })]
+    [Arguments("ກເກ", new[] { 1, 3 })]
+    [Arguments("เก เก", new[] { 3, 5 })]
+    public async Task AThaiOrLaoVowelKeepsItsSyllableWhole(string text, int[] expected)
+    {
+        await Assert.That(Wraps(text, LineBreakTailoring.SouthEastAsianAsIdeographs)).IsEquivalentTo(expected);
+    }
+
+    // Without the tailoring the letters are not broken at all, whichever vowel is among them.
+    [Test]
+    [Arguments("กาเกา")]
+    [Arguments("ກາເກາ")]
+    public async Task AThaiOrLaoVowelChangesNothingWithoutTheTailoring(string text)
+    {
+        await Assert.That(Wraps(text, LineBreakTailoring.None)).IsEquivalentTo(new[] { 5 });
+    }
+
+    // The same question over a boundary between two spans.
+    [Test]
+    [Arguments("ก", "า", false)]
+    [Arguments("ก", "เ", true)]
+    [Arguments("เ", "ก", false)]
+    [Arguments("กา", "เก", true)]
+    [Arguments("ກ", "າ", false)]
+    [Arguments("ເ", "ກ", false)]
+    [Arguments("ກ", "ເ", true)]
+    public async Task AThaiOrLaoVowelStaysWithItsConsonantAcrossASeam(string before, string after, bool allowed)
+    {
+        await Assert.That(LineBreakAlgorithm.IsBreakAllowedBetween(before, after, LineBreakTailoring.SouthEastAsianAsIdeographs)).IsEqualTo(allowed);
+    }
+
+    // The vowels of Khmer and Myanmar are marks, which stay with their consonant, and Myanmar encodes the vowel that it
+    // writes before the consonant after it, as Khmer does.
+    [Test]
+    [Arguments("កា", new[] { 2 })]
+    [Arguments("កេ", new[] { 2 })]
+    [Arguments("កេខ", new[] { 2, 3 })]
+    [Arguments("ကာ", new[] { 2 })]
+    [Arguments("ကေ", new[] { 2 })]
+    [Arguments("ကောခ", new[] { 3, 4 })]
+    public async Task AKhmerOrMyanmarVowelStaysWithItsConsonant(string text, int[] expected)
+    {
+        await Assert.That(Wraps(text, LineBreakTailoring.SouthEastAsianAsIdeographs)).IsEquivalentTo(expected);
+    }
+
+    [Test]
+    public async Task EveryDependentVowelOfKhmerAndMyanmarIsAMark()
+    {
+        List<string> notMarks = [];
+        foreach ((int first, int last) in new[] { (0x17B6, 0x17C5), (0x102B, 0x1032) })
+        {
+            for (int value = first; value <= last; value++)
+            {
+                if (!IsMark(value) || CodePoint.GetLineBreakClass(new CodePoint(value)) != LineBreakClass.SA)
+                {
+                    notMarks.Add($"U+{value:X4}");
+                }
+            }
+        }
+
+        await Assert.That(notMarks).IsEmpty();
+    }
+
+    // The compatibility jamo and the halfwidth jamo are Hangul letters that LB1 makes ideographs.
+    [Test]
+    [Arguments("ㄱㅏㄴ", LineBreakTailoring.None, new[] { 1, 2, 3 })]
+    [Arguments("ㄱㅏㄴ", LineBreakTailoring.HangulAsAlphabetic, new[] { 3 })]
+    [Arguments("ㄱㅏㄴ 한", LineBreakTailoring.HangulAsAlphabetic, new[] { 4, 5 })]
+    [Arguments("ﾡￂﾤ", LineBreakTailoring.None, new[] { 1, 2, 3 })]
+    [Arguments("ﾡￂﾤ", LineBreakTailoring.HangulAsAlphabetic, new[] { 3 })]
+    [Arguments("한ㄱ漢", LineBreakTailoring.HangulAsAlphabetic, new[] { 2, 3 })]
+    [Arguments("㈀㈀", LineBreakTailoring.HangulAsAlphabetic, new[] { 1, 2 })]
+    public async Task ACompatibilityJamoBreaksAsALetterDoes(string text, LineBreakTailoring tailoring, int[] expected)
+    {
+        await Assert.That(Wraps(text, tailoring)).IsEquivalentTo(expected);
+    }
+
     // A tailoring names classes. Every code point outside them breaks as it does with no tailoring, beside
     // characters of every other class, and so does a combination of the two tailorings outside both.
     [Test]
@@ -76,7 +171,7 @@ public class LineBreakTailoringTests
 
             LineBreakClass cls = CodePoint.GetLineBreakClass(new CodePoint(value));
             bool southEastAsian = cls == LineBreakClass.SA;
-            bool hangul = cls is LineBreakClass.JL or LineBreakClass.JV or LineBreakClass.JT or LineBreakClass.H2 or LineBreakClass.H3;
+            bool hangul = IsHangul(value);
             foreach (string neighbour in neighbours)
             {
                 for (int side = 0; side < 2; side++)
@@ -109,7 +204,7 @@ public class LineBreakTailoringTests
         int checkedLetters = 0;
         foreach (int letter in CodePointsOf(LineBreakClass.SA))
         {
-            if (IsMark(letter))
+            if (IsMark(letter) || IsThaiOrLaoVowel(letter))
             {
                 continue;
             }
@@ -157,18 +252,16 @@ public class LineBreakTailoringTests
         List<string> differing = [];
         int checkedCodePoints = 0;
         int syllable = 0;
-        foreach (LineBreakClass cls in new[] { LineBreakClass.JL, LineBreakClass.JV, LineBreakClass.JT, LineBreakClass.H2, LineBreakClass.H3 })
+        for (int value = 0; value <= 0x10FFFF; value++)
         {
-            foreach (int value in CodePointsOf(cls))
+            if (!IsHangul(value)
+                || (CodePoint.GetLineBreakClass(new CodePoint(value)) is LineBreakClass.H2 or LineBreakClass.H3 && syllable++ % 97 != 0))
             {
-                if (cls is LineBreakClass.H2 or LineBreakClass.H3 && syllable++ % 97 != 0)
-                {
-                    continue;
-                }
-
-                checkedCodePoints++;
-                CompareWith(value, letter, LineBreakTailoring.HangulAsAlphabetic, neighbours, deep.Add(Properties(value)), differing);
+                continue;
             }
+
+            checkedCodePoints++;
+            CompareWith(value, letter, LineBreakTailoring.HangulAsAlphabetic, neighbours, deep.Add(Properties(value)), differing);
         }
 
         await Assert.That(checkedCodePoints).IsGreaterThan(300);
@@ -234,6 +327,34 @@ public class LineBreakTailoringTests
         }
     }
 
+    // A Hangul syllable, a conjoining jamo, or a compatibility jamo that LB1 leaves as an ideograph.
+    private static bool IsHangul(int value)
+    {
+        if (value is >= 0xD800 and <= 0xDFFF)
+        {
+            return false;
+        }
+
+        LineBreakClass cls = CodePoint.GetLineBreakClass(new CodePoint(value));
+        return cls is LineBreakClass.JL or LineBreakClass.JV or LineBreakClass.JT or LineBreakClass.H2 or LineBreakClass.H3
+            || (cls == LineBreakClass.ID && value is (>= 0x3131 and <= 0x318E) or (>= 0xFFA0 and <= 0xFFDC));
+    }
+
+    private static bool IsThaiOrLaoVowel(int value)
+        => value is 0x0E30 or 0x0E32 or 0x0E33 or 0x0E45 or 0x0EB0 or 0x0EB2 or 0x0EB3 or 0x0EBD
+            or (>= 0x0E40 and <= 0x0E44) or (>= 0x0EC0 and <= 0x0EC4);
+
+    private static int[] Wraps(string text, LineBreakTailoring tailoring)
+    {
+        List<int> breaks = [];
+        foreach (LineBreak lineBreak in new LineBreakEnumerator(text.AsSpan(), tailoring))
+        {
+            breaks.Add(lineBreak.PositionWrap);
+        }
+
+        return breaks.ToArray();
+    }
+
     private static bool IsMark(int value)
         => CodePoint.GetGeneralCategory(new CodePoint(value)) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark;
 
@@ -266,9 +387,7 @@ public class LineBreakTailoringTests
             }
 
             LineBreakClass cls = CodePoint.GetLineBreakClass(new CodePoint(value));
-            bool tailored = hangul
-                ? cls is LineBreakClass.JL or LineBreakClass.JV or LineBreakClass.JT or LineBreakClass.H2 or LineBreakClass.H3
-                : cls == LineBreakClass.SA;
+            bool tailored = hangul ? IsHangul(value) : cls == LineBreakClass.SA;
             if (!tailored && seen.Add(Properties(value)))
             {
                 neighbours.Add(value);

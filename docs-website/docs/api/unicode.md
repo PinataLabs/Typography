@@ -118,8 +118,8 @@ gives at that position of the joined text. See
 | Value | Description |
 | --- | --- |
 | `None` | The algorithm as UAX #14 publishes it. This is the default. |
-| `SouthEastAsianAsIdeographs` | The letters of class SA (Thai, Lao, Khmer, Myanmar) break as ideographs do. SA marks stay combining marks. |
-| `HangulAsAlphabetic` | Hangul syllables and jamo break as letters do, so Korean breaks at its spaces. |
+| `SouthEastAsianAsIdeographs` | The letters of class SA (Thai, Lao, Khmer, Myanmar) break as ideographs do. SA marks stay combining marks, and so do the Thai and Lao vowels written after their consonant (U+0E30, U+0E32, U+0E33, U+0E45, U+0EB0, U+0EB2, U+0EB3, U+0EBD). No break follows a Thai or Lao vowel written before its consonant (U+0E40 to U+0E44, U+0EC0 to U+0EC4). |
+| `HangulAsAlphabetic` | Hangul syllables, conjoining jamo and compatibility jamo (U+3131 to U+318E, U+FFA0 to U+FFDC) break as letters do, so Korean breaks at its spaces. |
 
 A tailoring changes the class of the characters it names and of no other.
 
