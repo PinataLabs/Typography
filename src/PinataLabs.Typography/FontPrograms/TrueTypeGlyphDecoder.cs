@@ -536,7 +536,7 @@ internal static partial class TrueTypeGlyphDecoder
         public int SinkCalls;
     }
 
-    private readonly struct Component
+    internal readonly struct Component
     {
         public Component(int start, int flags, ushort glyphId, int argument1, int argument2, Matrix3x2 transform)
         {
@@ -568,7 +568,7 @@ internal static partial class TrueTypeGlyphDecoder
     /// <summary>
     /// Reads the component records of a composite glyph.
     /// </summary>
-    private ref struct ComponentReader
+    internal ref struct ComponentReader
     {
         private FontDataReader reader;
         private bool more;

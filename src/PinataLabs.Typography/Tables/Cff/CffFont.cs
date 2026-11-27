@@ -56,6 +56,21 @@ internal sealed class CffFont
     public int GlyphCount => this.charStrings.Count;
 
     /// <summary>
+    /// Gets the number of Font DICTs that the font reads: one for a font without an FDArray, else the FDArray count up to 256.
+    /// </summary>
+    internal int FontDictCount => this.fontDicts.Length;
+
+    /// <summary>
+    /// Gets the global subroutines.
+    /// </summary>
+    internal CffIndex GlobalSubrs => this.globalSubrs;
+
+    /// <summary>
+    /// Gets the charstrings, one for each glyph.
+    /// </summary>
+    internal CffIndex CharStrings => this.charStrings;
+
+    /// <summary>
     /// Gets a value indicating whether the font is CID-keyed. Such a font has CIDs in place of glyph names.
     /// </summary>
     public bool IsCidKeyed { get; }
@@ -198,22 +213,56 @@ internal sealed class CffFont
     }
 
     /// <summary>
-    /// Gets the charstring of the glyph that a code of the Standard Encoding names, for a seac endchar.
+    /// Gets the glyph that a code of the Standard Encoding names, for a seac endchar.
     /// </summary>
     /// <param name="code">The code in the Standard Encoding.</param>
+    /// <param name="glyphId">The glyph ID.</param>
     /// <param name="charString">The charstring of the glyph.</param>
     /// <returns><see langword="false"/> if the font is CID-keyed or has no glyph for the code.</returns>
-    internal bool TryGetSeacComponent(int code, out ReadOnlyMemory<byte> charString)
+    internal bool TryGetSeacComponent(int code, out int glyphId, out ReadOnlyMemory<byte> charString)
     {
         charString = default;
+        glyphId = -1;
         if (this.IsCidKeyed || (uint)code >= (uint)CffPredefinedTables.StandardEncoding.Length)
         {
             return false;
         }
 
-        int glyphId = this.charset.AsSpan().IndexOf(CffPredefinedTables.StandardEncoding[code]);
+        glyphId = this.charset.AsSpan().IndexOf(CffPredefinedTables.StandardEncoding[code]);
         return glyphId >= 0 && this.charStrings.TryGet(glyphId, out charString);
     }
+
+    /// <summary>
+    /// Runs the charstring of a glyph, with its subroutines and seac components, and tells an observer
+    /// which subroutines and which glyphs it uses. The outline is not kept.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="observer">The observer.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
+    internal bool TryObserveCalls(int glyphId, ICffCallObserver observer)
+        => this.TryGetGlyph(glyphId, out CffGlyphData glyph) && glyph.TryObserveCalls(observer);
+
+    /// <summary>
+    /// Gets the Font DICT of a glyph: the index that FDSelect gives, or 0 when the font has no FDSelect.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="fontDict">The index of the Font DICT, below <see cref="FontDictCount"/>.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or has no Font DICT.</returns>
+    internal bool TryGetFontDict(int glyphId, out int fontDict)
+    {
+        fontDict = 0;
+        return (uint)glyphId < (uint)this.GlyphCount
+            && (this.fdSelectOffset == 0 || this.TryGetFontDictIndex(glyphId, out fontDict))
+            && fontDict < this.fontDicts.Length;
+    }
+
+    /// <summary>
+    /// Gets the local subroutines of a Font DICT, or an empty INDEX when it has none.
+    /// </summary>
+    /// <param name="fontDict">The index of the Font DICT, below <see cref="FontDictCount"/>.</param>
+    /// <returns>The INDEX.</returns>
+    internal CffIndex GetLocalSubrs(int fontDict)
+        => this.fontDicts[fontDict].LocalSubrs;
 
     /// <summary>
     /// Checks that an FDSelect lies within the table, so that a glyph lookup can read it unchecked.

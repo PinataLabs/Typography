@@ -116,6 +116,51 @@ Unicode conformance suites to that version.
   a word at an icon; text that has only Unknown characters is one Unknown run. A closing paired bracket takes the script of its opening bracket,
   so `a (б) c` is Latin, Cyrillic and Latin. A script run that sits in a right to left bidi run is drawn in that
   direction, so the piece written first comes last. Script_Extensions is not read. (#154)
+- **Font subsetter for CFF fonts.** `FontSubsetter.Subset(font, glyphIds, options)` cuts an OpenType font with a `CFF ` table,
+  or a bare CFF font as a PDF embeds it in `/FontFile3`, down to the glyphs that a document uses, and keeps every glyph at its
+  glyph ID, as a PDF with `/CIDToGIDMap /Identity` needs. A kept glyph keeps its charstring byte for byte, and so its outline and
+  its advance. A dropped glyph stays in the font as a lone `endchar`. Glyph 0 is always kept. The subset also keeps what the
+  glyphs need: the base and the accent of a `seac` glyph, and the global and the local subroutines that the kept charstrings
+  call, in the Font DICT of each glyph. The subsetter finds them by running each kept glyph with the engine that draws it,
+  so the subroutine bias, the nesting limit of 10 and the arithmetic ahead of a `callsubr` are the engine's. A subroutine
+  that no kept glyph calls keeps its place in its INDEX with a lone `return` for a body, so no charstring and no bias changes.
+  The table is laid out again from the Top DICT, with each offset in a DICT in 5 bytes, so the offsets resolve in one
+  pass. The charset, the encoding, the FDSelect and the String INDEX stay as they were, so glyph names, SIDs and CIDs stay.
+  An sfnt file keeps `FontSubsetOptions.DefaultTables`, which are the tables that a PDF reader and PDF/A validators read, with
+  the checksum of each table and the `head` adjustment set again, and `FontSubsetOptions.Tables` chooses other tables.
+  `FontSubsetOptions.ProgramOptions` applies the `MaxRetainedBytes` of `FontProgramOptions` to the subsetter, which counts what
+  `FontProgram.RetainedByteCount` counts and the array that it returns, and throws `FontProgramTooLargeException` before
+  an allocation that would pass it. The input can be untrusted: malformed data, and a kept glyph whose charstring is
+  malformed, throw `InvalidFontFileException`, and nothing else. A glyph ID that the font does not have throws
+  `ArgumentOutOfRangeException`. A subset keeps one INDEX entry for each glyph and each subroutine, and `cmap`, `hmtx` and `name`
+  as they were. The subsets of the CFF test fonts, one of them CID-keyed with 257 Font DICTs and one with 24,869 glyphs,
+  load with `FontProgram`, and every kept glyph draws as it did. A TrueType font throws `InvalidFontFileException` for now. (#155)
+- **Font subsetter.** `FontSubsetter.Subset(font, glyphIds, options)` cuts a font program down to the glyphs that a document
+  uses, and keeps every glyph at its glyph ID, as a PDF with `/CIDToGIDMap /Identity` needs. It reads an OpenType font with
+  a `CFF ` table, a bare CFF font as a PDF embeds it in `/FontFile3`, and a TrueType font with `glyf` and `loca`. A kept glyph keeps
+  its data byte for byte, and so its outline and its advance. A dropped glyph stays in the font and is empty: a lone `endchar` in CFF,
+  and no data in `glyf`, so two equal offsets in `loca`. Glyph 0 is always kept. The subset also keeps what the glyphs need: the base
+  and the accent of a CFF `seac` glyph, the components of a composite TrueType glyph at any depth, with a cycle of composites ended
+  by the glyphs that are already kept, and the global and the local subroutines that the kept CFF charstrings call, in the Font DICT
+  of each glyph. The subsetter finds the subroutines by running each kept glyph with the engine that draws it, so the subroutine
+  bias, the nesting limit of 10 and the arithmetic ahead of a `callsubr` are the engine's. A subroutine that no kept glyph calls
+  keeps its place in its INDEX with a lone `return` for a body, so no charstring and no bias changes. A CFF table is laid out again
+  from the Top DICT, with each offset in a DICT in 5 bytes, so the offsets resolve in one pass. Font DICTs that name the same Private
+  DICT or the same local Subrs INDEX share one copy of it, so a font of 256 Font DICTs does not grow 256 times. Its charset, encoding,
+  FDSelect and String INDEX stay as they were, so glyph names, SIDs and CIDs stay. A TrueType font keeps the format of its `loca`, and each kept
+  glyph starts on a 2-byte boundary for short offsets and a 4-byte boundary for long ones. Kept glyphs whose `loca` entries share
+  the bytes of `glyf` cannot share them in a subset, so a font whose kept glyphs need more bytes than `glyf` has throws
+  `InvalidFontFileException`, and so does a CFF font whose distinct Private DICTs and local Subrs INDEXes are longer together than
+  the table, because their windows overlap. An sfnt file keeps `FontSubsetOptions.DefaultTables`, which are the tables that a PDF reader and PDF/A
+  validators read, with the outline tables of its own format only, the checksum of each table and the `head` adjustment set again,
+  and `FontSubsetOptions.Tables` chooses other tables. `FontSubsetOptions.ProgramOptions`
+  applies the `MaxRetainedBytes` of `FontProgramOptions` to the subsetter, which counts what `FontProgram.RetainedByteCount`
+  counts and the array that it returns, and throws `FontProgramTooLargeException` before an allocation that would pass it. The input
+  can be untrusted: malformed data, and a kept glyph whose charstring or components are malformed, throw `InvalidFontFileException`,
+  and nothing else. A glyph ID that the font does not have throws `ArgumentOutOfRangeException`. A subset keeps one entry in each
+  INDEX or `loca` for each glyph and each subroutine, and `cmap`, `hmtx` and `name` as they were, which is most of what is left of a
+  font of 24,869 glyphs. The subsets of the CFF and TrueType test fonts, among them CID-keyed fonts with 257 Font DICTs and with 24,869
+  glyphs, and TrueType fonts with composites, load with `FontProgram` and with fontTools, and every kept glyph draws as it did. (#155)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.

@@ -22,6 +22,7 @@ namespace PinataLabs.Typography.Fuzz;
 /// built font that has all three with every mapping. For the <c>tuple-variation-store</c> target it writes a small 'gvar'
 /// table of glyphs of Teko-Variable.ttf, one of its glyphs, and synthetic 'gvar' and 'cvar' tables that have what Teko lacks:
 /// intermediate regions, shared point numbers, point numbers in words, two axes and 32-bit offsets.
+/// For the <c>font-subsetter</c> target it writes the font seeds of the <c>program</c> target, and not the Type 1 fonts.
 /// </summary>
 internal static class SeedCorpus
 {
@@ -76,15 +77,21 @@ internal static class SeedCorpus
         Directory.CreateDirectory(program);
         Directory.CreateDirectory(type1Plain);
 
+        // The font subsetter reads the same fonts, and not Type 1.
+        string subsetter = Path.Combine(corpusRoot, FontSubsetterOracle.Target);
+        Directory.CreateDirectory(subsetter);
         foreach (string file in FontFiles)
         {
-            File.WriteAllBytes(Path.Combine(program, "seed-" + Path.GetFileName(file)), File.ReadAllBytes(Path.Combine(fonts, file)));
+            byte[] font = File.ReadAllBytes(Path.Combine(fonts, file));
+            File.WriteAllBytes(Path.Combine(program, "seed-" + Path.GetFileName(file)), font);
+            File.WriteAllBytes(Path.Combine(subsetter, "seed-" + Path.GetFileName(file)), font);
         }
 
         foreach (string file in BareCffFiles)
         {
             byte[] cff = GetTable(File.ReadAllBytes(Path.Combine(fonts, file)), "CFF ");
             File.WriteAllBytes(Path.Combine(program, "seed-bare-" + Path.ChangeExtension(Path.GetFileName(file), ".cff")), cff);
+            File.WriteAllBytes(Path.Combine(subsetter, "seed-bare-" + Path.ChangeExtension(Path.GetFileName(file), ".cff")), cff);
         }
 
         byte[] synthetic = SyntheticType1();
@@ -104,7 +111,7 @@ internal static class SeedCorpus
         WriteMetricsVariations(fonts, metricsVariation);
         string tupleStore = Path.Combine(corpusRoot, TupleVariationStoreOracle.Target);
         WriteTupleVariationStores(fonts, tupleStore);
-        Console.WriteLine($"Wrote seeds to {program}, {type1Plain}, {variationStore}, {metricsVariation} and {tupleStore}.");
+        Console.WriteLine($"Wrote seeds to {program}, {type1Plain}, {variationStore}, {metricsVariation}, {tupleStore} and {subsetter}.");
         return 0;
     }
 

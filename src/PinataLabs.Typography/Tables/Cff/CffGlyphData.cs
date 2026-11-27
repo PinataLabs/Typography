@@ -133,6 +133,20 @@ internal readonly struct CffGlyphData
         where TSink : IGlyphOutlineSink
         => this.TryWriteOutline(ref sink, out _);
 
+    /// <summary>
+    /// Runs the charstring and tells an observer which subroutines and seac components it uses. The outline is discarded.
+    /// </summary>
+    /// <param name="observer">The observer.</param>
+    /// <returns><see langword="false"/> if the charstring is malformed.</returns>
+    public bool TryObserveCalls(ICffCallObserver observer)
+    {
+        Span<float> stack = stackalloc float[CffEvaluationEngine.StackSize];
+        Span<float> transient = stackalloc float[CffEvaluationEngine.TransientSize];
+        CffEvaluationEngine engine = this.CreateEngine(stack, transient, observer);
+        NullGlyphOutlineSink sink = default;
+        return engine.TryWriteOutline(ref sink);
+    }
+
     // Layout throws for a malformed glyph. A seac without its base or accent draws without them instead,
     // as it did before layout drew seac components, so one such glyph does not fail the whole text.
     private void WriteOutline<TSink>(ref TSink sink)
@@ -178,7 +192,7 @@ internal readonly struct CffGlyphData
             && MathF.Abs(matrix.M32) < tolerance;
     }
 
-    private CffEvaluationEngine CreateEngine(Span<float> stack, Span<float> transient)
+    private CffEvaluationEngine CreateEngine(Span<float> stack, Span<float> transient, ICffCallObserver? observer = null)
         => new(
             this.charString.Span,
             this.globalSubrs,
@@ -189,5 +203,6 @@ internal readonly struct CffGlyphData
             transient,
             this.font,
             this.blendScalars,
-            this.vsIndex);
+            this.vsIndex,
+            observer);
 }

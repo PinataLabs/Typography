@@ -989,3 +989,32 @@ python tests/tools/generate_font_descriptor_reference.py
 ```
 
 The output is deterministic for one fontTools version. The reference records the version that wrote it.
+
+## Font subsets
+
+`verify_font_subsets.py` checks the subsets that `FontSubsetter` writes (issue #155) with fontTools. The `FontSubsetter` tests write each subset,
+with a JSON file that names the font and the glyph IDs that the test asked to keep, when the environment variable `EXPORT_FONT_SUBSETS`
+names a directory. The script loads each font and each subset with fontTools and checks that:
+
+- the subset loads, with every table checksum right (`TTFont(..., checkChecksums=2)`), the table directory in order, each table on a
+  4-byte boundary, and the words of the file summing to the `head` adjustment of `0xB1B0AFBA`;
+- the subset has the glyph names of the font, and so the glyph IDs;
+- each glyph that the test asked for has the outline and the advance that it had, with `seac` accents and composite components
+  drawn in place, and the points of a composite glyph placed as fontTools places them;
+- every other glyph has the outline that it had, because a kept glyph needs it, or none.
+
+Of a font with more than 1,500 glyphs the script compares every glyph that the test asked for and one glyph in every few of the others.
+
+With `--selftest` it also runs two comparisons that must fail, to show that the check can fail: the subset against the
+font with the two swapped, and the subset with every glyph claimed as kept. The exit code is 0 when every subset passes
+and every comparison that must fail does.
+
+To check the subsets again, install fontTools 4.68 or later and run this from the repository root:
+
+```
+EXPORT_FONT_SUBSETS=<directory> dotnet test --project tests/PinataLabs.Typography.Tests -c Release -f net8.0 --treenode-filter "/*/*/FontSubsetter*Tests/*"
+python tests/tools/verify_font_subsets.py <directory> --selftest
+```
+
+The font programs are the CFF and TrueType test fonts. PDF/A validation of a PDF that embeds a subset, such as veraPDF in the PdfPinata corpus,
+is not part of this repository.
