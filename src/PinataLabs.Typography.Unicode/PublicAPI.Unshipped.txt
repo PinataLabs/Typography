@@ -90,3 +90,5 @@ static PinataLabs.Typography.Unicode.BidiLevelRun.operator !=(PinataLabs.Typogra
 static PinataLabs.Typography.Unicode.BidiLevelRun.operator ==(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
 static PinataLabs.Typography.Unicode.BidiParagraph.Resolve(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.BidiParagraph!
 static PinataLabs.Typography.Unicode.CodePoint.GetScriptClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClassExtensions
+static PinataLabs.Typography.Unicode.ScriptClassExtensions.GetIso15924Code(this PinataLabs.Typography.Unicode.ScriptClass script) -> string!

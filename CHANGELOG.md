@@ -95,6 +95,9 @@ Unicode conformance suites to that version.
 - **`CodePoint.GetScriptClass` is public.** It gives the Script property of `Scripts.txt` for a code point, and
   `Unknown` for a code point that no script owns. A test compares it with `Scripts.txt` of Unicode 18.0.0 for every
   code point. Script_Extensions is not read. (#154)
+- **`ScriptClassExtensions.GetIso15924Code`.** It gives the four-letter ISO 15924 code of a `ScriptClass`, such as
+  `Latn`, `Arab`, `Hebr`, `Zyyy` for Common, `Zinh` for Inherited and `Zzzz` for Unknown. The generator reads the codes
+  from the `sc` lines of `PropertyValueAliases.txt`, so they follow the Unicode version of the data. (#154)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
