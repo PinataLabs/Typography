@@ -436,6 +436,24 @@ public class BidiParagraphTests
     public async Task AnUndefinedDirectionThrows()
         => await Assert.That(() => BidiParagraph.Resolve("abc", (BidiParagraphDirection)3)).Throws<ArgumentOutOfRangeException>();
 
+    // UAX #9 P1: a paragraph separator ends a paragraph, so a text with one before its end holds more than one.
+    [Test]
+    [Arguments("abc\n\U000005D0")]
+    [Arguments("a\rb")]
+    [Arguments("a\U00002029b")]
+    [Arguments("a\U0000001Cb")]
+    [Arguments("\n\n")]
+    public async Task ResolvingATextOfMoreThanOneParagraphThrows(string text)
+        => await Assert.That(() => BidiParagraph.Resolve(text, BidiParagraphDirection.Auto)).Throws<ArgumentException>();
+
+    // The separator is the last code unit of its paragraph, and CR LF is one separator.
+    [Test]
+    [Arguments("abc\n")]
+    [Arguments("abc\r\n")]
+    [Arguments("\U00002029")]
+    public async Task AParagraphEndsWithItsSeparator(string text)
+        => await Assert.That(BidiParagraph.Resolve(text, BidiParagraphDirection.Auto).Levels.Length).IsEqualTo(text.Length);
+
     private static int[] ParseNumbers(string field)
         => field.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(x => x == "x" ? -1 : int.Parse(x))

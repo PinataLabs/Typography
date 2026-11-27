@@ -111,6 +111,26 @@ public class TextItemizerTests
     }
 
     [Test]
+    public async Task EachParagraphIsItsOwnLineAndTheParagraphsKeepTheirOrder()
+    {
+        // A line feed ends a paragraph (UAX #9 P1), and a paragraph separator ends a line, so the runs of the second
+        // paragraph come after those of the first, not left of them as in one right to left line.
+        await AssertRuns(
+            Hebrew + "\n" + Arabic,
+            BidiParagraphDirection.RightToLeft,
+            new ItemizedRun(0, 3, ScriptClass.Hebrew, 1),
+            new ItemizedRun(3, 4, ScriptClass.Arabic, 1));
+
+        // With Auto, each paragraph takes its own direction: the second runs right to left, so its Latin is leftmost.
+        await AssertRuns(
+            "abc\n" + Hebrew + " x",
+            BidiParagraphDirection.Auto,
+            new ItemizedRun(0, 4, ScriptClass.Latin, 0),
+            new ItemizedRun(7, 1, ScriptClass.Latin, 2),
+            new ItemizedRun(4, 3, ScriptClass.Hebrew, 1));
+    }
+
+    [Test]
     public async Task ALeftToRightParagraphOfPlainTextIsOneRun()
         => await AssertRuns("The quick brown fox.", BidiParagraphDirection.Auto, new ItemizedRun(0, 20, ScriptClass.Latin, 0));
 
