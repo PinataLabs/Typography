@@ -25,6 +25,10 @@ lookup changes the first letter only when it does not match per syllable.
   other not. HarfBuzz sorts the lookups of a stage by their index, and keeps the flags of the first feature that
   added the lookup: the features are added in the order of their tags. So a lookup of pres and calt, or of init and
   clig, does not match per syllable, as calt and clig come first, and a lookup of abvs and calt does.
+* PerSyllableSorted48.ttf and PerSyllableSorted60.ttf (dev2) have 48 and 60 lookups in calt, and pres shares eight of
+  them. HarfBuzz sorts the entries of a stage with hb_qsort_inline, which is a quicksort for more than 24 entries and
+  is not stable, so the first entry of a shared lookup can be the one of pres. Each font has a lookup that then
+  matches per syllable.
 * PerSyllableRequired.ttf has the required feature ccmp for khmr, mym2, bali and dev2, which the language system
   also lists. HarfBuzz adds the lookups of the required feature first, and not per syllable, so its lookup matches
   across syllables.
@@ -140,6 +144,29 @@ def main():
         code_points += [first, second]
         texts.append([first, second])
     add(file_name, build(file_name, "dev2", code_points, features, glyphs), texts)
+
+    # More than 24 lookups in a stage, which HarfBuzz sorts with a quicksort.
+    for total, positions in ((48, [0, 7, 14, 21, 28, 35, 42, 47]), (60, [3, 9, 17, 30, 31, 44, 52, 59])):
+        file_name = "PerSyllableSorted%d.ttf" % total
+        features = ""
+        names = []
+        pairs = []
+        for i in range(total):
+            if i in positions:
+                first = 0x0915 + 2 * positions.index(i)
+                name = "Shared%d" % first
+                features += "lookup %s { sub u%04X' u%04X by u%04X.alt; } %s;\n" % (name, first, first + 1, first, name)
+                pairs.append([first, first + 1])
+            else:
+                # Ha, which no text has, takes the glyph of sa.
+                name = "Other%d" % i
+                features += "lookup %s { sub u0939 by u0938; } %s;\n" % (name, name)
+            names.append(name)
+        features += "feature calt {\n" + "".join("  lookup %s;\n" % name for name in names) + "} calt;\n"
+        features += "feature pres {\n" + "".join("  lookup Shared%d;\n" % first for first, _ in pairs) + "} pres;\n"
+        code_points = [c for pair in pairs for c in pair] + [0x0938, 0x0939]
+        glyphs = ["u%04X.alt" % first for first, _ in pairs]
+        add(file_name, build(file_name, "dev2", code_points, features, glyphs), pairs)
 
     # The required feature.
     file_name = "PerSyllableRequired.ttf"
