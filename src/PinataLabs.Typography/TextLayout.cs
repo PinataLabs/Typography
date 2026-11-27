@@ -138,7 +138,14 @@ internal static class TextLayout
 
         // Shaping takes the directional runs of the levels with rule L1 applied to each paragraph as one line.
         // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
-        BidiAlgorithm.ResetWhitespaceLevels(bidiData.Types, bidi.ResolvedLevels, bidiLevels.Paragraphs, 0, bidiData.Length);
+        foreach (BidiAlgorithm.Paragraph paragraph in bidiLevels.Paragraphs)
+        {
+            BidiAlgorithm.ResetWhitespaceLevels(
+                bidiData.Types.Slice(paragraph.Start, paragraph.Length),
+                bidi.ResolvedLevels.Slice(paragraph.Start, paragraph.Length),
+                paragraph.Level);
+        }
+
         BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
 
         // Incrementally build out collection of glyphs.
@@ -775,9 +782,13 @@ internal static class TextLayout
 
         // Calculate the position of potential line breaks. A line breaks only between graphemes, so a break inside a
         // grapheme moves to the start of the next grapheme. When another break is at that start, the later one is kept.
+        // A line must also break at the end of each bidi paragraph (UAX #9 P1), so that each line is in one paragraph:
+        // U+001C to U+001E end a paragraph but are no mandatory break of UAX #14. A paragraph ends at a grapheme
+        // boundary, and the last one ends with the text.
         var lineBreakEnumerator = new LineBreakEnumerator(text);
         var breakGraphemeEnumerator = new SpanGraphemeEnumerator(text);
         int graphemeEnd = 0;
+        int paragraphIndex = 0;
         List<LineBreak> lineBreaks = [];
         while (lineBreakEnumerator.MoveNext())
         {
@@ -792,14 +803,20 @@ internal static class TextLayout
                 lineBreak = new(lineBreak.PositionMeasure, graphemeEnd, lineBreak.Required);
             }
 
-            if (lineBreaks.Count > 0 && lineBreaks[^1].PositionWrap == lineBreak.PositionWrap)
+            for (; paragraphIndex < bidiLevels.Paragraphs.Length - 1 && bidiLevels.Paragraphs[paragraphIndex].End <= lineBreak.PositionWrap; paragraphIndex++)
             {
-                lineBreaks[^1] = lineBreak;
+                int paragraphEnd = bidiLevels.Paragraphs[paragraphIndex].End;
+                if (paragraphEnd == lineBreak.PositionWrap)
+                {
+                    lineBreak = new(lineBreak.PositionMeasure, paragraphEnd, true);
+                }
+                else
+                {
+                    AddLineBreak(lineBreaks, new(paragraphEnd, paragraphEnd, true));
+                }
             }
-            else
-            {
-                lineBreaks.Add(lineBreak);
-            }
+
+            AddLineBreak(lineBreaks, lineBreak);
         }
 
         int lineBreakIndex = 0;
@@ -1179,24 +1196,33 @@ internal static class TextLayout
             textLines.Add(textLine);
         }
 
-        // Each line aligns in the direction of its paragraph (UAX #9 P2 and P3 under Auto). Its glyphs are still in
-        // logical order, so the first holds its first codepoint.
+        // Each line is in one paragraph, and is ordered and aligned in its direction (UAX #9 P2 and P3 under Auto). Its
+        // glyphs are still in logical order, so the first holds its first codepoint.
         foreach (TextLine line in textLines)
         {
-            int paragraph = BidiAlgorithm.FindParagraph(bidiLevels.Paragraphs, line[0].Offset);
-            line.Direction = (bidiLevels.Paragraphs[paragraph].Level & 1) == 0 ? TextDirection.LeftToRight : TextDirection.RightToLeft;
-        }
+            sbyte paragraphLevel = bidiLevels.Paragraphs[BidiAlgorithm.FindParagraph(bidiLevels.Paragraphs, line[0].Offset)].Level;
+            line.Direction = (paragraphLevel & 1) == 0 ? TextDirection.LeftToRight : TextDirection.RightToLeft;
 
-        // When every level is 0, rule L1 changes none and no line has a run to reverse.
-        if (!bidiLevels.IsLeftToRight)
-        {
-            foreach (TextLine line in textLines)
+            // When every level is 0, rule L1 changes none and no line has a run to reverse.
+            if (!bidiLevels.IsLeftToRight)
             {
-                line.OrderVisually(bidiLevels);
+                line.OrderVisually(bidiLevels, paragraphLevel);
             }
         }
 
         return new TextBox(options, textLines);
+
+        static void AddLineBreak(List<LineBreak> lineBreaks, LineBreak lineBreak)
+        {
+            if (lineBreaks.Count > 0 && lineBreaks[^1].PositionWrap == lineBreak.PositionWrap)
+            {
+                lineBreaks[^1] = lineBreak;
+            }
+            else
+            {
+                lineBreaks.Add(lineBreak);
+            }
+        }
     }
 
     /// <summary>
@@ -1488,14 +1514,15 @@ internal static class TextLayout
         /// of the characters that rule X9 removes, and no two lines hold the same one of those.
         /// </summary>
         /// <param name="bidiLevels">The bidi types and levels of the text, before rule L1 for this line.</param>
-        public void OrderVisually(BidiLevels bidiLevels)
+        /// <param name="paragraphLevel">The embedding level of the paragraph that holds the line.</param>
+        public void OrderVisually(BidiLevels bidiLevels, sbyte paragraphLevel)
         {
             // The glyphs are in logical order, so the line holds the codepoints from the first glyph to the last.
             int lineStart = this.data[0].Offset;
             int lineLength = this.data[^1].Offset + 1 - lineStart;
             ArraySlice<sbyte> lineLevels = new(bidiLevels.Levels, lineStart, lineLength);
             ReadOnlyArraySlice<BidiCharacterType> lineTypes = bidiLevels.Types.Slice(lineStart, lineLength);
-            BidiAlgorithm.ResetWhitespaceLevels(bidiLevels.Types, bidiLevels.Levels, bidiLevels.Paragraphs, lineStart, lineLength);
+            BidiAlgorithm.ResetWhitespaceLevels(lineTypes, lineLevels, paragraphLevel);
 
             // A character that rule X9 removes at the start of the line has no character before it on the line, and
             // keeps the level of the one before it in the paragraph, which ends the line before. It takes the level of

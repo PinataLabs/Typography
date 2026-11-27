@@ -215,7 +215,9 @@ internal sealed class BidiAlgorithm
     /// <param name="data">The Bidi Unicode data.</param>
     /// <param name="resetWhitespace">
     /// <see langword="true"/> to apply rule L1 to each paragraph as one line; <see langword="false"/> to leave it to the
-    /// caller, which applies it to each line with <see cref="ResetWhitespaceLevels(ReadOnlyArraySlice{BidiCharacterType}, ArraySlice{sbyte}, IReadOnlyList{Paragraph}, int, int)"/>.
+    /// caller, which applies it to each line with
+    /// <see cref="ResetWhitespaceLevels(ReadOnlyArraySlice{BidiCharacterType}, ArraySlice{sbyte}, sbyte)"/> and the level
+    /// of the paragraph that holds the line.
     /// </param>
     public void Process(BidiData data, bool resetWhitespace = true)
         => this.Process(
@@ -1495,34 +1497,6 @@ internal sealed class BidiAlgorithm
             }
 
             k = end;
-        }
-    }
-
-    /// <summary>
-    /// Resets whitespace levels of a line of the text, as
-    /// <see cref="ResetWhitespaceLevels(ReadOnlyArraySlice{BidiCharacterType}, ArraySlice{sbyte}, sbyte)"/> does for a line
-    /// of one paragraph. A line that holds a paragraph separator is cut after it, and each piece takes the level of its
-    /// own paragraph. A layout breaks the line at most separators, but not at U+001C to U+001E, which UAX #14 does not
-    /// break at.
-    /// </summary>
-    /// <param name="types">The bidi types of the text.</param>
-    /// <param name="levels">The resolved levels of the text, which this resets in place for the line.</param>
-    /// <param name="paragraphs">The paragraphs of the text.</param>
-    /// <param name="lineStart">The index of the first code point of the line.</param>
-    /// <param name="lineLength">The number of code points in the line.</param>
-    internal static void ResetWhitespaceLevels(
-        ReadOnlyArraySlice<BidiCharacterType> types,
-        ArraySlice<sbyte> levels,
-        IReadOnlyList<Paragraph> paragraphs,
-        int lineStart,
-        int lineLength)
-    {
-        int lineEnd = lineStart + lineLength;
-        for (int p = FindParagraph(paragraphs, lineStart); p < paragraphs.Count && paragraphs[p].Start < lineEnd; p++)
-        {
-            int start = Math.Max(lineStart, paragraphs[p].Start);
-            int length = Math.Min(lineEnd, paragraphs[p].End) - start;
-            ResetWhitespaceLevels(types.Slice(start, length), levels.Slice(start, length), paragraphs[p].Level);
         }
     }
 

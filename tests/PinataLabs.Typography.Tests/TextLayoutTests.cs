@@ -1564,18 +1564,22 @@ public class TextLayoutTests
         await Assert.That(Math.Abs(arabicRight - wrappingLength)).IsLessThan(5);
     }
 
-    // U+001C ends a paragraph (UAX #9 P1) but not a line (UAX #14), so one line holds two paragraphs. Rule L1 resets the
-    // trailing space to the level of its own paragraph, the right-to-left second one, so it is drawn left of the Arabic,
-    // not after it at the level of the first paragraph. The line aligns by the paragraph its first character is in.
+    // U+001C ends a paragraph (UAX #9 P1) but is no mandatory break of UAX #14. The line still ends with the paragraph,
+    // so each line is in one paragraph and is ordered and aligned in the direction of that paragraph: the Hebrew line
+    // runs right to left from the right edge, and the Latin line left to right from the left edge.
     [Test]
-    public async Task ALineThatHoldsTwoParagraphs_ResetsEachToItsOwnLevel()
+    public async Task EachParagraphStartsALine_EvenAtASeparatorThatIsNoLineBreak()
     {
-        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        const float wrappingLength = 300;
+        Font font = new FontCollection().Add(TestFonts.Anchor2FontFile).CreateFont(24);
+        TextOptions options = new(font) { TextAlignment = TextAlignment.Start, WrappingLength = wrappingLength };
 
-        GlyphLayout[][] lines = GetLines("abc\U0000001Cكتب ", new TextOptions(font));
+        GlyphLayout[][] lines = GetLines("אב\U0000001Ccd", options);
 
-        await Assert.That(lines.Length).IsEqualTo(1);
-        await Assert.That(Visual(lines).Replace("\U0000001C", string.Empty)).IsEqualTo("abc بتك");
+        // Rule L1 gives the separator the level of its paragraph, so it is drawn at the left end of the Hebrew line.
+        await Assert.That(Visual(lines)).IsEqualTo("\U0000001Cבא|cd");
+        await Assert.That(Math.Round(lines[0].Max(x => x.PenLocation.X + x.AdvanceX), 4)).IsEqualTo(Math.Round(wrappingLength / options.Dpi, 4));
+        await Assert.That(lines[1].Min(x => x.PenLocation.X)).IsEqualTo(0);
     }
 
     // A line feed ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its direction from its own first

@@ -48,9 +48,9 @@ DIRECTIONAL FORMATTING) comes out as `cba`.
 
 Each paragraph separator ends a paragraph for the algorithm (UAX #9 rule P1): a line feed, a carriage
 return, CR LF, U+0085 NEXT LINE, U+2029 PARAGRAPH SEPARATOR, and U+001C to U+001E. U+2028 LINE SEPARATOR
-breaks the line but not the paragraph. The algorithm resolves each paragraph on its own, so `Auto` finds
-the base direction of each paragraph from its own first strong character, as CSS
-`unicode-bidi: plaintext` does.
+breaks the line but not the paragraph. Each paragraph starts a new line, U+001C to U+001E too. The
+algorithm resolves each paragraph on its own, so `Auto` finds the base direction of each paragraph from
+its own first strong character, as CSS `unicode-bidi: plaintext` does.
 
 Use `TextAlignment.Start` and `TextAlignment.End` rather than left and right. They follow the
 direction of the text, so one set of options works for both directions. See
