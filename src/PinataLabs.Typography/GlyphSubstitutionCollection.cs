@@ -495,6 +495,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         current.GlyphId = glyphId;
         current.LigatureId = ligatureId;
         current.IsLigated = true;
+        current.IsMultiplied = false;
         current.LigatureComponent = -1;
         current.MarkAttachment = -1;
         current.CursiveAttachment = 0;

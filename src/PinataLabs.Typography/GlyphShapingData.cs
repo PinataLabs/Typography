@@ -47,6 +47,7 @@ internal class GlyphShapingData
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsSubstituted = data.IsSubstituted;
         this.IsDecomposed = data.IsDecomposed;
+        this.IsMultiplied = data.IsMultiplied;
         this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
         this.SpaceFallback = data.SpaceFallback;
@@ -195,6 +196,12 @@ internal class GlyphShapingData
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution
     /// </summary>
     public bool IsDecomposed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is one of the glyphs that a multiple substitution made of one.
+    /// As in HarfBuzz, a ligature that the glyph then forms is not.
+    /// </summary>
+    public bool IsMultiplied { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this glyph was resolved to a vertical form (the font's

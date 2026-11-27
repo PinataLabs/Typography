@@ -102,7 +102,15 @@ internal class LookupType2Format1SubTable : LookupSubTable
 
         if (offset > -1)
         {
-            collection.Replace(index, this.sequenceTables[offset].SubstituteGlyphs);
+            ushort[] glyphs = this.sequenceTables[offset].SubstituteGlyphs;
+            collection.Replace(index, glyphs);
+
+            // As in HarfBuzz, a sequence of one glyph is a single substitution.
+            for (int i = 0; glyphs.Length > 1 && i < glyphs.Length; i++)
+            {
+                collection[index + i].IsMultiplied = true;
+            }
+
             return true;
         }
 
