@@ -28,6 +28,12 @@ public class SyllableTests
     public async Task JoinerInsideASyllableGivesTheGlyphsThatHarfBuzzGives()
         => await Assert.That(DifferentRows(HarfBuzz.Joiners)).IsEmpty();
 
+    // A sequence of IndicShapingInvalidCluster.txt gets a dotted circle before the sign that would make the vowel look
+    // like another vowel.
+    [Test]
+    public async Task InvalidVowelSequenceGivesTheGlyphsThatHarfBuzzGives()
+        => await Assert.That(DifferentRows(HarfBuzz.Invalid)).IsEmpty();
+
     private static List<string> DifferentRows(JsonElement[][] rows)
     {
         Dictionary<string, Font> fonts = [];
