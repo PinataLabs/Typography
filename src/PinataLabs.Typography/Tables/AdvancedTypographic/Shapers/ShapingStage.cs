@@ -14,7 +14,7 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
 /// </summary>
 internal sealed class ShapingStage
 {
-    private readonly List<Tag> featureTags = [];
+    private readonly List<PlannedFeature> features = [];
     private readonly Action<IGlyphShapingCollection, int, int>? preAction;
     private Action<IGlyphShapingCollection, int, int>? postAction;
 
@@ -24,9 +24,9 @@ internal sealed class ShapingStage
     /// <summary>
     /// Gets the features of the stage, in the order in which the shaper planned them.
     /// </summary>
-    public IReadOnlyList<Tag> FeatureTags => this.featureTags;
+    public IReadOnlyList<PlannedFeature> Features => this.features;
 
-    public void AddFeature(Tag featureTag) => this.featureTags.Add(featureTag);
+    public void AddFeature(PlannedFeature feature) => this.features.Add(feature);
 
     public void SetPostAction(Action<IGlyphShapingCollection, int, int> action) => this.postAction = action;
 

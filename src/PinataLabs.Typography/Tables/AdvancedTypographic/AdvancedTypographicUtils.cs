@@ -68,7 +68,7 @@ internal static class AdvancedTypographicUtils
         int index,
         int count)
     {
-        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags, features.InputIgnorables);
         int currentCount = collection.Count;
 
         foreach (SequenceLookupRecord lookupRecord in records)
@@ -106,7 +106,7 @@ internal static class AdvancedTypographicUtils
         int index,
         int count)
     {
-        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags, features.InputIgnorables);
         foreach (SequenceLookupRecord lookupRecord in records)
         {
             ushort sequenceIndex = lookupRecord.SequenceIndex;
@@ -118,99 +118,60 @@ internal static class AdvancedTypographicUtils
         }
     }
 
-    public static bool MatchInputSequence(SkippingGlyphIterator iterator, LookupFeatures features, ushort increment, ushort[] sequence, Span<int> matches)
-        => Match(
-            increment,
-            sequence,
+    /// <summary>
+    /// Matches the components of a ligature after its first glyph. Each glyph must have a feature of the lookup enabled.
+    /// </summary>
+    public static bool MatchInputSequence(SkippingGlyphIterator iterator, LookupFeatures features, ushort[] sequence, Span<int> matches)
+        => MatchInput(
             iterator,
+            features,
+            sequence,
             (component, data) => component == data.GlyphId && features.AnyEnabledOn(data.Features),
-            matches);
+            matches,
+            out _);
 
-    public static bool MatchSequence(SkippingGlyphIterator iterator, int increment, ushort[] sequence)
-        => Match(
-            increment,
-            sequence,
-            iterator,
-            (component, data) => component == data.GlyphId,
-            default);
+    /// <summary>
+    /// Matches the input glyphs of a context rule after its first glyph.
+    /// </summary>
+    public static bool MatchSequence(SkippingGlyphIterator iterator, LookupFeatures features, ushort[] sequence)
+        => MatchInput(iterator, features, sequence, MatchGlyph, default, out _);
 
+    /// <summary>
+    /// Matches the input classes of a context rule after its first glyph.
+    /// </summary>
     public static bool MatchClassSequence(
         SkippingGlyphIterator iterator,
-        int increment,
+        LookupFeatures features,
         ushort[] sequence,
         ClassDefinitionTable classDefinitionTable)
-        => Match(
-            increment,
-            sequence,
-            iterator,
-            (component, data) => component == classDefinitionTable.ClassIndexOf(data.GlyphId),
-            default);
+        => MatchInput(iterator, features, sequence, (component, data) => component == classDefinitionTable.ClassIndexOf(data.GlyphId), default, out _);
 
-    public static bool MatchCoverageSequence(
-        SkippingGlyphIterator iterator,
-        CoverageTable[] coverageTable,
-        int increment)
-        => Match(
-            increment,
-            coverageTable,
-            iterator,
-            (component, data) => component.CoverageIndexOf(data.GlyphId) >= 0,
-            default);
+    /// <summary>
+    /// Matches the input coverages of a context rule, the first of them at the glyph of the iterator.
+    /// </summary>
+    public static bool MatchCoverageSequence(SkippingGlyphIterator iterator, LookupFeatures features, CoverageTable[] coverageTables)
+        => MatchCoverageInput(iterator, features, coverageTables, out _);
 
-    public static bool ApplyChainedSequenceRule(SkippingGlyphIterator iterator, ChainedSequenceRuleTable rule)
-    {
-        if (rule.BacktrackSequence.Length > 0
-            && !MatchSequence(iterator, -rule.BacktrackSequence.Length, rule.BacktrackSequence))
-        {
-            return false;
-        }
-
-        if (rule.InputSequence.Length > 0
-            && !MatchSequence(iterator, 1, rule.InputSequence))
-        {
-            return false;
-        }
-
-        if (rule.LookaheadSequence.Length > 0
-            && !MatchSequence(iterator, 1 + rule.InputSequence.Length, rule.LookaheadSequence))
-        {
-            return false;
-        }
-
-        return true;
-    }
+    public static bool ApplyChainedSequenceRule(SkippingGlyphIterator iterator, LookupFeatures features, ChainedSequenceRuleTable rule)
+        => MatchInput(iterator, features, rule.InputSequence, MatchGlyph, default, out int end)
+        && MatchBacktrack(iterator, features, rule.BacktrackSequence, MatchGlyph)
+        && MatchLookahead(iterator, features, end, rule.LookaheadSequence, MatchGlyph);
 
     public static bool ApplyChainedClassSequenceRule(
         SkippingGlyphIterator iterator,
+        LookupFeatures features,
         ChainedClassSequenceRuleTable rule,
         ClassDefinitionTable inputClassDefinitionTable,
         ClassDefinitionTable backtrackClassDefinitionTable,
         ClassDefinitionTable lookaheadClassDefinitionTable)
-    {
-        if (rule.BacktrackSequence.Length > 0
-            && !MatchClassSequence(iterator, -rule.BacktrackSequence.Length, rule.BacktrackSequence, backtrackClassDefinitionTable))
-        {
-            return false;
-        }
-
-        if (rule.InputSequence.Length > 0 &&
-            !MatchClassSequence(iterator, 1, rule.InputSequence, inputClassDefinitionTable))
-        {
-            return false;
-        }
-
-        if (rule.LookaheadSequence.Length > 0
-            && !MatchClassSequence(iterator, 1 + rule.InputSequence.Length, rule.LookaheadSequence, lookaheadClassDefinitionTable))
-        {
-            return false;
-        }
-
-        return true;
-    }
+        => MatchInput(iterator, features, rule.InputSequence, (component, data) => component == inputClassDefinitionTable.ClassIndexOf(data.GlyphId), default, out int end)
+        && MatchBacktrack(iterator, features, rule.BacktrackSequence, (component, data) => component == backtrackClassDefinitionTable.ClassIndexOf(data.GlyphId))
+        && MatchLookahead(iterator, features, end, rule.LookaheadSequence, (component, data) => component == lookaheadClassDefinitionTable.ClassIndexOf(data.GlyphId));
 
     public static bool CheckAllCoverages(
         FontMetrics fontMetrics,
         LookupFlags lookupFlags,
+        LookupFeatures features,
         IGlyphShapingCollection collection,
         int index,
         int count,
@@ -224,24 +185,10 @@ internal static class AdvancedTypographicUtils
             return false;
         }
 
-        // Check all coverages: if any of them does not match, abort update.
         SkippingGlyphIterator iterator = new(fontMetrics, collection, index, lookupFlags);
-        if (!MatchCoverageSequence(iterator, backtrack, -backtrack.Length))
-        {
-            return false;
-        }
-
-        if (!MatchCoverageSequence(iterator, input, 0))
-        {
-            return false;
-        }
-
-        if (!MatchCoverageSequence(iterator, lookahead, input.Length))
-        {
-            return false;
-        }
-
-        return true;
+        return MatchCoverageInput(iterator, features, input, out int end)
+            && MatchBacktrack(iterator, features, backtrack, MatchCoverage)
+            && MatchLookahead(iterator, features, end, lookahead, MatchCoverage);
     }
 
     public static bool ApplyAnchor(
@@ -353,60 +300,78 @@ internal static class AdvancedTypographicUtils
         return new GlyphShapingClass(isMark, isBase, isLigature, markAttachmentType);
     }
 
-    private static bool Match<T>(
-        int increment,
-        T[] sequence,
-        SkippingGlyphIterator iterator,
-        Func<T, GlyphShapingData, bool> condition,
-        Span<int> matches)
+    private static bool MatchGlyph(ushort component, GlyphShapingData data) => component == data.GlyphId;
+
+    private static bool MatchCoverage(CoverageTable component, GlyphShapingData data) => component.CoverageIndexOf(data.GlyphId) >= 0;
+
+    // The first coverage is that of the glyph of the iterator. As in HarfBuzz, a rule without input matches nothing.
+    private static bool MatchCoverageInput(SkippingGlyphIterator iterator, LookupFeatures features, CoverageTable[] coverageTables, out int end)
     {
-        int position = iterator.Index;
+        end = -1;
+        return coverageTables.Length > 0
+            && MatchCoverage(coverageTables[0], iterator.Collection[iterator.Index])
+            && MatchInput(iterator, features, coverageTables.AsSpan(1), MatchCoverage, default, out end);
+    }
 
-        // A backtrack sequence lists its glyphs from the one nearest to the input to the farthest one.
-        if (increment < 0)
+    /// <summary>
+    /// Matches the glyphs of an input sequence one by one after the glyph of the iterator, which is the first glyph of
+    /// the input, and gives the index of the last glyph that matched.
+    /// </summary>
+    private static bool MatchInput<T>(
+        SkippingGlyphIterator iterator,
+        LookupFeatures features,
+        ReadOnlySpan<T> sequence,
+        Func<T, GlyphShapingData, bool> condition,
+        Span<int> matches,
+        out int end)
+    {
+        end = -1;
+        iterator.Ignorables = features.InputIgnorables;
+        for (int i = 0; i < sequence.Length; i++)
         {
-            int matched = 0;
-            while (matched < sequence.Length)
+            if (i >= MaxContextLength || !iterator.TryMatch(1, sequence[i], condition))
             {
-                int previous = iterator.Increment(-1);
-                if (previous < 0 || !condition(sequence[matched], iterator.Collection[previous]))
-                {
-                    break;
-                }
-
-                matched++;
+                return false;
             }
 
-            iterator.Index = position;
-            return matched == sequence.Length;
-        }
-
-        int offset = iterator.Increment(increment);
-        IGlyphShapingCollection collection = iterator.Collection;
-
-        if (offset < 0)
-        {
-            return false;
-        }
-
-        int i = 0;
-        while (i < sequence.Length && i < MaxContextLength && offset < collection.Count)
-        {
-            if (!condition(sequence[i], collection[offset]))
-            {
-                break;
-            }
-
-            if (matches.Length == MaxContextLength)
+            if (!matches.IsEmpty)
             {
                 matches[i] = iterator.Index;
             }
-
-            i++;
-            offset = iterator.Next();
         }
 
-        iterator.Index = position;
-        return i == sequence.Length;
+        end = iterator.Index;
+        return true;
+    }
+
+    // A backtrack sequence lists its glyphs from the one nearest to the input to the farthest one.
+    private static bool MatchBacktrack<T>(SkippingGlyphIterator iterator, LookupFeatures features, T[] sequence, Func<T, GlyphShapingData, bool> condition)
+    {
+        iterator.Ignorables = features.ContextIgnorables;
+        foreach (T component in sequence)
+        {
+            if (!iterator.TryMatch(-1, component, condition))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // The lookahead starts after the last glyph of the input.
+    private static bool MatchLookahead<T>(SkippingGlyphIterator iterator, LookupFeatures features, int end, T[] sequence, Func<T, GlyphShapingData, bool> condition)
+    {
+        iterator.Index = end;
+        iterator.Ignorables = features.ContextIgnorables;
+        foreach (T component in sequence)
+        {
+            if (!iterator.TryMatch(1, component, condition))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

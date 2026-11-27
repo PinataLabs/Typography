@@ -6,6 +6,11 @@ using System;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
+/// <summary>
+/// Walks the glyphs of a collection past the glyphs that the lookup flags skip, and past the default-ignorable glyphs
+/// that the lookup may skip. A default-ignorable glyph that the lookup may skip is still matched where the lookup asks
+/// for it, as in HarfBuzz.
+/// </summary>
 internal struct SkippingGlyphIterator
 {
     private readonly FontMetrics fontMetrics;
@@ -20,16 +25,30 @@ internal struct SkippingGlyphIterator
         FontMetrics fontMetrics,
         IGlyphShapingCollection collection,
         int index,
-        LookupFlags lookupFlags)
+        LookupFlags lookupFlags,
+        SkippableIgnorables ignorables = SkippableIgnorables.None)
     {
         this.fontMetrics = fontMetrics;
         this.Collection = collection;
+        this.Ignorables = ignorables;
         this.Reset(index, lookupFlags);
+    }
+
+    private enum Skip
+    {
+        No,
+        Yes,
+        Maybe,
     }
 
     public IGlyphShapingCollection Collection { get; }
 
     public int Index { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default-ignorable glyphs that the iterator may skip.
+    /// </summary>
+    public SkippableIgnorables Ignorables { get; set; }
 
     public int Next()
     {
@@ -69,12 +88,74 @@ internal struct SkippingGlyphIterator
         this.Move(1);
     }
 
+    /// <summary>
+    /// Moves to the next glyph in the direction that matches a component of a sequence. A glyph that the lookup flags
+    /// skip is passed. A default-ignorable glyph that the iterator may skip is passed when it does not match.
+    /// </summary>
+    /// <typeparam name="T">The type of the component.</typeparam>
+    /// <param name="direction">1 to move forward, or -1 to move back.</param>
+    /// <param name="component">The component of the sequence.</param>
+    /// <param name="matches">Whether a glyph matches the component.</param>
+    /// <returns><see langword="true"/> when the iterator is at a glyph that matches.</returns>
+    public bool TryMatch<T>(int direction, T component, Func<T, GlyphShapingData, bool> matches)
+    {
+        while (true)
+        {
+            this.Index += direction;
+            if (this.Index < 0 || this.Index >= this.Collection.Count)
+            {
+                return false;
+            }
+
+            Skip skip = this.GetSkip(this.Index);
+            if (skip == Skip.Yes)
+            {
+                continue;
+            }
+
+            if (matches(component, this.Collection[this.Index]))
+            {
+                return true;
+            }
+
+            if (skip == Skip.No)
+            {
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether a lookup may skip a glyph as a default-ignorable glyph.
+    /// </summary>
+    /// <param name="data">The glyph.</param>
+    /// <param name="ignorables">The default-ignorable glyphs that the lookup may skip.</param>
+    /// <returns><see langword="true"/> if the lookup may skip the glyph.</returns>
+    public static bool MaySkip(GlyphShapingData data, SkippableIgnorables ignorables)
+    {
+        if (ignorables == SkippableIgnorables.None || !data.IsDefaultIgnorable)
+        {
+            return false;
+        }
+
+        SkippableIgnorables kind = data.CodePoint.Value switch
+        {
+            0x200C => SkippableIgnorables.Zwnj,
+            0x200D => SkippableIgnorables.Zwj,
+            0x034F or (>= 0x180B and <= 0x180D) or 0x180F or (>= 0xE0020 and <= 0xE007F) => SkippableIgnorables.Hidden,
+            _ => SkippableIgnorables.Other,
+        };
+
+        return (ignorables & kind) != 0;
+    }
+
+    // Without a component to match, a glyph that may be skipped is skipped.
     private void Move(int direction)
     {
         this.Index += direction;
         while (this.Index >= 0 && this.Index < this.Collection.Count)
         {
-            if (!this.ShouldIgnore(this.Index))
+            if (this.GetSkip(this.Index) == Skip.No)
             {
                 break;
             }
@@ -83,9 +164,19 @@ internal struct SkippingGlyphIterator
         }
     }
 
-    private readonly bool ShouldIgnore(int index)
+    private readonly Skip GetSkip(int index)
     {
         GlyphShapingData data = this.Collection[index];
+        if (this.ShouldIgnore(data))
+        {
+            return Skip.Yes;
+        }
+
+        return MaySkip(data, this.Ignorables) ? Skip.Maybe : Skip.No;
+    }
+
+    private readonly bool ShouldIgnore(GlyphShapingData data)
+    {
         GlyphShapingClass shapingClass = AdvancedTypographicUtils.GetGlyphShapingClass(this.fontMetrics, data.GlyphId, data);
         if ((this.ignoreMarks && shapingClass.IsMark) ||
             (this.ignoreBaseGlyphs && shapingClass.IsBase) ||

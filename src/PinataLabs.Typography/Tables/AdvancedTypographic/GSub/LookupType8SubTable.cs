@@ -127,6 +127,7 @@ internal sealed class LookupType8Format1SubTable : LookupSubTable
         if (!AdvancedTypographicUtils.CheckAllCoverages(
             fontMetrics,
             this.LookupFlags,
+            features,
             collection,
             index,
             count,

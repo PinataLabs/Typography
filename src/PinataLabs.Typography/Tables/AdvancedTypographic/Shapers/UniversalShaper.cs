@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
@@ -44,6 +45,10 @@ internal sealed class UniversalShaper : DefaultShaper
     private static readonly Tag PresTag = Tag.Parse("pres");
     private static readonly Tag PstsTag = Tag.Parse("psts");
 
+    // As in HarfBuzz, akhn, the reordering, the basic and the presentation features keep ZWJ.
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
+        ManualJoiners.Zwj, AkhnTag, RphfTag, PrefTag, RkrfTag, AbvfTag, BlwfTag, HalfTag, PstfTag, VatuTag, CjctTag, AbvsTag, BlwsTag, HalnTag, PresTag, PstsTag);
+
     private const int DottedCircle = 0x25cc;
 
     private static readonly int CgjCategory = Array.IndexOf(UniversalShapingData.Categories, "CGJ");
@@ -63,7 +68,7 @@ internal sealed class UniversalShaper : DefaultShaper
     /// <param name="joinsLetters">Whether the letters of the script join as Arabic letters do.</param>
     /// <param name="textOptions">The text options.</param>
     public UniversalShaper(ScriptClass script, bool joinsLetters, TextOptions textOptions)
-       : base(script, MarkZeroingMode.PreGPos, textOptions)
+       : base(script, MarkZeroingMode.PreGPos, textOptions, ManualJoinerFeatures)
         => this.joinsLetters = joinsLetters;
 
     /// <inheritdoc/>

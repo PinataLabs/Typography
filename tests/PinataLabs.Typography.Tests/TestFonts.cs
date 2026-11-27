@@ -90,6 +90,9 @@ public static class TestFonts
     // Written by tests/tools/generate_default_ignorable_reference.py, with the DefaultIgnorables fonts.
     public static string DefaultIgnorablesHarfBuzzReference => GetFullPath("DefaultIgnorables.harfbuzz.json");
 
+    // Written by tests/tools/generate_joiners_reference.py, with Joiners.ttf.
+    public static string JoinersHarfBuzzReference => GetFullPath("Joiners.harfbuzz.json");
+
     // Written by tests/tools/generate_mongolian_lookups_reference.py, with MongolianLookups.ttf.
     public static string MongolianLookupsHarfBuzzReference => GetFullPath("MongolianLookups.harfbuzz.json");
 

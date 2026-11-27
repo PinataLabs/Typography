@@ -47,7 +47,7 @@ internal static class ArabicFallbackShaper
         }
 
         GSubTable gsub = fontMetrics.GetGSubTable();
-        LookupFeatures features = new([], 0, 0, true);
+        LookupFeatures features = LookupFeatures.ForShaperSubstitution();
         count = Ligate(fontMetrics, gsub, substitution, features, index, count, plan.LetterLigatures);
         Ligate(fontMetrics, gsub, substitution, features, index, count, plan.MarkLigatures);
     }
