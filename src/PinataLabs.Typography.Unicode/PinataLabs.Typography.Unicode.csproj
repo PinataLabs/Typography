@@ -5,11 +5,11 @@
     <AssemblyTitle>PinataLabs.Typography.Unicode</AssemblyTitle>
     <RootNamespace>PinataLabs.Typography.Unicode</RootNamespace>
     <PackageId>PinataLabs.Typography.Unicode</PackageId>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0 AND BSD-3-Clause</PackageLicenseExpression>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/PinataLabs/Typography</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
-    <PackageTags>unicode;code-point;grapheme;uax29;script;uax24</PackageTags>
-    <Description>Unicode character properties for .NET, with no font code: code points, code point and grapheme cluster enumeration, and the Unicode version of the data</Description>
+    <PackageTags>unicode;code-point;grapheme;uax29;script;uax24;pdf;adobe-glyph-list;encoding</PackageTags>
+    <Description>Unicode character properties for .NET, with no font code: code points, code point and grapheme cluster enumeration, the Unicode version of the data, the PDF standard encodings and the Adobe Glyph List</Description>
     <TargetFrameworks>netstandard2.1;net8.0;net10.0;net11.0</TargetFrameworks>
     <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
   </PropertyGroup>

@@ -22,6 +22,16 @@ python tests/tools/generate_font_program_fixtures.py
 
 The output is deterministic. A run that changes a file means that the script, fontTools, or a shipped font changed.
 
+## Glyph name tables
+
+`generate_glyph_names.py` writes the Adobe Glyph List and the PDF standard encodings into
+`src/PinataLabs.Typography.Unicode/Resources` from the data files in `tests/tools/glyph_names`, which have their own
+README with the sources. It checks the data before it writes, and needs no packages.
+
+```
+python tests/tools/generate_glyph_names.py
+```
+
 ## Item Variation Store reference
 
 `generate_item_variation_store_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ItemVariationStore.fonttools.json`,
