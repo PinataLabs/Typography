@@ -130,11 +130,7 @@ internal readonly struct ArraySlice<T> : IEnumerable<T>, IEnumerable
     /// </exception>
     public ArraySlice<T> Slice(int start, int length)
     {
-        if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
-        {
-            throw new ArgumentOutOfRangeException(nameof(start));
-        }
-
+        SliceRange.Check(start, length, this.Length);
         return new(this.data, this.Start + start, length);
     }
 
