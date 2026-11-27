@@ -131,8 +131,7 @@ internal sealed class KerningTable : Table
         // both of its glyphs are rotated.
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
         if (AdvancedTypographicUtils.IsVerticalGlyph(leftData.CodePoint, layoutMode, leftData.HasVerticalForm)
-            || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm)
-            || leftData.Direction != rightData.Direction)
+            || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm))
         {
             return false;
         }

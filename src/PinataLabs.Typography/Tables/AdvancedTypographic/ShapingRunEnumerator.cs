@@ -6,9 +6,10 @@ using PinataLabs.Typography.Unicode;
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 
 /// <summary>
-/// Splits the glyphs of a collection into the runs that a caller of HarfBuzz shapes in a buffer each: runs of one script.
-/// A character of the scripts Common, Inherited or Unknown joins the script before it, or the script after it at the
-/// start of the text.
+/// Splits the glyphs of a collection into the runs that a caller of HarfBuzz shapes in a buffer each: runs of one script
+/// and one direction. A character of the scripts Common, Inherited or Unknown joins the script before it, or the script
+/// after it at the start of the text. A caller itemizes text by script first, so each piece of a script run keeps the
+/// script of the run, also a piece of digits that runs the other way.
 /// </summary>
 /// <remarks>
 /// The end of a run is kept as the number of glyphs after it, as <see cref="IGlyphShapingCollection.RunEnd"/> is, so a
@@ -19,6 +20,7 @@ internal struct ShapingRunEnumerator
 {
     private readonly IGlyphShapingCollection collection;
     private int glyphsAfterRun;
+    private int glyphsAfterScriptRun;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ShapingRunEnumerator"/> struct, before the first run.
@@ -28,6 +30,7 @@ internal struct ShapingRunEnumerator
     {
         this.collection = collection;
         this.glyphsAfterRun = collection.Count;
+        this.glyphsAfterScriptRun = collection.Count;
     }
 
     /// <summary>
@@ -62,9 +65,26 @@ internal struct ShapingRunEnumerator
             return false;
         }
 
+        if (start >= this.collection.Count - this.glyphsAfterScriptRun)
+        {
+            this.glyphsAfterScriptRun = this.collection.Count - this.GetScriptRunEnd(start);
+        }
+
         this.Start = start;
-        this.glyphsAfterRun = this.collection.Count - this.GetScriptRunEnd(start);
+        this.glyphsAfterRun = this.collection.Count - this.GetRunEnd(start, this.collection.Count - this.glyphsAfterScriptRun);
         return true;
+    }
+
+    private readonly int GetRunEnd(int start, int scriptRunEnd)
+    {
+        TextDirection direction = this.collection[start].Direction;
+        int end = start + 1;
+        while (end < scriptRunEnd && this.collection[end].Direction == direction)
+        {
+            end++;
+        }
+
+        return end;
     }
 
     private int GetScriptRunEnd(int start)

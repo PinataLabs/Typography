@@ -486,6 +486,11 @@ Unicode conformance suites to that version.
   Common script, such as `!` or U+30FC, joins the run before it. So a lookup still matches `d!` and U+5B57 U+30FC, as
   in HarfBuzz when its caller splits the text into these runs. A caller of `TextShaper.Shape` who wants a lookup to
   match across scripts sets `ShapingOptions.Script`, which makes the text one run. (#194)
+- A GSUB or GPOS lookup, the `kern` table and the fallback placement of marks apply only within a run of one
+  direction, as HarfBuzz does when its caller splits text by script and then by the direction that the bidi algorithm
+  resolves. A digit after a Hebrew letter is a run from left to right inside a run from right to left, so a `calt`
+  lookup of alef before digit one, and a pair of bet and digit two, no longer apply in the layout. The digits keep the
+  script of their script run, so a lookup of the Hebrew script still applies to them. (#202)
 - A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
   does. It found the glyph of each nested lookup by walking the glyphs again from the first. After a nested ligature
   took the second glyph of the input, a nested lookup at that glyph changed the glyph after the input, which can be

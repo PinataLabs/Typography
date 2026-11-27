@@ -138,7 +138,7 @@ internal static class TextLayout
         BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), [.. bidi.Paragraphs]);
 
         // Shaping takes the directional runs of the levels with rule L1 applied to each paragraph as one line.
-        // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
+        // Shaping splits a font run by direction too, and comes before the lines, so where a line ends does not change it.
         foreach (BidiAlgorithm.Paragraph paragraph in bidiLevels.Paragraphs)
         {
             BidiAlgorithm.ResetWhitespaceLevels(
