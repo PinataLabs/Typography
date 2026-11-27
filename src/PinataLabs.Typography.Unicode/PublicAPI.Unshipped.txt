@@ -36,3 +36,7 @@ PinataLabs.Typography.Unicode.ArabicJoiningGroup.KashmiriYeh = 114 -> PinataLabs
 PinataLabs.Typography.Unicode.ArabicJoiningGroup.ThinNoon = 115 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
 PinataLabs.Typography.Unicode.UnicodeInfo
 static PinataLabs.Typography.Unicode.UnicodeInfo.Version.get -> string!
+PinataLabs.Typography.Unicode.AdobeGlyphList
+static PinataLabs.Typography.Unicode.AdobeGlyphList.GetGlyphName(int codePoint) -> string!
+static PinataLabs.Typography.Unicode.AdobeGlyphList.TryGetUnicode(System.ReadOnlySpan<char> glyphName, out string! text) -> bool
+static PinataLabs.Typography.Unicode.AdobeGlyphList.TryGetZapfDingbatsUnicode(System.ReadOnlySpan<char> glyphName, out string! text) -> bool
