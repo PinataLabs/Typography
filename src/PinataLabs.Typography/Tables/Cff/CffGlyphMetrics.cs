@@ -47,57 +47,13 @@ internal class CffGlyphMetrics : GlyphMetrics
               glyphColor)
         => this.glyphData = glyphData;
 
-    internal CffGlyphMetrics(
-        StreamFontMetrics fontMetrics,
-        ushort glyphId,
-        CodePoint codePoint,
-        CffGlyphData glyphData,
-        Bounds bounds,
-        int advanceWidth,
-        int advanceHeight,
-        short leftSideBearing,
-        short topSideBearing,
-        ushort unitsPerEM,
-        Vector2 offset,
-        Vector2 scaleFactor,
-        TextRun textRun,
-        GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null)
-        : base(
-              fontMetrics,
-              glyphId,
-              codePoint,
-              bounds,
-              advanceWidth,
-              advanceHeight,
-              leftSideBearing,
-              topSideBearing,
-              unitsPerEM,
-              offset,
-              scaleFactor,
-              textRun,
-              glyphType,
-              glyphColor)
-        => this.glyphData = glyphData;
+    private CffGlyphMetrics(CffGlyphMetrics source, TextRun textRun, CodePoint codePoint)
+        : base(source, textRun, codePoint)
+        => this.glyphData = source.glyphData;
 
     /// <inheritdoc/>
     internal override GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint)
-        => new CffGlyphMetrics(
-            this.FontMetrics,
-            this.GlyphId,
-            codePoint,
-            this.glyphData,
-            this.Bounds,
-            this.AdvanceWidth,
-            this.AdvanceHeight,
-            this.LeftSideBearing,
-            this.TopSideBearing,
-            this.UnitsPerEm,
-            this.Offset,
-            this.ScaleFactor,
-            textRun,
-            this.GlyphType,
-            this.GlyphColor);
+        => new CffGlyphMetrics(this, textRun, codePoint);
 
     /// <inheritdoc/>
     internal override void RenderTo(IGlyphRenderer renderer, Vector2 location, Vector2 offset, GlyphLayoutMode mode, TextOptions options)

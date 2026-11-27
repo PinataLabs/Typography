@@ -41,6 +41,8 @@ public abstract class GlyphMetrics
         this.UnitsPerEm = unitsPerEM;
         this.AdvanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
+        this.FontAdvanceWidth = advanceWidth;
+        this.FontAdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
         this.TopSideBearing = topSideBearing;
         this.TextAttributes = textAttributes;
@@ -67,40 +69,28 @@ public abstract class GlyphMetrics
         this.Offset = offset;
     }
 
-    internal GlyphMetrics(
-        StreamFontMetrics font,
-        ushort glyphId,
-        CodePoint codePoint,
-        Bounds bounds,
-        int advanceWidth,
-        int advanceHeight,
-        short leftSideBearing,
-        short topSideBearing,
-        ushort unitsPerEM,
-        Vector2 offset,
-        Vector2 scaleFactor,
-        TextRun textRun,
-        GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null)
+    // Clones the metrics for a layout, which changes the advances and the offset of the clone only.
+    internal GlyphMetrics(GlyphMetrics source, TextRun textRun, CodePoint codePoint)
     {
-        // This is used during cloning. Ensure anything that could be changed is copied.
-        this.FontMetrics = font;
-        this.GlyphId = glyphId;
+        this.FontMetrics = source.FontMetrics;
+        this.GlyphId = source.GlyphId;
         this.CodePoint = codePoint;
-        this.Bounds = new Bounds(bounds.Min, bounds.Max);
-        this.Width = bounds.Max.X - bounds.Min.X;
-        this.Height = bounds.Max.Y - bounds.Min.Y;
-        this.UnitsPerEm = unitsPerEM;
-        this.AdvanceWidth = advanceWidth;
-        this.AdvanceHeight = advanceHeight;
-        this.LeftSideBearing = leftSideBearing;
-        this.TopSideBearing = topSideBearing;
+        this.Bounds = source.Bounds;
+        this.Width = source.Width;
+        this.Height = source.Height;
+        this.UnitsPerEm = source.UnitsPerEm;
+        this.AdvanceWidth = source.AdvanceWidth;
+        this.AdvanceHeight = source.AdvanceHeight;
+        this.FontAdvanceWidth = source.FontAdvanceWidth;
+        this.FontAdvanceHeight = source.FontAdvanceHeight;
+        this.LeftSideBearing = source.LeftSideBearing;
+        this.TopSideBearing = source.TopSideBearing;
         this.TextAttributes = textRun.TextAttributes;
         this.TextDecorations = textRun.TextDecorations;
-        this.GlyphType = glyphType;
-        this.GlyphColor = glyphColor;
-        this.ScaleFactor = new Vector2(scaleFactor.X, scaleFactor.Y);
-        this.Offset = new Vector2(offset.X, offset.Y);
+        this.GlyphType = source.GlyphType;
+        this.GlyphColor = source.GlyphColor;
+        this.ScaleFactor = source.ScaleFactor;
+        this.Offset = source.Offset;
         this.TextRun = textRun;
     }
 
@@ -125,6 +115,16 @@ public abstract class GlyphMetrics
     /// the positioning of the glyph in a layout can take it below zero or above 65535.
     /// </summary>
     public int AdvanceHeight { get; private set; }
+
+    /// <summary>
+    /// Gets the advance width that the font gives the glyph, before positioning in a layout, expressed in font units.
+    /// </summary>
+    internal ushort FontAdvanceWidth { get; }
+
+    /// <summary>
+    /// Gets the advance height that the font gives the glyph, before positioning in a layout, expressed in font units.
+    /// </summary>
+    internal ushort FontAdvanceHeight { get; }
 
     /// <summary>
     /// Gets the left side bearing for horizontal layout, expressed in font units.

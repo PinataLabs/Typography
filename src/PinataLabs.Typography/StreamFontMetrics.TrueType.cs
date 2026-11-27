@@ -30,7 +30,8 @@ internal partial class StreamFontMetrics
     private short[]? instanceControlValues;
 
     // Hints the points of a glyph in place. The phantom points are the origin at the x of originX, the end of the advance width after it,
-    // the top at the y of top, and the end of the advance height below it. Each is measured from the unrounded point before it, and
+    // the top at the y of top, and the end of the advance height below it. The advances are those of the font, as in FreeType, so that
+    // positioning in a layout does not change the hinted outline. Each is measured from the unrounded point before it, and
     // rounds to the pixel as FreeType rounds it, with a half going up. It returns the x of the first phantom point after hinting, which
     // is that of the unrounded phantom point if the glyph is not hinted. A glyph of a variation instance moves left by it after
     // hinting, as FreeType does.
@@ -45,10 +46,10 @@ internal partial class StreamFontMetrics
         TrueTypeFontTables tables = this.trueTypeFontTables!;
 
         Vector2 pp1 = new(RoundToPixel(origin), 0);
-        Vector2 pp2 = new(RoundToPixel(origin + (metrics.AdvanceWidth * scaleXY.X)), 0);
+        Vector2 pp2 = new(RoundToPixel(origin + (metrics.FontAdvanceWidth * scaleXY.X)), 0);
         float topY = (top + metrics.Offset.Y) * scaleXY.Y;
         Vector2 pp3 = new(0, RoundToPixel(topY));
-        Vector2 pp4 = new(0, RoundToPixel(topY - (metrics.AdvanceHeight * scaleXY.Y)));
+        Vector2 pp4 = new(0, RoundToPixel(topY - (metrics.FontAdvanceHeight * scaleXY.Y)));
 
         // The interpreter holds mutable state (stack, zones, storage, scaled control values)
         // so it must only be used by one thread at a time.

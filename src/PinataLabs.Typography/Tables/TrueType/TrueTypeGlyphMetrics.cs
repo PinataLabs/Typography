@@ -60,62 +60,16 @@ public class TrueTypeGlyphMetrics : GlyphMetrics
         this.varied = varied;
     }
 
-    internal TrueTypeGlyphMetrics(
-        StreamFontMetrics font,
-        ushort glyphId,
-        CodePoint codePoint,
-        GlyphTable glyphs,
-        Bounds bounds,
-        int advanceWidth,
-        int advanceHeight,
-        short leftSideBearing,
-        short topSideBearing,
-        ushort unitsPerEM,
-        Vector2 offset,
-        Vector2 scaleFactor,
-        TextRun textRun,
-        GlyphType glyphType = GlyphType.Standard,
-        GlyphColor? glyphColor = null,
-        GlyphVector varied = default)
-        : base(
-              font,
-              glyphId,
-              codePoint,
-              bounds,
-              advanceWidth,
-              advanceHeight,
-              leftSideBearing,
-              topSideBearing,
-              unitsPerEM,
-              offset,
-              scaleFactor,
-              textRun,
-              glyphType,
-              glyphColor)
+    private TrueTypeGlyphMetrics(TrueTypeGlyphMetrics source, TextRun textRun, CodePoint codePoint)
+        : base(source, textRun, codePoint)
     {
-        this.glyphs = glyphs;
-        this.varied = varied;
+        this.glyphs = source.glyphs;
+        this.varied = source.varied;
     }
 
     /// <inheritdoc/>
     internal override GlyphMetrics CloneForRendering(TextRun textRun, CodePoint codePoint)
-        => new TrueTypeGlyphMetrics(
-            this.FontMetrics,
-            this.GlyphId,
-            codePoint,
-            this.glyphs,
-            this.Bounds,
-            this.AdvanceWidth,
-            this.AdvanceHeight,
-            this.LeftSideBearing,
-            this.TopSideBearing,
-            this.UnitsPerEm,
-            this.Offset,
-            this.ScaleFactor,
-            textRun,
-            this.GlyphType,
-            this.GlyphColor,
-            this.varied);
+        => new TrueTypeGlyphMetrics(this, textRun, codePoint);
 
     /// <summary>
     /// Gets one point of the unhinted glyph in glyph space, at the variation instance of its font.
