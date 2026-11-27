@@ -932,6 +932,28 @@ python tests/tools/generate_nesting_limit_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Font run context reference
+
+`generate_font_run_context_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/FontRunContext.ttf` and
+`FontRunContextFallback.ttf` and writes `FontRunContext.harfbuzz.json` next to them. A caller of HarfBuzz shapes the
+characters that each font draws in a buffer of that font, so no lookup of one font sees a glyph of another. The two
+fonts give the same glyph IDs to different characters, and each case has a GPOS lookup that would apply if it took a
+glyph of the other font for its own: a pair lookup of either font, and a chained context and a mark-to-base lookup of
+the fallback font. The script splits each text into runs of the characters that one font draws, the font of the text
+where it has the character, and shapes each run in a buffer of its font. As a control, it also shapes a text in one
+buffer of the font, where the lookup applies. The reference holds the glyph ID and the place of each glyph.
+
+`FontRunContextTests` checks that the layout gives the same glyphs in the same places.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_font_run_context_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Thai private use reference
 
 `generate_thai_pua_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/ThaiPua.harfbuzz.json`. When the

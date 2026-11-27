@@ -122,6 +122,13 @@ public static class TestFonts
 
     public static string NestingLimitHarfBuzzReference => GetFullPath("NestingLimit.harfbuzz.json");
 
+    // Built by tests/tools/generate_font_run_context_reference.py, which also writes the HarfBuzz reference.
+    public static string FontRunContextFile => GetFullPath("FontRunContext.ttf");
+
+    public static string FontRunContextFallbackFile => GetFullPath("FontRunContextFallback.ttf");
+
+    public static string FontRunContextHarfBuzzReference => GetFullPath("FontRunContext.harfbuzz.json");
+
     // Written by tests/tools/generate_thai_pua_reference.py, with the ThaiPua fonts.
     public static string ThaiPuaHarfBuzzReference => GetFullPath("ThaiPua.harfbuzz.json");
 

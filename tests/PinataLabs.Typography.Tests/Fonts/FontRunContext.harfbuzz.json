@@ -1,0 +1,13 @@
+{
+  "harfbuzz": "15.0.0",
+  "rows": [
+    ["FallbackPair","az","runs",[[1,0,0],[3,600,0]]],
+    ["FallbackPair","xz","fallback",[[1,0,0],[3,500,0]]],
+    ["FallbackContext","ay","runs",[[1,0,0],[2,600,0]]],
+    ["FallbackContext","xy","fallback",[[1,0,0],[2,600,100]]],
+    ["FallbackMark","aw","runs",[[1,0,0],[4,600,0]]],
+    ["FallbackMark","xw","fallback",[[1,0,0],[4,300,200]]],
+    ["PrimaryPair","aya","runs",[[1,0,0],[2,600,0],[1,1200,0]]],
+    ["PrimaryPair","aba","primary",[[1,0,0],[2,600,0],[1,1100,0]]]
+  ]
+}
