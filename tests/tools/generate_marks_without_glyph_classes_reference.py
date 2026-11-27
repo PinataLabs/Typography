@@ -31,7 +31,11 @@ class, and the script removes it.
   not covered, so the acute attaches to d, the first.
 * a, acute, b, grave: the acute and the grave attach to the components of the ligature of a and b.
 
-The reference holds each text and the glyph ID and place of each glyph, in font units from the start of the line, as
+MarksWithoutGlyphClassesFallback.ttf has a, b, the two accents and the ligature of acute and a, and no GPOS table, so
+HarfBuzz places marks around their base itself. A ligature of components that are not all marks takes the general
+category Lo in place of Mn, so in acute, a, grave the grave goes over the ligature, as over b in b, grave.
+
+The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the line, as
 HarfBuzz gives them. MarksWithoutGlyphClassesTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
@@ -45,6 +49,7 @@ from fontTools.ttLib import TTFont
 from harfbuzz_reference import FONTS, build_font, load_font, shape_line, write_reference
 
 FONT = "MarksWithoutGlyphClasses.ttf"
+FALLBACK_FONT = "MarksWithoutGlyphClassesFallback.ttf"
 REFERENCE = os.path.join(FONTS, "MarksWithoutGlyphClasses.harfbuzz.json")
 
 CODE_POINTS = [0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x0300, 0x0301, 0x0316, 0x034F, 0x1D165]
@@ -69,32 +74,48 @@ feature mkmk { pos mark u0301 <anchor 50 900> mark @Accent; } mkmk;
 """
 
 TEXTS = [
-    "á̀",
-    "à́",
-    "́à",
-    "́ab",
-    "́b",
-    "́͏a",
+    "a\u0301\u0300",
+    "a\u0300\u0301",
+    "\u0301a\u0300",
+    "\u0301ab",
+    "\u0301b",
+    "\u0301\u034Fa",
     "b\U0001D165b",
-    "b́b",
-    "b͏b",
-    "b́͏̖b",
-    "a͏́",
-    "á͏̀",
-    "a\U0001D165́",
-    "ć",
-    "f́",
-    "áb̀",
+    "b\u0301b",
+    "b\u034Fb",
+    "b\u0301\u034F\u0316b",
+    "a\u034F\u0301",
+    "a\u0301\u034F\u0300",
+    "a\U0001D165\u0301",
+    "c\u0301",
+    "f\u0301",
+    "a\u0301b\u0300",
 ]
+
+FALLBACK_CODE_POINTS = [0x61, 0x62, 0x0300, 0x0301]
+
+FALLBACK_FEATURES = "languagesystem DFLT dflt; languagesystem latn dflt; feature liga { sub u0301 u0061 by acute_a; } liga;"
+
+FALLBACK_TEXTS = ["\u0301a\u0300", "b\u0300", "\u0301\u0300"]
+
+
+def build_font_without_gdef(file_name, code_points, features, extra_glyphs):
+    path = build_font(file_name, code_points, features, extra_glyphs=extra_glyphs)
+    font = TTFont(path)
+    if "GDEF" in font:
+        del font["GDEF"]
+    font.save(path)
+    return load_font(path)
 
 
 def main():
-    path = build_font(FONT, CODE_POINTS, FEATURES, extra_glyphs=["acute_a", "a_b", "b_b"])
-    font = TTFont(path)
-    del font["GDEF"]
-    font.save(path)
-    hb_font = load_font(path)
-    write_reference(REFERENCE, [[text, shape_line(hb_font, text)[0]] for text in TEXTS])
+    rows = []
+    for file_name, code_points, features, extra_glyphs, texts in [
+            (FONT, CODE_POINTS, FEATURES, ["acute_a", "a_b", "b_b"], TEXTS),
+            (FALLBACK_FONT, FALLBACK_CODE_POINTS, FALLBACK_FEATURES, ["acute_a"], FALLBACK_TEXTS)]:
+        hb_font = build_font_without_gdef(file_name, code_points, features, extra_glyphs)
+        rows.extend([file_name, text, shape_line(hb_font, text)[0]] for text in texts)
+    write_reference(REFERENCE, rows)
 
 
 if __name__ == "__main__":
