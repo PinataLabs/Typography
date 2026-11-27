@@ -97,6 +97,8 @@ places marks around their base itself, on an equal part of a ligature for each c
   first half, at x 150, and of the second, at x 450.
 * a, grave: a2 is a glyph after the first that a multiple substitution made, so it gives no component of its own
   (_hb_glyph_info_get_lig_num_comps_in_ligation). a12 has one component, and the grave goes over its middle.
+* sixteen f, grave: the font ligates the sixteen f into f16. HarfBuzz keeps the number of components of a ligature in
+  four bits (_hb_glyph_info_set_lig_props_for_ligature), so f16 has none, and the grave goes over its middle.
 
 The reference holds the font, each text and the glyph ID and place of each glyph, in font units from the start of the
 line, as HarfBuzz gives them. LigaturePropertiesTests reads it.
@@ -180,7 +182,7 @@ NESTED_TEXTS = ["ab́c", "d́c", "abć"]
 
 COMPONENTS_FONT = "LigaturePropertiesComponents.ttf"
 COMPONENTS_CODE_POINTS = [0x61, 0x65, 0x66, 0x78, 0x79, 0x7A, 0x0300, 0x0301]
-COMPONENTS_EXTRA_GLYPHS = ["eacute", "eacute_f", "x_y", "p1", "p2", "z_p1", "a1", "a2", "a12"]
+COMPONENTS_EXTRA_GLYPHS = ["eacute", "eacute_f", "x_y", "p1", "p2", "z_p1", "a1", "a2", "a12", "f16"]
 COMPONENTS_FEATURES = """
 languagesystem DFLT dflt; languagesystem latn dflt;
 markClass [u0300 u0301 p2] <anchor 0 0> @Accent;
@@ -188,7 +190,11 @@ lookup BaseMark { sub u0065 u0301 by eacute; } BaseMark;
 lookup Pair { sub u0078 u0079 by x_y; } Pair;
 lookup Split { sub x_y by p1 p2; sub u0061 by a1 a2; } Split;
 lookup Ligate { lookupflag IgnoreMarks; sub eacute u0066 by eacute_f; sub u007A p1 by z_p1; sub a1 a2 by a12; } Ligate;
-feature liga { lookup BaseMark; lookup Pair; lookup Split; lookup Ligate; } liga;
+lookup Sixteen {
+    sub u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066 u0066
+        by f16;
+} Sixteen;
+feature liga { lookup BaseMark; lookup Pair; lookup Split; lookup Ligate; lookup Sixteen; } liga;
 feature mark {
     pos ligature eacute_f <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent;
     pos ligature z_p1 <anchor 100 500> mark @Accent ligComponent <anchor 700 500> mark @Accent
@@ -197,12 +203,13 @@ feature mark {
         ligComponent <anchor 1300 500> mark @Accent;
 } mark;
 table GDEF {
-    GlyphClassDef [u0061 u0065 u0066 u0078 u0079 u007A eacute p1 a1 a2], [eacute_f x_y z_p1 a12], [u0300 u0301 p2], ;
+    GlyphClassDef [u0061 u0065 u0066 u0078 u0079 u007A eacute p1 a1 a2], [eacute_f x_y z_p1 a12 f16],
+        [u0300 u0301 p2], ;
 } GDEF;
 """
 COMPONENTS_TEXTS = ["é̀f", "éf̀", "zxy", "à"]
 COMPONENTS_FALLBACK_FONT = "LigaturePropertiesComponentsFallback.ttf"
-COMPONENTS_FALLBACK_TEXTS = ["é̀f", "éf̀", "à"]
+COMPONENTS_FALLBACK_TEXTS = ["é̀f", "éf̀", "à", "f" * 16 + "̀"]
 
 CIRCLE_FONT = "LigaturePropertiesCircle.ttf"
 CIRCLE_GDEF_FONT = "LigaturePropertiesCircleGdef.ttf"

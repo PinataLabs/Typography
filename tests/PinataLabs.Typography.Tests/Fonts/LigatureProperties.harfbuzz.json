@@ -40,6 +40,7 @@
     ["LigaturePropertiesComponents.ttf","a\u0300",[[17,0,0],[7,1300,500]]],
     ["LigaturePropertiesComponentsFallback.ttf","e\u0301\u0300f",[[10,0,0],[7,150,62]]],
     ["LigaturePropertiesComponentsFallback.ttf","e\u0301f\u0300",[[10,0,0],[7,450,62]]],
-    ["LigaturePropertiesComponentsFallback.ttf","a\u0300",[[17,0,0],[7,300,62]]]
+    ["LigaturePropertiesComponentsFallback.ttf","a\u0300",[[17,0,0],[7,300,62]]],
+    ["LigaturePropertiesComponentsFallback.ttf","ffffffffffffffff\u0300",[[18,0,0],[7,300,62]]]
   ]
 }
