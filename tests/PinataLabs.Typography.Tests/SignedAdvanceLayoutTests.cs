@@ -142,6 +142,18 @@ public class SignedAdvanceLayoutTests
         await Assert.That(string.Join(", ", actual)).IsEqualTo(expected);
     }
 
+    // HarfBuzz zeroes the advance of the mark U+0301 of "e" U+0301 in TextShaper.ttf, which hmtx makes 600 wide
+    // (TextShaper.harfbuzz.json, MarkAbove). HarfBuzz gives no glyph an advance across the line, so the mark keeps the
+    // advance of the font across it, as every other glyph does. TextShaper.ttf has no vmtx, so that advance is the
+    // ascender less the descender, 1000.
+    [Test]
+    public async Task AZeroedMarkKeepsTheAdvanceOfTheFontAcrossTheLine()
+    {
+        TextOptions options = new(GetFont("TextShaper.ttf")) { Dpi = 1 };
+
+        await Assert.That(string.Join(", ", GetGlyphs("é", options, vertical: false))).IsEqualTo("8 at 0 advances 600 1000, 14 at 600 advances 0 1000");
+    }
+
     // Adds each glyph of the row, at the place of the pen along the line and with its advances across and down it, and
     // returns the start and the end of the space that the pen covers.
     private static (int Start, int End) AddHarfBuzzGlyphs(List<string> expected, JsonElement row, bool vertical, ref int pen)
