@@ -12,8 +12,9 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 
 /// <summary>
 /// The shapers find the syllables that HarfBuzz finds. Each row is a font, the ISO 15924 code of its script, a text,
-/// and the glyph ID and the place of each glyph that HarfBuzz gives. Only SyllablesCircles.ttf has a GSUB table, so
-/// in the other fonts only the shaper changes the order and the number of the glyphs.
+/// and the glyph ID and the place of each glyph that HarfBuzz gives. Only SyllablesCircles.ttf and
+/// SyllablesCircleProperties.ttf have a GSUB table, so in the other fonts only the shaper changes the order and the
+/// number of the glyphs.
 /// </summary>
 public class SyllableTests
 {
@@ -35,7 +36,7 @@ public class SyllableTests
         => await Assert.That(DifferentRows(HarfBuzz.Invalid)).IsEmpty();
 
     // The dotted circle of an invalid sequence has the Unicode properties of the character after it, and is .notdef in
-    // a font without a dotted circle.
+    // a font without a dotted circle. So before a sign, the circle continues a word and is a mark.
     [Test]
     public async Task CircleOfAnInvalidSequenceGivesTheGlyphsThatHarfBuzzGives()
         => await Assert.That(DifferentRows(HarfBuzz.Circles)).IsEmpty();
