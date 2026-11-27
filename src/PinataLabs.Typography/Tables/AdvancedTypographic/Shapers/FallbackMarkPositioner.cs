@@ -201,8 +201,7 @@ internal static class FallbackMarkPositioner
                 // HarfBuzz has taken the advance of a default-ignorable glyph away by now, and the layout does so later.
                 if (!data.IsDefaultIgnorable)
                 {
-                    int advance = Scale(GetAdvance(collection, i), scale.X);
-                    penOffset += isForward ? -advance : advance;
+                    penOffset += GetPenStep(collection, i, scale, isForward);
                 }
 
                 continue;
@@ -231,8 +230,10 @@ internal static class FallbackMarkPositioner
             FontMetrics markFont = collection.GetMetrics(i).FontMetrics;
             if (!PlacesAroundBase(markFont, baseFont, script, data))
             {
+                // The mark keeps any advance that its font left it, which moves the pen as for a glyph that is not placed.
                 mark.Top += Scale(data.Bounds.Y, scale.Y);
                 Seat(ref stack, mark, side);
+                penOffset += GetPenStep(collection, i, scale, isForward);
                 continue;
             }
 
@@ -253,6 +254,14 @@ internal static class FallbackMarkPositioner
         => ShaperFactory.HasFallbackPositioning(script, markFont.GetGSubTable().GetScriptTag(script))
             && (markFont.GetGPosTable()?.PositionsScript(script) != true
                 || (markFont != baseFont && AdvancedTypographicUtils.IsMarkGlyph(markFont, mark)));
+
+    // Gets how far the pen offset of the marks after a glyph that keeps its advance moves, in units of the font of the base:
+    // back in text that runs forward, as the pen moved forward past the glyph.
+    private static int GetPenStep(GlyphPositioningCollection collection, int index, Vector2 scale, bool isForward)
+    {
+        int advance = Scale(GetAdvance(collection, index), scale.X);
+        return isForward ? -advance : advance;
+    }
 
     // Converts a length to the units of another font, given the size of a unit of its font in those units.
     private static int Scale(int value, float scale)
