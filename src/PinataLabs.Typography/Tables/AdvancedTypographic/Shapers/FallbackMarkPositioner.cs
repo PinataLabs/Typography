@@ -121,9 +121,10 @@ internal static class FallbackMarkPositioner
                 continue;
             }
 
+            // As in HarfBuzz, the marks of a base go on past a default-ignorable glyph.
             int marksEnd = index + 1;
             bool canPlace = collection.ShouldProcess(fontMetrics, index) && IsPlaceable(collection, collection[index]);
-            while (marksEnd < end && IsUnicodeMark(collection[marksEnd]))
+            while (marksEnd < end && (IsUnicodeMark(collection[marksEnd]) || collection[marksEnd].IsDefaultIgnorable))
             {
                 canPlace &= collection.ShouldProcess(fontMetrics, marksEnd);
                 marksEnd++;
@@ -167,7 +168,12 @@ internal static class FallbackMarkPositioner
             MarkSide side = (MarkSide)((placement >> CanonicalMappingData.MarkSideShift) & CanonicalMappingData.MarkPlacementMask);
             if (alignment == MarkAlignment.None)
             {
-                penOffset += isForward ? -GetAdvance(collection, i) : GetAdvance(collection, i);
+                // HarfBuzz has taken the advance of a default-ignorable glyph away by now, and the layout does so later.
+                if (!data.IsDefaultIgnorable)
+                {
+                    penOffset += isForward ? -GetAdvance(collection, i) : GetAdvance(collection, i);
+                }
+
                 continue;
             }
 

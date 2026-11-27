@@ -488,6 +488,10 @@ Unicode conformance suites to that version.
 - `TextLayout` keeps a grapheme on one line. A line break opportunity inside a grapheme, such as after a space that
   a combining mark extends, moves to the end of the grapheme: `a` U+0020 U+0301 `bbbb` wrapped after the space, and
   the next line began with the acute on its own. (#181)
+- Fallback mark placement goes on past a default-ignorable glyph and takes no advance from it, as HarfBuzz 15.0.0 does.
+  In `TextShaperHangulColr.ttf`, U+AC00 U+FE00 U+302E put the tone mark and its dotted circle at x offset -900,
+  where HarfBuzz gives -300, because the 600 wide `.notdef` of the hidden U+FE00 moved them back. U+034F did the same,
+  and after a ZWJ the marks went on the ZWJ, not on the syllable. (#184)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the
