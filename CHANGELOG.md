@@ -84,6 +84,14 @@ Unicode conformance suites to that version.
   `NoSubsetting` (bit 8) and `BitmapEmbeddingOnly` (bit 9), and `IsStated` is `false` for a font with no `OS/2` table.
   The ascent and descent follow the rules of `HorizontalMetrics`, and the order of every value is in
   `docs/specs/003-font-descriptor.md`. The values of the 208 faces of the test fonts match fontTools. (#157)
+- **The bidi algorithm is public.** `BidiParagraph.Resolve(text, direction)` resolves a paragraph of UTF-16 text left to
+  right, right to left or from its first strong character (rules P2 and P3). `ParagraphLevel` and `Levels` give the
+  embedding level of the paragraph and of each code unit. `GetVisualRuns(lineStart, lineLength)` applies rule L1 to
+  one line and returns its `BidiLevelRun` values (`Start`, `Length`, `Level`, `IsRightToLeft`) in visual order (rule
+  L2), so a caller that breaks the lines applies L1 where its lines end. U+200C and U+200D stay inside the run around
+  them, because they decide how the letters on either side join. Every other character that rule X9 removes is in no
+  run and ends the run before it. `TextLayout` runs the same engine. The API passes all of `BidiTest.txt` and
+  `BidiCharacterTest.txt` of Unicode 18.0.0, levels and visual order. (#152)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
