@@ -71,7 +71,6 @@ internal static partial class IndicShapingData
         Before_Post = 1 << 10,
         Post_C = 1 << 11,
         After_Post = 1 << 12,
-        Final_C = 1 << 13,
         SMVD = 1 << 14,
         End = 1 << 15
     }

@@ -480,26 +480,6 @@ internal sealed class IndicShaper : DefaultShaper
                 }
             }
 
-            // Mark final consonants.  A final consonant is one appearing after a matra,
-            // like in Khmer.
-            for (int i = basePosition + 1; i < end; i++)
-            {
-                if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.M)
-                {
-                    for (int j = i + 1; j < end; j++)
-                    {
-                        GlyphShapingData c = substitutionCollection[j];
-                        if (IsConsonant(c) && c.IndicShapingEngineInfo != null)
-                        {
-                            c.IndicShapingEngineInfo.Position = Positions.Final_C;
-                            break;
-                        }
-                    }
-
-                    break;
-                }
-            }
-
             // Handle beginning Ra
             if (hasReph)
             {
