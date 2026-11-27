@@ -458,6 +458,12 @@ internal sealed class BidiAlgorithm
 
                 this.hasIsolates = true;
             }
+            else if (t == BidiCharacterType.ParagraphSeparator)
+            {
+                // A paragraph separator ends every isolate, so no PDI after it matches an initiator before it. It is the
+                // last code point of its paragraph, unless the caller puts one inside a paragraph.
+                this.pendingIsolateOpenings.Clear();
+            }
         }
     }
 
@@ -572,8 +578,14 @@ internal sealed class BidiAlgorithm
                     {
                         if (!this.isolatePairs.TryGetValue(i, out int endOfIsolate))
                         {
-                            // With no matching PDI, the isolate ends at the end of the paragraph.
-                            endOfIsolate = this.originalTypes.Length;
+                            // With no matching PDI, the isolate ends at the end of the paragraph, or at a paragraph
+                            // separator that the caller put inside it.
+                            endOfIsolate = i + 1;
+                            while (endOfIsolate < this.originalTypes.Length
+                                && this.originalTypes[endOfIsolate] != BidiCharacterType.ParagraphSeparator)
+                            {
+                                endOfIsolate++;
+                            }
                         }
 
                         // Rule X5c
@@ -691,7 +703,16 @@ internal sealed class BidiAlgorithm
 
                 case BidiCharacterType.ParagraphSeparator:
                 {
-                    // Rule X8: the separator ends the paragraph, and every embedding, override and isolate with it.
+                    // Rule X8: the separator ends every embedding, override and isolate. It is the last code point of its
+                    // paragraph, unless the caller puts one inside a paragraph, as BidiTest.txt does.
+                    while (this.statusStack.Count > 1)
+                    {
+                        this.statusStack.Pop();
+                    }
+
+                    overflowIsolateCount = 0;
+                    overflowEmbeddingCount = 0;
+                    validIsolateCount = 0;
                     this.levels[i] = this.paragraphEmbeddingLevel;
                     break;
                 }

@@ -279,6 +279,29 @@ public class BidiAlgorithmTests
         }
     }
 
+    // A caller can put a paragraph separator inside a paragraph, as BidiTest.txt does. Rules X8 and BD9 still end every
+    // embedding, override and isolate at it, so the levels are those of the text split into paragraphs at it.
+    [Test]
+    [Arguments("\u202Ba\nb", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2068\n\u2069", new sbyte[] { 0, 0, 0 })]
+    [Arguments("\u2066a\n\u2069", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2067a\n\u2069", new sbyte[] { 0, 2, 0, 0 })]
+    [Arguments("\u2066a\nb\u2069", new sbyte[] { 0, 2, 0, 0, 0 })]
+    [Arguments("\u2066\na\u2069", new sbyte[] { 0, 0, 0, 0 })]
+    [Arguments("\u202B\na", new sbyte[] { 0, 0, 0 })]
+    [Arguments("\u2068!\n\u05D0", new sbyte[] { 0, 2, 0, 1 })]
+    public async Task AParagraphSeparatorInsideAParagraphEndsEveryIsolateAndEmbedding(string text, sbyte[] expected)
+    {
+        var data = new BidiData();
+        data.Init(text, 0);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data.Types, data.PairedBracketTypes, data.PairedBracketValues, 0, data.HasBrackets, data.HasEmbeddings, data.HasIsolates, [data.Length]);
+
+        await Assert.That(bidi.Paragraphs.Count).IsEqualTo(1);
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
     // The paragraph ends must split the types into paragraphs that cover them: each end after the one before, and the
     // last at the end of the types. Only empty types are one empty paragraph.
     [Test]
