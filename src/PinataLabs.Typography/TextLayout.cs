@@ -130,15 +130,20 @@ internal static class TextLayout
         BidiAlgorithm bidi = BidiAlgorithm.Instance.Value!;
         var bidiData = new BidiData();
         bidiData.Init(text, (sbyte)options.TextDirection);
-        bidi.Process(bidiData);
 
-        TextDirection paragraphDirection = (bidi.ResolvedParagraphEmbeddingLevel & 1) == 0
+        // Rule L1 applies to each line, so BreakLines applies it once it knows the lines.
+        bidi.Process(bidiData, resetWhitespace: false);
+        BidiLevels bidiLevels = new(bidiData.Types, bidi.ResolvedLevels.Span.ToArray(), (sbyte)bidi.ResolvedParagraphEmbeddingLevel);
+
+        TextDirection paragraphDirection = (bidiLevels.ParagraphLevel & 1) == 0
             ? TextDirection.LeftToRight
             : TextDirection.RightToLeft;
 
-        // Get the list of directional runs
-        BidiRun[] bidiRuns = BidiRun.CoalesceLevels(bidi.ResolvedLevels).ToArray();
-        Dictionary<int, int> bidiMap = [];
+        // Shaping takes the directional runs of the levels with rule L1 applied to the whole text as one line.
+        // GSUB splits a font run by script, not by direction, so where a line ends does not change the shaping.
+        sbyte[] shapingLevels = (sbyte[])bidiLevels.Levels.Clone();
+        BidiAlgorithm.ResetWhitespaceLevels(bidiLevels.Types, shapingLevels, bidiLevels.ParagraphLevel);
+        BidiRun[] bidiRuns = BidiRun.CoalesceLevels(shapingLevels).ToArray();
 
         // Incrementally build out collection of glyphs.
         IReadOnlyList<TextRun> textRuns = BuildTextRuns(text, options);
@@ -165,7 +170,6 @@ internal static class TextLayout
                 false,
                 textRun.Font!,
                 bidiRuns,
-                bidiMap,
                 substitutions,
                 positionings))
             {
@@ -196,7 +200,6 @@ internal static class TextLayout
                     true,
                     font,
                     bidiRuns,
-                    bidiMap,
                     substitutions,
                     positionings))
                 {
@@ -226,7 +229,7 @@ internal static class TextLayout
             }
         }
 
-        return BreakLines(text, options, paragraphDirection, bidiRuns, bidiMap, positionings, layoutMode);
+        return BreakLines(text, options, paragraphDirection, bidiLevels, positionings, layoutMode);
     }
 
     private static IReadOnlyList<GlyphLayout> LayoutText(TextBox textBox, TextOptions options, Vector2 origin)
@@ -773,8 +776,7 @@ internal static class TextLayout
         ReadOnlySpan<char> text,
         TextOptions options,
         TextDirection paragraphDirection,
-        BidiRun[] bidiRuns,
-        Dictionary<int, int> bidiMap,
+        BidiLevels bidiLevels,
         GlyphPositioningCollection positionings,
         LayoutMode layoutMode)
     {
@@ -971,7 +973,7 @@ internal static class TextLayout
                     // Mandatory wrap at index.
                     if (currentLineBreak.PositionWrap == codePointIndex && currentLineBreak.Required)
                     {
-                        textLines.Add(textLine.Finalize());
+                        textLines.Add(textLine);
                         glyphCount += textLine.Count;
                         textLine = new();
                         lineAdvance = 0;
@@ -987,7 +989,7 @@ internal static class TextLayout
                         }
                         else if (breakAll)
                         {
-                            textLines.Add(textLine.Finalize());
+                            textLines.Add(textLine);
                             glyphCount += textLine.Count;
                             textLine = new();
                             lineAdvance = 0;
@@ -1000,14 +1002,14 @@ internal static class TextLayout
                                 TextLine split = textLine.SplitAt(lastLineBreak, keepAll);
                                 if (split != textLine)
                                 {
-                                    textLines.Add(textLine.Finalize());
+                                    textLines.Add(textLine);
                                     textLine = split;
                                     lineAdvance = split.ScaledLineAdvance;
                                 }
                             }
                             else
                             {
-                                textLines.Add(textLine.Finalize());
+                                textLines.Add(textLine);
                                 glyphCount += textLine.Count;
                                 textLine = new();
                                 lineAdvance = 0;
@@ -1019,7 +1021,7 @@ internal static class TextLayout
                             TextLine split = textLine.SplitAt(currentLineBreak, keepAll);
                             if (split != textLine)
                             {
-                                textLines.Add(textLine.Finalize());
+                                textLines.Add(textLine);
                                 textLine = split;
                                 lineAdvance = split.ScaledLineAdvance;
                             }
@@ -1032,13 +1034,13 @@ internal static class TextLayout
                             TextLine split = textLine.SplitAt(lastLineBreak, keepAll);
                             if (split != textLine)
                             {
-                                textLines.Add(textLine.Finalize());
+                                textLines.Add(textLine);
                                 textLine = split;
                                 lineAdvance = split.ScaledLineAdvance;
                             }
                             else if (breakWord)
                             {
-                                textLines.Add(textLine.Finalize());
+                                textLines.Add(textLine);
                                 glyphCount += textLine.Count;
                                 textLine = new();
                                 lineAdvance = 0;
@@ -1046,7 +1048,7 @@ internal static class TextLayout
                         }
                         else if (breakWord)
                         {
-                            textLines.Add(textLine.Finalize());
+                            textLines.Add(textLine);
                             glyphCount += textLine.Count;
                             textLine = new();
                             lineAdvance = 0;
@@ -1143,7 +1145,6 @@ internal static class TextLayout
                         lineHeight,
                         ascender,
                         descender,
-                        bidiRuns[bidiMap[codePointIndex]],
                         graphemeIndex,
                         codePointIndex,
                         isRotated,
@@ -1158,11 +1159,24 @@ internal static class TextLayout
         // Add the final line.
         if (textLine.Count > 0)
         {
-            textLines.Add(textLine.Finalize());
+            textLines.Add(textLine);
+        }
+
+        foreach (TextLine line in textLines)
+        {
+            line.OrderVisually(bidiLevels);
         }
 
         return new TextBox(options, paragraphDirection, textLines);
     }
+
+    /// <summary>
+    /// The bidi types and resolved levels of the codepoints of the text, before rule L1, which applies to each line.
+    /// </summary>
+    /// <param name="Types">The bidi type of each codepoint.</param>
+    /// <param name="Levels">The level of each codepoint, before rule L1.</param>
+    /// <param name="ParagraphLevel">The embedding level of the paragraph.</param>
+    internal readonly record struct BidiLevels(ReadOnlyArraySlice<BidiCharacterType> Types, sbyte[] Levels, sbyte ParagraphLevel);
 
     internal sealed class TextBox
     {
@@ -1209,7 +1223,6 @@ internal static class TextLayout
             float scaledLineHeight,
             float scaledAscender,
             float scaledDescender,
-            BidiRun bidiRun,
             int graphemeIndex,
             int offset,
             bool isRotated,
@@ -1229,7 +1242,6 @@ internal static class TextLayout
                 scaledLineHeight,
                 scaledAscender,
                 scaledDescender,
-                bidiRun,
                 graphemeIndex,
                 offset,
                 isRotated,
@@ -1350,8 +1362,6 @@ internal static class TextLayout
             return result;
         }
 
-        public TextLine Finalize() => this.BidiReOrder();
-
         public void Justify(TextOptions options)
         {
             if (options.WrappingLength == -1F || options.TextJustification == TextJustification.None)
@@ -1424,19 +1434,30 @@ internal static class TextLayout
             }
         }
 
-        private TextLine BidiReOrder()
+        /// <summary>
+        /// Orders the glyphs of the line visually. Rule L1 is applied to the codepoints of the line, then rule L2 orders
+        /// the glyphs by the levels it gives.
+        /// </summary>
+        /// <param name="bidiLevels">The bidi types and levels of the text, before rule L1.</param>
+        public void OrderVisually(BidiLevels bidiLevels)
         {
+            // The glyphs are in logical order, so the line holds the codepoints from the first glyph to the last.
+            int lineStart = this.data[0].Offset;
+            int lineLength = this.data[^1].Offset + 1 - lineStart;
+            sbyte[] lineLevels = new sbyte[lineLength];
+            Array.Copy(bidiLevels.Levels, lineStart, lineLevels, 0, lineLength);
+            BidiAlgorithm.ResetWhitespaceLevels(bidiLevels.Types.Slice(lineStart, lineLength), lineLevels, bidiLevels.ParagraphLevel);
+
             // Build up the collection of ordered runs.
-            BidiRun run = this.data[0].BidiRun;
-            OrderedBidiRun orderedRun = new(run.Level);
+            OrderedBidiRun orderedRun = new(lineLevels[0]);
             OrderedBidiRun? current = orderedRun;
             for (int i = 0; i < this.data.Count; i++)
             {
                 GlyphLayoutData g = this.data[i];
-                if (run != g.BidiRun)
+                int level = lineLevels[g.Offset - lineStart];
+                if (level != current.Level)
                 {
-                    run = g.BidiRun;
-                    current.Next = new(run.Level);
+                    current.Next = new(level);
                     current = current.Next;
                 }
 
@@ -1454,7 +1475,7 @@ internal static class TextLayout
             int min = int.MaxValue;
             for (int i = 0; i < this.data.Count; i++)
             {
-                int level = this.data[i].BidiRun.Level;
+                int level = lineLevels[this.data[i].Offset - lineStart];
                 if (level > max)
                 {
                     max = level;
@@ -1474,7 +1495,7 @@ internal static class TextLayout
             if (max == 0 || (min == max && (max & 1) == 0))
             {
                 // Nothing to reverse.
-                return this;
+                return;
             }
 
             // Now apply the reversal and replace the original contents.
@@ -1502,8 +1523,6 @@ internal static class TextLayout
                 this.data.AddRange(current.AsSlice());
                 current = current.Next;
             }
-
-            return this;
         }
 
         /// <summary>
@@ -1577,7 +1596,6 @@ internal static class TextLayout
                 float scaledLineHeight,
                 float scaledAscender,
                 float scaledDescender,
-                BidiRun bidiRun,
                 int graphemeIndex,
                 int offset,
                 bool isRotated,
@@ -1589,7 +1607,6 @@ internal static class TextLayout
                 this.ScaledLineHeight = scaledLineHeight;
                 this.ScaledAscender = scaledAscender;
                 this.ScaledDescender = scaledDescender;
-                this.BidiRun = bidiRun;
                 this.GraphemeIndex = graphemeIndex;
                 this.Offset = offset;
                 this.IsRotated = isRotated;
@@ -1610,10 +1627,6 @@ internal static class TextLayout
 
             public float ScaledDescender { get; }
 
-            public BidiRun BidiRun { get; }
-
-            public readonly TextDirection TextDirection => (TextDirection)this.BidiRun.Direction;
-
             public int GraphemeIndex { get; }
 
             public int Offset { get; }
@@ -1625,7 +1638,7 @@ internal static class TextLayout
             public readonly bool IsNewLine => CodePoint.IsNewLine(this.CodePoint);
 
             private readonly string DebuggerDisplay => FormattableString
-                .Invariant($"{this.CodePoint.ToDebuggerDisplay()} : {this.TextDirection} : {this.Offset}, level: {this.BidiRun.Level}");
+                .Invariant($"{this.CodePoint.ToDebuggerDisplay()} : {this.Offset}");
         }
 
         private sealed class OrderedBidiRun
