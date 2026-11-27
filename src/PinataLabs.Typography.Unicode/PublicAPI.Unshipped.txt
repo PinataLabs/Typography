@@ -80,8 +80,10 @@ PinataLabs.Typography.Unicode.BidiLevelRun.Level.get -> byte
 PinataLabs.Typography.Unicode.BidiLevelRun.Start.get -> int
 PinataLabs.Typography.Unicode.BidiParagraph
 PinataLabs.Typography.Unicode.BidiParagraph.GetVisualRuns(int lineStart, int lineLength) -> PinataLabs.Typography.Unicode.BidiLevelRun[]!
+PinataLabs.Typography.Unicode.BidiParagraph.Length.get -> int
 PinataLabs.Typography.Unicode.BidiParagraph.Levels.get -> System.ReadOnlySpan<byte>
 PinataLabs.Typography.Unicode.BidiParagraph.ParagraphLevel.get -> byte
+PinataLabs.Typography.Unicode.BidiParagraph.Start.get -> int
 PinataLabs.Typography.Unicode.BidiParagraphDirection
 PinataLabs.Typography.Unicode.BidiParagraphDirection.Auto = 2 -> PinataLabs.Typography.Unicode.BidiParagraphDirection
 PinataLabs.Typography.Unicode.BidiParagraphDirection.LeftToRight = 0 -> PinataLabs.Typography.Unicode.BidiParagraphDirection
@@ -89,6 +91,7 @@ PinataLabs.Typography.Unicode.BidiParagraphDirection.RightToLeft = 1 -> PinataLa
 static PinataLabs.Typography.Unicode.BidiLevelRun.operator !=(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
 static PinataLabs.Typography.Unicode.BidiLevelRun.operator ==(PinataLabs.Typography.Unicode.BidiLevelRun left, PinataLabs.Typography.Unicode.BidiLevelRun right) -> bool
 static PinataLabs.Typography.Unicode.BidiParagraph.Resolve(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.BidiParagraph!
+static PinataLabs.Typography.Unicode.BidiParagraph.ResolveAll(System.ReadOnlySpan<char> text, PinataLabs.Typography.Unicode.BidiParagraphDirection direction) -> PinataLabs.Typography.Unicode.BidiParagraph![]!
 static PinataLabs.Typography.Unicode.CodePoint.GetScriptClass(PinataLabs.Typography.Unicode.CodePoint codePoint) -> PinataLabs.Typography.Unicode.ScriptClass
 PinataLabs.Typography.Unicode.ScriptClassExtensions
 static PinataLabs.Typography.Unicode.ScriptClassExtensions.GetIso15924Code(this PinataLabs.Typography.Unicode.ScriptClass script) -> string!

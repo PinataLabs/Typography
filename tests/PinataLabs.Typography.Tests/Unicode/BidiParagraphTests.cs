@@ -292,9 +292,9 @@ public class BidiParagraphTests
     [Test]
     public async Task AnIsolateThatHoldsALineFeedEndsAtTheLineFeed()
     {
-        BidiParagraph paragraph = BidiParagraph.Resolve("\u2066a\n\u2069", BidiParagraphDirection.LeftToRight);
+        BidiParagraph[] paragraphs = BidiParagraph.ResolveAll("\U00002066a\n\U00002069", BidiParagraphDirection.LeftToRight);
 
-        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(new byte[] { 0, 2, 0, 0 }, CollectionOrdering.Matching);
+        await Assert.That(paragraphs.SelectMany(p => p.Levels.ToArray())).IsEquivalentTo(new byte[] { 0, 2, 0, 0 }, CollectionOrdering.Matching);
     }
 
     [Test]
@@ -445,6 +445,49 @@ public class BidiParagraphTests
     [Arguments("\n\n")]
     public async Task ResolvingATextOfMoreThanOneParagraphThrows(string text)
         => await Assert.That(() => BidiParagraph.Resolve(text, BidiParagraphDirection.Auto)).Throws<ArgumentException>();
+
+    // UAX #9 P1: each paragraph is resolved on its own, with Auto at its own level, and its indices are those of the text.
+    // A surrogate pair is two code units. ICU 72 gives the same paragraphs and levels, with a BMP letter for U+10800.
+    [Test]
+    public async Task ResolveAllResolvesEachParagraphOnItsOwn()
+    {
+        const string text = "abc\n\U000005D0\U000005D1 \r\n1\U00010800";
+
+        BidiParagraph[] paragraphs = BidiParagraph.ResolveAll(text, BidiParagraphDirection.Auto);
+
+        await Assert.That(paragraphs.Select(p => (p.Start, p.Length, (int)p.ParagraphLevel)))
+            .IsEquivalentTo([(0, 4, 0), (4, 5, 1), (9, 3, 1)], CollectionOrdering.Matching);
+        await Assert.That(paragraphs[0].Levels.ToArray()).IsEquivalentTo(new byte[] { 0, 0, 0, 0 }, CollectionOrdering.Matching);
+        await Assert.That(paragraphs[1].Levels.ToArray()).IsEquivalentTo(new byte[] { 1, 1, 1, 1, 1 }, CollectionOrdering.Matching);
+        await Assert.That(paragraphs[2].Levels.ToArray()).IsEquivalentTo(new byte[] { 2, 1, 1 }, CollectionOrdering.Matching);
+        await Assert.That(paragraphs[2].GetVisualRuns(9, 3))
+            .IsEquivalentTo([new BidiLevelRun(10, 2, 1), new BidiLevelRun(9, 1, 2)], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    [Arguments(0, 4)]
+    [Arguments(3, 2)]
+    [Arguments(4, 6)]
+    public async Task ALineOutsideItsParagraphThrows(int lineStart, int lineLength)
+    {
+        BidiParagraph second = BidiParagraph.ResolveAll("abc\ndef\nghi", BidiParagraphDirection.Auto)[1];
+
+        await Assert.That(() => second.GetVisualRuns(lineStart, lineLength)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    [Arguments("")]
+    [Arguments("abc")]
+    [Arguments("abc\r\n")]
+    public async Task ResolveAllOfOneParagraphIsResolve(string text)
+    {
+        BidiParagraph[] paragraphs = BidiParagraph.ResolveAll(text, BidiParagraphDirection.RightToLeft);
+        BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.RightToLeft);
+
+        await Assert.That(paragraphs.Length).IsEqualTo(1);
+        await Assert.That((paragraphs[0].Start, paragraphs[0].Length, paragraphs[0].ParagraphLevel)).IsEqualTo((0, text.Length, paragraph.ParagraphLevel));
+        await Assert.That(paragraphs[0].Levels.ToArray()).IsEquivalentTo(paragraph.Levels.ToArray(), CollectionOrdering.Matching);
+    }
 
     // The separator is the last code unit of its paragraph, and CR LF is one separator.
     [Test]
