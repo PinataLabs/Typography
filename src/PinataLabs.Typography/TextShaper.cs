@@ -25,8 +25,9 @@ public static class TextShaper
     /// glyphs of the characters, the normalization that the script needs, GSUB, GPOS, the <c>kern</c> table and the
     /// placement of marks. The clusters are those of HarfBuzz at its default cluster level. A ligature is one glyph at the
     /// cluster of its first character. A mark shares the cluster of its base. A decomposition keeps the cluster of its
-    /// character. A reordering gives the glyphs that it moves over the lowest cluster among them. The font is not scaled,
-    /// so its size does not matter.
+    /// character. A reordering gives the glyphs that it joins the lowest cluster among them, as HarfBuzz does: in an Indic
+    /// syllable, a vowel sign written before its consonant joins the glyphs from its new place to the consonant, and the
+    /// glyphs before that place keep their clusters. The font is not scaled, so its size does not matter.
     /// </remarks>
     /// <param name="font">The font. A variable font shapes with the variations that it was created with.</param>
     /// <param name="text">The text of the run. It is not split into lines, and a line break is not special.</param>

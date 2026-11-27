@@ -327,6 +327,7 @@ internal static class AdvancedTypographicUtils
     {
         end = -1;
         iterator.Ignorables = features.InputIgnorables;
+        iterator.MatchSyllable(features.PerSyllable);
         for (int i = 0; i < sequence.Length; i++)
         {
             if (i >= MaxContextLength || !iterator.TryMatch(1, sequence[i], condition))
@@ -348,6 +349,7 @@ internal static class AdvancedTypographicUtils
     private static bool MatchBacktrack<T>(SkippingGlyphIterator iterator, LookupFeatures features, T[] sequence, Func<T, GlyphShapingData, bool> condition)
     {
         iterator.Ignorables = features.ContextIgnorables;
+        iterator.MatchSyllable(features.PerSyllable);
         foreach (T component in sequence)
         {
             if (!iterator.TryMatch(-1, component, condition))
@@ -359,9 +361,10 @@ internal static class AdvancedTypographicUtils
         return true;
     }
 
-    // The lookahead starts after the last glyph of the input.
+    // The lookahead starts after the last glyph of the input, and keeps to the syllable of the first.
     private static bool MatchLookahead<T>(SkippingGlyphIterator iterator, LookupFeatures features, int end, T[] sequence, Func<T, GlyphShapingData, bool> condition)
     {
+        iterator.MatchSyllable(features.PerSyllable);
         iterator.Index = end;
         iterator.Ignorables = features.ContextIgnorables;
         foreach (T component in sequence)

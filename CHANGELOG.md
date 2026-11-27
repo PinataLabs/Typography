@@ -172,13 +172,11 @@ Unicode conformance suites to that version.
   The clusters follow HarfBuzz at its default cluster level. A ligature is one glyph at the cluster of its first character, and the
   glyph after it is further by the characters of the ligature. A mark, a zero width joiner, an emoji modifier, a tag character,
   the second regional indicator of a pair, and an emoji after a joiner share the cluster of the character before them.
-  A decomposition keeps the cluster of its character, and a reordering gives the glyphs it moves over the lowest cluster
-  among them. The glyphs of a run from right to left start with the last character, so its clusters fall.
+  A decomposition keeps the cluster of its character, and a reordering gives the glyphs it joins the lowest cluster among
+  them, as HarfBuzz merges them. The glyphs of a run from right to left start with the last character, so its clusters fall.
   The glyph IDs, clusters, advances and offsets match HarfBuzz for runs of marks, and for words, in the Latin, Greek,
   Cyrillic, Hebrew, Arabic, Indic, Khmer, Myanmar, Balinese and Hangul faces of the tests, and for the variable test fonts at
-  three weights. Ten runs differ in their glyphs, and the layout shapes them with the same glyphs: two vowel signs on one
-  consonant of Bengali, Gurmukhi and Tamil, a Gujarati ra with a virama, and the space between Hangul syllables of NotoSansKR,
-  which the Hangul shaper keeps wide by turning off `calt`. A feature that the caller turns off counts as absent, and a
+  three weights. A feature that the caller turns off counts as absent, and a
   language looks up its own language system, as in HarfBuzz: this decides whether a Hebrew letter composes with its point,
   whether an Arabic font without joining forms falls back to the presentation forms, and whether the `kern` table applies.
   An advance or an offset is not limited to 16 bits, so a font of 16384 units to the em has advances above 32767 and
@@ -465,6 +463,37 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
+  syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
+  syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
+  the font gives after ka, where HarfBuzz keeps the plain reph after ma. (#163)
+- The Indic shaper moves a pre-base-reordering consonant that `pref` formed to just after the last vowel sign or virama
+  before the base, as HarfBuzz 15.0.0 does. With a vowel sign before the base and another after it, it moved the
+  consonant before the first sign too, as the Khmer shaper of an older HarfBuzz did. The Telugu syllable ra, virama, ZWJ,
+  whose reph takes the place of its base, has no base after the initial reordering, so as in HarfBuzz ZWJ takes `half`
+  where it took the post-base features. (#163)
+- A Gurmukhi bindi before the vowel sign ii (U+0A02, U+0A40) is one syllable with its consonant, as in HarfBuzz 15.0.0,
+  and keeps its place before the sign. The Indic syllable grammar ended the syllable at the bindi, so the sign started a
+  broken cluster and took a dotted circle. As in HarfBuzz, U+0A40 has a category of its own, a post-base matra that a
+  bindi or a visarga can come before. (#163)
+- The Indic shaper applies `init` to a vowel sign that goes before its consonant only at the start of a word, as
+  HarfBuzz 15.0.0 does: at the start of the run, or after a character that is not a letter, a mark, a format character,
+  or an unassigned, private use or surrogate code point. It applied `init` after any character but a non-spacing mark or
+  a format character, so in Noto Sans Bengali the e and ai of a syllable after a letter or a spacing mark took their
+  initial forms. (#163)
+- In an Indic syllable with two or more vowel signs that go before the base, the Indic shaper writes them in the
+  reverse order of the text, each with the marks after it, as HarfBuzz 15.0.0 does. It kept the order of the text, so
+  Bengali dha, i, e gave i, e, dha where HarfBuzz gives e, i, dha, and Tamil sha, ee, au put ee before the e of au.
+  (#163)
+- `TextShaper` gives the clusters of HarfBuzz 15.0.0 for an Indic syllable whose vowel sign is written before its
+  consonant. The Indic shaper merged the cluster of every glyph that the sign moved past, so in Sumana, Marathi, ta,
+  virama, ra, i had the clusters 0, 0, 0, 0. As in HarfBuzz, the initial reordering merges no clusters before the base,
+  and the final reordering merges from the new place of the sign to the base, so the clusters are 0, 0, 2, 2. A glyph
+  that the initial reordering moves from after the base to before it merges with the glyphs from the base to its old
+  place. (#168)
+- The Hangul shaper applies `calt`, as HarfBuzz 15.0.0 does, and keeps it off only for the jamo that do not compose to a
+  syllable. It turned `calt` off for the whole run, as Uniscribe does, so in Noto Sans KR the space between two
+  syllables kept its full width where the font narrows it. (#163)
 - `TextLayout` and `TextMeasurer` place the glyph after one whose advance GPOS kerning takes below zero or above 65535
   where HarfBuzz places it. The advance wrapped at 16 bits, so a kern of -700 on an advance of 600 moved the next glyph
   65436 font units forward instead of 100 back. The vertical advance no longer wraps either, but no test font covers a

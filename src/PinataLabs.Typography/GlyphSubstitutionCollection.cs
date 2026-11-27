@@ -297,12 +297,24 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <param name="toIndex">The index to move to.</param>
     public void MoveGlyph(int fromIndex, int toIndex)
     {
+        this.MergeClusters(Math.Min(fromIndex, toIndex), Math.Max(fromIndex, toIndex) + 1);
+        this.MoveGlyphKeepingClusters(fromIndex, toIndex);
+    }
+
+    /// <summary>
+    /// Moves the specified glyph to the specified position, and leaves the clusters of the glyphs as they are. A shaper
+    /// that merges the clusters of a reordering itself, as the Indic shaper of HarfBuzz does, calls
+    /// <see cref="MergeClusters"/> for the glyphs that the reordering joins.
+    /// </summary>
+    /// <param name="fromIndex">The index to move from.</param>
+    /// <param name="toIndex">The index to move to.</param>
+    internal void MoveGlyphKeepingClusters(int fromIndex, int toIndex)
+    {
         if (fromIndex == toIndex)
         {
             return;
         }
 
-        this.MergeClusters(Math.Min(fromIndex, toIndex), Math.Max(fromIndex, toIndex) + 1);
         GlyphShapingData data = this[fromIndex];
         if (fromIndex > toIndex)
         {

@@ -748,6 +748,28 @@ python tests/tools/generate_chain_backtrack_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Indic reordering reference
+
+`generate_indic_reordering_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/IndicReordering.ttf` and
+writes `IndicReordering.harfbuzz.json` next to it. The font has a `pref` feature that ligates Devanagari virama, ra, and
+`rphf`, `half` and `blwf` features for Telugu. Each of `half` and `blwf` gives ZWJ a glyph of its own. The reference
+holds the glyph IDs that HarfBuzz gives for two things:
+
+- A pre-base-reordering consonant goes between a left matra and the base, also when a below-base matra follows the base.
+- The Telugu syllable ra, virama, ZWJ has no base after the sort, so every glyph of it is one before the base and ZWJ
+  takes `half`.
+
+`IndicReorderingTests` checks that the library gives the same glyphs.
+
+To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_indic_reordering_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
 ## Lookup flags reference
 
 `generate_lookup_flags_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/LookupFlags.ttf` and writes

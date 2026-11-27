@@ -65,6 +65,9 @@ public static partial class Generator
     {
         { 0x0953, Categories.SM },
         { 0x0954, Categories.SM },
+
+        // As in HarfBuzz, U+0A40 GURMUKHI VOWEL SIGN II may be preceded by U+0A02 GURMUKHI SIGN BINDI.
+        { 0x0A40, Categories.MPst },
         { 0x0A72, Categories.C },
         { 0x0A73, Categories.C },
         { 0x1CF5, Categories.C },
@@ -219,7 +222,7 @@ public static partial class Generator
         {
             position = Positions.Base_C;
         }
-        else if (category == Categories.M)
+        else if ((category & IndicShapingData.MatraFlags) != 0)
         {
             position = MatraPosition(codepoint, position);
         }

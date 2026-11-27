@@ -27,7 +27,10 @@ public partial class GSubTableTests
         // arrange
         const string input = "\uD734\uAC00\u0020\uAC00\u002D\u002D\u0020\u0028\uC624\u002D\u002D\u0029";
         ColorGlyphRenderer renderer = new();
-        int[] expectedGlyphIndices = { 21324, 10264, 1, 10264, 14, 14, 1, 9, 16956, 14, 14, 10 };
+
+        // As in HarfBuzz 15.0.0, calt gives the space between two syllables the narrow glyph 22497. The space before
+        // the bracket stays glyph 1.
+        int[] expectedGlyphIndices = { 21324, 10264, 22497, 10264, 14, 14, 1, 9, 16956, 14, 14, 10 };
 
         // act
         TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));
@@ -46,7 +49,10 @@ public partial class GSubTableTests
         // arrange
         const string input = "\u1112\u1172\u1100\u1161\u0020\u1100\u1161\u002D\u002D\u0020\u0028\u110B\u1169\u002D\u002D\u0029";
         ColorGlyphRenderer renderer = new();
-        int[] expectedGlyphIndices = { 21324, 10264, 1, 10264, 14, 14, 1, 9, 16956, 14, 14, 10 };
+
+        // As in HarfBuzz 15.0.0, calt gives the space between two syllables the narrow glyph 22497. The space before
+        // the bracket stays glyph 1.
+        int[] expectedGlyphIndices = { 21324, 10264, 22497, 10264, 14, 14, 1, 9, 16956, 14, 14, 10 };
 
         // act
         TextRenderer.RenderTextTo(renderer, input, new TextOptions(this.hangulFontCFF));

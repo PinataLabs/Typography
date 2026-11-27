@@ -392,13 +392,12 @@ REPH_FACES = ["NotoSansDevanagari-Regular.ttf", "Sumana-Regular.ttf"]
 REPH_WORDS = [U("0930 094D 0915"), U("0915 0930 094D 092E"), U("0938 0930 094D 0935 0924")]
 
 # Sumana has no Indic features in the language systems of Marathi and Nepali, so the shaper finds no reph, half form or
-# conjunct there, and HarfBuzz takes the default language system for any other language. The words leave out a vowel
-# sign that goes before its consonant after a virama, as in ta, virama, ra, i: with no feature to join the glyphs, the
-# library gives the glyphs that the sign passes the lowest cluster of them, and HarfBuzz joins the clusters from the
-# sign to the base only.
+# conjunct there, and HarfBuzz takes the default language system for any other language. In ta, virama, ra, i, no
+# feature joins the glyphs, so the vowel sign that goes before its consonant moves to the ra after the virama, and its
+# cluster joins the ra only.
 LANGUAGE_FACES = [("Sumana-Regular.ttf", "Deva", [("mr", "MAR "), ("ne", "NEP "), ("hi", "HIN ")],
                    [U("0938 0902 0938 094D 0915 0943 0924 092E 094D"), U("0939 093F 0928 094D 0926 0940"), U("0915 0930 094D 092E"),
-                    U("0926 0941 0903 0916"), U("0936 094D 0930 0940")])]
+                    U("0926 0941 0903 0916"), U("0936 094D 0930 0940"), U("0924 094D 0930 093F")])]
 
 # Fonts with the Arabic presentation forms and no GSUB table, or a GSUB table with other features. HarfBuzz joins the
 # letters with the forms of the font when the font has none of isol, fina, medi and init, and only if all four are planned.

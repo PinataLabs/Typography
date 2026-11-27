@@ -26,25 +26,6 @@ public class TextShaperTests
 
     private static readonly Dictionary<string, Font> Fonts = [];
 
-    // The runs that the library shapes with other glyphs than HarfBuzz, whatever calls it: the layout gives the same glyphs.
-    // They are two vowel signs on one consonant of Bengali, Gurmukhi and Tamil, a Gujarati ra with a virama and a letter
-    // after it, and the space between Hangul syllables of NotoSansKR. HarfBuzz narrows that space with the calt feature,
-    // which the Hangul shaper of the library turns off, as Uniscribe does. Each entry has the font and the code points of
-    // the run.
-    private static readonly HashSet<string> KnownDifferences =
-    [
-        "NotoSansGujarati-Regular.ttf 0A95 0AB0 0ACD 0AAE",
-        "NotoSansKR-Regular.otf D55C AD6D C5B4 0020 C870 C120 AE00",
-        "NotoSansKR-Regular.otf AC01 0020 D7A3",
-        "NotoSansBengali-Regular.ttf 09A7 09BF 09C7",
-        "NotoSansBengali-Regular.ttf 0995 0981 09C3 0999 0983 09C7 099E 09BE 09C8",
-        "NotoSansBengali-Regular.ttf 099E 09BE 09C8 09A2 09BF 09CC 09A7 09C1 09D7",
-        "NotoSansBengali-Regular.ttf 09B2 09C7 09B9 09C8 0995 09CC",
-        "NotoSansBengali-Regular.ttf 09B2 09C7 0983 09B9 09C8 09BE 0995 09CC 09BF",
-        "NotoSansGurmukhi-Regular.ttf 0A1E 0A02 0A40",
-        "NotoSansTamil-Regular.ttf 0BB6 0BC7 0BCC",
-    ];
-
     private static readonly Dictionary<string, ScriptClass> Scripts = new()
     {
         ["Arab"] = ScriptClass.Arabic,
@@ -272,17 +253,17 @@ public class TextShaperTests
     }
 
     [Test]
-    public async Task KnownDifferencesAreStillDifferences()
+    public async Task LeftMatraAfterARunOfAnotherScriptStartsAWord()
     {
-        // A run that starts to match HarfBuzz leaves the list.
-        Row[] known = HarfBuzz.Rows.Where(IsKnownDifference).ToArray();
-        List<string> matching = known
-            .Where(r => Shape(r, withScript: true).Select(g => g.GlyphId).SequenceEqual(r.Glyphs.Select(g => (ushort)g[0])))
-            .Select(r => $"{r.Font} {Describe(r.Text)}")
-            .ToList();
+        Font font = GetFont("NotoSansBengali-Regular.ttf");
 
-        await Assert.That(known.Length).IsEqualTo(KnownDifferences.Count);
-        await Assert.That(matching).IsEmpty();
+        // Ka and the vowel sign e, which goes before ka and has the init form 446 at the start of a word. A Latin letter
+        // before them is a run of its own, which HarfBuzz shapes in a buffer of its own, so the sign still starts a word.
+        ShapedGlyph[] syllable = TextShaper.Shape(font, "কে", new() { Script = ScriptClass.Bengali });
+        ShapedGlyph[] afterLetter = TextShaper.Shape(font, "aকে");
+
+        await Assert.That(syllable.Select(g => g.GlyphId).SequenceEqual(new ushort[] { 446, 19 })).IsTrue();
+        await Assert.That(afterLetter.Skip(1).Select(g => g.GlyphId).SequenceEqual(new ushort[] { 446, 19 })).IsTrue();
     }
 
     [Test]
@@ -345,7 +326,7 @@ public class TextShaperTests
     private static List<string> Differences(IEnumerable<Row> rows, bool withScript, bool positions)
     {
         List<string> different = [];
-        foreach (Row row in rows.Where(r => !IsKnownDifference(r)))
+        foreach (Row row in rows)
         {
             ShapedGlyph[] actual = Shape(row, withScript);
             string expected = string.Join(' ', row.Glyphs.Select(g => positions ? $"{g[0]}@{g[1]}:{g[2]}:{g[3]},{g[4]}" : $"{g[0]}@{g[1]}"));
@@ -362,7 +343,7 @@ public class TextShaperTests
     private static List<string> PositionDifferences(IEnumerable<Row> rows, bool withScript)
     {
         List<string> different = [];
-        foreach (Row row in rows.Where(r => !IsKnownDifference(r)))
+        foreach (Row row in rows)
         {
             ShapedGlyph[] actual = Shape(row, withScript);
             if (actual.Length != row.Glyphs.Length)
@@ -383,8 +364,6 @@ public class TextShaperTests
 
     private static bool HasScriptOfItsOwn(System.Text.Rune rune)
         => CodePoint.GetScriptClass(new CodePoint(rune.Value)) is not (ScriptClass.Common or ScriptClass.Inherited or ScriptClass.Unknown);
-
-    private static bool IsKnownDifference(Row row) => KnownDifferences.Contains($"{row.Font} {Describe(row.Text)}");
 
     private static string Describe(string text) => string.Join(' ', text.EnumerateRunes().Select(r => r.Value.ToString("X4")));
 

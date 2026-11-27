@@ -44,6 +44,10 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
         ManualJoiners.Both, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag);
 
+    // As in HarfBuzz, the lookups of locl, ccmp, the basic and the presentation features match within a syllable.
+    private static readonly HashSet<Tag> PerSyllableFeatures =
+        [LoclTag, CcmpTag, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag];
+
     private const int DottedCircle = 0x25cc;
 
     private readonly TextOptions textOptions;
@@ -100,6 +104,8 @@ internal sealed class IndicShaper : DefaultShaper
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
     }
+
+    protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
 
     private void AddBasicFeature(IGlyphShapingCollection collection, int index, int count, Tag feature, bool enabled = true)
     {
@@ -249,6 +255,7 @@ internal sealed class IndicShaper : DefaultShaper
         int max = index + count;
         int start = index;
         int end = NextSyllable(substitutionCollection, index, max);
+        int[] sources = [];
         while (start < max)
         {
             GlyphShapingData data = substitutionCollection[start];
@@ -473,26 +480,6 @@ internal sealed class IndicShaper : DefaultShaper
                 }
             }
 
-            // Mark final consonants.  A final consonant is one appearing after a matra,
-            // like in Khmer.
-            for (int i = basePosition + 1; i < end; i++)
-            {
-                if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.M)
-                {
-                    for (int j = i + 1; j < end; j++)
-                    {
-                        GlyphShapingData c = substitutionCollection[j];
-                        if (IsConsonant(c) && c.IndicShapingEngineInfo != null)
-                        {
-                            c.IndicShapingEngineInfo.Position = Positions.Final_C;
-                            break;
-                        }
-                    }
-
-                    break;
-                }
-            }
-
             // Handle beginning Ra
             if (hasReph)
             {
@@ -579,6 +566,13 @@ internal sealed class IndicShaper : DefaultShaper
                     }
                     else if (info.Position != Positions.SMVD)
                     {
+                        // As in HarfBuzz, a syllable modifier before a post-base matra takes the place of the matra, so
+                        // that the sort keeps it before the matra.
+                        if (info.Category == Categories.MPst && i > start && substitutionCollection[i - 1].IndicShapingEngineInfo is { Category: Categories.SM } modifier)
+                        {
+                            modifier.Position = info.Position;
+                        }
+
                         lastPosition = info.Position;
                     }
                 }
@@ -606,28 +600,70 @@ internal sealed class IndicShaper : DefaultShaper
 
                         last = i;
                     }
-                    else if (info.Category == Categories.M)
+                    else if ((info.Category & MatraFlags) != 0)
                     {
                         last = i;
                     }
                 }
             }
 
-            substitutionCollection.Sort(start, end, (a, b) =>
+            if (sources.Length < end - start)
             {
-                int pa = a.IndicShapingEngineInfo?.Position != null ? (int)a.IndicShapingEngineInfo.Position : 0;
-                int pb = b.IndicShapingEngineInfo?.Position != null ? (int)b.IndicShapingEngineInfo.Position : 0;
-                return pa - pb;
-            });
+                sources = new int[end - start];
+            }
 
-            // Find base again
+            SortByPosition(substitutionCollection, start, end, sources);
+
+            // Find base again, and the left matras before it. As in HarfBuzz, a syllable whose reph took the place of
+            // the base has none, and every glyph is before it.
+            int firstLeftMatra = end;
+            int lastLeftMatra = end;
+            basePosition = end;
             for (int i = start; i < end; i++)
             {
-                if (substitutionCollection[i].IndicShapingEngineInfo?.Position == Positions.Base_C)
+                Positions? position = substitutionCollection[i].IndicShapingEngineInfo?.Position;
+                if (position == Positions.Base_C)
                 {
                     basePosition = i;
                     break;
                 }
+
+                if (position == Positions.Pre_M)
+                {
+                    if (firstLeftMatra == end)
+                    {
+                        firstLeftMatra = i;
+                    }
+
+                    lastLeftMatra = i;
+                }
+            }
+
+            // As in HarfBuzz, left matras go in the reverse order of the text, each with the marks after it. See
+            // https://github.com/harfbuzz/harfbuzz/issues/3863.
+            if (firstLeftMatra < lastLeftMatra)
+            {
+                ReverseKeepingClusters(substitutionCollection, start, firstLeftMatra, lastLeftMatra + 1, sources);
+                int groupStart = firstLeftMatra;
+                for (int i = firstLeftMatra; i <= lastLeftMatra; i++)
+                {
+                    if ((substitutionCollection[i].IndicShapingEngineInfo?.Category & MatraFlags) != 0)
+                    {
+                        ReverseKeepingClusters(substitutionCollection, start, groupStart, i + 1, sources);
+                        groupStart = i + 1;
+                    }
+                }
+            }
+
+            // As in HarfBuzz, the final reordering merges the clusters before the base. Here the glyphs that the sort
+            // moved over the base merge from the base, and old spec moved halants after it, so all of them merge.
+            if (this.isOldSpec)
+            {
+                substitutionCollection.MergeClusters(basePosition, end);
+            }
+            else
+            {
+                MergeClustersMovedOverBase(substitutionCollection, start, basePosition, end, sources);
             }
 
             // Setup features now.
@@ -769,6 +805,78 @@ internal sealed class IndicShaper : DefaultShaper
         }
 
         return Positions.Base_C;
+    }
+
+    // Sorts the glyphs of a syllable by their position, keeping the order of glyphs with the same position, and gives the
+    // index in the syllable that each glyph had before the sort. As in HarfBuzz, the sort merges no clusters.
+    private static void SortByPosition(GlyphSubstitutionCollection collection, int start, int end, Span<int> sources)
+    {
+        for (int i = 0; i < end - start; i++)
+        {
+            sources[i] = i;
+        }
+
+        for (int i = start + 1; i < end; i++)
+        {
+            int position = PositionOf(collection[i]);
+            int j = i;
+            while (j > start && PositionOf(collection[j - 1]) > position)
+            {
+                j--;
+            }
+
+            if (j < i)
+            {
+                collection.MoveGlyphKeepingClusters(i, j);
+                int source = sources[i - start];
+                sources[(j - start)..(i - start)].CopyTo(sources[(j - start + 1)..]);
+                sources[j - start] = source;
+            }
+        }
+    }
+
+    private static int PositionOf(GlyphShapingData data) => (int)(data.IndicShapingEngineInfo?.Position ?? 0);
+
+    // Reverses the glyphs from start to end of a syllable that begins at syllableStart, with the indexes that the sort
+    // gave them, and merges no clusters.
+    private static void ReverseKeepingClusters(GlyphSubstitutionCollection collection, int syllableStart, int start, int end, Span<int> sources)
+    {
+        for (int i = start; i < end - 1; i++)
+        {
+            collection.MoveGlyphKeepingClusters(end - 1, i);
+        }
+
+        sources[(start - syllableStart)..(end - syllableStart)].Reverse();
+    }
+
+    // As HarfBuzz merges the clusters after a sort of a syllable in the new spec: the glyphs that took each other's places
+    // form a cycle, and a cycle with a glyph from the base on merges from the base, or its first glyph after the base, to
+    // its last glyph. A glyph that the sort moved from after the base to before it so merges with the glyphs up to its old
+    // place, and the glyphs before the base keep their clusters.
+    private static void MergeClustersMovedOverBase(GlyphSubstitutionCollection collection, int start, int basePosition, int end, Span<int> sources)
+    {
+        const int visited = -1;
+        for (int i = basePosition; i < end; i++)
+        {
+            if (sources[i - start] == visited)
+            {
+                continue;
+            }
+
+            int min = i;
+            int max = i;
+            int j = start + sources[i - start];
+            while (j != i)
+            {
+                min = Math.Min(min, j);
+                max = Math.Max(max, j);
+                int next = start + sources[j - start];
+                sources[j - start] = visited;
+                j = next;
+            }
+
+            collection.MergeClusters(Math.Max(basePosition, min), max + 1);
+        }
     }
 
     // As in HarfBuzz, the font has a feature for the run when the language system of its language lists it and the caller
@@ -986,7 +1094,7 @@ internal sealed class IndicShaper : DefaultShaper
                 {
                     while (true)
                     {
-                        while (newPos > start && (substitutionCollection[newPos].IndicShapingEngineInfo?.Category & (Categories.M | HalantOrCoengFlags)) == 0)
+                        while (newPos > start && (substitutionCollection[newPos].IndicShapingEngineInfo?.Category & (MatraFlags | HalantOrCoengFlags)) == 0)
                         {
                             newPos--;
                         }
@@ -1013,6 +1121,7 @@ internal sealed class IndicShaper : DefaultShaper
                     }
                 }
 
+                // As in HarfBuzz, a matra merges the clusters from its place to the base, after it moves.
                 if (start < newPos && substitutionCollection[newPos].IndicShapingEngineInfo?.Position != Positions.Pre_M)
                 {
                     // Now go see if there's actually any matras...
@@ -1027,8 +1136,20 @@ internal sealed class IndicShaper : DefaultShaper
                                 basePosition--;
                             }
 
-                            substitutionCollection.MoveGlyph(oldPos, newPos);
+                            substitutionCollection.MoveGlyphKeepingClusters(oldPos, newPos);
+                            substitutionCollection.MergeClusters(newPos, Math.Min(end, basePosition + 1));
                             newPos--;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = start; i < basePosition; i++)
+                    {
+                        if (substitutionCollection[i].IndicShapingEngineInfo?.Position == Positions.Pre_M)
+                        {
+                            substitutionCollection.MergeClusters(i, Math.Min(end, basePosition + 1));
+                            break;
                         }
                     }
                 }
@@ -1167,7 +1288,7 @@ internal sealed class IndicShaper : DefaultShaper
                     {
                         for (int i = basePosition + 1; i < newRephPos; i++)
                         {
-                            if (substitutionCollection[i].IndicShapingEngineInfo?.Category == Categories.M)
+                            if ((substitutionCollection[i].IndicShapingEngineInfo?.Category & MatraFlags) != 0)
                             {
                                 newRephPos--;
                             }
@@ -1219,24 +1340,9 @@ internal sealed class IndicShaper : DefaultShaper
                             // We want to position matra after them.
                             if (this.ScriptClass is not ScriptClass.Malayalam and not ScriptClass.Tamil)
                             {
-                                while (newPos > start && (substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category & (Categories.M | HalantOrCoengFlags)) == 0)
+                                while (newPos > start && (substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category & (MatraFlags | HalantOrCoengFlags)) == 0)
                                 {
                                     newPos--;
-                                }
-
-                                // In Khmer coeng model, a H,Ra can go *after* matras.  If it goes after a
-                                // split matra, it should be reordered to *before* the left part of such matra.
-                                if (newPos > start && substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category == Categories.M)
-                                {
-                                    int oldPos = i;
-                                    for (int j = basePosition + 1; j < oldPos; j++)
-                                    {
-                                        if (substitutionCollection[j].IndicShapingEngineInfo?.Category == Categories.M)
-                                        {
-                                            newPos--;
-                                            break;
-                                        }
-                                    }
                                 }
                             }
 
@@ -1262,9 +1368,10 @@ internal sealed class IndicShaper : DefaultShaper
                 }
             }
 
-            // Apply 'init' to the Left Matra if it's a word start.
+            // Apply 'init' to the Left Matra if it's a word start: as in HarfBuzz, at the start of the run, which HarfBuzz
+            // shapes in a buffer of its own, or after a character that does not continue a word.
             if (substitutionCollection[start].IndicShapingEngineInfo?.Position == Positions.Pre_M &&
-                (start == 0 || CodePoint.GetGeneralCategory(substitutionCollection[start - 1].CodePoint) is not UnicodeCategory.NonSpacingMark and not UnicodeCategory.Format))
+                (start == index || !ContinuesWord(substitutionCollection[start - 1].CodePoint)))
             {
                 substitutionCollection.EnableShapingFeature(start, InitTag);
             }
@@ -1273,4 +1380,13 @@ internal sealed class IndicShaper : DefaultShaper
             end = NextSyllable(substitutionCollection, start, max);
         }
     }
+
+    // A letter, a mark, a format character, and an unassigned, private use or surrogate code point: the general categories
+    // that HarfBuzz checks as the range from Cf to Mn of its enumeration.
+    private static bool ContinuesWord(CodePoint codePoint)
+        => CodePoint.GetGeneralCategory(codePoint) is UnicodeCategory.Format or UnicodeCategory.OtherNotAssigned
+            or UnicodeCategory.PrivateUse or UnicodeCategory.Surrogate or UnicodeCategory.LowercaseLetter
+            or UnicodeCategory.ModifierLetter or UnicodeCategory.OtherLetter or UnicodeCategory.TitlecaseLetter
+            or UnicodeCategory.UppercaseLetter or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark
+            or UnicodeCategory.NonSpacingMark;
 }
