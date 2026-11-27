@@ -14,10 +14,13 @@ namespace UnicodeTrieGenerator;
 /// </summary>
 internal static partial class UnicodeVersionReader
 {
+    private const int VersionLineSearchDepth = 10;
+
     /// <summary>
-    /// Gets the Unicode version that every versioned rule file in a directory names in its first line,
-    /// such as <c># LineBreak-18.0.0.txt</c>. A file without a version in that line, such as
-    /// <c>emoji-data.txt</c>, is not read.
+    /// Gets the Unicode version that every versioned rule file in a directory names, either in its first line,
+    /// such as <c># LineBreak-18.0.0.txt</c>, or in a <c># Version: 18.0.0</c> line among its first lines, as
+    /// <c>emoji-data.txt</c> does. A file with neither is not read. <c>UnicodeData.txt</c> has no header, and the
+    /// HarfBuzz override files carry no Unicode version, so those are not checked.
     /// </summary>
     /// <param name="rulesDirectory">The directory that holds the Unicode rule files.</param>
     /// <returns>The version, such as <c>18.0.0</c>.</returns>
@@ -28,10 +31,8 @@ internal static partial class UnicodeVersionReader
 
         foreach (string file in Directory.EnumerateFiles(rulesDirectory, "*.txt"))
         {
-            using StreamReader reader = File.OpenText(file);
-            if (HeaderVersion().Match(reader.ReadLine() ?? string.Empty) is { Success: true } match)
+            if (ReadFileVersion(file) is { } version)
             {
-                string version = match.Groups[1].Value;
                 if (!filesByVersion.TryGetValue(version, out List<string>? files))
                 {
                     filesByVersion[version] = files = [];
@@ -51,6 +52,31 @@ internal static partial class UnicodeVersionReader
 
         return filesByVersion.Keys.Single();
     }
+
+    private static string? ReadFileVersion(string file)
+    {
+        using StreamReader reader = File.OpenText(file);
+        string first = reader.ReadLine() ?? string.Empty;
+        if (HeaderVersion().Match(first) is { Success: true } header)
+        {
+            return header.Groups[1].Value;
+        }
+
+        string? line = first;
+        for (int i = 0; i < VersionLineSearchDepth && line is not null; i++, line = reader.ReadLine())
+        {
+            if (VersionLine().Match(line) is { Success: true } match)
+            {
+                return match.Groups[1].Value;
+            }
+        }
+
+        return null;
+    }
+
+    // A line such as "# Version: 18.0.0", in the header of emoji-data.txt.
+    [GeneratedRegex(@"^#\s+Version:\s*(\d+\.\d+\.\d+)\s*$")]
+    private static partial Regex VersionLine();
 
     // A header such as "# BidiTest-18.0.0.txt". The first line of a conformance test file has the same form.
     [GeneratedRegex(@"^#\s+\S+?-(\d+\.\d+\.\d+)\.txt\s*$")]

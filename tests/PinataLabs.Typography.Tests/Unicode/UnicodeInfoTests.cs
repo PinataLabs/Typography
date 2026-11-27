@@ -39,6 +39,16 @@ public class UnicodeInfoTests
     }
 
     [Test]
+    public async Task Read_VersionLineInTheHeader_IsChecked()
+    {
+        using TempDirectory directory = new();
+        directory.Write("LineBreak.txt", "# LineBreak-18.0.0.txt");
+        directory.Write("emoji-data.txt", "# emoji-data.txt\n# Version: 17.0.0");
+
+        await Assert.That(() => UnicodeVersionReader.Read(directory.Path)).ThrowsExactly<InvalidOperationException>();
+    }
+
+    [Test]
     public async Task Read_FilesOfTwoVersions_Throws()
     {
         using TempDirectory directory = new();

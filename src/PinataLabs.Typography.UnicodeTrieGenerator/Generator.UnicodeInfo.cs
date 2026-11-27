@@ -13,10 +13,9 @@ public static partial class Generator
     /// <summary>
     /// Generates <c>UnicodeInfo</c>, with the Unicode version that the rule files are of.
     /// </summary>
-    public static void GenerateUnicodeInfo()
+    /// <param name="version">The Unicode version of the rule files.</param>
+    public static void GenerateUnicodeInfo(string version)
     {
-        string version = UnicodeVersionReader.Read(GeneratorPaths.GetRulesDirectory(SolutionDirectoryFullPath));
-
         using FileStream fileStream = GetStreamWriter("UnicodeInfo.Generated.cs");
         using var writer = new StreamWriter(fileStream);
 
