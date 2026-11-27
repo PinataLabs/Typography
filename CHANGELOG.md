@@ -558,6 +558,10 @@ Unicode conformance suites to that version.
   eacute_f, where HarfBuzz puts it on the first. Fallback mark placement splits a ligature into that many parts, so in
   `LigaturePropertiesComponentsFallback.ttf` it split eacute_f into three, and the ligature of the two glyphs that a
   multiple substitution made of a into two, where HarfBuzz splits them into two and one. (#191)
+- A ligature moves the marks after its last component to itself up to a glyph of no component, as HarfBuzz 15.0.0
+  does. It took such a glyph for a mark on the first component and moved it too. In
+  `LigaturePropertiesComponents.ttf`, which substitutes the ligature x_y by p1 and the mark p2 and then ligates z and p1,
+  z, x, y put p2 on the second component of z_p1, where HarfBuzz puts it on the last. (#191, #196)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the

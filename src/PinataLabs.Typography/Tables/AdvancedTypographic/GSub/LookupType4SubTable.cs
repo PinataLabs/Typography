@@ -241,24 +241,21 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                 idx++; // Skip base glyph
             }
 
-            // Adjust ligature components for any marks following
+            // Adjust ligature components for any marks following. As in HarfBuzz, they end at a glyph of no component,
+            // such as a glyph of the last ligature that a multiple substitution made.
             if (lastLigatureId > 0 && !isMarkLigature)
             {
                 // Only check glyphs managed by current shaper.
                 for (int j = idx; j < index + count; j++)
                 {
                     GlyphShapingData current = collection[j];
-                    if (current.LigatureId == lastLigatureId)
-                    {
-                        int currentLC = current.LigatureComponent == -1 ? 1 : current.LigatureComponent;
-                        int ligatureComponent = currentComponentCount - lastComponentCount + Math.Min(currentLC, lastComponentCount);
-                        current.LigatureId = ligatureId;
-                        current.LigatureComponent = ligatureComponent;
-                    }
-                    else
+                    if (current.LigatureId != lastLigatureId || current.LigatureComponent <= 0)
                     {
                         break;
                     }
+
+                    current.LigatureComponent = currentComponentCount - lastComponentCount + Math.Min(current.LigatureComponent, lastComponentCount);
+                    current.LigatureId = ligatureId;
                 }
             }
 
