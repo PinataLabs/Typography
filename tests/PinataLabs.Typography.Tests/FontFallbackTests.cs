@@ -114,6 +114,27 @@ public class FontFallbackTests
 
     // The dotted circle that breaks the vowel sequence a, short e is .notdef in a font without U+25CC.
     [Arguments("SyllablesNoCircle.ttf", "SyllablesInvalid.ttf", "0905 0946", "1 0 2", "1 91 12", "1P 91F 2P")]
+
+    // tests/tools/generate_font_fallback_parts_fonts.py builds the next fonts and prints what HarfBuzz gives.
+    // The fallback font has a ligature of f and i, g and h, and i and g. It forms only of characters that the font
+    // lacks, so the font draws f, or h, and the fallback font i, or g, each once.
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "0066 0069", "1 0", "12", "1P 4F")]
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "0067 0068", "0 2", "13", "2F 2P")]
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "0069 0067", "0 0", "14", "14F")]
+
+    // The fallback font makes one glyph of the dotted circle and the sign U+0941 that the font lacks. It draws them
+    // both, in place of the circle of the font.
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "0941", "5 0", "15", "15F")]
+
+    // Bengali ka, o and Khmer ka, U+17BE. Each font that has every part of the vowel sign splits it and moves the
+    // first part before ka. A font that has the sign and lacks a part keeps it whole, as HarfBuzz does. The font of the
+    // text lacks the sign and a part, and splits it all the same, where HarfBuzz gives "3 0" and "0 0", so that a
+    // fallback font draws each part where the shaper put it. A fallback font that keeps the sign whole draws it in the
+    // place of the last part, and the part that the font drew goes.
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "0995 09CB", "4 3 0", "6 8", "3P 8F")]
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsSplit.ttf", "0995 09CB", "4 3 0", "3 1 2", "4P 3P 2F")]
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsWhole.ttf", "1780 17BE", "0 0 0", "9 10", "9F 10F")]
+    [Arguments("FontFallbackParts.ttf", "FontFallbackPartsSplit.ttf", "1780 17BE", "0 0 0", "7 5 6", "7F 5F 6F")]
     public async Task FallbackFontDrawsEachGlyphThatTheFontLacksOnceWhereTheFontPutsIt(
         string font,
         string fallback,

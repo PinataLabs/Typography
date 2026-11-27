@@ -843,6 +843,23 @@ python tests/tools/generate_ligature_properties_reference.py
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 
+## Font fallback parts fonts
+
+`generate_font_fallback_parts_fonts.py` builds `FontFallbackParts.ttf`, `FontFallbackPartsWhole.ttf` and
+`FontFallbackPartsSplit.ttf` in `tests/PinataLabs.Typography.Tests/Fonts`, and prints the glyph IDs that HarfBuzz gives
+each font alone for each text of the fallback rows. The first is the font of the text. The second is a fallback font that
+has ligatures and keeps a two-part vowel sign whole, as it lacks one of its parts, and the third is a fallback font that
+has every part and splits the sign. The script says which characters each font has.
+
+`FontFallbackTests` gives these glyph IDs for each font alone and checks that the library draws each glyph that the font
+lacks once, with the glyphs of the fallback font.
+
+To write the fonts again, install fontTools 4.68 or later and uharfbuzz, and run this from the repository root:
+
+```
+python tests/tools/generate_font_fallback_parts_fonts.py
+```
+
 ## Text run context reference
 
 `generate_text_run_context_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextRunContext.harfbuzz.json`.
