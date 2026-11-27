@@ -279,6 +279,26 @@ public class BidiAlgorithmTests
         }
     }
 
+    // The paragraph ends must split the types into paragraphs that cover them: each end after the one before, and the
+    // last at the end of the types. Only empty types are one empty paragraph.
+    [Test]
+    [Arguments(3, new int[0])]
+    [Arguments(3, new[] { 2 })]
+    [Arguments(3, new[] { 4 })]
+    [Arguments(3, new[] { 2, 1, 3 })]
+    [Arguments(3, new[] { 1, 1, 3 })]
+    [Arguments(3, new[] { 0, 3 })]
+    [Arguments(0, new[] { 0, 0 })]
+    [Arguments(0, new[] { 1 })]
+    public async Task ParagraphEndsThatDoNotSplitTheTypesThrow(int length, int[] paragraphEnds)
+    {
+        BidiCharacterType[] types = Enumerable.Repeat(BidiCharacterType.LeftToRight, length).ToArray();
+        var bidi = new BidiAlgorithm();
+
+        await Assert.That(() => bidi.Process(types, ArraySlice<BidiPairedBracketType>.Empty, ArraySlice<int>.Empty, 0, false, null, null, paragraphEnds))
+            .ThrowsExactly<ArgumentException>().WithParameterName("paragraphEnds");
+    }
+
     // Rule X5c reads the text of an FSI and rule P2 the text of the paragraph, and both skip each isolate pair in it. The
     // FSI holds the pair LRI a PDI, then an R, so it resolves right to left. With paragraph level 2, P2 skips the pair
     // and finds the R. Types that are a slice of a longer array resolve to the levels of the same types in an array of

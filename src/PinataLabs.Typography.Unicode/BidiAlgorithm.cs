@@ -246,6 +246,10 @@ internal sealed class BidiAlgorithm
     /// code point of its paragraph.
     /// </param>
     /// <param name="resetWhitespace"><see langword="true"/> to apply rule L1 to each paragraph as one line.</param>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="paragraphEnds"/> does not split the types into paragraphs that cover them: an end is not after the
+    /// one before, or the last is not the length of the types. Only empty types are one empty paragraph.
+    /// </exception>
     public void Process(
         ReadOnlyArraySlice<BidiCharacterType> types,
         ReadOnlyArraySlice<BidiPairedBracketType> pairedBracketTypes,
@@ -257,6 +261,24 @@ internal sealed class BidiAlgorithm
         IReadOnlyList<int> paragraphEnds,
         bool resetWhitespace = true)
     {
+        // Each paragraph holds at least one code point, and the last ends with the types. Empty types are one empty
+        // paragraph.
+        int previousEnd = 0;
+        foreach (int end in paragraphEnds)
+        {
+            if (end < previousEnd || (end == previousEnd && (types.Length > 0 || paragraphEnds.Count > 1)))
+            {
+                throw new ArgumentException("Each paragraph end must be after the one before.", nameof(paragraphEnds));
+            }
+
+            previousEnd = end;
+        }
+
+        if (paragraphEnds.Count == 0 || previousEnd != types.Length)
+        {
+            throw new ArgumentException("The last paragraph end must be the length of the types.", nameof(paragraphEnds));
+        }
+
         this.resolvedLevelsBuffer.Clear();
         this.paragraphs.Clear();
         this.ResolvedLevels = this.resolvedLevelsBuffer.Add(types.Length);
