@@ -1688,7 +1688,7 @@ public class TextLayoutTests
     {
         const string text = "aaaa \nb";
         Font font = ((IFontMetricsCollection)new FontCollection())
-            .AddMetrics(new SpaceLineFeedLigatingFakeFontInstance(text), CultureInfo.InvariantCulture)
+            .AddMetrics(new PairLigatingFakeFontInstance(text, ' ', '\n'), CultureInfo.InvariantCulture)
             .CreateFont(12);
         TextOptions options = new(font) { TextDirection = direction, WordBreaking = WordBreaking.BreakAll };
         options.WrappingLength = TextMeasurer.MeasureAdvance("aaaa", options).Width + 1;
@@ -1711,6 +1711,45 @@ public class TextLayoutTests
         Font font = new FontCollection().Add(TestFonts.OpenSansFile).CreateFont(12);
 
         await Assert.That(TextMeasurer.CountLines(text, new TextOptions(font))).IsEqualTo(2);
+    }
+
+    // The layout lays out no variation selector, so a line break opportunity at one is taken at the codepoint after it,
+    // and the text breaks into the lines it breaks into without the variation selector. A variation selector after a
+    // space or a line feed starts a grapheme, and the codepoint after it can be in the same grapheme.
+    [Test]
+    [Arguments("a\n\uFE0Fb", 2)]
+    [Arguments("a \n\uFE0Fb", 2)]
+    [Arguments("a \uFE0F\nb", 2)]
+    [Arguments("a\n\uFE0F\u0301b", 2)]
+    [Arguments("aaaa \uFE0Fbbbb cccc", 3)]
+    [Arguments("aaaa\n\uFE0Fbbbb cccc", 3)]
+    public async Task BreakAtAVariationSelector_IsTakenAtTheCodepointAfterIt(string text, int lineCount)
+    {
+        Font font = CreateFont(text, 12);
+        string withoutSelector = text.Replace("\uFE0F", string.Empty);
+        foreach (WordBreaking wordBreaking in Enum.GetValues<WordBreaking>())
+        {
+            TextOptions options = new(font) { WordBreaking = wordBreaking };
+            options.WrappingLength = TextMeasurer.MeasureAdvance("aaaaa", options).Width + 1;
+
+            string expected = Visual(GetLines(withoutSelector, options));
+
+            await Assert.That(Visual(GetLines(text, options))).IsEqualTo(expected);
+            await Assert.That(expected.Split('|').Length).IsEqualTo(lineCount);
+        }
+    }
+
+    // The font ligates the line feed and the b after it, so the b, at the mandatory break after the line feed, has no
+    // glyph. The break is taken at the c.
+    [Test]
+    public async Task MandatoryBreakAtACodepointWithNoGlyph_IsTakenAtTheCodepointAfterIt()
+    {
+        const string text = "a\nbc d";
+        Font font = ((IFontMetricsCollection)new FontCollection())
+            .AddMetrics(new PairLigatingFakeFontInstance(text, '\n', 'b'), CultureInfo.InvariantCulture)
+            .CreateFont(12);
+
+        await Assert.That(Visual(GetLines(text, new TextOptions(font)))).IsEqualTo("a|c d");
     }
 
     // The layout lays out no variation selector on its own, so text that is only variation selectors has no line, as
