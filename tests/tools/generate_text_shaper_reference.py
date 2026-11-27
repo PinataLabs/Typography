@@ -307,6 +307,15 @@ HANGUL_FACES = [
      [0x11A8, 0x11AB, 0x11BC]),
 ]
 
+# Syllables that HarfBuzz leaves in jamo or takes apart, which it puts in one cluster, and syllables that compose, with and
+# without a tone mark: old jamo that do not compose, a trailing consonant that does not compose with <LV>, a lone leading
+# consonant, and a tone mark after a syllable and after a lone consonant.
+HANGUL_CLUSTER_TEXTS = [
+    U("A960 D7B0 D7CB"), U("1100 1161 D7CB"), U("AC00 11C3"), U("A960 1161 11A8"), U("AC00 11A8"), U("1100"),
+    U("1100 1161 11A8"), U("1100 1161"), U("AC01 11A8"), U("1100 1100 1161"), U("AC00 302E"), U("1100 1161 11A8 302F"),
+    U("A960 D7B0 D7CB 302E"), U("AC00 11C3 302F"), U("1100 302E"), U("302E"),
+]
+
 # Words of each script with the marks that are in use: vowel points, conjuncts, reordered vowel signs, ligatures.
 ARABIC_WORDS = ["بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ", "مُحَمَّد", "السَّلَامُ عَلَيْكُمْ", "لا إله إلا الله", "لَأَ لِإ"]
 HEBREW_WORDS = ["בְּרֵאשִׁית בָּרָא אֱלֹהִים", "שָׁלוֹם", "אֲנִי", "וַיְהִי"]
@@ -603,7 +612,7 @@ def main():
 
     for font_name, leading, vowels, trailing in HANGUL_FACES:
         hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
-        for text in hangul_texts(leading, vowels, trailing) + ["한국어 조선글", "각 힣"]:
+        for text in hangul_texts(leading, vowels, trailing) + ["한국어 조선글", "각 힣"] + HANGUL_CLUSTER_TEXTS:
             rows.append(row("Hang", font_name, hb_font, text, script="Hang", direction="ltr"))
 
     ref.write_reference(REFERENCE, rows)

@@ -1240,6 +1240,22 @@
     {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1161\u1102\u1165\u1109\u1169\u110b\u116e\u1112\u1175","script":"Hang","direction":"ltr","glyphs":[[10264,0,920,0,0],[11552,2,920,0,0],[15780,4,920,0,0],[17096,6,920,0,0],[21408,8,920,0,0]]},
     {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1161\u11a8\u1102\u1165\u11ab\u1109\u1169\u11bc\u110b\u116e\u11a8\u1112\u1175\u11ab","script":"Hang","direction":"ltr","glyphs":[[10265,0,920,0,0],[11556,3,920,0,0],[15801,6,920,0,0],[17097,9,920,0,0],[21412,12,920,0,0]]},
     {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\ud55c\uad6d\uc5b4 \uc870\uc120\uae00","script":"Hang","direction":"ltr","glyphs":[[20852,0,920,0,0],[10629,1,920,0,0],[16844,2,920,0,0],[22497,3,280,0,0],[17544,4,920,0,0],[15672,5,920,0,0],[10776,6,920,0,0]]},
-    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac01 \ud7a3","script":"Hang","direction":"ltr","glyphs":[[10265,0,920,0,0],[22497,1,280,0,0],[21435,2,920,0,0]]}
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac01 \ud7a3","script":"Hang","direction":"ltr","glyphs":[[10265,0,920,0,0],[22497,1,280,0,0],[21435,2,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\ua960\ud7b0\ud7cb","script":"Hang","direction":"ltr","glyphs":[[23511,0,920,0,0],[23860,0,0,0,0],[24202,0,0,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1161\ud7cb","script":"Hang","direction":"ltr","glyphs":[[23168,0,920,0,0],[23789,0,0,0,0],[24065,0,0,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac00\u11c3","script":"Hang","direction":"ltr","glyphs":[[23168,0,920,0,0],[23789,0,0,0,0],[24004,0,0,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\ua960\u1161\u11a8","script":"Hang","direction":"ltr","glyphs":[[23263,0,920,0,0],[23789,0,0,0,0],[23977,0,0,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac00\u11a8","script":"Hang","direction":"ltr","glyphs":[[10265,0,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100","script":"Hang","direction":"ltr","glyphs":[[372,0,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1161\u11a8","script":"Hang","direction":"ltr","glyphs":[[10265,0,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1161","script":"Hang","direction":"ltr","glyphs":[[10264,0,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac01\u11a8","script":"Hang","direction":"ltr","glyphs":[[10265,0,920,0,0],[540,1,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1100\u1161","script":"Hang","direction":"ltr","glyphs":[[372,0,920,0,0],[10264,1,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac00\u302e","script":"Hang","direction":"ltr","glyphs":[[1442,0,250,0,0],[10264,0,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u1161\u11a8\u302f","script":"Hang","direction":"ltr","glyphs":[[1443,0,250,0,0],[10265,0,920,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\ua960\ud7b0\ud7cb\u302e","script":"Hang","direction":"ltr","glyphs":[[1442,0,250,0,0],[23511,0,920,0,0],[23860,0,0,0,0],[24202,0,0,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\uac00\u11c3\u302f","script":"Hang","direction":"ltr","glyphs":[[1443,0,250,0,0],[23168,0,920,0,0],[23789,0,0,0,0],[24004,0,0,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u1100\u302e","script":"Hang","direction":"ltr","glyphs":[[372,0,920,0,0],[1442,0,250,0,0],[1265,0,1000,0,0]]},
+    {"name":"Hang","font":"NotoSansKR-Regular.otf","text":"\u302e","script":"Hang","direction":"ltr","glyphs":[[1442,0,250,0,0],[1265,0,1000,0,0]]}
   ]
 }
