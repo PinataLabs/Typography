@@ -40,6 +40,9 @@ internal sealed class MyanmarShaper : DefaultShaper
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
         ManualJoiners.Zwj, RphfTag, PrefTag, BlwfTag, PstfTag, PresTag, AbvsTag, BlwsTag, PstsTag);
 
+    // As in HarfBuzz, the lookups of locl, ccmp and the basic features match within a syllable.
+    private static readonly HashSet<Tag> PerSyllableFeatures = [LoclTag, CcmpTag, RphfTag, PrefTag, BlwfTag, PstfTag];
+
     public MyanmarShaper(ScriptClass script, TextOptions textOptions)
        : base(script, MarkZeroingMode.PreGPos, textOptions, ManualJoinerFeatures)
     {
@@ -169,6 +172,8 @@ internal sealed class MyanmarShaper : DefaultShaper
         this.AddFeature(collection, index, count, MarkTag);
         this.AddFeature(collection, index, count, MkmkTag);
     }
+
+    protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
 
     private static void SetupSyllables(IGlyphShapingCollection collection, int index, int count)
     {

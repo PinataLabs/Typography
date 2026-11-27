@@ -49,6 +49,10 @@ internal sealed class UniversalShaper : DefaultShaper
     private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
         ManualJoiners.Zwj, AkhnTag, RphfTag, PrefTag, RkrfTag, AbvfTag, BlwfTag, HalfTag, PstfTag, VatuTag, CjctTag, AbvsTag, BlwsTag, HalnTag, PresTag, PstsTag);
 
+    // As in HarfBuzz, the lookups of the pre-processing, the reordering and the basic features match within a syllable.
+    private static readonly HashSet<Tag> PerSyllableFeatures =
+        [LoclTag, CcmpTag, NuktTag, AkhnTag, RphfTag, PrefTag, RkrfTag, AbvfTag, BlwfTag, HalfTag, PstfTag, VatuTag, CjctTag];
+
     private const int DottedCircle = 0x25cc;
 
     private static readonly int CgjCategory = Array.IndexOf(UniversalShapingData.Categories, "CGJ");
@@ -110,6 +114,8 @@ internal sealed class UniversalShaper : DefaultShaper
         this.AddFeature(collection, index, count, AbvmTag);
         this.AddFeature(collection, index, count, BlwmTag);
     }
+
+    protected override bool IsPerSyllable(Tag feature) => PerSyllableFeatures.Contains(feature);
 
     /// <inheritdoc/>
     protected override void AssignFeatures(IGlyphShapingCollection collection, int index, int count)

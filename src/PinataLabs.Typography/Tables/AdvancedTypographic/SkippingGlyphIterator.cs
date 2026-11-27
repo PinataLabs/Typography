@@ -21,7 +21,7 @@ internal struct SkippingGlyphIterator
     private bool useMarkFilteringSet;
     private ushort markFilteringSet;
 
-    // The syllable of the Indic shaper that a glyph must be in to match, or 0 to match a glyph of any.
+    // The syllable of the syllabic shaper that a glyph must be in to match, or 0 to match a glyph of any.
     private int syllable;
 
     public SkippingGlyphIterator(
@@ -161,7 +161,9 @@ internal struct SkippingGlyphIterator
         return (ignorables & kind) != 0;
     }
 
-    private static int SyllableOf(GlyphShapingData data) => data.IndicShapingEngineInfo?.Syllable ?? 0;
+    // The Indic and Khmer shapers, the universal shaper and the Myanmar shaper each number the syllables of a run.
+    private static int SyllableOf(GlyphShapingData data)
+        => data.IndicShapingEngineInfo?.Syllable ?? data.UniversalShapingEngineInfo?.Syllable ?? data.MyanmarShapingEngineInfo?.Syllable ?? 0;
 
     // Without a component to match, a glyph that may be skipped is skipped.
     private void Move(int direction)

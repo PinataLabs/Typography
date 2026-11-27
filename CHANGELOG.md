@@ -510,6 +510,11 @@ Unicode conformance suites to that version.
   its features, so a lookup that the Indic shaper shared between `pres` and `calt` did not match across syllables
   where HarfBuzz matches it, and neither did a lookup of a required feature. With more than 24 lookups in a stage,
   HarfBuzz sorts them with a quicksort that is not stable, and the library sorts them the same way. (#175)
+- The GSUB lookups of the Khmer, Myanmar and universal shapers match glyphs of one syllable only for the features that
+  HarfBuzz 15.0.0 plans per syllable: `locl` and `ccmp`, the Khmer basic features `pref`, `blwf`, `abvf`, `pstf` and
+  `cfar`, the Myanmar basic features `rphf`, `pref`, `blwf` and `pstf`, and the universal `nukt`, `akhn`, `rphf`,
+  `pref`, `rkrf`, `abvf`, `blwf`, `half`, `pstf`, `vatu` and `cjct`. A lookup of these features matched the letter of
+  the next syllable as its context. (#175)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
