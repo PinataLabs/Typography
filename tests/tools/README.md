@@ -1018,6 +1018,7 @@ python tests/tools/verify_font_subsets.py <directory> --selftest
 
 The font programs are the CFF and TrueType test fonts. PDF/A validation of a PDF that embeds a subset, such as veraPDF in the PdfPinata corpus,
 is not part of this repository.
+
 ## Text shaper reference
 
 `generate_text_shaper_reference.py` writes `tests/PinataLabs.Typography.Tests/Fonts/TextShaper.harfbuzz.json`, what
