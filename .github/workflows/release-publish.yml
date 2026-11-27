@@ -174,7 +174,11 @@ jobs:
 
       # Dispatching again with no new commits gives the same MinVer version, and
       # --skip-duplicate would turn that into a green run that published nothing.
-      # A stable release keeps --skip-duplicate instead, so a half-finished one resumes.
+      # PinataLabs.Typography is pushed last, so it is the id that shows a finished publish.
+      # If only PinataLabs.Typography.Unicode has the version, an earlier run stopped half way.
+      # That is a warning, not an error, so that a rerun can push the missing package;
+      # --skip-duplicate on the push skips the one that is already there.
+      # A stable release keeps --skip-duplicate too, so a half-finished one resumes.
       - name: Verify the pre-release version is new
         if: inputs.kind == 'prerelease'
         env:
@@ -187,21 +191,23 @@ jobs:
 
           # The flat container takes lowercase package ids and lists lowercase versions.
           lower=$(printf '%s' "$VERSION" | tr '[:upper:]' '[:lower:]')
-          for id in pinatalabs.typography pinatalabs.typography.unicode; do
-            status=$(curl -s -o versions.json -w '%{http_code}' \
-              "https://api.nuget.org/v3-flatcontainer/$id/index.json")
+          for id in pinatalabs.typography.unicode pinatalabs.typography; do
+            status=$(curl -s -o versions.json -w '%{http_code}'               "https://api.nuget.org/v3-flatcontainer/$id/index.json")
             case "$status" in
               200)
                 if jq -e --arg v "$lower" '.versions | index($v)' versions.json >/dev/null; then
-                  echo "::error::$id $VERSION is already on nuget.org. Commit something first, or pick another label."
-                  exit 1
+                  if [ "$id" = "pinatalabs.typography" ]; then
+                    echo "::error::$id $VERSION is already on nuget.org. Commit something first, or pick another label."
+                    exit 1
+                  fi
+                  echo "::warning::$id $VERSION is already on nuget.org. An earlier run may have stopped half way, so the push will skip it and publish the rest."
                 fi
                 ;;
               404) echo "$id is not on nuget.org yet" ;;
               *) echo "::error::Could not query nuget.org for $id (HTTP $status)"; exit 1 ;;
             esac
           done
-          echo "$VERSION is not on nuget.org yet"
+          echo "$VERSION is not fully on nuget.org yet"
 
       - name: Summary
         env:

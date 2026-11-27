@@ -57,8 +57,11 @@ there.
 Run **Pre-release** from `main` and pick a label. MinVer numbers the package from the last
 `v` tag and the number of commits since it, for example `0.1.0-beta.12`.
 
-The run fails if that version is already on nuget.org for either package. That happens
-when nothing has been committed since the last pre-release with the same label.
+The run fails if that version is already on nuget.org for `PinataLabs.Typography`, the
+package pushed last. That happens when nothing has been committed since the last
+pre-release with the same label. If only `PinataLabs.Typography.Unicode` has the version,
+an earlier run stopped half way. The check warns and passes, and the push skips the
+package that is already there, so running **Pre-release** again publishes the missing one.
 
 From a branch other than `main`, a dry run works but publishing does not. The `nuget`
 environment allows deployments from `main` only.
