@@ -40,6 +40,22 @@ public class SyllableTests
     public async Task CircleOfAnInvalidSequenceGivesTheGlyphsThatHarfBuzzGives()
         => await Assert.That(DifferentRows(HarfBuzz.Circles)).IsEmpty();
 
+    // A fallback font would replace the .notdef circle together with the sign that shares its offset, so the sign would
+    // be there twice. With fallback fonts, a font without a dotted circle gets none.
+    [Test]
+    public async Task CircleIsLeftOutWhenTheFontLacksItAndHasFallbackFonts()
+    {
+        FontCollection collection = new();
+        Font font = collection.Add(TestFonts.GetPath("SyllablesNoCircle.ttf")).CreateFont(12);
+        FontFamily fallback = collection.Add(TestFonts.GetPath("SyllablesInvalid.ttf"));
+        TextOptions options = new(font) { FallbackFontFamilies = [fallback] };
+
+        string glyphs = string.Join(' ', TextLayout.GenerateLayout("अॆ".AsSpan(), options)
+            .Select(g => g.Glyph.GlyphMetrics.GlyphId));
+
+        await Assert.That(glyphs).IsEqualTo("1 2");
+    }
+
     private static List<string> DifferentRows(JsonElement[][] rows)
     {
         Dictionary<string, Font> fonts = [];
