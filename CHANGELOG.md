@@ -485,6 +485,10 @@ Unicode conformance suites to that version.
   precomposed syllable `ljmo` and `vjmo`, and each trailing consonant `tjmo`. (#174)
 - The dotted circle that the Hangul shaper puts next to a tone mark is a glyph of its own, and a mark after it attaches to
   it, as in HarfBuzz 15.0.0. It was a part of the tone mark, so a mark after it attached to the tone mark. (#174)
+- The Hangul shaper takes a tone mark as zero width, which it leaves after its syllable and puts after a dotted circle,
+  only when the font has a glyph for the tone mark whose horizontal advance is 0, as HarfBuzz 15.0.0 does. It took the
+  .notdef glyph of a tone mark that the font lacks as zero width when that glyph was 0 wide, and a tone mark as zero
+  width when one of its COLR layers was. (#174)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

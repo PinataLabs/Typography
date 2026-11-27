@@ -3,7 +3,6 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using System.Collections.Generic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic.Shapers;
@@ -303,26 +302,19 @@ internal sealed class HangulShaper : DefaultShaper
         };
     }
 
+    // As in HarfBuzz, a tone mark is zero width when the font has a glyph for it and the horizontal advance of that glyph
+    // is 0. The .notdef glyph of a tone mark that the font lacks is not, whatever its advance.
     private static bool IsZeroWidth(GlyphSubstitutionCollection collection, GlyphShapingData data)
     {
-        // We don't have access to the glyphs metrics as an array when substituting so we have to loop.
         FontMetrics fontMetrics = collection.GetFontMetrics(data);
-        TextAttributes textAttributes = data.TextRun.TextAttributes;
-        TextDecorations textDecorations = data.TextRun.TextDecorations;
-        LayoutMode layoutMode = collection.TextOptions.LayoutMode;
-        ColorFontSupport colorFontSupport = collection.TextOptions.ColorFontSupport;
-        if (fontMetrics.TryGetGlyphMetrics(data.CodePoint, textAttributes, textDecorations, layoutMode, colorFontSupport, out IReadOnlyList<GlyphMetrics>? metrics))
-        {
-            foreach (GlyphMetrics gm in metrics)
-            {
-                if (gm.AdvanceWidth == 0)
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return fontMetrics.TryGetGlyphId(data.CodePoint, out ushort id)
+            && fontMetrics.GetGlyphMetrics(
+                data.CodePoint,
+                id,
+                TextAttributes.None,
+                TextDecorations.None,
+                LayoutMode.HorizontalTopBottom,
+                ColorFontSupport.None)[0].AdvanceWidth == 0;
     }
 
     private static int InsertDottedCircle(GlyphSubstitutionCollection collection, GlyphShapingData data, int index)
