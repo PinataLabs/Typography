@@ -1,0 +1,8 @@
+{
+  "harfbuzz": "15.0.0",
+  "family": "NoOs2",
+  "rows": [
+    {"file":"NoOs2-Regular.ttf","style":"Regular","styleValues":{"weight":400.0,"width":100.0,"italic":0.0},"metrics":{"ascender":800,"descender":-200,"lineGap":90,"strikeoutSize":55,"strikeoutPosition":400,"underlineThickness":50,"underlinePosition":-100,"subscriptXSize":833,"subscriptYSize":833,"subscriptXOffset":0,"subscriptYOffset":200,"superscriptXSize":833,"superscriptYSize":833,"superscriptXOffset":0,"superscriptYOffset":200},"texts":[{"text":"abc","glyphIds":[1,2,3],"advance":2100},{"text":"cab","glyphIds":[3,1,2],"advance":2100},{"text":"a","glyphIds":[1],"advance":600}]},
+    {"file":"NoOs2-BoldCondensedItalic.otf","style":"Bold Condensed Italic","styleValues":{"weight":700.0,"width":75.0,"italic":1.0},"metrics":{"ascender":800,"descender":-200,"lineGap":90,"strikeoutSize":55,"strikeoutPosition":400,"underlineThickness":50,"underlinePosition":-100,"subscriptXSize":833,"subscriptYSize":833,"subscriptXOffset":0,"subscriptYOffset":200,"superscriptXSize":833,"superscriptYSize":833,"superscriptXOffset":0,"superscriptYOffset":200},"texts":[{"text":"abc","glyphIds":[1,2,3],"advance":1800},{"text":"cab","glyphIds":[3,1,2],"advance":1800},{"text":"a","glyphIds":[1],"advance":500}]}
+  ]
+}
