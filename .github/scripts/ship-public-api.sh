@@ -13,7 +13,8 @@
 #
 # Usage: ship-public-api.sh [project-dir]
 #
-#   project-dir  Defaults to src/PinataLabs.Typography in the repository root.
+#   project-dir  Defaults to src/PinataLabs.Typography in the repository root. Run it once per project that has
+#                a PublicAPI baseline.
 
 set -euo pipefail
 

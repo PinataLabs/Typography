@@ -1,9 +1,9 @@
 name: Release Publish
 
-# Builds, tests, packs and publishes PinataLabs.Typography to NuGet. This is the only
-# workflow that logs in to NuGet, so it is the file named in the nuget.org trusted
-# publishing policy. nuget.org matches the policy against the token's job_workflow_ref
-# claim, which names this file even when another workflow calls it.
+# Builds, tests, packs and publishes PinataLabs.Typography and PinataLabs.Typography.Unicode to NuGet,
+# both at one version. This is the only workflow that logs in to NuGet, so it is the file named in
+# the nuget.org trusted publishing policy. nuget.org matches the policy against the token's
+# job_workflow_ref claim, which names this file even when another workflow calls it.
 #
 # It is never run directly. Two workflows call it:
 #
@@ -128,18 +128,36 @@ jobs:
       # Not ./artifacts: Directory.Build.props sends build output there.
       - name: Pack
         run: |
+          dotnet pack src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj -c Release --no-build --output ./packages
           dotnet pack src/PinataLabs.Typography/PinataLabs.Typography.csproj -c Release --no-build --output ./packages
           ls -la ./packages/
 
-      # What was actually built, read from the package rather than assumed from inputs.
+      # What was actually built, read from the packages rather than assumed from inputs.
+      # PinataLabs.Typography.<digit> cannot match PinataLabs.Typography.Unicode.<digit>, whose
+      # name has a letter after the dot. PinataLabs.Typography depends on exactly the version of
+      # PinataLabs.Typography.Unicode that is packed with it, so the two versions must be one.
       - name: Resolve the packed version
         id: version
         run: |
-          package=$(ls ./packages/PinataLabs.Typography.*.nupkg)
-          version=$(basename "$package" .nupkg)
+          typography=(./packages/PinataLabs.Typography.[0-9]*.nupkg)
+          unicode=(./packages/PinataLabs.Typography.Unicode.[0-9]*.nupkg)
+          if [ "${#typography[@]}" -ne 1 ] || [ ! -f "${typography[0]}" ] || [ "${#unicode[@]}" -ne 1 ] || [ ! -f "${unicode[0]}" ]; then
+            echo "::error::Expected one PinataLabs.Typography and one PinataLabs.Typography.Unicode package in ./packages"
+            ls -la ./packages/
+            exit 1
+          fi
+
+          version=$(basename "${typography[0]}" .nupkg)
           version=${version#PinataLabs.Typography.}
+          unicode_version=$(basename "${unicode[0]}" .nupkg)
+          unicode_version=${unicode_version#PinataLabs.Typography.Unicode.}
+          if [ "$version" != "$unicode_version" ]; then
+            echo "::error::PinataLabs.Typography is version $version but PinataLabs.Typography.Unicode is version $unicode_version — refusing to publish"
+            exit 1
+          fi
+
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Packed PinataLabs.Typography $version"
+          echo "Packed PinataLabs.Typography and PinataLabs.Typography.Unicode $version"
 
       # A stable package must carry its tag's version. A mismatch means MinVer did not
       # see the tag and produced a pre-release version instead.
@@ -167,19 +185,22 @@ jobs:
             *) echo "::error::$VERSION is not a pre-release version"; exit 1 ;;
           esac
 
+          # The flat container takes lowercase package ids and lists lowercase versions.
           lower=$(printf '%s' "$VERSION" | tr '[:upper:]' '[:lower:]')
-          status=$(curl -s -o versions.json -w '%{http_code}' \
-            https://api.nuget.org/v3-flatcontainer/pinatalabs.typography/index.json)
-          case "$status" in
-            200)
-              if jq -e --arg v "$lower" '.versions | index($v)' versions.json >/dev/null; then
-                echo "::error::PinataLabs.Typography $VERSION is already on nuget.org. Commit something first, or pick another label."
-                exit 1
-              fi
-              ;;
-            404) echo "PinataLabs.Typography is not on nuget.org yet" ;;
-            *) echo "::error::Could not query nuget.org (HTTP $status)"; exit 1 ;;
-          esac
+          for id in pinatalabs.typography pinatalabs.typography.unicode; do
+            status=$(curl -s -o versions.json -w '%{http_code}' \
+              "https://api.nuget.org/v3-flatcontainer/$id/index.json")
+            case "$status" in
+              200)
+                if jq -e --arg v "$lower" '.versions | index($v)' versions.json >/dev/null; then
+                  echo "::error::$id $VERSION is already on nuget.org. Commit something first, or pick another label."
+                  exit 1
+                fi
+                ;;
+              404) echo "$id is not on nuget.org yet" ;;
+              *) echo "::error::Could not query nuget.org for $id (HTTP $status)"; exit 1 ;;
+            esac
+          done
           echo "$VERSION is not on nuget.org yet"
 
       - name: Summary
@@ -188,7 +209,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry-run }}
         run: |
           {
-            echo "### PinataLabs.Typography $VERSION ($KIND)"
+            echo "### PinataLabs.Typography and PinataLabs.Typography.Unicode $VERSION ($KIND)"
             echo
             if [ "$DRY_RUN" = "true" ]; then
               echo "**Dry run — nothing was published.**"
@@ -243,11 +264,23 @@ jobs:
         with:
           user: jafin
 
+      # PinataLabs.Typography.Unicode goes first, so that no moment exists when a PinataLabs.Typography
+      # that cannot be restored is on nuget.org. dotnet nuget push takes one file, so each is a call.
       - name: Push to NuGet
-        run: dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          for package in ./packages/PinataLabs.Typography.Unicode.[0-9]*.nupkg ./packages/PinataLabs.Typography.[0-9]*.nupkg; do
+            dotnet nuget push "$package" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+          done
 
       - name: Push symbols to NuGet
-        run: dotnet nuget push ./packages/*.snupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          for package in ./packages/PinataLabs.Typography.Unicode.[0-9]*.snupkg ./packages/PinataLabs.Typography.[0-9]*.snupkg; do
+            dotnet nuget push "$package" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+          done
 
       # Publishes the rolling draft that Release Drafter has been accumulating from
       # merged PRs, so any manual edits made to it are kept.
