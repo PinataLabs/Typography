@@ -21,6 +21,15 @@ records name a lookup that moves the glyph one step and then the context lookup 
 * TwoRecords, the positive control for GPOS: a GPOS context lookup moves Latin z up 10 units with each of its two
   records.
 
+When HarfBuzz runs out of levels it puts the buffer in error, and from then on it applies no lookup to the buffer,
+nested or not. Each case after the limit shows a part of that:
+
+* Tree: a GPOS context lookup moves Latin w up 1 unit and names itself twice. It moves w 64 times, not 2^64.
+* SelfFirst: a GPOS context lookup names itself and then moves Latin v up 1 unit. It does not move v at all.
+* LaterGlyph: the lookup of SelfGpos moves the first x and not the second.
+* LaterLookup: the lookup of SelfGpos moves x, and the next lookup of kern, which moves Latin y up 5 units, does not
+  move y. PlainControl shows that it moves y without x before it.
+
 feaLib does not let a lookup name itself, or a lookup defined after it, so the feature code names a placeholder lookup,
 and the script points each record that names a placeholder at the context lookup it stands for.
 HarfBuzz reports that shaping failed when it runs out of nesting levels, and uharfbuzz raises MemoryError for that, but
@@ -46,6 +55,11 @@ CASES = [
     ("SelfGpos", "x"),
     ("NaturalEnd", "d"),
     ("TwoRecords", "z"),
+    ("Tree", "w"),
+    ("SelfFirst", "v"),
+    ("LaterGlyph", "xx"),
+    ("LaterLookup", "xy"),
+    ("PlainControl", "y"),
 ]
 
 # The number of alternates of each letter that steps through them.
@@ -69,7 +83,7 @@ def input_class(code_point, last=True):
     return "[%s]" % " ".join(glyphs if last else glyphs[:-1])
 
 
-# GSUB lookups 0 to 4 are standalone, 5 to 7 are those of calt. GPOS lookups 0 to 2 are standalone, 3 and 4 those of kern.
+# GSUB lookups 0 to 4 are standalone, 5 to 7 are those of calt. GPOS lookups 0 to 4 are standalone, 5 to 9 those of kern.
 FEATURES = f"""
 languagesystem DFLT dflt;
 languagesystem latn dflt;
@@ -99,6 +113,8 @@ feature calt {{
 
 lookup X_UP {{ pos u0078 <0 10 0 0>; }} X_UP;
 lookup Z_UP {{ pos u007A <0 10 0 0>; }} Z_UP;
+lookup W_UP {{ pos u0077 <0 1 0 0>; }} W_UP;
+lookup V_UP {{ pos u0076 <0 1 0 0>; }} V_UP;
 lookup POS_PLACEHOLDER {{ pos u0078 0; }} POS_PLACEHOLDER;
 
 feature kern {{
@@ -109,16 +125,27 @@ feature kern {{
     lookup Z_TWICE {{
         pos u007A' lookup Z_UP lookup Z_UP;
     }} Z_TWICE;
+
+    lookup W_TREE {{
+        pos u0077' lookup W_UP lookup POS_PLACEHOLDER lookup POS_PLACEHOLDER;
+    }} W_TREE;
+
+    lookup V_SELF_FIRST {{
+        pos u0076' lookup POS_PLACEHOLDER lookup V_UP;
+    }} V_SELF_FIRST;
+
+    lookup Y_PLAIN {{
+        pos u0079 <0 5 0 0>;
+    }} Y_PLAIN;
 }} kern;
 """
 
 EXTRA_GLYPHS = [name for code_point in STEPS for name in chain(code_point)[1:]]
 
-# For each table, the placeholder and the lookup that each context lookup's placeholder record stands for.
+# The placeholder of each table. A record that names it stands for the context lookup that holds the record, except in
+# B_SECOND, lookup 4, where it stands for B_FIRST, lookup 6.
 GSUB_PLACEHOLDER = 3
-GSUB_TARGETS = {4: 6, 5: 5, 7: 7}  # B_SECOND names B_FIRST, A_SELF and D_SELF name themselves.
-GPOS_PLACEHOLDER = 2
-GPOS_TARGETS = {3: 3}  # X_SELF names itself.
+GPOS_PLACEHOLDER = 4
 
 
 def subtables(lookup):
@@ -126,17 +153,18 @@ def subtables(lookup):
         yield getattr(subtable, "ExtSubTable", subtable)
 
 
-def point_placeholders(table, placeholder, targets):
-    """Points each record of a context lookup that names the placeholder at the lookup that it stands for."""
+def point_placeholders(table, placeholder, targets=None):
+    """Points each record of a context lookup that names the placeholder at the lookup that it stands for, and gives the
+    number of records it pointed."""
     pointed = 0
     for index, lookup in enumerate(table.LookupList.Lookup):
         for subtable in subtables(lookup):
             for name in ("SubstLookupRecord", "PosLookupRecord"):
                 for record in getattr(subtable, name, None) or []:
                     if record.LookupListIndex == placeholder:
-                        record.LookupListIndex = targets[index]
+                        record.LookupListIndex = (targets or {}).get(index, index)
                         pointed += 1
-    assert pointed == len(targets), pointed
+    return pointed
 
 
 def shape(font, text):
@@ -170,10 +198,11 @@ def main():
     types = [lookup.LookupType for lookup in gsub.LookupList.Lookup]
     assert types == [1, 1, 1, 1, 7, 5, 5, 5], types
     types = [lookup.LookupType for lookup in gpos.LookupList.Lookup]
-    assert types == [1, 1, 1, 8, 8], types
+    assert types == [1, 1, 1, 1, 1, 8, 8, 8, 8, 1], types
 
-    point_placeholders(gsub, GSUB_PLACEHOLDER, GSUB_TARGETS)
-    point_placeholders(gpos, GPOS_PLACEHOLDER, GPOS_TARGETS)
+    # A_SELF, B_SECOND and D_SELF in GSUB, and X_SELF, V_SELF_FIRST and the two records of W_TREE in GPOS.
+    assert point_placeholders(gsub, GSUB_PLACEHOLDER, {4: 6}) == 3
+    assert point_placeholders(gpos, GPOS_PLACEHOLDER) == 4
     font.save(path)
 
     hb_font = load_font(path)
