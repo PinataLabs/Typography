@@ -110,6 +110,41 @@ if (bidi.TryGetPairedBracket(out CodePoint closing))
 }
 ```
 
+## Line breaks
+
+`LineBreakEnumerator` finds the places where a line may end in a text, by UAX #14. Each
+`LineBreak` has `PositionWrap`, the index of the code point that starts the next line, and `Required`,
+which is `true` for a mandatory break.
+
+```csharp
+foreach (LineBreak lineBreak in new LineBreakEnumerator("Hello World
+Bye".AsSpan()))
+{
+    Console.WriteLine($"{lineBreak.PositionWrap} {lineBreak.Required}");
+}
+// 6 False
+// 13 True
+// 16 False
+```
+
+A layout engine that holds text in runs asks about the seam between two of them instead. Pass the
+text before the seam and the text after it:
+
+```csharp
+bool allowed = LineBreakAlgorithm.IsBreakAllowedBetween("44".AsSpan(), "-1".AsSpan()); // false
+```
+
+The answer is the one the enumerator gives for the two texts joined, so a rule that reads across the
+seam, such as LB25 for the number above, applies. An empty `before` never breaks (LB2), and an empty
+`after` always does (LB3). Pass as much text on each side as can change the answer. A window of
+32 code units each side is enough, unless a row of spaces, digits, combining marks or regional
+indicators longer than that runs across the seam.
+
+Both take a `LineBreakTailoring`. With none, which is the default, the result is the algorithm as
+published. `SouthEastAsianAsIdeographs` allows a break between Thai, Lao, Khmer and Myanmar letters,
+for which the algorithm has no dictionary, and `HangulAsAlphabetic` breaks Korean at its spaces and
+not between syllables.
+
 `new ArabicJoiningClass(codePoint)` gives the Arabic joining type and joining group of a code
 point. The namespace also has the `ScriptClass`, `IndicSyllabicCategory` and
 `IndicPositionalCategory` enumerations. The shapers use them inside the library; there is no public

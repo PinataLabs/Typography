@@ -1,6 +1,6 @@
 ---
 title: Unicode types
-description: API reference for CodePoint, UnicodeInfo, the span enumerators, MemoryExtensions and the Unicode property types in PinataLabs.Typography.Unicode.
+description: API reference for CodePoint, UnicodeInfo, the span enumerators, line breaking, MemoryExtensions and the Unicode property types in PinataLabs.Typography.Unicode.
 ---
 
 Namespace: `PinataLabs.Typography.Unicode`. Guide:
@@ -86,6 +86,42 @@ because their names are different. If you need to name the class, write it in fu
 Enumerators for `foreach`. They do not allocate. `SpanCodePointEnumerator.Current` is a
 `CodePoint`; `SpanGraphemeEnumerator.Current` is a `ReadOnlySpan<char>`. Both can also be made
 directly from a `ReadOnlySpan<char>`.
+
+## LineBreakEnumerator, LineBreak and LineBreakAlgorithm
+
+`public ref struct LineBreakEnumerator`
+`public readonly struct LineBreak`
+`public static class LineBreakAlgorithm`
+
+The line breaking algorithm of UAX #14. `new LineBreakEnumerator(text, tailoring)` is an enumerator for
+`foreach` over the break opportunities of a `ReadOnlySpan<char>`. It does not allocate. The tailoring is
+optional.
+
+| `LineBreak` member | Description |
+| --- | --- |
+| `PositionWrap` | The index of the code point that starts the next line. It counts code points, not `char` values. |
+| `PositionMeasure` | The index to measure the line to: `PositionWrap` without the spaces before it. |
+| `Required` | `true` for a mandatory break, such as after a line feed. |
+
+The last opportunity is at the end of the text (LB3), so a text that is not empty gives at least one.
+
+`LineBreakAlgorithm.IsBreakAllowedBetween(before, after, tailoring)` answers a question about one
+boundary: is a break allowed where `before` ends and `after` begins? It reads the two spans as one
+text, so every rule that reaches across the boundary applies. The result is the one the enumerator
+gives at that position of the joined text. See
+[Line breaks](../unicode/code-points-and-graphemes.md#line-breaks).
+
+### LineBreakTailoring
+
+`[Flags] public enum LineBreakTailoring`
+
+| Value | Description |
+| --- | --- |
+| `None` | The algorithm as UAX #14 publishes it. This is the default. |
+| `SouthEastAsianAsIdeographs` | The letters of class SA (Thai, Lao, Khmer, Myanmar) break as ideographs do. SA marks stay combining marks. |
+| `HangulAsAlphabetic` | Hangul syllables and jamo break as letters do, so Korean breaks at its spaces. |
+
+A tailoring changes the class of the characters it names and of no other.
 
 ## Property types
 
