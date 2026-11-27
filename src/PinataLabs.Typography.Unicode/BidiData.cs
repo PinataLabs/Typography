@@ -115,17 +115,9 @@ internal class BidiData
             BidiPairedBracketType pbt = bidi.PairedBracketType;
             this.pairedBracketTypes[i] = pbt;
 
-            if (pbt == BidiPairedBracketType.Open)
+            if (pbt != BidiPairedBracketType.None)
             {
-                // Opening bracket types can never have a null pairing.
-                bidi.TryGetPairedBracket(out CodePoint paired);
-                this.pairedBracketValues[i] = CodePoint.GetCanonicalType(paired).Value;
-
-                this.HasBrackets = true;
-            }
-            else if (pbt == BidiPairedBracketType.Close)
-            {
-                this.pairedBracketValues[i] = CodePoint.GetCanonicalType(codePoint).Value;
+                this.pairedBracketValues[i] = bidi.GetBracketPairKey(codePoint);
                 this.HasBrackets = true;
             }
 

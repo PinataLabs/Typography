@@ -34,6 +34,22 @@ public readonly struct BidiClass
         => (BidiPairedBracketType)((this.bidiValue >> 16) & 0xFF);
 
     /// <summary>
+    /// Gets the canonical code point of the closing bracket of the pair that this paired bracket is half of.
+    /// An opening bracket and its closing bracket give the same key, so the key matches them.
+    /// </summary>
+    /// <param name="codePoint">The code point that this instance is the bidi class of.</param>
+    /// <returns>The key.</returns>
+    internal int GetBracketPairKey(CodePoint codePoint)
+    {
+        if (this.PairedBracketType == BidiPairedBracketType.Open)
+        {
+            codePoint = new CodePoint(this.bidiValue & 0xFFFF);
+        }
+
+        return CodePoint.GetCanonicalType(codePoint).Value;
+    }
+
+    /// <summary>
     /// Gets the codepoint representing the bracket pairing for this instance.
     /// </summary>
     /// <param name="codePoint">
