@@ -135,6 +135,58 @@ public class LineBreakEnumeratorTests
         await Assert.That(breaks.ToArray()).IsEquivalentTo(expected);
     }
 
+    // The positions count code points, so a character outside the Basic Multilingual Plane counts as one.
+    [Test]
+    [Arguments("\U0001F600 a", 1, 2)]
+    [Arguments("\U0001D400\U0001D400  a", 2, 4)]
+    [Arguments("\U0001D400\U0001D400\r\n\U0001D400", 2, 4)]
+    public async Task PositionMeasureCountsCodePointsAfterACharacterOutsideTheBasicMultilingualPlane(string text, int measure, int wrap)
+    {
+        LineBreak first = FirstBreak(text);
+        await Assert.That(first.PositionMeasure).IsEqualTo(measure);
+        await Assert.That(first.PositionWrap).IsEqualTo(wrap);
+    }
+
+    // The measure stops before the whole mandatory break, CR LF being one, and before the spaces in front of it.
+    [Test]
+    [Arguments("a\r\nb", 1, 3)]
+    [Arguments("a \r\nb", 1, 4)]
+    [Arguments("a\rb", 1, 2)]
+    [Arguments("a\nb", 1, 2)]
+    [Arguments("a\u0085b", 1, 2)]
+    [Arguments("a\u000Bb", 1, 2)]
+    [Arguments("a\u000Cb", 1, 2)]
+    [Arguments("a\u2028b", 1, 2)]
+    [Arguments("a\u2029b", 1, 2)]
+    [Arguments("a  \u0085b", 1, 4)]
+    public async Task PositionMeasureStopsBeforeAMandatoryBreak(string text, int measure, int wrap)
+    {
+        LineBreak first = FirstBreak(text);
+        await Assert.That(first.PositionMeasure).IsEqualTo(measure);
+        await Assert.That(first.PositionWrap).IsEqualTo(wrap);
+        await Assert.That(first.Required).IsTrue();
+    }
+
+    // A text that ends in a mandatory break measures as one that goes on after it does (LB3).
+    [Test]
+    [Arguments("a\r\n", 1, 3)]
+    [Arguments("a\u0085", 1, 2)]
+    [Arguments("a \r", 1, 3)]
+    public async Task PositionMeasureStopsBeforeAMandatoryBreakAtTheEndOfTheText(string text, int measure, int wrap)
+    {
+        LineBreak first = FirstBreak(text);
+        await Assert.That(first.PositionMeasure).IsEqualTo(measure);
+        await Assert.That(first.PositionWrap).IsEqualTo(wrap);
+        await Assert.That(first.Required).IsTrue();
+    }
+
+    private static LineBreak FirstBreak(string text)
+    {
+        LineBreakEnumerator enumerator = new(text.AsSpan());
+        enumerator.MoveNext();
+        return enumerator.Current;
+    }
+
     // Contains 19,346 tests at Unicode 18.0.0
     // https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/LineBreakTest.html
     [Test]

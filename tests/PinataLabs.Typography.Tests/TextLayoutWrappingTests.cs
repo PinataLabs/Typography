@@ -182,6 +182,24 @@ public class TextLayoutWrappingTests
         }
     }
 
+    // The break opportunity before a space is measured to the end of the text before it, which a character outside the
+    // Basic Multilingual Plane, being two UTF-16 code units, used to put one position too far on.
+    [Test]
+    [Arguments("\U0001D400 \U0001D400 \U0001D400 \U0001D400 \U0001D400 x")]
+    [Arguments("\U0001F600 \U0001F600 \U0001F600 \U0001F600 \U0001F600 x")]
+    public async Task WrappedLinesDoNotKeepTrailingWhitespaceAfterACharacterOutsideTheBasicMultilingualPlane(string text)
+    {
+        Font font = CreateFont();
+        for (int w = 20; w <= 200; w += 3)
+        {
+            List<string> lines = Layout(text, new TextOptions(font) { WrappingLength = w });
+            foreach (string line in lines.Take(lines.Count - 1))
+            {
+                await Assert.That(line.EndsWith(' ')).IsFalse();
+            }
+        }
+    }
+
     [Test]
     public async Task SolidusDoesNotBreakWordWhenEarlierSpaceIsAvailable()
     {

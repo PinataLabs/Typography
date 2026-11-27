@@ -358,6 +358,12 @@ Unicode conformance suites to that version.
 
 ### Fixed
 
+- A wrapped line no longer keeps a trailing space that follows a character outside the Basic Multilingual Plane, such as
+  an emoji or a mathematical letter. The line break enumerator measured the text before a break through UTF-16 indexes as
+  if they were code point indexes, so after such a character it stopped one position too far and `TextLayout` left the
+  space on the line, in its measured bounds, where it trims the space after any other character. The measure of a break
+  after a mandatory break also stops before the whole of CR LF, and before NL (U+0085), as it does before the other
+  line terminators. It kept the CR and the NL. (#153)
 - The `OS/2` table reader reads `ulCodePageRange1` and `ulCodePageRange2` as 32-bit values. It read 16 bits each, so the
   `sxHeight`, `sCapHeight`, `usDefaultChar`, `usBreakChar`, `usMaxContext`, `usLowerOpticalPointSize` and
   `usUpperOpticalPointSize` of a version 2 or later table were read 4 bytes off. Nothing used them until the font

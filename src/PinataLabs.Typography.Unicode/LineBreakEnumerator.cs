@@ -113,6 +113,7 @@ public ref struct LineBreakEnumerator
         while (this.position < this.pointsLength)
         {
             int boundary = this.position;
+            int boundaryChar = this.charPosition;
             Character next = this.Read(this.charPosition, out int count);
             this.charPosition += count;
             this.position++;
@@ -138,7 +139,7 @@ public ref struct LineBreakEnumerator
 
             if (decision != Decision.NoBreak)
             {
-                this.Current = new LineBreak(this.FindPriorNonWhitespace(boundary), boundary, decision == Decision.Mandatory);
+                this.Current = new LineBreak(this.FindPriorNonWhitespace(boundary, boundaryChar), boundary, decision == Decision.Mandatory);
                 return true;
             }
         }
@@ -148,7 +149,7 @@ public ref struct LineBreakEnumerator
         {
             this.done = true;
             bool required = this.previousCharacter is LineBreakClass.BK or LineBreakClass.CR or LineBreakClass.LF or LineBreakClass.NL;
-            this.Current = new LineBreak(this.FindPriorNonWhitespace(this.pointsLength), this.pointsLength, required);
+            this.Current = new LineBreak(this.FindPriorNonWhitespace(this.pointsLength, this.source.Length), this.pointsLength, required);
             return true;
         }
 
@@ -504,36 +505,39 @@ public ref struct LineBreakEnumerator
         return new Character(Character.Eot, Flags.None);
     }
 
-    private readonly int FindPriorNonWhitespace(int from)
+    /// <summary>
+    /// Finds where the text before a break ends once the mandatory break and the spaces in front of it are left out.
+    /// </summary>
+    /// <param name="position">The code point index of the break.</param>
+    /// <param name="charPosition">The UTF-16 index of the break.</param>
+    /// <returns>The code point index to measure to.</returns>
+    private readonly int FindPriorNonWhitespace(int position, int charPosition)
     {
-        if (from > 0)
+        // The characters that are left out are all in the Basic Multilingual Plane, so each is one code unit and one
+        // code point, and the two indexes move together.
+        int end = charPosition;
+        if (end > 0 && IsMandatoryBreak(this.source[end - 1]))
         {
-            var cp = CodePoint.DecodeFromUtf16At(this.source, from - 1, out int count);
-            LineBreakClass cls = CodePoint.GetLineBreakClass(cp);
+            end--;
 
-            if (cls is LineBreakClass.BK or LineBreakClass.LF or LineBreakClass.CR)
+            // CR LF is one mandatory break (LB5).
+            if (this.source[end] == '\n' && end > 0 && this.source[end - 1] == '\r')
             {
-                from -= count;
+                end--;
             }
         }
 
-        while (from > 0)
+        while (end > 0 && this.source[end - 1] == ' ')
         {
-            var cp = CodePoint.DecodeFromUtf16At(this.source, from - 1, out int count);
-            LineBreakClass cls = CodePoint.GetLineBreakClass(cp);
-
-            if (cls == LineBreakClass.SP)
-            {
-                from -= count;
-            }
-            else
-            {
-                break;
-            }
+            end--;
         }
 
-        return from;
+        return position - (charPosition - end);
     }
+
+    private static bool IsMandatoryBreak(char value)
+        => !char.IsSurrogate(value)
+        && CodePoint.GetLineBreakClass(new CodePoint(value)) is LineBreakClass.BK or LineBreakClass.CR or LineBreakClass.LF or LineBreakClass.NL;
 
     /// <summary>
     /// A character with its class after LB1.
