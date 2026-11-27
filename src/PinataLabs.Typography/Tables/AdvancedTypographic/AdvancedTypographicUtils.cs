@@ -252,6 +252,21 @@ internal static class AdvancedTypographicUtils
             ? glyphClass == GlyphClassDef.MarkGlyph
             : GetSynthesizedGlyphClass(shapingData) == GlyphClassDef.MarkGlyph);
 
+    /// <summary>
+    /// Gets the number of components of the glyph, as in HarfBuzz (_hb_glyph_info_get_lig_num_comps): those of the
+    /// ligature that formed it, while it is that ligature and has the ligature class, and one for any other glyph,
+    /// whatever characters it holds.
+    /// </summary>
+    /// <param name="fontMetrics">The font of the glyph.</param>
+    /// <param name="shapingData">The glyph.</param>
+    /// <returns>The number of components.</returns>
+    public static int GetLigatureComponentCount(FontMetrics fontMetrics, GlyphShapingData shapingData)
+        => shapingData.LigatureId > 0
+            && shapingData.LigatureComponent == -1
+            && GetGlyphShapingClass(fontMetrics, shapingData.GlyphId, shapingData).IsLigature
+            ? shapingData.LigatureComponentCount
+            : 1;
+
     public static GlyphShapingClass GetGlyphShapingClass(FontMetrics fontMetrics, ushort glyphId, GlyphShapingData shapingData)
     {
         if (shapingData.IsUnclassified)

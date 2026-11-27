@@ -203,7 +203,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             int ligatureId = isLigature ? collection.LigatureId++ : isMarkLigature ? data.LigatureId : 0;
             int firstComponent = data.LigatureComponent;
             int lastLigatureId = data.LigatureId;
-            int lastComponentCount = data.CodePointCount;
+            int lastComponentCount = AdvancedTypographicUtils.GetLigatureComponentCount(fontMetrics, data);
             int currentComponentCount = lastComponentCount;
             int idx = index + 1;
 
@@ -231,9 +231,12 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                     }
                 }
 
+                // As in HarfBuzz, a glyph after the first that a multiple substitution made gives no component of its own.
                 GlyphShapingData last = collection[idx];
                 lastLigatureId = last.LigatureId;
-                lastComponentCount = last.CodePointCount;
+                lastComponentCount = last.IsMultiplied && last.LigatureComponent > 0
+                    ? 0
+                    : AdvancedTypographicUtils.GetLigatureComponentCount(fontMetrics, last);
                 currentComponentCount += lastComponentCount;
                 idx++; // Skip base glyph
             }
@@ -268,6 +271,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
             else if (isLigature)
             {
                 GlyphShapingData ligature = collection[index];
+                ligature.LigatureComponentCount = currentComponentCount;
                 ligature.SubstitutedGlyphClass = GlyphClassDef.LigatureGlyph;
                 ligature.IsOtherLetter |= CodePoint.GetGeneralCategory(ligature.UnicodePropertiesCodePoint) == UnicodeCategory.NonSpacingMark;
             }

@@ -47,6 +47,7 @@ internal class GlyphShapingData
         this.LigatureId = data.LigatureId;
         this.IsLigated = data.IsLigated;
         this.LigatureComponent = data.LigatureComponent;
+        this.LigatureComponentCount = data.LigatureComponentCount;
         this.MarkAttachment = data.MarkAttachment;
         this.CursiveAttachment = data.CursiveAttachment;
         this.IsSubstituted = data.IsSubstituted;
@@ -192,6 +193,13 @@ internal class GlyphShapingData
     /// Gets or sets the ligature component index of the glyph.
     /// </summary>
     public int LigatureComponent { get; set; } = -1;
+
+    /// <summary>
+    /// Gets or sets the number of components of the ligature that formed the glyph, as HarfBuzz counts them, which need
+    /// not be the number of characters that it holds. It counts while the glyph is a ligature: see
+    /// <see cref="Tables.AdvancedTypographic.AdvancedTypographicUtils.GetLigatureComponentCount"/>.
+    /// </summary>
+    public int LigatureComponentCount { get; set; } = 1;
 
     /// <summary>
     /// Gets or sets the index of any mark attachment.

@@ -551,6 +551,13 @@ Unicode conformance suites to that version.
   sign, so the glyph of the whole sign took the place of that part alone, and the first part was drawn twice. With
   `FontFallbackPartsPre.ttf`, which has U+17C1 and lacks U+17BE, and the fallback `FontFallbackPartsWhole.ttf`, ka,
   U+17BE drew U+17C1, ka and the whole sign. (#191)
+- A glyph gives a ligature as many components as in HarfBuzz 15.0.0: those of a ligature, none for a glyph after the
+  first that a multiple substitution made, and one for any other glyph, whatever characters it holds. The library
+  counted the characters. In `LigaturePropertiesComponents.ttf`, where e and the acute ligate into eacute, the ligature
+  of a base and a mark, and eacute and f then ligate, e, acute, grave, f put the grave on the second component of
+  eacute_f, where HarfBuzz puts it on the first. Fallback mark placement splits a ligature into that many parts, so in
+  `LigaturePropertiesComponentsFallback.ttf` it split eacute_f into three, and the ligature of the two glyphs that a
+  multiple substitution made of a into two, where HarfBuzz splits them into two and one. (#191)
 - A fallback font draws each glyph that the font of the text lacks once, at the place where the shaper of that font
   put it. A fallback font replaced the glyphs of a place in the text, not of a character, so when a shaper reordered
   glyphs, as the Hangul shaper does with a tone mark and the Indic shaper with a pre-base matra or a reph, or when the
