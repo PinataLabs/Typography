@@ -125,6 +125,35 @@ public class SignedAdvanceLayoutTests
         await Assert.That(string.Join(", ", actual)).IsEqualTo("0 advances 900 800, 800 advances 900 1300, 2100 advances 900 1000");
     }
 
+    // A side bearing is the space between the ink and the end of the advance, so it follows the advance that positioning
+    // gives the glyph: the o of "ole" advances -100, the first W of "WW" 72960, a lone W 40960, and U+4E00 800 down the
+    // line. The glyphs are empty, so the right and bottom side bearings are the advances less the leading bearings.
+    [Test]
+    [Arguments("TextShaper.ttf", "ole", false)]
+    [Arguments("TextShaperLarge.ttf", "WW", false)]
+    [Arguments("TextShaperLarge.ttf", "W", false)]
+    [Arguments("VerticalAdvance.ttf", "一二三一", true)]
+    public async Task TheSideBearingsFollowThePositionedAdvance(string fontName, string text, bool vertical)
+    {
+        TextOptions options = new(GetFont(fontName))
+        {
+            Dpi = 1,
+            LayoutMode = vertical ? LayoutMode.VerticalLeftRight : LayoutMode.HorizontalTopBottom,
+            FeatureTags = vertical ? [Tag.Parse("vkrn")] : [],
+        };
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        string[] expected = layout
+            .Select(g => g.Glyph.GlyphMetrics)
+            .Select(m => FormattableString.Invariant($"{m.AdvanceWidth - m.LeftSideBearing - m.Width} {m.AdvanceHeight - m.TopSideBearing - m.Height}"))
+            .ToArray();
+        string[] actual = layout
+            .Select(g => g.Glyph.GlyphMetrics)
+            .Select(m => FormattableString.Invariant($"{m.RightSideBearing} {m.BottomSideBearing}"))
+            .ToArray();
+
+        await Assert.That(string.Join(", ", actual)).IsEqualTo(string.Join(", ", expected));
+    }
+
     private static JsonElement GetVerticalAdvanceRow(string fontName, string text, string direction)
     {
         using JsonDocument document = JsonDocument.Parse(File.ReadAllText(TestFonts.GetPath("VerticalAdvance.harfbuzz.json")));
