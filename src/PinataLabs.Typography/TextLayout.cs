@@ -966,6 +966,7 @@ internal static class TextLayout
 
                 // Should we start a new line?
                 bool requiredBreak = false;
+                LineBreak? wrapAfterGlyph = null;
                 if (isGraphemeStart)
                 {
                     // Mandatory wrap at index. The line is empty only when the line break before the index has no glyph
@@ -1021,14 +1022,9 @@ internal static class TextLayout
                         }
                         else if (currentLineBreak.PositionWrap <= codePointIndex)
                         {
-                            // Exact length match. Check for CJK
-                            TextLine split = textLine.SplitAt(currentLineBreak, keepAll);
-                            if (split != textLine)
-                            {
-                                textLines.Add(textLine);
-                                textLine = split;
-                                lineAdvance = split.ScaledLineAdvance;
-                            }
+                            // The line wraps before its first glyph at or after the break. That glyph can be this one,
+                            // so the line splits once this glyph is on it.
+                            wrapAfterGlyph = currentLineBreak;
                         }
                         else if (lastLineBreak.PositionWrap < codePointIndex && !CodePoint.IsWhiteSpace(codePoint))
                         {
@@ -1153,6 +1149,17 @@ internal static class TextLayout
                         codePointIndex,
                         isRotated,
                         isDecomposed);
+                }
+
+                if (wrapAfterGlyph is LineBreak wrap)
+                {
+                    TextLine split = textLine.SplitAt(wrap, keepAll);
+                    if (split != textLine)
+                    {
+                        textLines.Add(textLine);
+                        textLine = split;
+                        lineAdvance = split.ScaledLineAdvance;
+                    }
                 }
 
                 codePointIndex++;
