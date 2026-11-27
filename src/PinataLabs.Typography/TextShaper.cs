@@ -74,23 +74,30 @@ public static class TextShaper
         return glyphs;
     }
 
-    // The run takes the direction of its first paragraph, as the Unicode Bidirectional Algorithm has it (rules P1 to P3):
-    // the first strong character before the first paragraph separator decides. A first paragraph with none, such as
-    // digits and brackets, has the direction that HarfBuzz gives a buffer of its script, and runs from left to right
-    // without a script.
+    // The first strong character of the run decides, as rules P2 and P3 of the Unicode Bidirectional Algorithm read it.
+    // The run is never split, so it is one paragraph whatever separators it holds. A run with none, such as digits and
+    // brackets, has the direction that HarfBuzz gives a buffer of its script, and runs from left to right without a script.
     private static TextDirection GetAutoDirection(ReadOnlySpan<char> text, ScriptClass? script)
     {
         BidiAlgorithm bidi = BidiAlgorithm.Instance.Value!;
         BidiData bidiData = new();
         bidiData.Init(text, (sbyte)TextDirection.Auto);
-        bidi.Process(bidiData);
-        BidiAlgorithm.Paragraph first = bidi.Paragraphs[0];
-        if ((first.Level & 1) != 0)
+        bidi.Process(
+            bidiData.Types,
+            bidiData.PairedBracketTypes,
+            bidiData.PairedBracketValues,
+            bidiData.ParagraphEmbeddingLevel,
+            bidiData.HasBrackets,
+            bidiData.HasEmbeddings,
+            bidiData.HasIsolates,
+            [bidiData.Length]);
+
+        if ((bidi.Paragraphs[0].Level & 1) != 0)
         {
             return TextDirection.RightToLeft;
         }
 
-        return script is ScriptClass named && IsRightToLeft(named) && !HasStrongCharacter(bidiData.Types.Slice(0, first.Length))
+        return script is ScriptClass named && IsRightToLeft(named) && !HasStrongCharacter(bidiData.Types)
             ? TextDirection.RightToLeft
             : TextDirection.LeftToRight;
     }

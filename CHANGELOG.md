@@ -483,10 +483,9 @@ Unicode conformance suites to that version.
   whitespace to that level. In `TextLayout`, the second line of `"كتب abc\nabc كتب"` now runs left to right, with
   `abc` drawn first, and each line aligns by the direction of its own paragraph: with `TextAlignment.Start`, the
   Arabic line of `"abc\nكتب"` ends at the right edge of the box, where it started at the left with the Latin line.
-  Under a fixed `TextDirection` every paragraph has that direction, so the alignment does not change.
-  `TextShaper.Shape` with `TextDirection.Auto` takes the direction of the first paragraph of the run: a line feed
-  followed by Hebrew runs left to right, and the script decides for a first paragraph with no strong character,
-  whatever follows the separator. ICU 72 gives the same levels. (#189)
+  Under a fixed `TextDirection` every paragraph has that direction, so the alignment does not change. ICU 72 gives
+  the same levels. `TextShaper.Shape` does not split a run, so with `TextDirection.Auto` it still takes the direction
+  of the first strong character anywhere in the run: a line feed followed by Hebrew runs right to left. (#189)
 - Text that has no codepoint to lay out, such as text that is only U+FE0F, lays out as empty text: no glyph, no line,
   and the size of empty text. `TextLayout` threw `InvalidOperationException` ("Sequence contains no elements"),
   because a text with no line has no longest line. (#179)
