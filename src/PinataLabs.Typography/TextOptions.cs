@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using PinataLabs.Typography.Tables.AdvancedTypographic;
+using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography;
 
@@ -50,6 +51,9 @@ public class TextOptions
         this.ColorFontSupport = options.ColorFontSupport;
         this.FeatureTags = new List<Tag>(options.FeatureTags);
         this.TextRuns = new List<TextRun>(options.TextRuns);
+        this.Script = options.Script;
+        this.Language = options.Language;
+        this.DisabledFeatureTags = options.DisabledFeatureTags;
     }
 
     /// <summary>
@@ -209,4 +213,31 @@ public class TextOptions
     /// </para>
     /// </remarks>
     public IReadOnlyList<TextRun> TextRuns { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the script of the text, for a caller that shapes one run and knows it. The shapers and the lookups
+    /// then take every character as of this script, as HarfBuzz does with the script of its buffer. When it is
+    /// <see langword="null"/>, each character has the script that Unicode gives it, and the characters of no script of
+    /// their own join the script next to them.
+    /// </summary>
+    internal ScriptClass? Script { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tag of the OpenType language system of the text. The lookups of the language system of the font
+    /// for the script apply, and the default language system when the font has none for this tag.
+    /// </summary>
+    internal Tag? Language { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tags of the features that no shaper applies, whatever the script, even when the font lists them.
+    /// </summary>
+    internal IReadOnlyList<Tag> DisabledFeatureTags { get; set; } = [];
+
+    /// <summary>
+    /// Gets the script of a character for the shapers: the script of the text when it has one, and otherwise the
+    /// script that Unicode gives the character.
+    /// </summary>
+    /// <param name="codePoint">The character.</param>
+    /// <returns>The script.</returns>
+    internal ScriptClass GetScriptClass(CodePoint codePoint) => this.Script ?? CodePoint.GetScriptClass(codePoint);
 }

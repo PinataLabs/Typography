@@ -143,7 +143,7 @@ internal class GSubTable : Table
         {
             // Choose a shaper based on the script.
             // This determines which features to apply to which glyphs.
-            ScriptClass current = CodePoint.GetScriptClass(collection[i].CodePoint);
+            ScriptClass current = collection.TextOptions.GetScriptClass(collection[i].CodePoint);
 
             int index = i;
             int count = 1;
@@ -152,7 +152,7 @@ internal class GSubTable : Table
                 // We want to assign the same feature lookups to individual sections of the text rather
                 // than the text as a whole to ensure that different language shapers do not interfere
                 // with each other when the text contains multiple languages.
-                ScriptClass next = CodePoint.GetScriptClass(collection[i + 1].CodePoint);
+                ScriptClass next = collection.TextOptions.GetScriptClass(collection[i + 1].CodePoint);
                 if (next != current &&
                     current is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited &&
                     next is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited)
@@ -187,7 +187,7 @@ internal class GSubTable : Table
             count += delta;
 
             IReadOnlyList<ShapingStage> stages = shaper.GetShapingStages();
-            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, current, stages);
+            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, current, collection.TextOptions.Language, stages);
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
             for (int s = 0; s < stages.Count; s++)
             {
@@ -294,7 +294,8 @@ internal class GSubTable : Table
         int maxOperationsCount,
         ref int currentOperations)
     {
-        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, positioning: false, out List<(ushort Index, LookupFeatures Features)>? lookups))
+        features = LookupFeatures.WithoutDisabled(features, collection.TextOptions.DisabledFeatureTags);
+        if (!LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, collection.TextOptions.Language, withRequiredFeature, positioning: false, out List<(ushort Index, LookupFeatures Features)>? lookups))
         {
             return;
         }
@@ -366,7 +367,7 @@ internal class GSubTable : Table
             features[i] = new(stageFeatures[i]);
         }
 
-        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, script, false, positioning: false, out value);
+        return LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, script, null, false, positioning: false, out value);
     }
 
     /// <summary>

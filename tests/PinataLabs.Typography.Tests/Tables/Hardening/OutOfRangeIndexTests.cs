@@ -44,7 +44,7 @@ public class OutOfRangeIndexTests
     {
         GPosTable table = GPosTable.Load(CreateLayoutTable());
 
-        bool found = LookupFeatures.TryGetLookups(table.ScriptList, table.FeatureList, table.LookupList.LookupTables.Length, [new PlannedFeature(Kern)], ScriptClass.Latin, false, positioning: true, out var lookups);
+        bool found = LookupFeatures.TryGetLookups(table.ScriptList, table.FeatureList, table.LookupList.LookupTables.Length, [new PlannedFeature(Kern)], ScriptClass.Latin, null, false, positioning: true, out var lookups);
 
         await Assert.That(found).IsTrue();
         await Assert.That(lookups!.Count).IsEqualTo(1);
