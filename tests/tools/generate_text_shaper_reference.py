@@ -36,6 +36,8 @@ Khmer, Myanmar, Balinese and Hangul.
 
 Other cases:
 
+* TextShaperLarge.ttf, a font of 16384 units to the em with wide glyphs, so that an advance is above 32767 or below zero,
+  and a mark that moves by more than 32767 units.
 * Variable fonts at three weights each, with the advances and the GPOS deltas that the weight gives.
 * Emoji with a variation selector, a skin tone, a joiner, a tag sequence and regional indicators.
 * Characters that a face has no glyph for, to show which of them HarfBuzz keeps in the cluster before them.
@@ -143,6 +145,36 @@ table GDEF {
                   ;
 } GDEF;
 """
+
+# TextShaperLarge.ttf has W 40960 wide, o 20000 wide and i 8192 wide in an em of 16384 units. A pair kern moves the advance of
+# the first glyph by up to 32000 units, so the advances come to 8960 and 50000, below zero, and above 65535. A mark on
+# W moves back by the advance of W.
+LARGE_FONT = "TextShaperLarge.ttf"
+LARGE_CODE_POINTS = [0x20, 0x57, 0x69, 0x6F, 0x0301]
+LARGE_ADVANCES = {0x57: 40960, 0x6F: 20000, 0x69: 8192, 0x20: 8192, 0x0301: 0}
+LARGE_FEATURES = """
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+markClass u0301 <anchor 0 0> @ABOVE;
+
+feature kern {
+    pos u0057 u0069 -32000;
+    pos u0069 u006F -12000;
+    pos u006F u0069 30000;
+    pos u0057 u0057 32000;
+} kern;
+
+feature mark {
+    pos base u0057 <anchor 0 20000> mark @ABOVE;
+    pos base u006F <anchor 30000 20000> mark @ABOVE;
+} mark;
+
+table GDEF {
+    GlyphClassDef [u0057 u0069 u006F], , [u0301], ;
+} GDEF;
+"""
+LARGE_TEXTS = ["Wi", "io", "oi", "WW", "Wio", "WiW", "o" + U("0301"), "W" + U("0301"), "W" + U("0301 0301"), "W o"]
 
 # Each case is (name, font, text, options). The options can have `script`, `language`, `direction` and `features`.
 SYNTHETIC_CASES = [
@@ -472,6 +504,11 @@ def main():
         hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
         for text in texts:
             rows.append(row("Emoji", font_name, hb_font, text, direction="ltr"))
+
+    path = ref.build_font(LARGE_FONT, LARGE_CODE_POINTS, LARGE_FEATURES, units_per_em=16384, advances=LARGE_ADVANCES)
+    hb_font = ref.load_font(path)
+    for text in LARGE_TEXTS:
+        rows.append(row("LargeUnitsPerEm", LARGE_FONT, hb_font, text, direction="ltr"))
 
     for text in HEBREW_POINTS:
         hb_font = ref.load_font(os.path.join(ref.FONTS, "DejaVuSans.ttf"))

@@ -111,6 +111,42 @@ public class TextShaperTests
     }
 
     [Test]
+    public async Task AdvanceAbove32767IsNotNegative()
+    {
+        // TextShaperLarge.ttf has 16384 units to the em, and its o is 20000 wide. The pair o i adds 30000.
+        ShapedGlyph[] glyphs = TextShaper.Shape(GetFont("TextShaperLarge.ttf"), "oi");
+
+        await Assert.That(glyphs.Select(g => g.XAdvance)).IsEquivalentTo(new[] { 50000, 8192 });
+    }
+
+    [Test]
+    public async Task AdvanceAbove65535IsNotWrapped()
+    {
+        // The W is 40960 wide, and the pair W W adds 32000.
+        ShapedGlyph[] glyphs = TextShaper.Shape(GetFont("TextShaperLarge.ttf"), "WW");
+
+        await Assert.That(glyphs.Select(g => g.XAdvance)).IsEquivalentTo(new[] { 72960, 40960 });
+    }
+
+    [Test]
+    public async Task AdvanceBelowZeroIsNegative()
+    {
+        // The i is 8192 wide, and the pair i o takes 12000 from it.
+        ShapedGlyph[] glyphs = TextShaper.Shape(GetFont("TextShaperLarge.ttf"), "io");
+
+        await Assert.That(glyphs.Select(g => g.XAdvance)).IsEquivalentTo(new[] { -3808, 20000 });
+    }
+
+    [Test]
+    public async Task OffsetBeyond32767IsNotWrapped()
+    {
+        // The mark moves back by the 40960 units of the W that it sits on, and up by the anchor of the W.
+        ShapedGlyph[] glyphs = TextShaper.Shape(GetFont("TextShaperLarge.ttf"), "Ẃ");
+
+        await Assert.That(glyphs.Select(g => (g.XOffset, g.YOffset))).IsEquivalentTo(new[] { (0, 0), (-40960, 20000) });
+    }
+
+    [Test]
     public async Task SizeOfTheFontDoesNotChangeTheGlyphs()
     {
         Font font = GetFont("TextShaper.ttf");

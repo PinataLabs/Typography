@@ -17,6 +17,10 @@ public abstract class GlyphMetrics
 {
     private static readonly Vector2 YInverter = new(1, -1);
 
+    // The advance width that positioning adds to. A glyph that the font pulls back past its own width has less than zero,
+    // and a wide glyph that it widens has more than 65535, so the field is an int. AdvanceWidth is the same value modulo 65536.
+    private int advanceWidth;
+
     internal GlyphMetrics(
         StreamFontMetrics font,
         ushort glyphId,
@@ -39,7 +43,7 @@ public abstract class GlyphMetrics
         this.Width = bounds.Max.X - bounds.Min.X;
         this.Height = bounds.Max.Y - bounds.Min.Y;
         this.UnitsPerEm = unitsPerEM;
-        this.AdvanceWidth = advanceWidth;
+        this.advanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
         this.RightSideBearing = (short)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
@@ -93,7 +97,7 @@ public abstract class GlyphMetrics
         this.Width = bounds.Max.X - bounds.Min.X;
         this.Height = bounds.Max.Y - bounds.Min.Y;
         this.UnitsPerEm = unitsPerEM;
-        this.AdvanceWidth = advanceWidth;
+        this.advanceWidth = advanceWidth;
         this.AdvanceHeight = advanceHeight;
         this.LeftSideBearing = leftSideBearing;
         this.RightSideBearing = (short)(this.AdvanceWidth - this.LeftSideBearing - this.Width);
@@ -121,7 +125,14 @@ public abstract class GlyphMetrics
     /// <summary>
     /// Gets the advance width for horizontal layout, expressed in font units.
     /// </summary>
-    public ushort AdvanceWidth { get; private set; }
+    public ushort AdvanceWidth => (ushort)this.advanceWidth;
+
+    /// <summary>
+    /// Gets the advance width in whole font units, as a signed value. The positioning of the glyph adds to it without
+    /// wrapping, so it can be below zero or above <see cref="ushort.MaxValue"/>, where <see cref="AdvanceWidth"/> is the
+    /// same value modulo 65536.
+    /// </summary>
+    internal int XAdvance => this.advanceWidth;
 
     /// <summary>
     /// Gets the advance height for vertical layout, expressed in font units.
@@ -244,7 +255,7 @@ public abstract class GlyphMetrics
     /// </summary>
     /// <param name="x">The x-offset.</param>
     /// <param name="y">The y-offset.</param>
-    internal void ApplyOffset(short x, short y)
+    internal void ApplyOffset(int x, int y)
         => this.Offset = Vector2.Transform(this.Offset, Matrix3x2.CreateTranslation(x, y));
 
     /// <summary>
@@ -254,7 +265,7 @@ public abstract class GlyphMetrics
     /// <param name="y">The y-advance.</param>
     internal void ApplyAdvance(short x, short y)
     {
-        this.AdvanceWidth = (ushort)(this.AdvanceWidth + x);
+        this.advanceWidth += x;
 
         // AdvanceHeight values grow downward but font-space grows upward, hence negation
         this.AdvanceHeight = (ushort)(this.AdvanceHeight - y);
@@ -264,7 +275,7 @@ public abstract class GlyphMetrics
     /// Sets a new advance width.
     /// </summary>
     /// <param name="x">The x-advance.</param>
-    internal void SetAdvanceWidth(ushort x) => this.AdvanceWidth = x;
+    internal void SetAdvanceWidth(int x) => this.advanceWidth = x;
 
     /// <summary>
     /// Sets a new advance height.

@@ -54,7 +54,7 @@ public static class TextShaper
         {
             GlyphShapingData data = positionings[i];
             GlyphMetrics metrics = positionings.GetMetrics(i);
-            glyphs[i] = new(data.GlyphId, data.Cluster, GetAdvance(metrics), (int)MathF.Round(metrics.Offset.X), (int)MathF.Round(metrics.Offset.Y));
+            glyphs[i] = new(data.GlyphId, data.Cluster, metrics.XAdvance, (int)MathF.Round(metrics.Offset.X), (int)MathF.Round(metrics.Offset.Y));
         }
 
         // The glyphs are in the order of the characters. A run from right to left draws the last character first.
@@ -65,11 +65,6 @@ public static class TextShaper
 
         return glyphs;
     }
-
-    // The metrics keep the advance in an unsigned 16 bit value, and kerning adds to it modulo 65536. So a glyph that the
-    // font pulls back past its own width has an advance from 32768 up, which is the negative value that HarfBuzz gives.
-    private static int GetAdvance(GlyphMetrics metrics)
-        => metrics.AdvanceWidth > short.MaxValue ? metrics.AdvanceWidth - 0x10000 : metrics.AdvanceWidth;
 
     private static TextDirection GetFirstStrongDirection(ReadOnlySpan<char> text)
     {

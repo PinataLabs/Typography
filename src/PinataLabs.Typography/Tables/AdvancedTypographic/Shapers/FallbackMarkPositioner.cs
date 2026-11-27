@@ -277,7 +277,7 @@ internal static class FallbackMarkPositioner
     private static int GetAdvance(GlyphPositioningCollection collection, int index)
     {
         GlyphShapingData data = collection[index];
-        return data.Bounds.IsDirtyWH ? data.Bounds.Width : collection.GetMetrics(index).AdvanceWidth;
+        return data.Bounds.IsDirtyWH ? data.Bounds.Width : collection.GetMetrics(index).XAdvance;
     }
 
     private static int GetFontAdvance(FontMetrics fontMetrics, GlyphPositioningCollection collection, GlyphShapingData data)

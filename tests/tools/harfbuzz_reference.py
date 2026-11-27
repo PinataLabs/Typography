@@ -20,19 +20,22 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 FONTS = os.path.join(ROOT, "tests", "PinataLabs.Typography.Tests", "Fonts")
 
 
-def build_font(file_name, code_points, features=None, extra_glyphs=()):
+def build_font(file_name, code_points, features=None, extra_glyphs=(), units_per_em=1000, advances=None):
     """Saves a TrueType font of empty glyphs, 600 units wide, one for each code point, and gives its path.
 
-    `features` is feature code for the GSUB table, and `extra_glyphs` are glyph names that no code point maps to."""
+    `features` is feature code for the GSUB table, and `extra_glyphs` are glyph names that no code point maps to.
+    `units_per_em` is the size of the em, and `advances` maps a code point to a width other than 600."""
     names = [".notdef"] + ["u%04X" % c for c in code_points] + list(extra_glyphs)
-    builder = FontBuilder(1000, isTTF=True)
+    widths = {"u%04X" % c: w for c, w in (advances or {}).items()}
+    builder = FontBuilder(units_per_em, isTTF=True)
     builder.setupGlyphOrder(names)
     builder.setupCharacterMap({c: "u%04X" % c for c in code_points})
     builder.setupGlyf({name: Glyph() for name in names})
-    builder.setupHorizontalMetrics({name: (600, 0) for name in names})
-    builder.setupHorizontalHeader(ascent=800, descent=-200)
+    builder.setupHorizontalMetrics({name: (widths.get(name, 600), 0) for name in names})
+    builder.setupHorizontalHeader(ascent=units_per_em * 4 // 5, descent=-(units_per_em // 5))
     builder.setupNameTable({"familyName": os.path.splitext(file_name)[0], "styleName": "Regular"})
-    builder.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
+    builder.setupOS2(sTypoAscender=units_per_em * 4 // 5, sTypoDescender=-(units_per_em // 5),
+                     usWinAscent=units_per_em * 4 // 5, usWinDescent=units_per_em // 5)
     builder.setupPost(keepGlyphNames=False)
     if features:
         addOpenTypeFeaturesFromString(builder.font, features)
