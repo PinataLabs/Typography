@@ -96,7 +96,7 @@ internal ref struct GlyphNormalizer
             this.runEnd = GetScriptRunEnd(this.collection, index, out ScriptClass script);
             Tag scriptTag = this.fontMetrics.GetGSubTable().GetScriptTag(script);
             this.profile = ShaperFactory.GetNormalizationProfile(script, scriptTag);
-            this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script);
+            this.composesPresentationForms = this.profile.ComposesPresentationForms && !this.fontMetrics.HasMarkPositioning(script, this.collection.TextOptions);
             if (this.profile.SplitsVowels)
             {
                 this.SplitVowels();

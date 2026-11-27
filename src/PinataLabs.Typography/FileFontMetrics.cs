@@ -187,8 +187,8 @@ internal sealed class FileFontMetrics : FontMetrics
         => this.fontMetrics.Value.GetArabicFallbackPlan();
 
     /// <inheritdoc/>
-    internal override bool HasMarkPositioning(ScriptClass script)
-        => this.fontMetrics.Value.HasMarkPositioning(script);
+    internal override bool HasMarkPositioning(ScriptClass script, TextOptions options)
+        => this.fontMetrics.Value.HasMarkPositioning(script, options);
 
     /// <inheritdoc/>
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)

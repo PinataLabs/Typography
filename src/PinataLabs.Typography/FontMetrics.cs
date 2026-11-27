@@ -306,12 +306,13 @@ public abstract class FontMetrics
     internal abstract ArabicFallbackPlan GetArabicFallbackPlan();
 
     /// <summary>
-    /// Gets a value indicating whether the GPOS language system that the font uses for the script lists a
-    /// <c>mark</c> feature.
+    /// Gets a value indicating whether the GPOS language system that the font uses for the script and the language
+    /// lists a <c>mark</c> feature, and the options did not turn it off.
     /// </summary>
     /// <param name="script">The script of the text.</param>
+    /// <param name="options">The options of the text, which give its language and the features that are off.</param>
     /// <returns><see langword="true"/> if the font attaches marks for the script.</returns>
-    internal abstract bool HasMarkPositioning(ScriptClass script);
+    internal abstract bool HasMarkPositioning(ScriptClass script, TextOptions options);
 
     /// <summary>
     /// Applies any available substitutions to the collection of glyphs.

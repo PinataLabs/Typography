@@ -82,7 +82,7 @@ internal sealed class KerningTable : Table
         {
             int end = FallbackMarkPositioner.GetScriptRunEnd(collection, start, out ScriptClass script);
             if (ShaperFactory.HasFallbackPositioning(script, fontMetrics.GetGSubTable().GetScriptTag(script))
-                && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag)))
+                && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag, collection.TextOptions.Language, collection.TextOptions.DisabledFeatureTags)))
             {
                 // The change that the kerning makes to the advance and to the offset of each glyph of the run.
                 using Buffer<int> buffer = new((end - start) * 2);

@@ -93,14 +93,6 @@ internal sealed class ScriptList : Dictionary<Tag, ScriptListTable>
     }
 
     /// <summary>
-    /// Gets the language system that applies to text of a script when no language is requested.
-    /// </summary>
-    /// <param name="script">The script of the text.</param>
-    /// <returns>The language system, or <see langword="null"/> when no script or language system applies.</returns>
-    public LangSysTable? GetDefaultLangSys(ScriptClass script)
-        => this.ChooseScript(script)?.GetDefaultLangSys();
-
-    /// <summary>
     /// Gets the language system that applies to text of a script in a language.
     /// </summary>
     /// <param name="script">The script of the text.</param>

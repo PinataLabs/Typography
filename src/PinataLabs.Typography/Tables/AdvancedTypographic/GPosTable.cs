@@ -268,15 +268,19 @@ internal class GPosTable : Table
         => !ShaperFactory.NeedsOwnGposScript(script) || this.HasScriptOf(script);
 
     /// <summary>
-    /// Gets a value indicating whether the language system that the table uses for the script lists the feature.
+    /// Gets a value indicating whether the table has a feature for the text: the language system that it uses for the
+    /// script and the language lists the feature, and the caller did not turn the feature off. As in HarfBuzz, a feature
+    /// that is off counts as absent.
     /// </summary>
     /// <param name="script">The script of the text.</param>
     /// <param name="feature">The tag of the feature.</param>
-    /// <returns><see langword="true"/> if the language system lists a feature with the tag.</returns>
-    public bool HasFeature(ScriptClass script, Tag feature)
+    /// <param name="language">The tag of the language system of the text, or <see langword="null"/> when no language is requested.</param>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <returns><see langword="true"/> if the language system lists a feature with the tag and the feature is on.</returns>
+    public bool HasFeature(ScriptClass script, Tag feature, Tag? language, IReadOnlyList<Tag> disabled)
     {
-        LangSysTable? langSysTable = this.ScriptList?.GetDefaultLangSys(script);
-        if (langSysTable is null)
+        LangSysTable? langSysTable = this.ScriptList?.GetLangSys(script, language);
+        if (langSysTable is null || LookupFeatures.IsDisabled(disabled, feature))
         {
             return false;
         }

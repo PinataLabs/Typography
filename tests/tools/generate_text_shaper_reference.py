@@ -19,12 +19,14 @@ TextShaper.ttf has empty glyphs 600 wide. Its features:
 * `rlig` in the script `arab` only: a b. A caller that names the script Arabic gets it for Latin letters.
 * `locl` in the language `TRK `: i becomes a glyph of its own.
 * `smcp`: a and b become small capitals. It is off unless the caller turns it on.
-* `kern`: A V is 80 units closer, and o l is 700 units closer, which leaves o with a negative advance.
+* `kern`: A V is 80 units closer, and o l is 700 units closer, which leaves o with a negative advance. The language
+  system `TRK ` of `latn` has no `kern` feature.
 * `mark`: the marks U+0301 and U+0323 attach above and below e and a.
 * `mkmk`: U+0301 attaches above U+0323, to stack the marks.
 
 The font has no precomposed e acute, so the shaper decomposes it, and it has i diaeresis, so the shaper composes i and
-U+0308.
+U+0308. It also has a `kern` table, which HarfBuzz reads only when the GPOS table has no `kern` feature for the script
+and the language: T o is 100 units closer, and A V is 50 units closer, where GPOS makes it 80.
 
 The cases of real faces take the letters and marks of a block from the cmap table of the face. Each case is a base with
 one mark, a base with two marks, and a word of bases with marks, so that the marks of the face are on show. Each face
@@ -55,7 +57,8 @@ import unicodedata
 
 import harfbuzz_reference as ref
 import uharfbuzz as hb
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0
 
 REFERENCE = os.path.join(ref.FONTS, "TextShaper.harfbuzz.json")
 FONT = "TextShaper.ttf"
@@ -108,9 +111,18 @@ feature smcp {
     sub u0062 by b.sc;
 } smcp;
 
-feature kern {
+lookup KERN_PAIRS {
     pos u0041 u0056 -80;
     pos u006F u006C -700;
+} KERN_PAIRS;
+
+feature kern {
+    script DFLT;
+    lookup KERN_PAIRS;
+    script latn;
+    lookup KERN_PAIRS;
+    script arab;
+    lookup KERN_PAIRS;
 } kern;
 
 feature mark {
@@ -176,6 +188,10 @@ SYNTHETIC_CASES = [
     ("RightToLeftMark", "e" + U("0301") + "a", {"script": "Arab", "direction": "rtl"}),
     ("RightToLeftLigature", "fi", {"script": "Arab", "direction": "rtl"}),
     ("RightToLeftLigatureThenMark", "fi" + U("0301") + "e", {"script": "Arab", "direction": "rtl"}),
+    ("KernTableAfterGposKern", "AVA To", {}),
+    ("KernTableForLanguageWithoutGposKern", "AVA To", {"language": ("tr", "TRK ")}),
+    ("KernTableForLanguageWithoutGposKernOff", "AVA To", {"language": ("tr", "TRK "), "features": {"kern": False}}),
+    ("KernTableForLanguageWithLigature", "fiAVA", {"language": ("tr", "TRK ")}),
 ]
 
 # Letters and marks of a block of a real face are listed as (font, ISO 15924 code, direction, blocks of the letters,
@@ -285,8 +301,31 @@ VARIABLE_FACES = [
     ]),
 ]
 
+# Hebrew points with a letter, shaped with and without the mark feature. Without it, HarfBuzz composes the letter and the
+# point to a presentation form when the font has one.
+HEBREW_POINTS = ["שׁ", "שּׁ", "בּ", "וֹ", "בֿ", "יִ"]
+
+# Latin words in a font with a GPOS kern feature and a kern table, in a language whose language system has no kern feature.
+KERN_WORDS = ["AVATAR To", "Wa Yo", "Te AV", "To", "LT"]
+
 BASES_PER_CASE = 8
 MARKS_PER_CASE = 10
+
+
+def add_kern_table(path):
+    """Adds the legacy `kern` table to the font at the path."""
+    subtable = KernTable_format_0()
+    subtable.version = 0
+    subtable.format = 0
+    subtable.coverage = 1
+    font = TTFont(path)
+    names = font.getBestCmap()
+    subtable.kernTable = {(names[0x54], names[0x6F]): -100, (names[0x41], names[0x56]): -50}
+    table = newTable("kern")
+    table.version = 0
+    table.kernTables = [subtable]
+    font["kern"] = table
+    font.save(path)
 
 
 def utf16_indexes(text):
@@ -386,6 +425,7 @@ def main():
     rows = []
 
     path = ref.build_font(FONT, CODE_POINTS, FEATURES, EXTRA_GLYPHS)
+    add_kern_table(path)
     hb_font = ref.load_font(path)
     for name, text, options in SYNTHETIC_CASES:
         rows.append(row(name, FONT, hb_font, text, **options))
@@ -412,6 +452,16 @@ def main():
         hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))
         for text in texts:
             rows.append(row("Emoji", font_name, hb_font, text, direction="ltr"))
+
+    for text in HEBREW_POINTS:
+        hb_font = ref.load_font(os.path.join(ref.FONTS, "DejaVuSans.ttf"))
+        rows.append(row("HebrewPoints", "DejaVuSans.ttf", hb_font, text, script="Hebr", direction="rtl"))
+        rows.append(row("HebrewPointsWithoutMark", "DejaVuSans.ttf", hb_font, text, script="Hebr", direction="rtl", features={"mark": False}))
+
+    hb_font = ref.load_font(os.path.join(ref.FONTS, "Segoeui.ttf"))
+    for text in KERN_WORDS:
+        rows.append(row("KernTable", "Segoeui.ttf", hb_font, text, script="Latn", direction="ltr"))
+        rows.append(row("KernTableLanguageWithoutKern", "Segoeui.ttf", hb_font, text, script="Latn", direction="ltr", language=("tr", "TRK ")))
 
     for font_name, leading, vowels, trailing in HANGUL_FACES:
         hb_font = ref.load_font(os.path.join(ref.FONTS, font_name))

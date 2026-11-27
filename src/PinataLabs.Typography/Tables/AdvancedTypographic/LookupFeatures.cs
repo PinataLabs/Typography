@@ -65,19 +65,32 @@ internal readonly struct LookupFeatures
         List<PlannedFeature> enabled = new(features.Count);
         foreach (PlannedFeature feature in features)
         {
-            bool isDisabled = false;
-            for (int i = 0; i < disabled.Count && !isDisabled; i++)
-            {
-                isDisabled = disabled[i] == feature.Tag;
-            }
-
-            if (!isDisabled)
+            if (!IsDisabled(disabled, feature.Tag))
             {
                 enabled.Add(feature);
             }
         }
 
         return enabled;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the caller turned a feature off.
+    /// </summary>
+    /// <param name="disabled">The tags of the features that the caller turned off.</param>
+    /// <param name="tag">The tag of the feature.</param>
+    /// <returns><see langword="true"/> if the feature is off.</returns>
+    public static bool IsDisabled(IReadOnlyList<Tag> disabled, Tag tag)
+    {
+        for (int i = 0; i < disabled.Count; i++)
+        {
+            if (disabled[i] == tag)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
