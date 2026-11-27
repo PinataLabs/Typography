@@ -1542,6 +1542,28 @@ public class TextLayoutTests
         await Assert.That(Math.Round(rightEdges[1], 4)).IsEqualTo(Math.Round(rightEdges[0], 4));
     }
 
+    // With Auto, each paragraph takes its own direction, so TextAlignment.Start is the left edge of the box for the
+    // left-to-right paragraph and the right edge for the right-to-left one, whichever comes first, as CSS
+    // text-align: start does with unicode-bidi: plaintext.
+    [Test]
+    [Arguments("abc\nكتب")]
+    [Arguments("كتب\nabc")]
+    public async Task TextDirection_Auto_AlignsEachParagraphToItsOwnStart(string text)
+    {
+        const float wrappingLength = 300;
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+        TextOptions options = new(font) { TextAlignment = TextAlignment.Start, WrappingLength = wrappingLength };
+
+        TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
+        GlyphBounds[] glyphs = bounds.ToArray();
+        float latinLeft = glyphs.Where(x => x.Codepoint.Value is >= 'a' and <= 'z').Min(x => x.Bounds.Left);
+        float arabicRight = glyphs.Where(x => x.Codepoint.Value is >= 0x0600 and <= 0x06FF).Max(x => x.Bounds.Right);
+
+        // Ink bounds sit inside the advance by the side bearings, so allow a few pixels.
+        await Assert.That(latinLeft).IsLessThan(5);
+        await Assert.That(Math.Abs(arabicRight - wrappingLength)).IsLessThan(5);
+    }
+
     // A line feed ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its direction from its own first
     // strong character (P2, P3). The first paragraph runs right to left, so its Latin word, written last, is drawn left
     // of the Arabic. The second runs left to right, so its Latin word, written first, is drawn left of the Arabic too.
