@@ -14,6 +14,12 @@ internal abstract class BaseShaper
     public MarkZeroingMode MarkZeroingMode { get; protected set; }
 
     /// <summary>
+    /// Gets the tags of the features whose lookups do not apply: those that the caller turned off, and those that the
+    /// shaper turns off whatever the caller asks for, without those that the shaper turns on.
+    /// </summary>
+    public abstract IReadOnlyList<Tag> DisabledFeatureTags { get; }
+
+    /// <summary>
     /// Assigns the features to each glyph within the collection.
     /// </summary>
     /// <param name="collection">The glyph shaping collection.</param>

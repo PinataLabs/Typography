@@ -543,6 +543,11 @@ Unicode conformance suites to that version.
   numbered the syllables of a run from 1, so after a run of one syllable, a lookup of the first syllable of the next
   run matched its glyph as context: Devanagari ka after Brahmi A, or Bengali ka after Devanagari kha, took a `locl`
   form that the font gives after that letter. No two runs of a text now share a syllable number. (#175)
+- The Indic shaper turns `liga` off, and the Khmer shaper turns `clig` on and `liga` off, whatever the caller asks for,
+  as the override functions of HarfBuzz 15.0.0 do. Both shapers applied `liga`, so a `liga` lookup of a `dev2` font
+  made a ligature of ka and kha where HarfBuzz keeps the two letters. The Khmer shaper also left out `clig` when the
+  caller turned it off, and in vertical text, where HarfBuzz applies it. The Myanmar and universal shapers of
+  HarfBuzz override no feature, and neither do they here. (#178)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
