@@ -533,7 +533,7 @@ Unicode conformance suites to that version.
   UAX #9 section 5.2 says. The pass that gives each removed character the level of the character before it ran after
   L1 and overwrote the reset, so in `"ab"` + U+00AD in a right-to-left paragraph the soft hyphen took level 2, not 1.
   `BidiAlgorithm.Process`, `BidiParagraph.Levels` and `BidiParagraph.GetVisualRuns` have the fix. In `TextLayout`, a
-  soft hyphen at the end of a line, or before a tab, now takes the paragraph level and is drawn on the paragraph side
+  soft hyphen at the end of the text, or before a tab, now takes the paragraph level and is drawn on the paragraph side
   of the letter before it. A ZWJ or ZWNJ moves the same way, and the letter before it still joins to it, because
   shaping splits a font run by script, not by direction. None of these characters has an advance, so no other glyph
   moves. (#165)
