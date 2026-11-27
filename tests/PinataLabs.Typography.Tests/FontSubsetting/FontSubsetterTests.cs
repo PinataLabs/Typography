@@ -183,6 +183,16 @@ public class FontSubsetterTests
     }
 
     [Test]
+    public async Task TheExportOfTwoSubsetsWithTheSameCountAndFirstGlyphDoNotShareAName()
+    {
+        string first = SubsetExport.GetName("a.otf", [3, 4, 5]);
+        string second = SubsetExport.GetName("a.otf", [3, 5, 4]);
+
+        await Assert.That(first).IsNotEqualTo(second);
+        await Assert.That(SubsetExport.GetName("a.otf", [3, 4, 5])).IsEqualTo(first);
+    }
+
+    [Test]
     [Arguments("CFF")]
     [Arguments("cmapp")]
     [Arguments("")]

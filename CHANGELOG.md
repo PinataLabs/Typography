@@ -145,11 +145,14 @@ Unicode conformance suites to that version.
   of each glyph. The subsetter finds the subroutines by running each kept glyph with the engine that draws it, so the subroutine
   bias, the nesting limit of 10 and the arithmetic ahead of a `callsubr` are the engine's. A subroutine that no kept glyph calls
   keeps its place in its INDEX with a lone `return` for a body, so no charstring and no bias changes. A CFF table is laid out again
-  from the Top DICT, with each offset in a DICT in 5 bytes, so the offsets resolve in one pass. Its charset, encoding, FDSelect and
-  String INDEX stay as they were, so glyph names, SIDs and CIDs stay. A TrueType font keeps the format of its `loca`, and each kept
-  glyph starts on a 2-byte boundary for short offsets and a 4-byte boundary for long ones. An sfnt file keeps
-  `FontSubsetOptions.DefaultTables`, which are the tables that a PDF reader and PDF/A validators read, with the checksum of each table
-  and the `head` adjustment set again, and `FontSubsetOptions.Tables` chooses other tables. `FontSubsetOptions.ProgramOptions`
+  from the Top DICT, with each offset in a DICT in 5 bytes, so the offsets resolve in one pass. Font DICTs that name the same Private
+  DICT or the same local Subrs INDEX share one copy of it, so a font of 256 Font DICTs does not grow 256 times. Its charset, encoding,
+  FDSelect and String INDEX stay as they were, so glyph names, SIDs and CIDs stay. A TrueType font keeps the format of its `loca`, and each kept
+  glyph starts on a 2-byte boundary for short offsets and a 4-byte boundary for long ones. Kept glyphs whose `loca` entries share
+  the bytes of `glyf` cannot share them in a subset, so a font whose kept glyphs need more bytes than `glyf` has throws
+  `InvalidFontFileException`. An sfnt file keeps `FontSubsetOptions.DefaultTables`, which are the tables that a PDF reader and PDF/A
+  validators read, with the outline tables of its own format only, the checksum of each table and the `head` adjustment set again,
+  and `FontSubsetOptions.Tables` chooses other tables. `FontSubsetOptions.ProgramOptions`
   applies the `MaxRetainedBytes` of `FontProgramOptions` to the subsetter, which counts what `FontProgram.RetainedByteCount`
   counts and the array that it returns, and throws `FontProgramTooLargeException` before an allocation that would pass it. The input
   can be untrusted: malformed data, and a kept glyph whose charstring or components are malformed, throw `InvalidFontFileException`,
