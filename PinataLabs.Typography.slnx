@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/src/">
     <File Path="src/Directory.Build.props" />
+    <Project Path="src/PinataLabs.Typography.Unicode/PinataLabs.Typography.Unicode.csproj" />
     <Project Path="src/PinataLabs.Typography/PinataLabs.Typography.csproj" />
   </Folder>
   <Folder Name="/tests/">

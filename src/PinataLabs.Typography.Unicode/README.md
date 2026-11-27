@@ -1,0 +1,36 @@
+# PinataLabs.Typography.Unicode
+
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/PinataLabs/Typography/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-pinatalabs.github.io-blue.svg)](https://pinatalabs.github.io/Typography/)
+
+PinataLabs.Typography.Unicode is a .NET library of Unicode text algorithms and character properties. It contains no font code. It is the Unicode half of [PinataLabs.Typography](https://www.nuget.org/packages/PinataLabs.Typography), which depends on it for bidirectional text, line breaking, scripts and grapheme clusters.
+
+Use this package on its own when you need those algorithms and not fonts.
+
+## Features
+
+- `CodePoint`: a Unicode scalar value with its general category and its bidi class, line-break class, grapheme-cluster class and vertical orientation.
+- Enumerate the code points and grapheme clusters of a span of text.
+- The property data behind them, built from the [Unicode Character Database](https://www.unicode.org/ucd/).
+
+## Install
+
+```bash
+dotnet add package PinataLabs.Typography.Unicode
+```
+
+Add `--prerelease` while only pre-release versions are published. The library targets `netstandard2.1`, `net8.0`, `net10.0` and `net11.0`.
+
+## Versioning
+
+PinataLabs.Typography and PinataLabs.Typography.Unicode are released together with one version number. PinataLabs.Typography reads internals of this assembly, so a PinataLabs.Typography package depends on exactly the PinataLabs.Typography.Unicode package of the same version.
+
+## Contributing
+
+Read the [contribution guide](https://github.com/PinataLabs/Typography/blob/main/.github/CONTRIBUTING.md) before you open an issue or a pull request. Report bugs and suggest changes in [GitHub Issues](https://github.com/PinataLabs/Typography/issues). This project follows the [Code of Conduct](https://github.com/PinataLabs/Typography/blob/main/CODE_OF_CONDUCT.md).
+
+## License and attribution
+
+PinataLabs.Typography.Unicode is licensed under the [Apache License, Version 2.0](https://github.com/PinataLabs/Typography/blob/main/LICENSE).
+
+This project is derived from [SixLabors.Fonts](https://github.com/SixLabors/Fonts), Copyright (c) Six Labors, licensed under the Apache License, Version 2.0. It was forked at commit `32bef429` and has been modified by PinataLabs. PinataLabs.Typography.Unicode is not affiliated with or endorsed by Six Labors. See [NOTICE](https://github.com/PinataLabs/Typography/blob/main/NOTICE) for the full attribution.

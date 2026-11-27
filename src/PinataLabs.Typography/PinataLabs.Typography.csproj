@@ -23,10 +23,12 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
+  <!--
+    The Unicode algorithms and character properties live in PinataLabs.Typography.Unicode, which has no font code.
+    This assembly reads that one's internals, so the package pins it to the exact version of this one.
+  -->
   <ItemGroup>
-    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="Unicode\StateAutomation\StateMachine.cs" />
-    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\INode.cs" Link="Unicode\StateAutomation\INode.cs" />
-    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
+    <ProjectReference Include="..\PinataLabs.Typography.Unicode\PinataLabs.Typography.Unicode.csproj" />
   </ItemGroup>
 
   <!--

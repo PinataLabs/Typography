@@ -15,7 +15,7 @@ Files sourced from:
 
 `HarfBuzzMarkOrder.txt` is not a Unicode file. `tests/tools/derive_harfbuzz_mark_order.py` writes it from the output of HarfBuzz.
 
-To regenerate the files in `src/PinataLabs.Typography/Unicode/Resources`, run this from the repository root:
+To regenerate the files in `src/PinataLabs.Typography.Unicode/Resources`, run this from the repository root:
 
 ```
 dotnet run --project src/PinataLabs.Typography.UnicodeTrieGenerator

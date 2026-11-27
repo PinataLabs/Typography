@@ -29,7 +29,7 @@ public class GeneratorPathsTests
         string[] segments = path.Split(Path.DirectorySeparatorChar);
 
         await Assert.That(segments).IsEquivalentTo(
-            ["root", "src", "PinataLabs.Typography", "Unicode", "Resources"],
+            ["root", "src", "PinataLabs.Typography.Unicode", "Resources"],
             TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
