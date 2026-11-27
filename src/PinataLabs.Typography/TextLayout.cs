@@ -813,8 +813,9 @@ internal static class TextLayout
         var graphemeEnumerator = new SpanGraphemeEnumerator(text);
         for (graphemeIndex = 0; graphemeEnumerator.MoveNext(); graphemeIndex++)
         {
-            // Now enumerate through each codepoint in the grapheme.
-            int graphemeCodePointIndex = 0;
+            // Now enumerate through each codepoint in the grapheme. A line breaks only at the first codepoint of the
+            // grapheme that is laid out, and the codepoints skipped before it do not count.
+            bool isGraphemeStart = true;
             var codePointEnumerator = new SpanCodePointEnumerator(graphemeEnumerator.Current);
             while (codePointEnumerator.MoveNext())
             {
@@ -822,7 +823,6 @@ internal static class TextLayout
                 {
                     // Codepoint was skipped during original enumeration.
                     codePointIndex++;
-                    graphemeCodePointIndex++;
                     continue;
                 }
 
@@ -840,7 +840,6 @@ internal static class TextLayout
                 if (CodePoint.IsVariationSelector(codePoint))
                 {
                     codePointIndex++;
-                    graphemeCodePointIndex++;
                     continue;
                 }
 
@@ -967,11 +966,12 @@ internal static class TextLayout
 
                 // Should we start a new line?
                 bool requiredBreak = false;
-                if (graphemeCodePointIndex == 0)
+                if (isGraphemeStart)
                 {
                     // Mandatory wrap at index. The line is empty only when the line break before the index has no glyph
-                    // of its own, as when a font ligates it, and a line with no glyph has nothing to lay out.
-                    if (currentLineBreak.PositionWrap == codePointIndex && currentLineBreak.Required)
+                    // of its own, as when a font ligates it, and a line with no glyph has nothing to lay out. A break at
+                    // a codepoint that is not laid out is taken at the first one after it that is.
+                    if (currentLineBreak.PositionWrap <= codePointIndex && currentLineBreak.Required)
                     {
                         if (textLine.Count > 0)
                         {
@@ -1019,7 +1019,7 @@ internal static class TextLayout
                                 lineAdvance = 0;
                             }
                         }
-                        else if (currentLineBreak.PositionWrap == codePointIndex)
+                        else if (currentLineBreak.PositionWrap <= codePointIndex)
                         {
                             // Exact length match. Check for CJK
                             TextLine split = textLine.SplitAt(currentLineBreak, keepAll);
@@ -1060,8 +1060,10 @@ internal static class TextLayout
                     }
                 }
 
+                isGraphemeStart = false;
+
                 // Find the next line break.
-                if (currentLineBreak.PositionWrap == codePointIndex)
+                while (currentLineBreak.PositionWrap <= codePointIndex)
                 {
                     lastLineBreak = currentLineBreak;
                     currentLineBreak = lineBreaks[++lineBreakIndex];
@@ -1078,7 +1080,6 @@ internal static class TextLayout
                     && !CodePoint.IsNewLine(codePoint))
                 {
                     codePointIndex++;
-                    graphemeCodePointIndex++;
                     continue;
                 }
 
@@ -1086,7 +1087,6 @@ internal static class TextLayout
                 {
                     // Do not add new lines unless at position zero.
                     codePointIndex++;
-                    graphemeCodePointIndex++;
                     continue;
                 }
 
@@ -1156,7 +1156,6 @@ internal static class TextLayout
                 }
 
                 codePointIndex++;
-                graphemeCodePointIndex++;
             }
         }
 
@@ -1269,22 +1268,19 @@ internal static class TextLayout
 
         public TextLine SplitAt(LineBreak lineBreak, bool keepAll)
         {
+            // The line breaks before its first glyph at or after the break, as the codepoint at the break may have none.
             int index = this.data.Count;
-            GlyphLayoutData glyphWrap = default;
-            while (index > 0)
+            while (index > 0 && this.data[index - 1].Offset >= lineBreak.PositionWrap)
             {
-                glyphWrap = this.data[--index];
-
-                if (glyphWrap.Offset == lineBreak.PositionWrap)
-                {
-                    break;
-                }
+                index--;
             }
 
-            if (index == 0)
+            if (index == 0 || index == this.data.Count)
             {
                 return this;
             }
+
+            GlyphLayoutData glyphWrap = this.data[index];
 
             // A solidus allows a break after it but, as recommended by UAX #14, prefer an earlier
             // opportunity after whitespace if one exists on this line so words like "and/or" or

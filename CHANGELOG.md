@@ -478,6 +478,10 @@ Unicode conformance suites to that version.
   U+2066 `a` U+000A U+2069, made `TextLayout` and `BidiParagraph.Resolve` throw
   `InvalidOperationException` ("Internal error"), and an isolate or embedding before a line feed raised the text after
   it. (#179)
+- `TextLayout` takes a line break at a codepoint that it does not lay out, a variation selector or a codepoint that a
+  ligature leaves with no glyph, at the first codepoint after it that it lays out. A break at such a codepoint, such as
+  after a space or a line feed that a variation selector follows, stayed the next break, so it and every break after it
+  in the text were lost, mandatory breaks too: `a` U+000A U+FE0F `b` was one line. (#181)
 - `ArraySlice<T>.Slice` and `ReadOnlyArraySlice<T>.Slice` start the new slice at the start of the slice plus `start`.
   They started it at `start` in the array, so a slice of a slice that did not begin at 0 held the wrong items. Every
   caller sliced a slice that begins at 0, so no output changes. (#180)
