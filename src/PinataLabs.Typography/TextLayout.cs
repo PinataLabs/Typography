@@ -225,6 +225,8 @@ internal static class TextLayout
             }
         }
 
+        // The glyphs come from more than one font only when text runs of two fonts or a fallback font drew them.
+        bool hasManyFonts = positioned.Count > 1 || !complete;
         foreach (Font font in fallbackFonts)
         {
             if (positioned.Add(font.FontMetrics))
@@ -235,7 +237,7 @@ internal static class TextLayout
 
         // A cluster whose base and marks come from two fonts takes the places of its marks once both fonts have
         // positioned their own glyphs.
-        if (positioned.Count > 1)
+        if (hasManyFonts)
         {
             FallbackMarkPositioner.PlaceMarksAcrossFonts(positionings);
         }
