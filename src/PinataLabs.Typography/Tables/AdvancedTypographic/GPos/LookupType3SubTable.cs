@@ -94,7 +94,13 @@ internal static class LookupType3SubTable
                 return false;
             }
 
-            int nextIndex = index + 1;
+            // As in HarfBuzz, the next glyph is past the glyphs that the lookup flags skip and the joiners that the lookup skips.
+            int nextIndex = new SkippingGlyphIterator(fontMetrics, collection, index, this.LookupFlags, features.InputIgnorables).Next();
+            if (nextIndex >= index + count)
+            {
+                return false;
+            }
+
             ushort nextGlyphId = collection[nextIndex].GlyphId;
             if (nextGlyphId == 0)
             {

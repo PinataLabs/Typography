@@ -11,7 +11,7 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// <summary>
 /// The features of a shaping stage that reference one lookup.
 /// The lookup applies to a glyph that has any of them enabled, and to every glyph when the
-/// required feature of the language system references it.
+/// required feature of the language system references it. It skips the joiners that none of them keeps.
 /// </summary>
 internal readonly struct LookupFeatures
 {
@@ -22,13 +22,31 @@ internal readonly struct LookupFeatures
     private readonly int count;
     private readonly bool required;
 
-    public LookupFeatures(Tag[] tags, int offset, int count, bool required)
+    private LookupFeatures(Tag[] tags, int offset, int count, bool required, ManualJoiners manualJoiners, bool positioning)
     {
         this.tags = tags;
         this.offset = offset;
         this.count = count;
         this.required = required;
+        (this.InputIgnorables, this.ContextIgnorables) = GetSkippableIgnorables(manualJoiners, positioning);
     }
+
+    /// <summary>
+    /// Gets the default-ignorable glyphs that the lookup may skip between the glyphs of its input.
+    /// </summary>
+    public SkippableIgnorables InputIgnorables { get; }
+
+    /// <summary>
+    /// Gets the default-ignorable glyphs that the lookup may skip in its backtrack and its lookahead.
+    /// </summary>
+    public SkippableIgnorables ContextIgnorables { get; }
+
+    /// <summary>
+    /// Gets the features of a GSUB lookup that a shaper applies to every glyph on its own, outside the features of
+    /// the font. As in HarfBuzz, it skips the joiners wherever HarfBuzz skips them by default.
+    /// </summary>
+    /// <returns>The features.</returns>
+    public static LookupFeatures ForShaperSubstitution() => new([], 0, 0, true, ManualJoiners.None, false);
 
     /// <summary>
     /// Gets the lookups that the given features reference for a script, in LookupList order, as the
@@ -41,20 +59,22 @@ internal readonly struct LookupFeatures
     /// <param name="features">The features, in the order in which the shaper planned them.</param>
     /// <param name="script">The script of the text.</param>
     /// <param name="withRequiredFeature">Whether the lookups of the required feature of the language system are included.</param>
+    /// <param name="positioning">Whether the lookups are those of GPOS, which skips more default-ignorable glyphs than GSUB.</param>
     /// <param name="value">The lookups, when the features reference any.</param>
     /// <returns><see langword="true"/> when the features reference a lookup.</returns>
     public static bool TryGetLookups(
         ScriptList? scriptList,
         FeatureListTable featureList,
         int lookupCount,
-        IReadOnlyList<Tag> features,
+        IReadOnlyList<PlannedFeature> features,
         ScriptClass script,
         bool withRequiredFeature,
+        bool positioning,
         [NotNullWhen(true)] out List<(ushort Index, LookupFeatures Features)>? value)
     {
         // No language is requested, so only one language system applies. A script without one has no features but vert.
         LangSysTable? langSysTable = scriptList?.GetDefaultLangSys(script);
-        value = GetLookups(featureList, lookupCount, features, langSysTable, withRequiredFeature);
+        value = GetLookups(featureList, lookupCount, features, langSysTable, withRequiredFeature, positioning);
         return value.Count > 0;
     }
 
@@ -82,7 +102,7 @@ internal readonly struct LookupFeatures
         Tag feature = featureList.FeatureTables[langSysTable.RequiredFeatureIndex].FeatureTag;
         for (int i = 0; i < stages.Count; i++)
         {
-            if (IndexOf(stages[i].FeatureTags, feature) >= 0)
+            if (IndexOf(stages[i].Features, feature) >= 0)
             {
                 return i;
             }
@@ -134,9 +154,10 @@ internal readonly struct LookupFeatures
     private static List<(ushort Index, LookupFeatures Features)> GetLookups(
         FeatureListTable featureList,
         int lookupCount,
-        IReadOnlyList<Tag> features,
+        IReadOnlyList<PlannedFeature> features,
         LangSysTable? langSysTable,
-        bool withRequiredFeature)
+        bool withRequiredFeature,
+        bool positioning)
     {
         List<(ushort Index, int Order, Tag Feature, bool Required)> references = [];
         ushort[] featureIndices = langSysTable?.FeatureIndices ?? [];
@@ -192,9 +213,16 @@ internal readonly struct LookupFeatures
             ushort lookupIndex = references[start].Index;
             int tagStart = tagCount;
             bool required = false;
+
+            // As in HarfBuzz, a lookup keeps a joiner when any of its features does. The required feature keeps none.
+            ManualJoiners manualJoiners = ManualJoiners.None;
             for (end = start; end < references.Count && references[end].Index == lookupIndex; end++)
             {
                 required |= references[end].Required;
+                if (!references[end].Required && references[end].Order >= 0)
+                {
+                    manualJoiners |= features[references[end].Order].ManualJoiners;
+                }
 
                 // Feature records that share a tag, or a feature that lists a lookup twice, repeat a reference.
                 if (end == start || references[end].Order != references[end - 1].Order)
@@ -203,10 +231,28 @@ internal readonly struct LookupFeatures
                 }
             }
 
-            lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart, required)));
+            lookups.Add(new(lookupIndex, new LookupFeatures(tags, tagStart, tagCount - tagStart, required, manualJoiners, positioning)));
         }
 
         return lookups;
+    }
+
+    /// <summary>
+    /// Gets the default-ignorable glyphs that a lookup may skip, as HarfBuzz does: GSUB skips ZWNJ in the backtrack and
+    /// the lookahead only, GPOS always skips it, and both skip ZWJ in the backtrack and the lookahead, and in the input
+    /// of a lookup that does not keep it. Only GPOS skips the hidden default-ignorable glyphs.
+    /// </summary>
+    private static (SkippableIgnorables Input, SkippableIgnorables Context) GetSkippableIgnorables(ManualJoiners manualJoiners, bool positioning)
+    {
+        SkippableIgnorables inputZwj = (manualJoiners & ManualJoiners.Zwj) == 0 ? SkippableIgnorables.Zwj : SkippableIgnorables.None;
+        if (positioning)
+        {
+            const SkippableIgnorables skipped = SkippableIgnorables.Other | SkippableIgnorables.Zwnj | SkippableIgnorables.Hidden;
+            return (skipped | inputZwj, skipped | SkippableIgnorables.Zwj);
+        }
+
+        SkippableIgnorables contextZwnj = (manualJoiners & ManualJoiners.Zwnj) == 0 ? SkippableIgnorables.Zwnj : SkippableIgnorables.None;
+        return (SkippableIgnorables.Other | inputZwj, SkippableIgnorables.Other | SkippableIgnorables.Zwj | contextZwnj);
     }
 
     private static void AddReferences(
@@ -227,11 +273,11 @@ internal readonly struct LookupFeatures
         }
     }
 
-    private static int IndexOf(IReadOnlyList<Tag> tags, Tag tag)
+    private static int IndexOf(IReadOnlyList<PlannedFeature> features, Tag tag)
     {
-        for (int i = 0; i < tags.Count; i++)
+        for (int i = 0; i < features.Count; i++)
         {
-            if (tags[i] == tag)
+            if (features[i].Tag == tag)
             {
                 return i;
             }

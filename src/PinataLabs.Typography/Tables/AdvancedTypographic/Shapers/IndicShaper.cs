@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using PinataLabs.Typography.Unicode;
 using PinataLabs.Typography.Unicode.Resources;
@@ -39,6 +40,10 @@ internal sealed class IndicShaper : DefaultShaper
     private static readonly Tag PstsTag = Tag.Parse("psts");
     private static readonly Tag HalnTag = Tag.Parse("haln");
 
+    // As in HarfBuzz, the basic and the presentation features keep both joiners.
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
+        ManualJoiners.Both, NuktTag, AkhnTag, RphfTag, RkrfTag, PrefTag, BlwfTag, AbvfTag, HalfTag, PstfTag, VatuTag, CjctTag, InitTag, PresTag, AbvsTag, BlwsTag, PstsTag, HalnTag);
+
     private const int DottedCircle = 0x25cc;
 
     private readonly TextOptions textOptions;
@@ -46,7 +51,7 @@ internal sealed class IndicShaper : DefaultShaper
     private readonly bool isOldSpec;
 
     public IndicShaper(ScriptClass script, Tag unicodeScriptTag, TextOptions textOptions)
-        : base(script, MarkZeroingMode.None, textOptions)
+        : base(script, MarkZeroingMode.None, textOptions, ManualJoinerFeatures)
     {
         this.textOptions = textOptions;
 
@@ -794,7 +799,7 @@ internal sealed class IndicShaper : DefaultShaper
             fontMetrics,
             collection,
             ref iterator,
-            [featureTag],
+            [this.Plan(featureTag)],
             false,
             this.ScriptClass,
             index,
@@ -974,26 +979,32 @@ internal sealed class IndicShaper : DefaultShaper
                 // We want to position matra after them.
                 if (this.ScriptClass is not ScriptClass.Malayalam and not ScriptClass.Tamil)
                 {
-                    while (newPos > start && (substitutionCollection[newPos].IndicShapingEngineInfo?.Category & (Categories.M | HalantOrCoengFlags)) == 0)
+                    while (true)
                     {
-                        newPos--;
-                    }
-
-                    // If we found no Halant we are done.
-                    // Otherwise only proceed if the Halant does
-                    // not belong to the Matra itself!
-                    GlyphShapingData current = substitutionCollection[newPos];
-                    if (IsHalantOrCoeng(current) && current.IndicShapingEngineInfo?.Position != Positions.Pre_M)
-                    {
-                        // If ZWJ or ZWNJ follow this halant, position is moved after it.
-                        if (newPos + 1 < end && IsJoiner(substitutionCollection[newPos + 1]))
+                        while (newPos > start && (substitutionCollection[newPos].IndicShapingEngineInfo?.Category & (Categories.M | HalantOrCoengFlags)) == 0)
                         {
-                            newPos++;
+                            newPos--;
                         }
-                    }
-                    else
-                    {
-                        newPos = start; // No move.
+
+                        // If we found no Halant we are done.
+                        // Otherwise only proceed if the Halant does
+                        // not belong to the Matra itself!
+                        GlyphShapingData current = substitutionCollection[newPos];
+                        if (!IsHalantOrCoeng(current) || current.IndicShapingEngineInfo?.Position == Positions.Pre_M)
+                        {
+                            newPos = start; // No move.
+                            break;
+                        }
+
+                        // As in HarfBuzz and Uniscribe, the matra does not move after a halant that ZWJ follows. A ZWNJ
+                        // after a halant ends the syllable.
+                        if (newPos + 1 < end && newPos > start && substitutionCollection[newPos + 1].IndicShapingEngineInfo?.Category == Categories.ZWJ)
+                        {
+                            newPos--;
+                            continue;
+                        }
+
+                        break;
                     }
                 }
 

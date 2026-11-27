@@ -31,6 +31,10 @@ internal sealed class ArabicShaper : DefaultShaper
 
     private static readonly Tag Med2Tag = Tag.Parse("med2");
 
+    // As in HarfBuzz, ZWJ means "do not join" in Arabic too, so its forms and its ligating features keep ZWJ.
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> ManualJoinerFeatures = WithCommonManualJoiners(
+        ManualJoiners.Zwj, CcmpTag, LoclTag, IsolTag, FinaTag, Fin2Tag, Fin3Tag, MediTag, Med2Tag, InitTag, MsetTag, RligTag, CaltTag, LigaTag, CligTag);
+
     private const byte None = 0;
 
     private const byte Isol = 1;
@@ -74,7 +78,7 @@ internal sealed class ArabicShaper : DefaultShaper
     };
 
     public ArabicShaper(ScriptClass script, TextOptions textOptions)
-        : base(script, MarkZeroingMode.PostGpos, textOptions)
+        : base(script, MarkZeroingMode.PostGpos, textOptions, ManualJoinerFeatures)
     {
     }
 

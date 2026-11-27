@@ -144,6 +144,12 @@ internal class GlyphShapingData
     public bool IsSubstituted { get; set; }
 
     /// <summary>
+    /// Gets a value indicating whether the glyph is of a default-ignorable character that GSUB did not substitute. As in
+    /// HarfBuzz, a lookup can skip such a glyph between the glyphs it matches, and the glyph takes no room after shaping.
+    /// </summary>
+    public bool IsDefaultIgnorable => !this.IsSubstituted && UnicodeUtility.IsHiddenAfterShaping((uint)this.CodePoint.Value);
+
+    /// <summary>
     /// Gets or sets a value indicating whether this glyph is the result of a decomposition substitution
     /// </summary>
     public bool IsDecomposed { get; set; }

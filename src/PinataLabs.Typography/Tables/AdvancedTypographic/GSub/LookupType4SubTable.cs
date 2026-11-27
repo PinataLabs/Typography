@@ -146,7 +146,7 @@ internal sealed class LookupType4Format1SubTable : LookupSubTable
                 continue;
             }
 
-            if (!AdvancedTypographicUtils.MatchInputSequence(iterator, features, 1, ligatureTable.ComponentGlyphs, matchBuffer))
+            if (!AdvancedTypographicUtils.MatchInputSequence(iterator, features, ligatureTable.ComponentGlyphs, matchBuffer))
             {
                 continue;
             }

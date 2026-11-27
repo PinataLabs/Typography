@@ -70,6 +70,8 @@ internal class DefaultShaper : BaseShaper
 
     private static readonly CodePoint Slash = new(0x002F);
 
+    private static readonly IReadOnlyDictionary<Tag, ManualJoiners> CommonManualJoiners = WithCommonManualJoiners();
+
     private readonly List<ShapingStage> shapingStages = [];
 
     private readonly HashSet<Tag> plannedFeatures = [];
@@ -80,17 +82,35 @@ internal class DefaultShaper : BaseShaper
 
     private readonly IReadOnlyList<Tag> featureTags;
 
+    private readonly IReadOnlyDictionary<Tag, ManualJoiners> manualJoiners;
+
     internal DefaultShaper(ScriptClass script, TextOptions textOptions)
         : this(script, MarkZeroingMode.PostGpos, textOptions)
     {
     }
 
     protected DefaultShaper(ScriptClass script, MarkZeroingMode markZeroingMode, TextOptions textOptions)
+        : this(script, markZeroingMode, textOptions, CommonManualJoiners)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DefaultShaper"/> class.
+    /// </summary>
+    /// <param name="script">The script of the text.</param>
+    /// <param name="markZeroingMode">When the advances of marks are zeroed.</param>
+    /// <param name="textOptions">The text options.</param>
+    /// <param name="manualJoiners">
+    /// The joiners that the lookups of each feature do not skip, by the tag of the feature. A feature that it does not
+    /// list skips them wherever HarfBuzz does by default. Make it with <see cref="WithCommonManualJoiners"/>.
+    /// </param>
+    protected DefaultShaper(ScriptClass script, MarkZeroingMode markZeroingMode, TextOptions textOptions, IReadOnlyDictionary<Tag, ManualJoiners> manualJoiners)
     {
         this.ScriptClass = script;
         this.MarkZeroingMode = markZeroingMode;
         this.kerningMode = textOptions.KerningMode;
         this.featureTags = textOptions.FeatureTags;
+        this.manualJoiners = manualJoiners;
     }
 
     protected override void PlanFeatures(IGlyphShapingCollection collection, int index, int count)
@@ -276,7 +296,7 @@ internal class DefaultShaper : BaseShaper
             this.shapingStages.Add(this.openStage);
         }
 
-        this.openStage.AddFeature(feature);
+        this.openStage.AddFeature(this.Plan(feature));
 
         if (postAction is not null)
         {
@@ -290,6 +310,32 @@ internal class DefaultShaper : BaseShaper
     /// so their lookups are applied after all lookups of the features added before.
     /// </summary>
     protected void EndStage() => this.openStage = null;
+
+    /// <summary>
+    /// Gets a feature as the shaper plans it, with the joiners that its lookups do not skip.
+    /// </summary>
+    /// <param name="feature">The tag of the feature.</param>
+    /// <returns>The planned feature.</returns>
+    protected PlannedFeature Plan(Tag feature)
+        => new(feature, this.manualJoiners.TryGetValue(feature, out ManualJoiners joiners) ? joiners : ManualJoiners.None);
+
+    /// <summary>
+    /// Gets the joiners that the lookups of each feature do not skip: the given joiners for the given features, and
+    /// both joiners for mark and mkmk, as every shaper of HarfBuzz plans them.
+    /// </summary>
+    /// <param name="joiners">The joiners that the lookups of the features do not skip.</param>
+    /// <param name="features">The features.</param>
+    /// <returns>The joiners by the tag of the feature.</returns>
+    protected static IReadOnlyDictionary<Tag, ManualJoiners> WithCommonManualJoiners(ManualJoiners joiners = ManualJoiners.None, params Tag[] features)
+    {
+        Dictionary<Tag, ManualJoiners> map = new() { [MarkTag] = ManualJoiners.Both, [MkmkTag] = ManualJoiners.Both };
+        foreach (Tag feature in features)
+        {
+            map[feature] = joiners;
+        }
+
+        return map;
+    }
 
     public override IReadOnlyList<ShapingStage> GetShapingStages() => this.shapingStages;
 

@@ -298,6 +298,16 @@ An additive or breaking public API change needs all of these:
 
 ### Fixed
 
+- GSUB and GPOS lookups match their glyphs across ZWJ, ZWNJ and the other default-ignorable characters where HarfBuzz
+  15.0.0 does. Such a character between the matched glyphs is skipped unless the lookup matches it there. GSUB skips
+  ZWNJ only in the backtrack and the lookahead, GPOS always skips it, and both skip ZWJ unless the feature keeps it in
+  its input. As in HarfBuzz, each shaper says which features keep the joiners: every shaper keeps both in `mark` and
+  `mkmk`, the Arabic shaper keeps ZWJ in its forms and its ligating features, the Indic and Khmer shapers keep both in
+  their basic and presentation features, and the Myanmar and universal shapers keep ZWJ in theirs. Pair, cursive,
+  mark-to-base, mark-to-ligature and mark-to-mark positioning skip the same characters, and a mark's offset leaves out
+  the advance of a default-ignorable character between the mark and its base. In Dubai, yeh ZWJ yeh now takes the
+  forms and the cursive offset of yeh yeh. In Indic text, a pre-base matra no longer moves after a halant that ZWJ
+  follows. (#117)
 - GSUB and GPOS lookups apply where HarfBuzz 15.0.0 applies them. A lookup starts at the first glyph that its flags
   do not skip, where it used to apply to a first glyph that its flags or mark filtering set skip (#120). A chained
   context positioning lookup counts the sequence index of a nested lookup over the glyphs that are not skipped (#118).

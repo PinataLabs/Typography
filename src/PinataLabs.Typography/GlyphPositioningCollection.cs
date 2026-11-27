@@ -382,9 +382,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
         {
             GlyphPositioningData glyph = this.glyphs[i];
             GlyphShapingData data = glyph.Data;
-            if (!this.ShouldProcess(fontMetrics, i)
-                || data.IsSubstituted
-                || !UnicodeUtility.IsHiddenAfterShaping((uint)data.CodePoint.Value))
+            if (!this.ShouldProcess(fontMetrics, i) || !data.IsDefaultIgnorable)
             {
                 continue;
             }

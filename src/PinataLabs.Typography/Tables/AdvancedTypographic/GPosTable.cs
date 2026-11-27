@@ -203,16 +203,16 @@ internal class GPosTable : Table
             // Positioning has no stage boundaries. The shapers pause only between substitutions, and
             // their stage actions act on substitution collections alone, so the lookups of every
             // planned feature are applied together.
-            List<Tag> features = [];
+            List<PlannedFeature> features = [];
             foreach (ShapingStage stage in shaper.GetShapingStages())
             {
-                features.AddRange(stage.FeatureTags);
+                features.AddRange(stage.Features);
             }
 
             bool withRequiredFeature = collection.TextOptions.KerningMode != KerningMode.None
                 || !this.RequiredFeatureIsKerning(current);
 
-            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, out List<(ushort Index, LookupFeatures Features)>? lookups))
+            if (LookupFeatures.TryGetLookups(this.ScriptList, this.FeatureList, this.LookupList.LookupTables.Length, features, current, withRequiredFeature, positioning: true, out List<(ushort Index, LookupFeatures Features)>? lookups))
             {
                 SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
                 foreach ((ushort lookupIndex, LookupFeatures lookupFeatures) in lookups)
@@ -364,13 +364,17 @@ internal class GPosTable : Table
                 data.Bounds.X += markData.Bounds.X;
                 data.Bounds.Y += markData.Bounds.Y;
 
+                // As in HarfBuzz, a default-ignorable glyph between them has no advance by now.
                 if (data.Direction == TextDirection.LeftToRight)
                 {
                     for (int k = j; k < currentIndex; k++)
                     {
                         markData = collection[k];
-                        data.Bounds.X -= markData.Bounds.Width;
-                        data.Bounds.Y -= markData.Bounds.Height;
+                        if (!markData.IsDefaultIgnorable)
+                        {
+                            data.Bounds.X -= markData.Bounds.Width;
+                            data.Bounds.Y -= markData.Bounds.Height;
+                        }
                     }
                 }
                 else
@@ -378,8 +382,11 @@ internal class GPosTable : Table
                     for (int k = j + 1; k < currentIndex + 1; k++)
                     {
                         markData = collection[k];
-                        data.Bounds.X += markData.Bounds.Width;
-                        data.Bounds.Y += markData.Bounds.Height;
+                        if (!markData.IsDefaultIgnorable)
+                        {
+                            data.Bounds.X += markData.Bounds.Width;
+                            data.Bounds.Y += markData.Bounds.Height;
+                        }
                     }
                 }
             }
