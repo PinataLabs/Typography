@@ -104,8 +104,10 @@ public class FontFallbackTests
     // fallback font makes a pre-base form of virama and ra, so ka is the base and i goes first.
     [Arguments("SyllablesInvalid.ttf", "IndicReordering.ttf", "0915 094D 0930 093F", "0 19 0 6", "6 13 1", "1F 19P 6F 6P")]
 
-    // Devanagari ra, virama, ka, i: the fallback font makes a reph of ra and virama and moves it after the base.
-    [Arguments("SyllablesInvalid.ttf", "NotoSansDevanagari-Regular.ttf", "0930 094D 0915 093F", "6 19 0 0", "585 25 606", "6P 19P 585F 25F")]
+    // Devanagari ra, virama, ka, i: alone, the fallback font makes a reph of ra and virama, moves it after the base and
+    // gives i the form 585 that leaves room for it. The font draws ra and virama, so the fallback font makes no reph of
+    // them, and gives i the form 561 that HarfBuzz gives before ka alone.
+    [Arguments("SyllablesInvalid.ttf", "NotoSansDevanagari-Regular.ttf", "0930 094D 0915 093F", "6 19 0 0", "585 25 606", "6P 19P 561F 25F")]
     [Arguments("SyllablesInvalid.ttf", "NotoSansDevanagari-Regular.ttf", "0930 094D 0915", "6 19 0", "25 181", "6P 19P 25F")]
 
     // A broken cluster: each font gives the sign its own dotted circle as a base, before or after the pre-base matra.

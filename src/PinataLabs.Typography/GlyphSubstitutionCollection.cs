@@ -125,8 +125,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <summary>
     /// Gets a value indicating whether the glyphs in the range may become other glyphs. A fallback font replaces glyphs
-    /// character by character, so it may compose or decompose only characters that no earlier font has a glyph for.
-    /// Otherwise a glyph of an earlier font would lose the characters that the fallback font folded into it.
+    /// character by character, so it may compose, ligate or decompose only characters that no earlier font has a glyph
+    /// for. Otherwise a glyph of an earlier font would lose the characters that the fallback font folded into it.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph.</param>
     /// <param name="end">The zero-based index after the last glyph.</param>
