@@ -27,15 +27,11 @@ public class TextShaperTests
     private static readonly Dictionary<string, Font> Fonts = [];
 
     // The runs that the library shapes with other glyphs than HarfBuzz, whatever calls it: the layout gives the same glyphs.
-    // They are two vowel signs on one consonant of Bengali, Gurmukhi and Tamil, a Gujarati ra with a virama and a letter
-    // after it, and the space between Hangul syllables of NotoSansKR. HarfBuzz narrows that space with the calt feature,
-    // which the Hangul shaper of the library turns off, as Uniscribe does. Each entry has the font and the code points of
-    // the run.
+    // They are two vowel signs on one consonant of Bengali, Gurmukhi and Tamil, and a Gujarati ra with a virama and a
+    // letter after it. Each entry has the font and the code points of the run.
     private static readonly HashSet<string> KnownDifferences =
     [
         "NotoSansGujarati-Regular.ttf 0A95 0AB0 0ACD 0AAE",
-        "NotoSansKR-Regular.otf D55C AD6D C5B4 0020 C870 C120 AE00",
-        "NotoSansKR-Regular.otf AC01 0020 D7A3",
         "NotoSansBengali-Regular.ttf 09A7 09BF 09C7",
         "NotoSansBengali-Regular.ttf 0995 0981 09C3 0999 0983 09C7 099E 09BE 09C8",
         "NotoSansBengali-Regular.ttf 099E 09BE 09C8 09A2 09BF 09CC 09A7 09C1 09D7",
