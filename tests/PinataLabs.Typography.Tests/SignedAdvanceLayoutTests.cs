@@ -116,14 +116,17 @@ public class SignedAdvanceLayoutTests
     }
 
     // A side bearing is the space between the ink and the end of the advance, so it follows the advance that positioning
-    // gives the glyph: the o of "ole" advances -100, the first W of "WW" 72960, a lone W 40960, and U+4E00 800 down the
-    // line. The glyphs are empty, so the right and bottom side bearings are the advances less the leading bearings.
+    // gives the glyph: the o of "ole" advances -100, the first W of "WW" 72960, a lone W 40960, and U+4E00 U+4E8C U+4E09
+    // U+4E00 800, 1300, -300 and 1000 down the line (TextShaper.harfbuzz.json, VerticalAdvance.harfbuzz.json). The glyphs
+    // are empty and their leading bearings in hmtx and vmtx are 0. TextShaper.ttf and TextShaperLarge.ttf have no vmtx, so
+    // a glyph is as high as the ascender less the descender, 1000 and 16383, and starts at the ascender, 800 and 13107,
+    // which leaves 200 and 3276 below it. The ideographs of VerticalAdvance.ttf are 900 wide.
     [Test]
-    [Arguments("TextShaper.ttf", "ole", false)]
-    [Arguments("TextShaperLarge.ttf", "WW", false)]
-    [Arguments("TextShaperLarge.ttf", "W", false)]
-    [Arguments("VerticalAdvance.ttf", "一二三一", true)]
-    public async Task TheSideBearingsFollowThePositionedAdvance(string fontName, string text, bool vertical)
+    [Arguments("TextShaper.ttf", "ole", false, "-100 200, 600 200, 600 200")]
+    [Arguments("TextShaperLarge.ttf", "WW", false, "72960 3276, 40960 3276")]
+    [Arguments("TextShaperLarge.ttf", "W", false, "40960 3276")]
+    [Arguments("VerticalAdvance.ttf", "一二三一", true, "900 800, 900 1300, 900 -300, 900 1000")]
+    public async Task TheSideBearingsFollowThePositionedAdvance(string fontName, string text, bool vertical, string expected)
     {
         TextOptions options = new(GetFont(fontName))
         {
@@ -131,17 +134,12 @@ public class SignedAdvanceLayoutTests
             LayoutMode = vertical ? LayoutMode.VerticalLeftRight : LayoutMode.HorizontalTopBottom,
             FeatureTags = vertical ? [Tag.Parse("vkrn")] : [],
         };
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
-        string[] expected = layout
-            .Select(g => g.Glyph.GlyphMetrics)
-            .Select(m => FormattableString.Invariant($"{m.AdvanceWidth - m.LeftSideBearing - m.Width} {m.AdvanceHeight - m.TopSideBearing - m.Height}"))
-            .ToArray();
-        string[] actual = layout
+        string[] actual = TextLayout.GenerateLayout(text.AsSpan(), options)
             .Select(g => g.Glyph.GlyphMetrics)
             .Select(m => FormattableString.Invariant($"{m.RightSideBearing} {m.BottomSideBearing}"))
             .ToArray();
 
-        await Assert.That(string.Join(", ", actual)).IsEqualTo(string.Join(", ", expected));
+        await Assert.That(string.Join(", ", actual)).IsEqualTo(expected);
     }
 
     // Adds each glyph of the row, at the place of the pen along the line and with its advances across and down it, and
