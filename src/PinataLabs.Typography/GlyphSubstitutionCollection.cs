@@ -111,6 +111,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     {
         this.runStart = start;
         this.glyphsAfterRun = this.glyphs.Count - start - count;
+        this.NestingLevel = 0;
         this.NestingLimitReached = false;
     }
 
