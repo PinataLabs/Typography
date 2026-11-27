@@ -1369,7 +1369,7 @@ internal sealed class IndicShaper : DefaultShaper
             // Apply 'init' to the Left Matra if it's a word start: as in HarfBuzz, at the start of the run, which HarfBuzz
             // shapes in a buffer of its own, or after a character that does not continue a word.
             if (substitutionCollection[start].IndicShapingEngineInfo?.Position == Positions.Pre_M &&
-                (start == index || !ContinuesWord(substitutionCollection[start - 1].CodePoint)))
+                (start == index || !ContinuesWord(substitutionCollection[start - 1].UnicodePropertiesCodePoint)))
             {
                 substitutionCollection.EnableShapingFeature(start, InitTag);
             }
