@@ -26,13 +26,6 @@ public class TextShaperTests
 
     private static readonly Dictionary<string, Font> Fonts = [];
 
-    // The runs that the library shapes with other glyphs than HarfBuzz, whatever calls it: the layout gives the same glyphs.
-    // It is a Gujarati ra with a virama and a letter after it. Each entry has the font and the code points of the run.
-    private static readonly HashSet<string> KnownDifferences =
-    [
-        "NotoSansGujarati-Regular.ttf 0A95 0AB0 0ACD 0AAE",
-    ];
-
     private static readonly Dictionary<string, ScriptClass> Scripts = new()
     {
         ["Arab"] = ScriptClass.Arabic,
@@ -274,20 +267,6 @@ public class TextShaperTests
     }
 
     [Test]
-    public async Task KnownDifferencesAreStillDifferences()
-    {
-        // A run that starts to match HarfBuzz leaves the list.
-        Row[] known = HarfBuzz.Rows.Where(IsKnownDifference).ToArray();
-        List<string> matching = known
-            .Where(r => Shape(r, withScript: true).Select(g => g.GlyphId).SequenceEqual(r.Glyphs.Select(g => (ushort)g[0])))
-            .Select(r => $"{r.Font} {Describe(r.Text)}")
-            .ToList();
-
-        await Assert.That(known.Length).IsEqualTo(KnownDifferences.Count);
-        await Assert.That(matching).IsEmpty();
-    }
-
-    [Test]
     public async Task SyntheticCasesGiveTheGlyphsThatHarfBuzzGives()
         => await Assert.That(Differences(HarfBuzz.Rows.Where(r => r.Font == "TextShaper.ttf"), withScript: true, positions: true)).IsEmpty();
 
@@ -347,7 +326,7 @@ public class TextShaperTests
     private static List<string> Differences(IEnumerable<Row> rows, bool withScript, bool positions)
     {
         List<string> different = [];
-        foreach (Row row in rows.Where(r => !IsKnownDifference(r)))
+        foreach (Row row in rows)
         {
             ShapedGlyph[] actual = Shape(row, withScript);
             string expected = string.Join(' ', row.Glyphs.Select(g => positions ? $"{g[0]}@{g[1]}:{g[2]}:{g[3]},{g[4]}" : $"{g[0]}@{g[1]}"));
@@ -364,7 +343,7 @@ public class TextShaperTests
     private static List<string> PositionDifferences(IEnumerable<Row> rows, bool withScript)
     {
         List<string> different = [];
-        foreach (Row row in rows.Where(r => !IsKnownDifference(r)))
+        foreach (Row row in rows)
         {
             ShapedGlyph[] actual = Shape(row, withScript);
             if (actual.Length != row.Glyphs.Length)
@@ -385,8 +364,6 @@ public class TextShaperTests
 
     private static bool HasScriptOfItsOwn(System.Text.Rune rune)
         => CodePoint.GetScriptClass(new CodePoint(rune.Value)) is not (ScriptClass.Common or ScriptClass.Inherited or ScriptClass.Unknown);
-
-    private static bool IsKnownDifference(Row row) => KnownDifferences.Contains($"{row.Font} {Describe(row.Text)}");
 
     private static string Describe(string text) => string.Join(' ', text.EnumerateRunes().Select(r => r.Value.ToString("X4")));
 
