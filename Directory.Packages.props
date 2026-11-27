@@ -20,7 +20,7 @@
     <PackageVersion Include="Microsoft.Sbom.Targets" Version="4.1.13" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
     <PackageVersion Include="MinVer" Version="8.0.0" />
-    <PackageVersion Include="PolySharp" Version="1.16.0" />
+    <PackageVersion Include="PolySharp" Version="1.17.1" />
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 
@@ -30,7 +30,7 @@
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Pegasus" Version="4.1.0" />
     <PackageVersion Include="SharpFuzz" Version="2.3.0" />
-    <PackageVersion Include="SkiaSharp" Version="4.157.0" />
+    <PackageVersion Include="SkiaSharp" Version="4.158.0" />
     <PackageVersion Include="TUnit" Version="1.87.12" />
   </ItemGroup>
 
