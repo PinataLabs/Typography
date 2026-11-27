@@ -478,7 +478,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             return;
         }
 
-        (int x, int y) = isDirtyXY ? data.Bounds.TakeOffsetChange() : default;
+        // The glyph takes the change only when a metric of it does, so an update that moves none leaves it for the next.
+        (int X, int Y)? change = null;
         ushort glyphId = data.GlyphId;
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         foreach (GlyphMetrics m in this.glyphs[index].Metrics)
@@ -487,7 +488,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             {
                 if (isDirtyXY)
                 {
-                    m.ApplyOffset(x, y);
+                    change ??= data.Bounds.TakeOffsetChange();
+                    m.ApplyOffset(change.Value.X, change.Value.Y);
                 }
 
                 // As in HarfBuzz, positioning changes the advance along the line only. Across the line the glyph keeps
