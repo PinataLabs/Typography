@@ -8,8 +8,10 @@ These pages list every public type of PinataLabs.Typography, grouped by what it 
 explain how to use them together; these pages tell you what each member does.
 
 The authoritative list of the public API is the file
-[`src/PinataLabs.Typography/PublicAPI.Shipped.txt`](https://github.com/PinataLabs/Typography/blob/main/src/PinataLabs.Typography/PublicAPI.Shipped.txt).
-The build fails if the public API differs from it, so it is always up to date.
+[`src/PinataLabs.Typography/PublicAPI.Shipped.txt`](https://github.com/PinataLabs/Typography/blob/main/src/PinataLabs.Typography/PublicAPI.Shipped.txt),
+and, for the `PinataLabs.Typography.Unicode` namespace, which is a package of its own,
+[`src/PinataLabs.Typography.Unicode/PublicAPI.Shipped.txt`](https://github.com/PinataLabs/Typography/blob/main/src/PinataLabs.Typography.Unicode/PublicAPI.Shipped.txt).
+The build fails if the public API differs from them, so they are always up to date.
 
 ## Namespaces
 

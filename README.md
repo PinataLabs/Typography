@@ -17,6 +17,7 @@ Read the [documentation](https://pinatalabs.github.io/Typography/) for guides, t
 - Load [WOFF](https://www.w3.org/Submission/WOFF/) and [WOFF2](https://www.w3.org/TR/WOFF2) fonts.
 - Load all compatible fonts installed on the machine (Windows, Linux and macOS).
 - Line breaking based on [UAX #14](https://www.unicode.org/reports/tr14/).
+- The Unicode algorithms and character properties are also published without any font code, as `PinataLabs.Typography.Unicode`. It reports the Unicode version of its data as `UnicodeInfo.Version`.
 - Left-to-right, right-to-left and bidirectional text.
 - Ligatures, and the OpenType glyph substitution ([GSUB](https://learn.microsoft.com/typography/opentype/spec/gsub)) and glyph positioning ([GPOS](https://learn.microsoft.com/typography/opentype/spec/gpos)) features.
 - Measure the size, advance and bounds of laid-out text.
@@ -36,7 +37,7 @@ cd Typography
 dotnet build PinataLabs.Typography.slnx -c Release
 ```
 
-Then add a project reference to `src/PinataLabs.Typography/PinataLabs.Typography.csproj`, or create a local package with `dotnet pack src/PinataLabs.Typography -c Release` and install `PinataLabs.Typography` from that folder.
+Then add a project reference to `src/PinataLabs.Typography/PinataLabs.Typography.csproj`, or create local packages with `dotnet pack src/PinataLabs.Typography.Unicode -c Release` and `dotnet pack src/PinataLabs.Typography -c Release` and install `PinataLabs.Typography` from that folder. `PinataLabs.Typography` depends on `PinataLabs.Typography.Unicode`, so the folder needs both packages.
 
 ## Quick start
 

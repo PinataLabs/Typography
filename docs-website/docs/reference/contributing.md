@@ -23,7 +23,8 @@ A small test case is the best way to show a layout bug.
 
 Open an issue that describes the change before you write the code. A maintainer must approve each
 public API addition or breaking change. The build checks the public API against
-`src/PinataLabs.Typography/PublicAPI.Shipped.txt` and fails if it differs.
+`PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt` in `src/PinataLabs.Typography` and
+`src/PinataLabs.Typography.Unicode`, and fails if it differs.
 
 ## Build and test
 

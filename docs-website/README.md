@@ -45,7 +45,8 @@ as the site root, so there is no separate landing page under `src/pages`.
 | `docs/reference/` | Platforms, migration, troubleshooting, FAQ, licensing, contributing. |
 
 The API reference is written by hand from
-[`PublicAPI.Shipped.txt`](../src/PinataLabs.Typography/PublicAPI.Shipped.txt). When a pull request
+[`PublicAPI.Shipped.txt`](../src/PinataLabs.Typography/PublicAPI.Shipped.txt) and the one in
+[`src/PinataLabs.Typography.Unicode`](../src/PinataLabs.Typography.Unicode/PublicAPI.Shipped.txt). When a pull request
 changes the public API, update the matching page in `docs/api/` in the same pull request.
 
 ## Publishing

@@ -10,21 +10,35 @@ The entries below describe the changes from that commit.
 
 ## Public API changes
 
-The public API is recorded in `src/PinataLabs.Typography/PublicAPI.Shipped.txt`.
-`Microsoft.CodeAnalysis.PublicApiAnalyzers` checks it, and the build fails when the
+The public API is recorded in `src/PinataLabs.Typography/PublicAPI.Shipped.txt` and
+`src/PinataLabs.Typography.Unicode/PublicAPI.Shipped.txt`, one for each package.
+`Microsoft.CodeAnalysis.PublicApiAnalyzers` checks them, and the build fails when the
 public surface does not match the PublicAPI files.
 
 An additive or breaking public API change needs all of these:
 
 1. A proposal that the maintainer approves.
 2. A commit of its own.
-3. A matching change to `src/PinataLabs.Typography/PublicAPI.Unshipped.txt`.
+3. A matching change to `PublicAPI.Unshipped.txt` in the project that declares the API.
 4. An entry in this file.
+
+## Unicode version
+
+`PinataLabs.Typography.Unicode` reports the Unicode version of its data in `UnicodeInfo.Version`.
+A release whose Unicode version differs from the release before it says so in its entry, in the
+form "The Unicode data is version 18.0.0, up from 17.0.0", because a caller can pin its own
+Unicode conformance suites to that version.
 
 ## [Unreleased]
 
 ### Added
 
+- **The `PinataLabs.Typography.Unicode` package.** The Unicode algorithms and character properties that were in the
+  `PinataLabs.Typography.Unicode` namespace of `PinataLabs.Typography` are now a package of their own, with no font code,
+  for the same target frameworks. A caller that needs bidi classes, line-break classes, scripts or grapheme clusters
+  and no fonts can depend on it alone. The namespace is the same, so source code needs no change.
+  `UnicodeInfo.Version` is the new public member: it reports the Unicode version of the property data, which is
+  18.0.0. The generator reads it from the rule files, so the data and the version cannot differ. (#151)
 - **GPOS deltas of a variation instance.** The library reads the Item Variation Store of a GDEF 1.3 table, and the
   `VariationIndex` device tables that GPOS value records and format 3 anchors point to. A variation instance adds the
   delta of each one to the kerning, the placement and the mark anchors, so they follow the weight and the other axes.
@@ -236,6 +250,10 @@ An additive or breaking public API change needs all of these:
 
 ### Changed
 
+- **`PinataLabs.Typography` depends on `PinataLabs.Typography.Unicode`, at exactly its own version.** It reads internals
+  of the Unicode assembly, so the package depends on `[x.y.z]` and the two are released together. The types that moved
+  are forwarded, so code compiled against an earlier `PinataLabs.Typography` runs without recompiling. The Unicode data
+  is version 18.0.0, as before. (#151)
 - **`FontStyle` is a weight, a width and a slope.** The flags enum is now a struct with a `FontWeight`, a `FontWidth`
   and a `FontSlope`. `FontStyle.Regular`, `Bold`, `Italic` and `BoldItalic` are static properties with the same
   names and meanings, so `CreateFont(12, FontStyle.Bold)` still compiles, and `default(FontStyle)` is
