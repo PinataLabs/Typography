@@ -1564,6 +1564,20 @@ public class TextLayoutTests
         await Assert.That(Math.Abs(arabicRight - wrappingLength)).IsLessThan(5);
     }
 
+    // U+001C ends a paragraph (UAX #9 P1) but not a line (UAX #14), so one line holds two paragraphs. Rule L1 resets the
+    // trailing space to the level of its own paragraph, the right-to-left second one, so it is drawn left of the Arabic,
+    // not after it at the level of the first paragraph. The line aligns by the paragraph its first character is in.
+    [Test]
+    public async Task ALineThatHoldsTwoParagraphs_ResetsEachToItsOwnLevel()
+    {
+        Font font = new FontCollection().Add(TestFonts.ArabicFontFile).CreateFont(24);
+
+        GlyphLayout[][] lines = GetLines("abc\U0000001Cكتب ", new TextOptions(font));
+
+        await Assert.That(lines.Length).IsEqualTo(1);
+        await Assert.That(Visual(lines).Replace("\U0000001C", string.Empty)).IsEqualTo("abc بتك");
+    }
+
     // A line feed ends a paragraph (UAX #9 P1), and with Auto each paragraph takes its direction from its own first
     // strong character (P2, P3). The first paragraph runs right to left, so its Latin word, written last, is drawn left
     // of the Arabic. The second runs left to right, so its Latin word, written first, is drawn left of the Arabic too.
