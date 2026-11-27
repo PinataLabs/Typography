@@ -155,8 +155,8 @@ public class TextShaperTests
         ShapedGlyph[] automatic = TextShaper.Shape(font, "\u05D0\u05D1");
         ShapedGlyph[] rightToLeft = TextShaper.Shape(font, "\u05D0\u05D1", new() { Direction = TextDirection.RightToLeft });
 
-        await Assert.That(automatic).IsEquivalentTo(rightToLeft);
-        await Assert.That(automatic.Select(g => g.Cluster)).IsEquivalentTo(new[] { 1, 0 });
+        await Assert.That(automatic).IsEquivalentTo(rightToLeft, CollectionOrdering.Matching);
+        await Assert.That(automatic.Select(g => g.Cluster)).IsEquivalentTo(new[] { 1, 0 }, CollectionOrdering.Matching);
     }
 
     [Test]
@@ -182,10 +182,10 @@ public class TextShaperTests
         ShapedGlyph[] latin = TextShaper.Shape(font, "123 ()", new() { Script = ScriptClass.Latin });
         ShapedGlyph[] unset = TextShaper.Shape(font, "123 ()");
 
-        await Assert.That(arabic.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 });
-        await Assert.That(hebrew.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 });
-        await Assert.That(latin.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 });
-        await Assert.That(unset.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 });
+        await Assert.That(arabic.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 }, CollectionOrdering.Matching);
+        await Assert.That(hebrew.Select(g => g.Cluster)).IsEquivalentTo(new[] { 5, 4, 3, 2, 1, 0 }, CollectionOrdering.Matching);
+        await Assert.That(latin.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 }, CollectionOrdering.Matching);
+        await Assert.That(unset.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2, 3, 4, 5 }, CollectionOrdering.Matching);
     }
 
     [Test]
@@ -208,7 +208,7 @@ public class TextShaperTests
         // The caller names Arabic for Latin letters. The letters decide, where HarfBuzz would follow the script.
         ShapedGlyph[] glyphs = TextShaper.Shape(GetFont("DejaVuSans.ttf"), "abc", new() { Script = ScriptClass.Arabic });
 
-        await Assert.That(glyphs.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2 });
+        await Assert.That(glyphs.Select(g => g.Cluster)).IsEquivalentTo(new[] { 0, 1, 2 }, CollectionOrdering.Matching);
     }
 
     [Test]
