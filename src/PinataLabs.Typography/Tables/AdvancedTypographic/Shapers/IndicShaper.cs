@@ -634,9 +634,11 @@ internal sealed class IndicShaper : DefaultShaper
 
             SortByPosition(substitutionCollection, start, end, sources);
 
-            // Find base again, and the left matras before it.
+            // Find base again, and the left matras before it. As in HarfBuzz, a syllable whose reph took the place of
+            // the base has none, and every glyph is before it.
             int firstLeftMatra = end;
             int lastLeftMatra = end;
+            basePosition = end;
             for (int i = start; i < end; i++)
             {
                 Positions? position = substitutionCollection[i].IndicShapingEngineInfo?.Position;
@@ -1361,21 +1363,6 @@ internal sealed class IndicShaper : DefaultShaper
                                 while (newPos > start && (substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category & (MatraFlags | HalantOrCoengFlags)) == 0)
                                 {
                                     newPos--;
-                                }
-
-                                // In Khmer coeng model, a H,Ra can go *after* matras.  If it goes after a
-                                // split matra, it should be reordered to *before* the left part of such matra.
-                                if (newPos > start && substitutionCollection[newPos - 1].IndicShapingEngineInfo?.Category == Categories.M)
-                                {
-                                    int oldPos = i;
-                                    for (int j = basePosition + 1; j < oldPos; j++)
-                                    {
-                                        if (substitutionCollection[j].IndicShapingEngineInfo?.Category == Categories.M)
-                                        {
-                                            newPos--;
-                                            break;
-                                        }
-                                    }
                                 }
                             }
 

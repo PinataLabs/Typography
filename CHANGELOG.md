@@ -467,6 +467,11 @@ Unicode conformance suites to that version.
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that
   the font gives after ka, where HarfBuzz keeps the plain reph after ma. (#163)
+- The Indic shaper moves a pre-base-reordering consonant that `pref` formed to just after the last vowel sign or virama
+  before the base, as HarfBuzz 15.0.0 does. With a vowel sign before the base and another after it, it moved the
+  consonant before the first sign too, as the Khmer shaper of an older HarfBuzz did. The Telugu syllable ra, virama, ZWJ,
+  whose reph takes the place of its base, has no base after the initial reordering, so as in HarfBuzz ZWJ takes `half`
+  where it took the post-base features. (#163)
 - A Gurmukhi bindi before the vowel sign ii (U+0A02, U+0A40) is one syllable with its consonant, as in HarfBuzz 15.0.0,
   and keeps its place before the sign. The Indic syllable grammar ended the syllable at the bindi, so the sign started a
   broken cluster and took a dotted circle. As in HarfBuzz, U+0A40 has a category of its own, a post-base matra that a
