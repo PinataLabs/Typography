@@ -38,6 +38,7 @@ internal class GlyphShapingData
         this.SubstitutedGlyphClass = data.SubstitutedGlyphClass;
         this.IsOtherLetter = data.IsOtherLetter;
         this.CodePointCount = data.CodePointCount;
+        this.HoldsInsertedGlyph = data.HoldsInsertedGlyph;
         this.SourceOffset = data.SourceOffset;
         this.Cluster = data.Cluster;
         this.Direction = data.Direction;
@@ -137,6 +138,12 @@ internal class GlyphShapingData
     /// character of the text.
     /// </summary>
     public bool IsInserted => this.CodePointCount == 0;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is one that a shaper inserted or a ligature that took one in, as a
+    /// font can make one glyph of a dotted circle and a sign.
+    /// </summary>
+    public bool HoldsInsertedGlyph { get; set; }
 
     /// <summary>
     /// Gets or sets the offset, within the input codepoint collection, of the character that the glyph comes from. It

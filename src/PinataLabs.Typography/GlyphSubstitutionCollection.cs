@@ -237,6 +237,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             GlyphId = glyphId,
             CodePoint = codePoint,
             CodePointCount = 0,
+            HoldsInsertedGlyph = true,
             IsSubstituted = true,
             IsLigated = false,
             LigatureId = 0,
@@ -448,16 +449,19 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
         // Remove the glyphs at each index.
         int codePointCount = 0;
+        bool holdsInsertedGlyph = false;
         for (int i = removalIndices.Length - 1; i >= 0; i--)
         {
             int match = removalIndices[i];
             codePointCount += this.glyphs[match].Data.CodePointCount;
+            holdsInsertedGlyph |= this.glyphs[match].Data.HoldsInsertedGlyph;
             this.glyphs.RemoveAt(match);
         }
 
         // Assign our new id at the index.
         GlyphShapingData current = this.glyphs[index].Data;
         current.CodePointCount += codePointCount;
+        current.HoldsInsertedGlyph |= holdsInsertedGlyph;
         current.GlyphId = glyphId;
         current.LigatureId = ligatureId;
         current.IsLigated = true;

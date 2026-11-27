@@ -219,7 +219,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// parts alone, as when it keeps whole a vowel sign that the font split, or makes one glyph of a sign and of the dotted
     /// circle that the font drew. So it does when the font drew none of the character and the fallback font has glyphs of
     /// it left, as when it splits a sign that the font kept whole. Its glyphs then take the place of the last missing
-    /// glyph, where a shaper puts a sign that it keeps whole, and the other glyphs of the character go.
+    /// glyph, where a shaper puts a sign that it keeps whole, and the other glyphs of the character go. A dotted circle
+    /// that the font drew stays, unless the fallback font draws its own, alone or in a ligature.
     /// </summary>
     /// <param name="fontMetrics">The fallback font.</param>
     /// <param name="character">The glyphs of the character here and in the fallback font.</param>
@@ -269,9 +270,17 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                 return false;
             }
 
+            bool hasFallbackInserted = fallback.Exists(g => g.HoldsInsertedGlyph);
             foreach (int i in indices)
             {
-                replacements.Add(i, i == last ? whole : []);
+                if (i == last)
+                {
+                    replacements.Add(i, whole);
+                }
+                else if (hasFallbackInserted || !this.glyphs[i].Data.IsInserted || IsMissing(this.glyphs[i]))
+                {
+                    replacements.Add(i, []);
+                }
             }
 
             return true;
