@@ -168,6 +168,25 @@ public class BidiAlgorithmTests
         await Assert.That((int)bidi.ResolvedLevels[1]).IsEqualTo(1);
     }
 
+    [Test]
+    [Arguments("ab­", new sbyte[] { 2, 2, 1 })]
+    [Arguments("ab ­", new sbyte[] { 2, 2, 1, 1 })]
+    [Arguments("ab­ ", new sbyte[] { 2, 2, 1, 1 })]
+    [Arguments("ab­\tcd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab\t­cd", new sbyte[] { 2, 2, 1, 1, 2, 2 })]
+    [Arguments("ab­cd", new sbyte[] { 2, 2, 2, 2, 2 })]
+    public async Task RuleL1ResetsABoundaryNeutralInTheSequenceItResets(string text, sbyte[] expected)
+    {
+        // UAX #9 section 5.2: rule L1 resets BN together with the whitespace before a separator or the end of the line.
+        var data = new BidiData();
+        data.Init(text, 1);
+        var bidi = new BidiAlgorithm();
+
+        bidi.Process(data);
+
+        await Assert.That(bidi.ResolvedLevels.ToArray()).IsEquivalentTo(expected, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
     private bool ICUTestsImpl()
     {
         this.Output.WriteLine("Bidi Class Tests");

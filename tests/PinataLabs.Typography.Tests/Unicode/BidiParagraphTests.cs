@@ -295,6 +295,18 @@ public class BidiParagraphTests
     }
 
     [Test]
+    [Arguments("ab" + SoftHyphen, new byte[] { 2, 2, 1 })]
+    [Arguments("ab " + SoftHyphen, new byte[] { 2, 2, 1, 1 })]
+    [Arguments("ab" + SoftHyphen + " ", new byte[] { 2, 2, 1, 1 })]
+    [Arguments("ab" + SoftHyphen + "\tcd", new byte[] { 2, 2, 1, 1, 2, 2 })]
+    public async Task RuleL1ResetsARemovedCharacterInTheSequenceItResets(string text, byte[] expected)
+    {
+        BidiParagraph paragraph = BidiParagraph.Resolve(text, BidiParagraphDirection.RightToLeft);
+
+        await Assert.That(paragraph.Levels.ToArray()).IsEquivalentTo(expected, CollectionOrdering.Matching);
+    }
+
+    [Test]
     public async Task OtherRemovedCharactersAreInNoRunAndEndTheRunBeforeThem()
     {
         const string text = Alef + SoftHyphen + Beh;
