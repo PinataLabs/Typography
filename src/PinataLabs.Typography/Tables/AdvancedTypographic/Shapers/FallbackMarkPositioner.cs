@@ -315,7 +315,7 @@ internal static class FallbackMarkPositioner
 
     // Converts a length to the units of another font, given the size of a unit of its font in those units.
     private static int Scale(int value, float scale)
-        => scale == 1 ? value : (int)MathF.Round(value * scale);
+        => (int)MathF.Round(value * scale);
 
     // A mark that GSUB did not give a component of this ligature, such as a mark after the ligature, goes on its last component.
     private static int GetComponent(GlyphShapingData baseData, GlyphShapingData mark, int components)
