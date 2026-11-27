@@ -8,21 +8,29 @@ using System.Globalization;
 namespace PinataLabs.Typography.Unicode;
 
 /// <summary>
-/// Supports a simple iteration over a linebreak collection.
+/// Supports a simple iteration over the line break opportunities of a text, each one a <see cref="LineBreak"/>.
 /// Implementation of the Unicode Line Break Algorithm. UAX:14
 /// <see href="https://www.unicode.org/reports/tr14/"/>
 /// Methods are pattern-matched by compiler to allow using foreach pattern.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The rules are those of Unicode 18.0.0, in the form of LineBreakTest.html, which LineBreakTest.txt checks.
 /// Rule LB9 joins a character and its combining marks into one unit, and the rules from LB11 on apply to units.
+/// </para>
+/// <para>
+/// The opportunities come in order, and the last is at the end of the text (LB3), so a text that is not empty
+/// gives at least one. A <see cref="LineBreak.Required"/> opportunity is a mandatory break. The text is read as a
+/// whole: its start is the start of the text for LB2 and its end the end for LB3.
+/// </para>
 /// </remarks>
-internal ref struct LineBreakEnumerator
+public ref struct LineBreakEnumerator
 {
     private const int FirstPictographBlock = 0x1F000;
     private const int LastPictographBlock = 0x1FFFF;
 
     private readonly ReadOnlySpan<char> source;
+    private readonly LineBreakTailoring tailoring;
     private readonly int pointsLength;
     private int charPosition;
     private int position;
@@ -35,10 +43,16 @@ internal ref struct LineBreakEnumerator
     private Unit previous;
     private Unit beforeSpaces;
 
-    public LineBreakEnumerator(ReadOnlySpan<char> source)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LineBreakEnumerator"/> struct.
+    /// </summary>
+    /// <param name="source">The text to find the line break opportunities of.</param>
+    /// <param name="tailoring">The changes to make to the line break classes. The default is none, the algorithm as published.</param>
+    public LineBreakEnumerator(ReadOnlySpan<char> source, LineBreakTailoring tailoring = LineBreakTailoring.None)
         : this()
     {
         this.source = source;
+        this.tailoring = tailoring;
         this.pointsLength = CodePoint.GetCodePointCount(source);
         this.previous = Unit.Sot;
         this.beforeSpaces = Unit.Sot;
@@ -74,6 +88,10 @@ internal ref struct LineBreakEnumerator
         Mandatory,
     }
 
+    /// <summary>
+    /// Gets the line break opportunity the enumerator is at. It is the default value before the first
+    /// <see cref="MoveNext"/> and once that has returned <see langword="false"/>.
+    /// </summary>
     public LineBreak Current { get; private set; }
 
     /// <summary>
@@ -392,7 +410,7 @@ internal ref struct LineBreakEnumerator
     }
 
     /// <summary>
-    /// Reads the character at a UTF-16 index and resolves its class by LB1.
+    /// Reads the character at a UTF-16 index and resolves its class by LB1, and by the tailoring.
     /// </summary>
     private readonly Character Read(int index, out int count)
     {
@@ -422,7 +440,12 @@ internal ref struct LineBreakEnumerator
             case LineBreakClass.SA:
                 cls = CodePoint.GetGeneralCategory(cp) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark
                     ? LineBreakClass.CM
-                    : LineBreakClass.AL;
+                    : (this.tailoring & LineBreakTailoring.SouthEastAsianAsIdeographs) != 0 ? LineBreakClass.ID : LineBreakClass.AL;
+                break;
+
+            case LineBreakClass.JL or LineBreakClass.JV or LineBreakClass.JT or LineBreakClass.H2 or LineBreakClass.H3
+                when (this.tailoring & LineBreakTailoring.HangulAsAlphabetic) != 0:
+                cls = LineBreakClass.AL;
                 break;
 
             case LineBreakClass.CJ:

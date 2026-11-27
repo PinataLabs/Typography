@@ -50,3 +50,18 @@ PinataLabs.Typography.Unicode.SimpleFontEncoding.WinAnsi = 1 -> PinataLabs.Typog
 PinataLabs.Typography.Unicode.SimpleFontEncoding.ZapfDingbats = 5 -> PinataLabs.Typography.Unicode.SimpleFontEncoding
 static PinataLabs.Typography.Unicode.GlyphNameEncodings.GetGlyphName(PinataLabs.Typography.Unicode.SimpleFontEncoding encoding, byte code) -> string?
 static PinataLabs.Typography.Unicode.GlyphNameEncodings.TryGetCode(PinataLabs.Typography.Unicode.SimpleFontEncoding encoding, System.ReadOnlySpan<char> glyphName, out byte code) -> bool
+PinataLabs.Typography.Unicode.LineBreak
+PinataLabs.Typography.Unicode.LineBreak.LineBreak() -> void
+PinataLabs.Typography.Unicode.LineBreak.PositionMeasure.get -> int
+PinataLabs.Typography.Unicode.LineBreak.PositionWrap.get -> int
+PinataLabs.Typography.Unicode.LineBreak.Required.get -> bool
+PinataLabs.Typography.Unicode.LineBreakEnumerator
+PinataLabs.Typography.Unicode.LineBreakEnumerator.Current.get -> PinataLabs.Typography.Unicode.LineBreak
+PinataLabs.Typography.Unicode.LineBreakEnumerator.GetEnumerator() -> PinataLabs.Typography.Unicode.LineBreakEnumerator
+PinataLabs.Typography.Unicode.LineBreakEnumerator.LineBreakEnumerator() -> void
+PinataLabs.Typography.Unicode.LineBreakEnumerator.LineBreakEnumerator(System.ReadOnlySpan<char> source, PinataLabs.Typography.Unicode.LineBreakTailoring tailoring = PinataLabs.Typography.Unicode.LineBreakTailoring.None) -> void
+PinataLabs.Typography.Unicode.LineBreakEnumerator.MoveNext() -> bool
+PinataLabs.Typography.Unicode.LineBreakTailoring
+PinataLabs.Typography.Unicode.LineBreakTailoring.HangulAsAlphabetic = 2 -> PinataLabs.Typography.Unicode.LineBreakTailoring
+PinataLabs.Typography.Unicode.LineBreakTailoring.None = 0 -> PinataLabs.Typography.Unicode.LineBreakTailoring
+PinataLabs.Typography.Unicode.LineBreakTailoring.SouthEastAsianAsIdeographs = 1 -> PinataLabs.Typography.Unicode.LineBreakTailoring
