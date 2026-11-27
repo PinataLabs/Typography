@@ -56,6 +56,21 @@ internal sealed class CffFont
     public int GlyphCount => this.charStrings.Count;
 
     /// <summary>
+    /// Gets the number of Font DICTs that the font reads: one for a font without an FDArray, else the FDArray count up to 256.
+    /// </summary>
+    internal int FontDictCount => this.fontDicts.Length;
+
+    /// <summary>
+    /// Gets the global subroutines.
+    /// </summary>
+    internal CffIndex GlobalSubrs => this.globalSubrs;
+
+    /// <summary>
+    /// Gets the charstrings, one for each glyph.
+    /// </summary>
+    internal CffIndex CharStrings => this.charStrings;
+
+    /// <summary>
     /// Gets a value indicating whether the font is CID-keyed. Such a font has CIDs in place of glyph names.
     /// </summary>
     public bool IsCidKeyed { get; }
@@ -226,6 +241,28 @@ internal sealed class CffFont
     /// <returns><see langword="false"/> if the glyph ID is out of range or the glyph is malformed.</returns>
     internal bool TryObserveCalls(int glyphId, ICffCallObserver observer)
         => this.TryGetGlyph(glyphId, out CffGlyphData glyph) && glyph.TryObserveCalls(observer);
+
+    /// <summary>
+    /// Gets the Font DICT of a glyph: the index that FDSelect gives, or 0 when the font has no FDSelect.
+    /// </summary>
+    /// <param name="glyphId">The glyph ID.</param>
+    /// <param name="fontDict">The index of the Font DICT, below <see cref="FontDictCount"/>.</param>
+    /// <returns><see langword="false"/> if the glyph ID is out of range or has no Font DICT.</returns>
+    internal bool TryGetFontDict(int glyphId, out int fontDict)
+    {
+        fontDict = 0;
+        return (uint)glyphId < (uint)this.GlyphCount
+            && (this.fdSelectOffset == 0 || this.TryGetFontDictIndex(glyphId, out fontDict))
+            && fontDict < this.fontDicts.Length;
+    }
+
+    /// <summary>
+    /// Gets the local subroutines of a Font DICT, or an empty INDEX when it has none.
+    /// </summary>
+    /// <param name="fontDict">The index of the Font DICT, below <see cref="FontDictCount"/>.</param>
+    /// <returns>The INDEX.</returns>
+    internal CffIndex GetLocalSubrs(int fontDict)
+        => this.fontDicts[fontDict].LocalSubrs;
 
     /// <summary>
     /// Checks that an FDSelect lies within the table, so that a glyph lookup can read it unchecked.

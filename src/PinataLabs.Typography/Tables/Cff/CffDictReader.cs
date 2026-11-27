@@ -26,6 +26,12 @@ internal ref struct CffDictReader
     }
 
     /// <summary>
+    /// Gets the position of the next byte to read. After <see cref="TryRead"/> returns <see langword="true"/>
+    /// it is the position after the operator that was read.
+    /// </summary>
+    public readonly int Position => this.position;
+
+    /// <summary>
     /// Reads the next operator.
     /// </summary>
     /// <param name="operands">Receives the operands. It must hold <see cref="MaxOperands"/> values.</param>

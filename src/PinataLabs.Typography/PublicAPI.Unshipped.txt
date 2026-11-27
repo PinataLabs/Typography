@@ -251,3 +251,12 @@ PinataLabs.Typography.MetricSource.PostItalicAngle = 15 -> PinataLabs.Typography
 PinataLabs.Typography.MetricSource.SmallXBounds = 13 -> PinataLabs.Typography.MetricSource
 PinataLabs.Typography.Tables.AdvancedTypographic.OpenTypeScriptTags
 static PinataLabs.Typography.Tables.AdvancedTypographic.OpenTypeScriptTags.GetTags(PinataLabs.Typography.Unicode.ScriptClass script) -> System.ReadOnlySpan<PinataLabs.Typography.Tables.AdvancedTypographic.Tag>
+PinataLabs.Typography.FontSubsetOptions
+PinataLabs.Typography.FontSubsetOptions.FontSubsetOptions() -> void
+PinataLabs.Typography.FontSubsetOptions.ProgramOptions.get -> PinataLabs.Typography.FontProgramOptions?
+PinataLabs.Typography.FontSubsetOptions.ProgramOptions.init -> void
+PinataLabs.Typography.FontSubsetOptions.Tables.get -> System.Collections.Generic.IReadOnlyCollection<string!>?
+PinataLabs.Typography.FontSubsetOptions.Tables.init -> void
+PinataLabs.Typography.FontSubsetter
+static PinataLabs.Typography.FontSubsetOptions.DefaultTables.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+static PinataLabs.Typography.FontSubsetter.Subset(System.ReadOnlyMemory<byte> font, System.Collections.Generic.IReadOnlyCollection<ushort>! glyphIds, PinataLabs.Typography.FontSubsetOptions? options = null) -> byte[]!

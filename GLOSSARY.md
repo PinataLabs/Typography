@@ -63,3 +63,21 @@ _Avoid_: Font fallback (that replaces a missing glyph with the glyph of another 
 **Fallback mark placement**:
 Placing a mark on its base from the boxes of the two glyphs, in a font that has no GPOS table to attach it. The mark takes no advance, and its combining class gives the side of the base.
 _Avoid_: Mark attachment (that is the GPOS lookup with anchors)
+
+## Font subsetting
+
+**Font subset**:
+A font program that keeps the outlines of some of the glyphs of a font and leaves every glyph at its glyph ID. It has the glyph count of the font, so a PDF that picks glyphs by ID reads it as it read the font.
+_Avoid_: Reduced font, stripped font (a stripped font is one with tables removed)
+
+**Kept glyph**:
+A glyph of a font subset that has its outline and its advance: a glyph that the caller asked for, glyph 0, or a glyph that a kept glyph needs.
+_Avoid_: Retained glyph, used glyph
+
+**Dropped glyph**:
+A glyph that a font subset does not keep. It stays at its glyph ID and has no outline: a lone `endchar` in CFF, and no data in `glyf`.
+_Avoid_: Removed glyph, deleted glyph (the glyph is still there, and empty)
+
+**Glyph closure**:
+The kept glyphs that follow from the glyphs that the caller asked for: the base and the accent of a CFF `seac` glyph, and the components of a composite TrueType glyph at any depth. For CFF it also names the subroutines that the kept charstrings call.
+_Avoid_: Dependencies, component set
