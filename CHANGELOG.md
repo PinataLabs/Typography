@@ -548,6 +548,8 @@ Unicode conformance suites to that version.
   made a ligature of ka and kha where HarfBuzz keeps the two letters. The Khmer shaper also left out `clig` when the
   caller turned it off, and in vertical text, where HarfBuzz applies it. The Myanmar and universal shapers of
   HarfBuzz override no feature, and neither do they here. (#178)
+- The Myanmar shaper applies `rphf` to every glyph, as HarfBuzz 15.0.0 does. It applied it to the kinzi only, so an
+  `rphf` lookup of a font did not change a lone ka. (#178)
 - The GSUB lookups of `locl`, `ccmp` and the basic and presentation features of the Indic shaper match glyphs of one
   syllable only, as in HarfBuzz 15.0.0, which plans these features per syllable. A lookup matched glyphs beyond the
   syllable of the glyph it applied to, so in Noto Sans Gujarati, ka, ra, virama, ma took the form of the reph that

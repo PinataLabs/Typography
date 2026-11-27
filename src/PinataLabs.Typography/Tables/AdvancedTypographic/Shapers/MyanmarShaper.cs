@@ -147,9 +147,8 @@ internal sealed class MyanmarShaper : DefaultShaper
         this.AddFeature(collection, index, count, CcmpTag);
 
         // Basic shaping. The syllables are reordered once the glyph sequence is final
-        // and before the first positional form is chosen.
-        // Only the kinzi takes part in rphf, which is enabled for it when the syllables are found.
-        this.AddFeature(collection, index, count, RphfTag, false, preAction: Reorder);
+        // and before the first positional form is chosen. As in HarfBuzz, rphf applies to every glyph.
+        this.AddFeature(collection, index, count, RphfTag, preAction: Reorder);
         this.EndStage();
         this.AddFeature(collection, index, count, PrefTag);
         this.EndStage();
@@ -206,15 +205,6 @@ internal sealed class MyanmarShaper : DefaultShaper
             for (int i = start; i < end; i++)
             {
                 substitutionCollection[index + i].MyanmarShapingEngineInfo = new(categories[i], Positions.Start, type, syllable);
-            }
-
-            // The kinzi is the only part that takes part in rphf.
-            if (HasKinzi(categories.AsSpan(start, end - start)))
-            {
-                for (int i = start; i < start + KinziLength; i++)
-                {
-                    substitutionCollection.EnableShapingFeature(index + i, RphfTag);
-                }
             }
 
             if (type == BrokenCluster)
