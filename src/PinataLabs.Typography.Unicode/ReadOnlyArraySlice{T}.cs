@@ -118,7 +118,14 @@ internal readonly struct ReadOnlyArraySlice<T> : IEnumerable<T>, IEnumerable
     /// Thrown when the specified <paramref name="start"/> or end index is not in range (&lt;0 or &gt;Length).
     /// </exception>
     public ReadOnlyArraySlice<T> Slice(int start, int length)
-        => new(this.data, this.Start + start, length);
+    {
+        if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
+
+        return new(this.data, this.Start + start, length);
+    }
 
     /// <inheritdoc/>
     public IEnumerator<T> GetEnumerator() => new Enumerator(this);
