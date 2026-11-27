@@ -75,8 +75,8 @@ The metrics of one glyph. `TrueTypeGlyphMetrics` is the subclass for TrueType ou
 | `GlyphColor` | `GlyphColor?` | The color of a color layer, or `null`. |
 | `UnitsPerEm` | `ushort` | The units per em of the font. |
 | `ScaleFactor` | `Vector2` | The scale factor of the font, for each axis. |
-| `AdvanceWidth` | `ushort` | How far the pen moves after the glyph in horizontal text. |
-| `AdvanceHeight` | `ushort` | How far the pen moves after the glyph in vertical text. |
+| `AdvanceWidth` | `int` | How far the pen moves after the glyph in horizontal text. Positioning in a layout can make it negative or larger than 65535. |
+| `AdvanceHeight` | `int` | How far the pen moves after the glyph in vertical text. Positioning in a layout can make it negative or larger than 65535. |
 | `LeftSideBearing` | `short` | The space from the pen position to the left edge of the ink. |
 | `RightSideBearing` | `short` | The space from the right edge of the ink to the end of the advance. |
 | `TopSideBearing` | `short` | The space above the ink in vertical text. |

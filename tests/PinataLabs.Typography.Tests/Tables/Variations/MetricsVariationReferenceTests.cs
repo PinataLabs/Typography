@@ -55,7 +55,7 @@ public class MetricsVariationReferenceTests
 
         for (int glyph = 0; glyph < reference.AdvanceWidths[index].Length; glyph++)
         {
-            ushort actual = GetMetrics(font, (ushort)glyph).AdvanceWidth;
+            int actual = GetMetrics(font, (ushort)glyph).AdvanceWidth;
             if (actual != reference.AdvanceWidths[index][glyph])
             {
                 differences.Add($"glyph {glyph}: {actual}, expected {reference.AdvanceWidths[index][glyph]}");
@@ -77,7 +77,7 @@ public class MetricsVariationReferenceTests
 
         for (int glyph = 0; glyph < reference.AdvanceHeights![index].Length; glyph++)
         {
-            ushort actual = GetMetrics(font, (ushort)glyph).AdvanceHeight;
+            int actual = GetMetrics(font, (ushort)glyph).AdvanceHeight;
             if (actual != reference.AdvanceHeights[index][glyph])
             {
                 differences.Add($"glyph {glyph}: {actual}, expected {reference.AdvanceHeights[index][glyph]}");

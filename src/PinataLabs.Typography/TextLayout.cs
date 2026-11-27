@@ -892,7 +892,7 @@ internal static class TextLayout
                         // The advance list is what reaches the line, so it keeps the exact (fractional) width.
                         // Glyph metrics store whole font units, so they are rounded rather than truncated.
                         glyphAdvance = spaceAdvance * options.TabWidth;
-                        ushort storedAdvance = (ushort)Math.Clamp(MathF.Round(glyphAdvance), 0F, ushort.MaxValue);
+                        int storedAdvance = (int)Math.Clamp(Math.Round((double)glyphAdvance), int.MinValue, int.MaxValue);
                         if (isHorizontalLayout || isRotated)
                         {
                             glyph.SetAdvanceWidth(storedAdvance);

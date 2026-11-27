@@ -51,7 +51,7 @@ public class Cff2FontTests
 
         GlyphMetrics glyph = metrics![0];
         await Assert.That(glyph.GlyphId).IsEqualTo((ushort)glyphId);
-        await Assert.That(glyph.AdvanceWidth).IsEqualTo((ushort)advance);
+        await Assert.That(glyph.AdvanceWidth).IsEqualTo(advance);
         await Assert.That(glyph.Width).IsEqualTo((ushort)(xMax - xMin));
         await Assert.That(glyph.Height).IsEqualTo((ushort)(yMax - yMin));
         await Assert.That(glyph.LeftSideBearing).IsEqualTo((short)xMin);

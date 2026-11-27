@@ -105,7 +105,7 @@ public class Cff2VariationOutlineTests
 
         foreach (GlyphReference glyph in FontTools.Glyphs)
         {
-            ushort actual = GetMetrics(font, glyph.Id).AdvanceWidth;
+            int actual = GetMetrics(font, glyph.Id).AdvanceWidth;
             double expected = Math.Floor(glyph.Advances[index] + 0.5);
             if (actual != expected)
             {

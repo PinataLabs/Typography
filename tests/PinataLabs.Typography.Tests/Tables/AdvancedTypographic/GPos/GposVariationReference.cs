@@ -51,7 +51,7 @@ internal static class GposVariationReference
         return layout.Select(g =>
         {
             GlyphMetrics metrics = g.Glyph.GlyphMetrics;
-            ushort unpositioned = font.FontMetrics.GetGlyphMetrics(
+            int unpositioned = font.FontMetrics.GetGlyphMetrics(
                 g.CodePoint,
                 metrics.GlyphId,
                 TextAttributes.None,

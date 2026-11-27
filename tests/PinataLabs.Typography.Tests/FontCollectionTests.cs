@@ -84,7 +84,7 @@ public class FontCollectionTests
 
         await Assert.That(font.FontMetrics.UnitsPerEm).IsEqualTo((ushort)1000);
         await Assert.That(font.TryGetGlyphs(new CodePoint('A'), out IReadOnlyList<Glyph>? glyphs)).IsTrue();
-        await Assert.That(glyphs![0].GlyphMetrics.AdvanceWidth).IsEqualTo((ushort)343);
+        await Assert.That(glyphs![0].GlyphMetrics.AdvanceWidth).IsEqualTo(343);
     }
 
     [Test]

@@ -205,7 +205,7 @@ public class GvarReferenceTests
         List<string> differences = [];
         for (int glyph = 0; glyph < HorizontalMetricCount; glyph++)
         {
-            ushort actual = GetMetrics(font, glyph).AdvanceWidth;
+            int actual = GetMetrics(font, glyph).AdvanceWidth;
             if (actual != expected[glyph])
             {
                 differences.Add($"glyph {glyph}: {actual}, expected {expected[glyph]}");
