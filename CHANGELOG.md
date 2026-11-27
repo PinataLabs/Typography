@@ -505,12 +505,13 @@ Unicode conformance suites to that version.
   character but ZWJ follows them, as HarfBuzz 15.0.0 does. It gave `blwf` only when ZWJ followed them, so ta, virama,
   ra, virama, ka took the half form of ra where HarfBuzz gives its below-base form, and with ZWJ the eyelash ra took
   its below-base form. (#175)
-- A GSUB lookup that a feature matched per syllable and another feature of the same stage did not takes the flag
-  that HarfBuzz 15.0.0 keeps. HarfBuzz adds the lookups of the required feature first, and then those of each feature
-  in the order of the tags, sorts them by index, and keeps the flag of the first. The lookup took the flag of any of
-  its features, so a lookup that the Indic shaper shared between `pres` and `calt` did not match across syllables
-  where HarfBuzz matches it, and neither did a lookup of a required feature. With more than 24 lookups in a stage,
-  HarfBuzz sorts them with a quicksort that is not stable, and the library sorts them the same way. (#175)
+- A GSUB lookup that two features of one stage share, where one feature matches per syllable and the other does not,
+  takes the flag that HarfBuzz 15.0.0 keeps. HarfBuzz adds the lookups of the required feature first, and then the
+  lookups of each feature in the order of the tags. It sorts them by index and keeps the flag of the first. The library
+  took the flag of either feature, so a lookup that the Indic shaper shared between `pres` and `calt` did not match
+  across syllables where HarfBuzz matches it. A lookup of a required feature that a per-syllable feature also lists did
+  not either. With more than 24 lookups in a stage, HarfBuzz sorts them with a quicksort that is not stable, and the
+  library sorts them the same way. (#175)
 - The GSUB lookups of the Khmer, Myanmar and universal shapers match glyphs of one syllable only for the features that
   HarfBuzz 15.0.0 plans per syllable: `locl` and `ccmp`, the Khmer basic features `pref`, `blwf`, `abvf`, `pstf` and
   `cfar`, the Myanmar basic features `rphf`, `pref`, `blwf` and `pstf`, and the universal `nukt`, `akhn`, `rphf`,
