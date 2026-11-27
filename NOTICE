@@ -25,7 +25,7 @@ licensed under the Apache License, Version 2.0, at commit
   sixlabors.ruleset                         .editorconfig (rule severities, modified)
   sixlabors.tests.ruleset                   .editorconfig (rule severities, modified)
   stylecop.json                             stylecop.json (modified)
-  src/SharedInfrastructure/DebugGuard.cs    src/PinataLabs.Typography/DebugGuard.cs (modified)
+  src/SharedInfrastructure/DebugGuard.cs    src/PinataLabs.Typography.Unicode/DebugGuard.cs (modified)
   src/SharedInfrastructure/SharedInfrastructure.projitems
                                             (removed; DebugGuard.cs is now part of the library project)
 

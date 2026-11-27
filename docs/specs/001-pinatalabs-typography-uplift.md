@@ -146,7 +146,7 @@ _N/A (library). Repository permissions are unchanged._
   from `global.json`. This is intended and documented in the README.
 - **Test fixture names:** `SixLaborsSampleAB` stays (see Domain Model).
 - **Generated Unicode resources:** after the rename, the generator must still
-  find the solution root (`.slnx`) and write into `src/PinataLabs.Typography/Unicode/Resources`.
+  find the solution root (`.slnx`) and write into `src/PinataLabs.Typography.Unicode/Resources`.
 - **InternalsVisibleTo** without strong naming: `PinataLabs.Typography.Tests`
   and `DynamicProxyGenAssembly2` (needed by NSubstitute's Castle proxies)
   without `Key`.
@@ -253,7 +253,7 @@ it** (xUnit until commit 7):
   SixLabors switch name has no effect.
 - **AC-19** Given the Unicode trie generator, when it runs from the build
   output, then it finds the `.slnx` root and regenerates the resources under
-  `src/PinataLabs.Typography/Unicode/Resources` with no diff.
+  `src/PinataLabs.Typography.Unicode/Resources` with no diff.
 - **AC-20** Given a push to the branch, when CI runs, then it builds and tests on
   ubuntu, windows and macos for net8.0/net10.0/net11.0 and passes. It has no
   pack, publish or codecov steps.

@@ -8,25 +8,25 @@
 
   <ItemGroup>
     <Compile Include="..\..\tests\PinataLabs.Typography.Tests\Unicode\UnicodeTypeMaps.cs" Link="UnicodeTypeMaps.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\BidiCharacterType.cs" Link="BidiCharacterType.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\BidiPairedBracketType.cs" Link="BidiPairedBracketType.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\GraphemeClusterClass.cs" Link="GraphemeClusterClass.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\ArabicJoiningGroup.cs" Link="ArabicJoiningGroup.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\ArabicJoiningType.cs" Link="ArabicJoiningType.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\IndicConjunctBreak.cs" Link="IndicConjunctBreak.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\IndicPositionalCategory.cs" Link="IndicPositionalCategory.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\IndicSyllabicCategory.cs" Link="IndicSyllabicCategory.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\LineBreakClass.cs" Link="LineBreakClass.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\Resources\IndicShapingData.cs" Link="IndicShapingData.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\ScriptClass.cs" Link="ScriptClass.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\TrieValueLayout.cs" Link="TrieValueLayout.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\UnicodeTrie.cs" Link="UnicodeTrie.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\UnicodeTrieBuilder.cs" Link="UnicodeTrieBuilder.cs" />
-    <Compile Include="..\PinataLabs.Typography\Unicode\VerticalOrientationType.cs" Link="VerticalOrientationType.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\BidiCharacterType.cs" Link="BidiCharacterType.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\BidiPairedBracketType.cs" Link="BidiPairedBracketType.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\GraphemeClusterClass.cs" Link="GraphemeClusterClass.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\ArabicJoiningGroup.cs" Link="ArabicJoiningGroup.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\ArabicJoiningType.cs" Link="ArabicJoiningType.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\IndicConjunctBreak.cs" Link="IndicConjunctBreak.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\IndicPositionalCategory.cs" Link="IndicPositionalCategory.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\IndicSyllabicCategory.cs" Link="IndicSyllabicCategory.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\LineBreakClass.cs" Link="LineBreakClass.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\Resources\IndicShapingData.cs" Link="IndicShapingData.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\ScriptClass.cs" Link="ScriptClass.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\TrieValueLayout.cs" Link="TrieValueLayout.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\UnicodeTrie.cs" Link="UnicodeTrie.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\UnicodeTrieBuilder.cs" Link="UnicodeTrieBuilder.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\VerticalOrientationType.cs" Link="VerticalOrientationType.cs" />
 
-    <Compile Include="..\PinataLabs.Typography\ArraySlice{T}.cs" Link="StateAutomation\ArraySlice{T}.cs" />
-    <Compile Include="..\PinataLabs.Typography\ReadOnlyArraySlice{T}.cs" Link="StateAutomation\ReadOnlyArraySlice{T}.cs" />
-    <Compile Include="..\PinataLabs.Typography\DebugGuard.cs" Link="DebugGuard.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\ArraySlice{T}.cs" Link="StateAutomation\ArraySlice{T}.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\ReadOnlyArraySlice{T}.cs" Link="StateAutomation\ReadOnlyArraySlice{T}.cs" />
+    <Compile Include="..\PinataLabs.Typography.Unicode\DebugGuard.cs" Link="DebugGuard.cs" />
   </ItemGroup>
 
   <ItemGroup>

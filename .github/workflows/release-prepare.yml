@@ -1,10 +1,10 @@
 name: Release
 
-# One-click stable release of PinataLabs.Typography:
+# One-click stable release of PinataLabs.Typography and PinataLabs.Typography.Unicode:
 #
 #   1. resolves the version from the release draft (or the version input)
 #   2. rolls CHANGELOG.md's [Unreleased] section into a dated version heading
-#   3. moves PublicAPI.Unshipped.txt into PublicAPI.Shipped.txt
+#   3. moves PublicAPI.Unshipped.txt into PublicAPI.Shipped.txt, in each of the two projects
 #   4. commits that to main and tags it vX.Y.Z
 #   5. calls release-publish.yml, which builds, tests, packs, publishes to NuGet, and
 #      publishes the draft release notes with contributor attribution
@@ -118,7 +118,9 @@ jobs:
         run: bash .github/scripts/roll-changelog.sh "$VERSION"
 
       - name: Ship public API
-        run: bash .github/scripts/ship-public-api.sh
+        run: |
+          bash .github/scripts/ship-public-api.sh src/PinataLabs.Typography
+          bash .github/scripts/ship-public-api.sh src/PinataLabs.Typography.Unicode
 
       - name: Show changes
         run: git --no-pager diff
@@ -146,7 +148,9 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CHANGELOG.md src/PinataLabs.Typography/PublicAPI.Shipped.txt src/PinataLabs.Typography/PublicAPI.Unshipped.txt
+          git add CHANGELOG.md \
+            src/PinataLabs.Typography/PublicAPI.Shipped.txt src/PinataLabs.Typography/PublicAPI.Unshipped.txt \
+            src/PinataLabs.Typography.Unicode/PublicAPI.Shipped.txt src/PinataLabs.Typography.Unicode/PublicAPI.Unshipped.txt
           git commit -m "chore: release $TAG"
           git tag -a "$TAG" -m "Release $TAG"
           git push --atomic origin HEAD:main "$TAG"

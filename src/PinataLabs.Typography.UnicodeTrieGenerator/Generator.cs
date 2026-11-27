@@ -486,6 +486,9 @@ public static partial class Generator
     /// </summary>
     public static void GenerateUnicodeTries()
     {
+        // Read first, so that rule files of mixed versions fail before any file is written.
+        string unicodeVersion = UnicodeVersionReader.Read(GeneratorPaths.GetRulesDirectory(SolutionDirectoryFullPath));
+
         GenerateBidiTrie();
         GenerateBidiMirrorTrie();
         GenerateLineBreakTrie();
@@ -500,6 +503,7 @@ public static partial class Generator
         List<Codepoint> codePoints = GenerateUniversalShapingDataTrie(ugc, uisc, uipc, uajt);
         GenerateIndicShapingDataTrie(codePoints.ToArray());
         GenerateNormalizationData();
+        GenerateUnicodeInfo(unicodeVersion);
     }
 
     /// <summary>

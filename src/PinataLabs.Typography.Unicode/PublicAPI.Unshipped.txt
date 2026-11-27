@@ -1,0 +1,38 @@
+#nullable enable
+PinataLabs.Typography.Unicode.ScriptClass.BeriaErfe = 163 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Garay = 164 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.GurungKhema = 165 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Jurchen = 166 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Kawi = 167 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.KiratRai = 168 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.NagMundari = 169 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.OlOnal = 170 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.ProtoCuneiform = 171 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Seal = 172 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Sidetic = 173 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Sunuwar = 174 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.TaiYo = 175 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.Todhri = 176 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.TolongSiki = 177 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.ScriptClass.TuluTigalari = 178 -> PinataLabs.Typography.Unicode.ScriptClass
+PinataLabs.Typography.Unicode.LineBreakClass.AK = 43 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.AP = 44 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.AS = 45 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.HH = 46 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.VF = 47 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.LineBreakClass.VI = 48 -> PinataLabs.Typography.Unicode.LineBreakClass
+PinataLabs.Typography.Unicode.IndicSyllabicCategory.ReorderingKiller = 36 -> PinataLabs.Typography.Unicode.IndicSyllabicCategory
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownAin = 104 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownBeh = 105 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownFeh = 106 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownHah = 107 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownHeh = 108 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownKaf = 109 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownMeem = 110 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownSad = 111 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownSeen = 112 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.CrownTah = 113 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.KashmiriYeh = 114 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.ArabicJoiningGroup.ThinNoon = 115 -> PinataLabs.Typography.Unicode.ArabicJoiningGroup
+PinataLabs.Typography.Unicode.UnicodeInfo
+static PinataLabs.Typography.Unicode.UnicodeInfo.Version.get -> string!

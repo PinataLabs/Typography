@@ -34,6 +34,7 @@
     <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\Compile.cs" Link="Unicode\StateAutomation\Compile.cs" />
     <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\State.cs" Link="Unicode\StateAutomation\State.cs" />
     <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\GeneratorPaths.cs" Link="Unicode\GeneratorPaths.cs" />
+    <Compile Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\UnicodeVersionReader.cs" Link="Unicode\UnicodeVersionReader.cs" />
     <PegGrammar Include="..\..\src\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\Grammar.peg" Link="Unicode\StateAutomation\Grammar.peg" />
   </ItemGroup>
 

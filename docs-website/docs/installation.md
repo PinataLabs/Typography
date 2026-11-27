@@ -5,10 +5,12 @@ description: Add PinataLabs.Typography to a .NET project, from a project referen
 
 ## Requirements
 
-- Your project must target **.NET 8**, **.NET 10** or **.NET 11**. The package contains builds for
-  `net8.0`, `net10.0` and `net11.0`.
-- The library has no native dependencies and no package dependencies. It runs on Windows, Linux,
-  macOS and any other platform that .NET supports.
+- Your project must target **.NET Standard 2.1**, **.NET 8**, **.NET 10** or **.NET 11**. The package
+  contains builds for `netstandard2.1`, `net8.0`, `net10.0` and `net11.0`.
+- The library has no native dependencies. It depends on `PinataLabs.Typography.Unicode`, at exactly its
+  own version. That package is part of the same repository and has no font code. The `netstandard2.1`
+  build also depends on `System.Runtime.CompilerServices.Unsafe`. The other builds have no other
+  package dependency. It runs on Windows, Linux, macOS and any other platform that .NET supports.
 
 ## Get the package
 
@@ -39,9 +41,11 @@ dotnet add reference path/to/Typography/src/PinataLabs.Typography/PinataLabs.Typ
 
 ### Option 2: local NuGet package
 
-1. Make a package in a local folder:
+1. Make the packages in a local folder. `PinataLabs.Typography` depends on `PinataLabs.Typography.Unicode`
+   at the same version, so pack both:
 
    ```bash
+   dotnet pack src/PinataLabs.Typography.Unicode -c Release -o ./artifacts
    dotnet pack src/PinataLabs.Typography -c Release -o ./artifacts
    ```
 

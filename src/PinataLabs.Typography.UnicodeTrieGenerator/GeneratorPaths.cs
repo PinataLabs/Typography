@@ -24,5 +24,5 @@ internal static class GeneratorPaths
     /// <param name="solutionDirectory">The directory that contains the solution file.</param>
     /// <returns>The full path of the resources directory.</returns>
     public static string GetResourcesDirectory(string solutionDirectory)
-        => Path.Combine(solutionDirectory, "src", "PinataLabs.Typography", "Unicode", "Resources");
+        => Path.Combine(solutionDirectory, "src", "PinataLabs.Typography.Unicode", "Resources");
 }

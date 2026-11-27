@@ -23,11 +23,20 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
+  <!--
+    The Unicode algorithms and character properties live in PinataLabs.Typography.Unicode, which has no font code.
+    This assembly reads that one's internals, so the package depends on the exact version of it that was packed with
+    this one. Pack writes a project reference as a minimum version, "1.2.3", and an exact one is "[1.2.3]".
+  -->
   <ItemGroup>
-    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="Unicode\StateAutomation\StateMachine.cs" />
-    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\INode.cs" Link="Unicode\StateAutomation\INode.cs" />
-    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="Unicode\StateAutomation\SymbolTable.cs" />
+    <ProjectReference Include="..\PinataLabs.Typography.Unicode\PinataLabs.Typography.Unicode.csproj" />
   </ItemGroup>
+
+  <Target Name="PinUnicodeDependencyVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Condition="'%(Filename)' == 'PinataLabs.Typography.Unicode'" ProjectVersion="[%(ProjectVersion)]" />
+    </ItemGroup>
+  </Target>
 
   <!--
     README.md here is the package readme shown on nuget.org. It is a copy of the repository README

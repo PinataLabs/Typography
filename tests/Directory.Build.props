@@ -26,6 +26,13 @@
                       Condition="'$(TestNetStandard)' == 'true'" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\PinataLabs.Typography\PinataLabs.Typography.csproj"
                       Condition="'$(TestNetStandard)' != 'true'" />
+    <!--
+      PinataLabs.Typography reaches the Unicode project through a reference of its own, which a net8.0 project would
+      bind to the net8.0 asset. The netstandard2.1 asset of one carries polyfills that the other lacks, so name it here.
+    -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\PinataLabs.Typography.Unicode\PinataLabs.Typography.Unicode.csproj"
+                      SetTargetFramework="TargetFramework=netstandard2.1"
+                      Condition="'$(TestNetStandard)' == 'true'" />
   </ItemGroup>
 
 </Project>

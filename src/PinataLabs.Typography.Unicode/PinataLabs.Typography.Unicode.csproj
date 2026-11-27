@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>PinataLabs.Typography.Unicode</AssemblyName>
+    <AssemblyTitle>PinataLabs.Typography.Unicode</AssemblyTitle>
+    <RootNamespace>PinataLabs.Typography.Unicode</RootNamespace>
+    <PackageId>PinataLabs.Typography.Unicode</PackageId>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/PinataLabs/Typography</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageTags>unicode;code-point;grapheme;uax29;script;uax24</PackageTags>
+    <Description>Unicode character properties for .NET, with no font code: code points, code point and grapheme cluster enumeration, and the Unicode version of the data</Description>
+    <TargetFrameworks>netstandard2.1;net8.0;net10.0;net11.0</TargetFrameworks>
+    <AssemblyVersion Condition="'$(IsContinuousIntegration)'==''">1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <!--
+    IsAotCompatible implies IsTrimmable and turns on the trim, AOT and single-file analyzers.
+    The netstandard2.1 asset gets neither: the trimmer reads the attribute only on .NET assets,
+    and the analyzers need the net8.0+ annotations.
+  -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!--
+    PinataLabs.Typography reads this assembly's internals (the property tries, the shaping data, ArraySlice and
+    ArrayBuilder), so the two packages must ship at one version. The Typography package pins this one to it.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="PinataLabs.Typography" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\StateMachine.cs" Link="StateAutomation\StateMachine.cs" />
+    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\INode.cs" Link="StateAutomation\INode.cs" />
+    <Compile Include="..\PinataLabs.Typography.UnicodeTrieGenerator\StateAutomation\SymbolTable.cs" Link="StateAutomation\SymbolTable.cs" />
+  </ItemGroup>
+
+  <!--
+    README.md here is the package readme shown on nuget.org, with every link absolute: nuget.org renders no
+    relative links. See the README of PinataLabs.Typography for why the images come from media.githubusercontent.com.
+  -->
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\NOTICE" Pack="true" PackagePath="" Visible="false" />
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <!--
+    Public API baseline. The build fails (RS0016/RS0017) when the public surface differs from these files.
+    A public API change needs an approved proposal, its own commit, a PublicAPI.Unshipped.txt change and a CHANGELOG.md entry.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+  </ItemGroup>
+
+  <!--
+    Polyfills for BCL members that netstandard2.1 lacks. Every other target framework has them.
+    PinataLabs.Typography uses these two through InternalsVisibleTo rather than carrying its own copy.
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.1'">
+    <Compile Remove="Polyfills\**" />
+  </ItemGroup>
+
+</Project>

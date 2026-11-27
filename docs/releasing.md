@@ -3,6 +3,23 @@
 PinataLabs.Typography is published to nuget.org from GitHub Actions. There are two
 buttons in the Actions tab. Both call one workflow that does the publishing.
 
+## Two packages, one version
+
+Each release publishes two packages:
+
+| Package | Project | Contents |
+|---|---|---|
+| `PinataLabs.Typography.Unicode` | `src/PinataLabs.Typography.Unicode` | The Unicode algorithms and character properties. No font code. |
+| `PinataLabs.Typography` | `src/PinataLabs.Typography` | Fonts and text layout. Depends on the package above. |
+
+They always have the same version. `PinataLabs.Typography` reads internals of the Unicode
+assembly, so its package depends on exactly the Unicode package packed with it, `[x.y.z]`
+and not `x.y.z` or newer. The publish workflow stops when the two packed versions differ.
+It pushes the Unicode package first.
+
+Each project has its own `PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt`, and a stable
+release ships both.
+
 | Workflow | File | What it does |
 |---|---|---|
 | Release | `release-prepare.yml` | Stable release. Rolls the changelog, ships the public API, tags `vX.Y.Z`, then publishes. |
@@ -22,10 +39,12 @@ summary, then run again with dry-run off.
      release, enter the version.
 3. The workflow then:
    - rolls `## [Unreleased]` into `## [1.0.0] - <date>`,
-   - moves the entries in `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt`,
+   - moves the entries in `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt`, in both
+     projects,
    - commits both to `main`, tags the commit `v1.0.0` and pushes them,
-   - builds and tests the tag, packs it, checks the package version equals the tag,
-   - pushes the package and symbols to NuGet,
+   - builds and tests the tag, packs both projects, checks that both packages have the
+     version of the tag,
+   - pushes the packages and symbols to NuGet, the Unicode package first,
    - publishes the drafted GitHub Release and attaches the packages.
 
 If a stable release fails after the tag is pushed, do not run **Release** again: the tag
@@ -38,11 +57,23 @@ there.
 Run **Pre-release** from `main` and pick a label. MinVer numbers the package from the last
 `v` tag and the number of commits since it, for example `0.1.0-beta.12`.
 
-The run fails if that version is already on nuget.org. That happens when nothing has been
-committed since the last pre-release with the same label.
+The run fails if that version is already on nuget.org for `PinataLabs.Typography`, the
+package pushed last. That happens when nothing has been committed since the last
+pre-release with the same label. If only `PinataLabs.Typography.Unicode` has the version,
+an earlier run stopped half way. The check warns and passes, and the push skips the
+package that is already there, so running **Pre-release** again publishes the missing one.
 
 From a branch other than `main`, a dry run works but publishing does not. The `nuget`
 environment allows deployments from `main` only.
+
+## Unicode version
+
+`UnicodeInfo.Version` reports the Unicode version of the property data. It comes from the
+rule files in `src/PinataLabs.Typography.UnicodeTrieGenerator/Rules`, through the generator.
+A caller can pin its own conformance suites to it, so a release that changes it must say so:
+put a line in the `CHANGELOG.md` entry, for example "The Unicode data is version 18.0.0, up
+from 17.0.0". Read the [rule files' README](../src/PinataLabs.Typography.UnicodeTrieGenerator/Rules/README.md)
+for how to move to a new version.
 
 ## Versioning
 
@@ -74,6 +105,13 @@ The policy on nuget.org, for the `jafin` account:
 | Repository | `Typography` |
 | Workflow file | `release-publish.yml` |
 | Environment | `nuget` |
+
+The policy has to let this workflow push both package IDs, `PinataLabs.Typography` and
+`PinataLabs.Typography.Unicode`. A dry run does not push, so it does not show whether
+nuget.org accepts the first push of the Unicode ID. The owner of the `jafin` account should
+check the policy, and the ownership of the new ID, before the first release that carries it.
+If the first push is rejected, push that package once by hand with an API key, then run the
+release again: the push skips a version that is already there.
 
 nuget.org checks the token's `job_workflow_ref` claim. That claim names the workflow file
 that runs the NuGet login step, even when another workflow calls it. That is why the policy
