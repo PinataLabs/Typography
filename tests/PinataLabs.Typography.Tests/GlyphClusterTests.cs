@@ -91,7 +91,7 @@ public class GlyphClusterTests
     // the mark of U+4E00 after the mark of U+5B57, where it keeps the orientation of U+4E00. So the reordered glyphs stay
     // one upright run.
     [Test]
-    public async Task AReorderingJoinsTheGraphemeClustersItMovesOver()
+    public async Task AReorderedGlyphKeepsTheOrientationOfItsGraphemeCluster()
     {
         GlyphSubstitutionCollection collection = Collection("\u5B57\u0301\u4E00\u0302a", LayoutMode.VerticalMixedLeftRight);
         collection.ResolveRunOrientations();
