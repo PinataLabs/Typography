@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -80,6 +81,40 @@ public class GlyphPositioningCollectionTests
         TextRun textRun = new() { Start = offset, End = offset + 1, Font = font };
         substitutions.AddGlyph(glyphId, new CodePoint(character), TextDirection.LeftToRight, textRun, offset, offset, offset);
         return substitutions;
+    }
+
+    // In vertical mixed text the font of the text ligates the upright U+4E00 and U+4E8C, and the fallback font draws the
+    // sideways acute in the grapheme cluster of U+4E8C. The acute keeps the upright orientation of its grapheme cluster,
+    // so it is in one run with the ligature, where the marks of another font than the base are placed.
+    [Test]
+    public async Task AFallbackMarkAfterALigatureOfTwoGraphemeClustersStaysInItsRun()
+    {
+        FontCollection collection = new();
+        Font font = collection.Add(TestFonts.FontRunContextFile).CreateFont(12);
+        Font fallback = collection.Add(TestFonts.FontRunContextFallbackFile).CreateFont(12);
+        TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalMixedLeftRight };
+        const string text = "\u4E00\u4E8C\u0301";
+        GlyphSubstitutionCollection substitutions = new(options);
+        GlyphPositioningCollection positionings = new(options);
+        TextRun[] textRuns = [new() { Start = 0, End = text.GetGraphemeCount(), Font = font }];
+        BidiRun[] bidiRuns = [new(BidiCharacterType.LeftToRight, 0, 0, CodePoint.GetCodePointCount(text))];
+        foreach (Font runFont in new[] { font, fallback })
+        {
+            int textRunIndex = 0;
+            int codePointIndex = 0;
+            int bidiRunIndex = 0;
+            FontRunShaper.Shape(text, [], [], 0, textRuns, ref textRunIndex, ref codePointIndex, ref bidiRunIndex, runFont == fallback, runFont, bidiRuns, substitutions, positionings);
+        }
+
+        List<int> runLengths = [];
+        ShapingRunEnumerator runs = new(positionings);
+        while (runs.MoveNext())
+        {
+            runLengths.Add(runs.Count);
+        }
+
+        await Assert.That(positionings.Count).IsEqualTo(2);
+        await Assert.That(runLengths).IsEquivalentTo([2]);
     }
 
     // A control character needs no fallback font, so it keeps the .notdef of the font of the text when a fallback font
