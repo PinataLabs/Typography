@@ -272,7 +272,28 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
         this.glyphs.Clear();
         this.glyphs.AddRange(updated);
+        this.TakeRunOrientations(replacements);
         return !this.glyphs.Exists(IsUnresolved);
+    }
+
+    // The orientation of a Tr glyph depends on whether its font has a vert form, so a mark that a fallback font draws can
+    // have another orientation than its base. A caller of HarfBuzz takes one orientation for each grapheme cluster, so
+    // each new glyph takes that of the first glyph of its grapheme cluster here.
+    private void TakeRunOrientations(Dictionary<int, GlyphPositioningData[]> replacements)
+    {
+        Dictionary<int, bool> uprightRuns = [];
+        foreach (GlyphPositioningData glyph in this.glyphs)
+        {
+            uprightRuns.TryAdd(glyph.Data.Grapheme, glyph.Data.IsInUprightRun);
+        }
+
+        foreach (GlyphPositioningData[] replacement in replacements.Values)
+        {
+            foreach (GlyphPositioningData glyph in replacement)
+            {
+                glyph.Data.IsInUprightRun = uprightRuns[glyph.Data.Grapheme];
+            }
+        }
     }
 
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
