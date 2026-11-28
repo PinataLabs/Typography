@@ -939,8 +939,10 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 characters that each font draws in a buffer of that font, so no lookup of one font sees a glyph of another. The two
 fonts give the same glyph IDs to different characters, and each case has a GPOS lookup that would apply if it took a
 glyph of the other font for its own: a pair lookup of either font, and a chained context and a mark-to-base lookup of
-the fallback font. The script splits each text into runs of the characters that one font draws, the font of the text
-where it has the character, and shapes each run in a buffer of its font. As a control, it also shapes a text in one
+the fallback font. Two more cases put a default-ignorable character of one font between glyphs of the other. The script
+splits each text into runs of the characters that one font draws, the font of the text where it has the character, and
+shapes each run in a buffer of its font. HarfBuzz hides a default-ignorable character that a font lacks, so the script
+gives one that the font of the text lacks to the fallback font only with another character of its grapheme cluster. As a control, it also shapes a text in one
 buffer of the font, where the lookup applies. The reference holds the glyph ID and the place of each glyph.
 
 `FontRunContextTests` checks that the layout gives the same glyphs in the same places.

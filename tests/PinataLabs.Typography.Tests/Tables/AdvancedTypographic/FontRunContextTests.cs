@@ -14,7 +14,10 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 /// FontRunContext.ttf, the font of the text, and FontRunContextFallback.ttf give the same glyph IDs to different
 /// characters, and each has GPOS lookups that would apply if they took a glyph of the other font for their own: a pair,
 /// a chained context and a mark-to-base lookup. A caller of HarfBuzz shapes the characters that each font draws in a
-/// buffer of that font, so none of them applies (issue #198). In one buffer of the font, each of them applies.
+/// buffer of that font, so none of them applies (issue #198). In one buffer of the font, each of them applies. The same
+/// holds for a default-ignorable glyph of one font between glyphs of the other. A default-ignorable character that the
+/// font of the text lacks stays in its buffer, where HarfBuzz hides it, unless another character of its cluster takes
+/// the fallback font.
 /// </summary>
 public class FontRunContextTests
 {
