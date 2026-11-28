@@ -77,12 +77,15 @@ internal sealed class KerningTable : Table
             return;
         }
 
-        int start = 0;
-        while (start < collection.Count)
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByFont(collection);
+        while (runs.MoveNext())
         {
-            int end = FallbackMarkPositioner.GetScriptRunEnd(collection, start, out ScriptClass script);
+            ScriptClass script = runs.Script;
+            int start = runs.Start;
+            int end = runs.End;
             Tag substitutionScript = fontMetrics.GetGSubTable().GetScriptTag(script);
-            if (ShaperFactory.HasFallbackPositioning(script, substitutionScript)
+            if (collection.ShouldProcess(fontMetrics, start)
+                && ShaperFactory.HasFallbackPositioning(script, substitutionScript)
                 && !(gpos?.PositionsScript(script) == true && gpos.HasFeature(script, GPosTable.KernTag, collection.TextOptions.Language, ShaperFactory.Create(script, substitutionScript, collection.TextOptions).DisabledFeatureTags)))
             {
                 // The change that the kerning makes to the advance and to the offset of each glyph of the run.
@@ -110,8 +113,6 @@ internal sealed class KerningTable : Table
                     MoveAttachedMarks(fontMetrics, collection, start, advances, offsets);
                 }
             }
-
-            start = end;
         }
     }
 
@@ -131,8 +132,7 @@ internal sealed class KerningTable : Table
         // both of its glyphs are rotated.
         LayoutMode layoutMode = collection.TextOptions.LayoutMode;
         if (AdvancedTypographicUtils.IsVerticalGlyph(leftData.CodePoint, layoutMode, leftData.HasVerticalForm)
-            || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm)
-            || leftData.Direction != rightData.Direction)
+            || AdvancedTypographicUtils.IsVerticalGlyph(rightData.CodePoint, layoutMode, rightData.HasVerticalForm))
         {
             return false;
         }

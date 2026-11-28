@@ -42,6 +42,7 @@ internal class GlyphShapingData
         this.HoldsInsertedGlyph = data.HoldsInsertedGlyph;
         this.SourceOffset = data.SourceOffset;
         this.Cluster = data.Cluster;
+        this.Grapheme = data.Grapheme;
         this.Direction = data.Direction;
         this.TextRun = data.TextRun;
         this.LigatureId = data.LigatureId;
@@ -56,6 +57,7 @@ internal class GlyphShapingData
         this.IsMultiplied = data.IsMultiplied;
         this.IsUnhiddenJoiner = data.IsUnhiddenJoiner;
         this.HasVerticalForm = data.HasVerticalForm;
+        this.IsInUprightRun = data.IsInUprightRun;
         this.SubstitutionReachedNestingLimit = data.SubstitutionReachedNestingLimit;
         this.SpaceFallback = data.SpaceFallback;
         this.JamoFeature = data.JamoFeature;
@@ -171,6 +173,17 @@ internal class GlyphShapingData
     public int Cluster { get; set; }
 
     /// <summary>
+    /// Gets the index in the text of the grapheme cluster of the character that the glyph comes from, as UAX #29
+    /// forms it and as <see cref="TextRun"/> counts it. No ligature or reordering changes it. A caller of HarfBuzz
+    /// itemizes text by grapheme cluster: a browser takes the orientation of each grapheme cluster in vertical text and a
+    /// font for each grapheme cluster. So the glyphs of one grapheme cluster share a run of one orientation, and a
+    /// default-ignorable character takes the font of the rest of its grapheme cluster. <see cref="Cluster"/> is the
+    /// cluster of HarfBuzz instead, which a ligature or a reordering can widen, and which starts at ZWNJ and joins an
+    /// emoji after a letter and ZWJ, where no grapheme cluster does.
+    /// </summary>
+    public int Grapheme { get; init; }
+
+    /// <summary>
     /// Gets or sets the text direction.
     /// </summary>
     public TextDirection Direction { get; set; }
@@ -263,6 +276,14 @@ internal class GlyphShapingData
     /// and rotated, with horizontal features and metrics, otherwise.
     /// </summary>
     public bool HasVerticalForm { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the glyph is shaped in a run of upright glyphs: whether the first glyph
+    /// of its grapheme cluster is upright. A caller of HarfBuzz takes the orientation of each grapheme cluster before it
+    /// shapes the text, so a ligature, a reordering or a fallback font leaves it as it is, and a mark keeps the
+    /// orientation of its base.
+    /// </summary>
+    public bool IsInUprightRun { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether a nested GSUB lookup of the glyph's script run would have gone past

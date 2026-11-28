@@ -869,9 +869,7 @@ internal sealed class IndicShaper : DefaultShaper
         const int index = 0;
         SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
         int initialCount = collection.Count;
-        int collectionCount = initialCount;
         int count = initialCount - index;
-        int last = index;
 
         // Set max constraints to prevent OutOfMemoryException or infinite loops from attacks.
         int maxCount = AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(collection.Count);
@@ -888,8 +886,6 @@ internal sealed class IndicShaper : DefaultShaper
             this.ScriptClass,
             index,
             ref count,
-            ref last,
-            ref collectionCount,
             maxCount,
             maxOperationsCount,
             ref currentOperations);

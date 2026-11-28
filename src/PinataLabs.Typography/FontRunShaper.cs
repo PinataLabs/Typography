@@ -35,6 +35,7 @@ internal static class FontRunShaper
         int bidiRunIndex = 0;
         Shape(text, default, default, 0, textRuns, ref textRunIndex, ref codePointIndex, ref bidiRunIndex, false, font, bidiRuns, substitutions, positionings);
         font.FontMetrics.UpdatePositions(positionings);
+        positionings.HideDefaultIgnorables();
         return positionings;
     }
 
@@ -56,7 +57,7 @@ internal static class FontRunShaper
     /// <param name="bidiRuns">The bidi runs of the text.</param>
     /// <param name="substitutions">The collection of glyphs to shape, which this method clears first.</param>
     /// <param name="positionings">The collection that receives the shaped glyphs.</param>
-    /// <returns><see langword="true"/> if the font has a glyph for every character of the run.</returns>
+    /// <returns><see langword="true"/> if no glyph of the text needs a fallback font any more.</returns>
     public static bool Shape(
         ReadOnlySpan<char> text,
         ReadOnlySpan<char> textBefore,
@@ -123,7 +124,7 @@ internal static class FontRunShaper
 
                 // Get the glyph id for the codepoint and add to the collection.
                 font.FontMetrics.TryGetGlyphId(current, next, out ushort glyphId, out skipNextCodePoint);
-                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex, codePointTextIndex);
+                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex, codePointTextIndex, graphemeIndex);
 
                 codePointIndex++;
                 graphemeCodePointIndex++;

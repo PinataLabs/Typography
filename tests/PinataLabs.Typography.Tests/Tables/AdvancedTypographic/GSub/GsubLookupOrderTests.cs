@@ -24,6 +24,8 @@ public class GsubLookupOrderTests
     private const ushort RotatedLigatureFI = 8;
     private const ushort AlternateA = 9;
     private const ushort LigatureAB = 10;
+    private const ushort C = 11;
+    private const ushort Copyright = 13;
     private const ushort LigatureCCopyright = 14;
     private const ushort LigatureDCopyright = 15;
     private const ushort BehAfterRtlmThenCcmp = 18;
@@ -59,17 +61,42 @@ public class GsubLookupOrderTests
     public async Task LookupIsNotAppliedToGlyphWithoutItsFeature()
         => await Assert.That(GlyphIds("if", LayoutMode.HorizontalTopBottom)).IsEquivalentTo(new[] { I, F });
 
-    // In vertical mixed layout the rotated letter has liga and ss01, and the upright copyright sign
-    // has ss01 but not liga. Both features reference the ligature lookup.
+    // The letter has liga and ss01, and the copyright sign ss01 alone. Both features reference the ligature lookup, so
+    // it forms the ligature, as in HarfBuzz, where the mask of a lookup has the bits of each feature that references it.
     [Test]
-    public async Task LookupOfTwoFeaturesFormsLigatureWhenAComponentHasOnlyOneOfThem()
-        => await Assert.That(GlyphIds("c©", LayoutMode.VerticalMixedRightLeft, Tag.Parse("ss01")))
-            .IsEquivalentTo(new[] { LigatureCCopyright });
+    [Arguments("c©", LigatureCCopyright)]
+    [Arguments("d©", LigatureDCopyright)]
+    public async Task LookupOfTwoFeaturesFormsLigatureWhenAComponentHasOnlyOneOfThem(string text, int ligature)
+    {
+        Font font = new FontCollection().Add(TestFonts.GsubLookupOrderFile).CreateFont(30);
+        FontMetrics fontMetrics = font.FontMetrics;
+        Tag liga = Tag.Parse("liga");
+        Tag ss01 = Tag.Parse("ss01");
+        GlyphSubstitutionCollection collection = new(new TextOptions(font)) { FontMetrics = fontMetrics };
+        TextRun run = new() { Start = 0, End = text.Length, Font = font };
+        for (int i = 0; i < text.Length; i++)
+        {
+            CodePoint codePoint = CodePoint.DecodeFromUtf16At(text, i);
+            fontMetrics.TryGetGlyphId(codePoint, out ushort glyphId);
+            collection.AddGlyph(glyphId, codePoint, TextDirection.LeftToRight, run, i, i, i);
+            collection.AddShapingFeature(i, new TagEntry(ss01, true));
+        }
 
+        collection.AddShapingFeature(0, new TagEntry(liga, true));
+        SkippingGlyphIterator iterator = new(fontMetrics, collection, 0, default);
+        int count = collection.Count;
+        int operations = 0;
+        fontMetrics.GetGSubTable().ApplyFeatures(fontMetrics, collection, ref iterator, [new(liga), new(ss01)], [], false, ScriptClass.Latin, 0, ref count, 64, 1024, ref operations);
+
+        await Assert.That(Enumerable.Range(0, collection.Count).Select(i => (int)collection[i].GlyphId)).IsEquivalentTo(new[] { ligature });
+    }
+
+    // In vertical mixed layout the letter is rotated and the copyright sign upright, so they are runs of two
+    // orientations, which HarfBuzz shapes in two buffers. No ligature forms across them.
     [Test]
-    public async Task NestedLookupOfTwoFeaturesFormsLigatureWhenAComponentHasOnlyOneOfThem()
-        => await Assert.That(GlyphIds("d©", LayoutMode.VerticalMixedRightLeft, Tag.Parse("ss01")))
-            .IsEquivalentTo(new[] { LigatureDCopyright });
+    public async Task LigatureIsNotFormedAcrossRunsOfTwoOrientations()
+        => await Assert.That(GlyphIds("c©", LayoutMode.VerticalMixedRightLeft, Tag.Parse("ss01")))
+            .IsEquivalentTo(new[] { C, Copyright });
 
     [Test]
     public async Task LigatureIsNotFormedWhenAComponentHasNoFeatureOfTheLookup()
@@ -88,7 +115,7 @@ public class GsubLookupOrderTests
         Font font = FakeFont.CreateFont(text);
         TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalRightLeft };
         GlyphSubstitutionCollection collection = new(options);
-        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.RightToLeft, new TextRun { Start = 0, End = 1, Font = font }, 0, 0);
+        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.RightToLeft, new TextRun { Start = 0, End = 1, Font = font }, 0, 0, 0);
 
         new ArabicShaper(ScriptClass.Arabic, options).Plan(collection, 0, 1);
 

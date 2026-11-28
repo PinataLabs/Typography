@@ -182,7 +182,7 @@ public class GposIndexHardeningTests
         GlyphSubstitutionCollection substitutions = new(options);
         for (int i = 0; i < text.Length; i++)
         {
-            substitutions.AddGlyph((ushort)(i + 1), new CodePoint(text[i]), TextDirection.LeftToRight, run, i, i);
+            substitutions.AddGlyph((ushort)(i + 1), new CodePoint(text[i]), TextDirection.LeftToRight, run, i, i, i);
         }
 
         GlyphPositioningCollection positionings = new(options);

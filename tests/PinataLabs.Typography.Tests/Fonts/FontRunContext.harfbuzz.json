@@ -1,0 +1,31 @@
+{
+  "harfbuzz": "15.0.0",
+  "rows": [
+    ["FallbackPair","az","runs",[[1,0,0],[4,600,0]]],
+    ["FallbackPair","xz","fallback",[[1,0,0],[4,500,0]]],
+    ["FallbackContext","ay","runs",[[1,0,0],[2,600,0]]],
+    ["FallbackContext","xy","fallback",[[1,0,0],[2,600,100]]],
+    ["FallbackMark","aw","runs",[[1,0,0],[5,600,0]]],
+    ["FallbackMark","xw","fallback",[[1,0,0],[5,300,200]]],
+    ["PrimaryPair","aya","runs",[[1,0,0],[2,600,0],[1,1200,0]]],
+    ["PrimaryPair","aba","primary",[[1,0,0],[2,600,0],[1,1100,0]]],
+    ["FallbackIgnorable","a\u034fa","runs",[[1,0,0],[8,600,0],[1,600,0]]],
+    ["FallbackIgnorable","ea","primary",[[3,0,0],[1,500,0]]],
+    ["PrimaryIgnorable","x\u200dz","runs",[[1,0,0],[4,500,0]]],
+    ["PrimaryIgnorable","x\u200dz","fallback",[[1,0,0],[4,500,0]]],
+    ["PrimaryWordJoiner","x\u2060z","runs",[[1,0,0],[8,600,0],[4,600,0]]],
+    ["PrimaryWordJoiner","xz","fallback",[[1,0,0],[4,500,0]]],
+    ["MissingIgnorable","x\udb40\udc61\u0301","runs",[[1,0,0],[6,200,300]]],
+    ["MissingIgnorable","x\udb40\udc61\u0301","fallback",[[1,0,0],[6,200,300]]],
+    ["ZwjLigature","\ud83d\udc68\u200d\ud83d\udc69","runs",[[12,0,0]]],
+    ["ZwjLigature","\ud83d\udc68\u200d\ud83d\udc69","fallback",[[12,0,0]]],
+    ["JoinerBeforeEmoji","a\u200d\ud83d\udc68","runs",[[1,0,0],[8,600,0],[10,600,0]]],
+    ["JoinerBeforeEmoji","a\u200d","primary",[[1,0,0],[8,600,0]]],
+    ["PrimaryNonJoiner","x\u200cz","runs",[[1,0,0],[4,500,0]]],
+    ["PrimaryNonJoiner","x\u200cz","fallback",[[1,0,0],[4,500,0]]],
+    ["MarkOrientation","\u5b57\u0301\u5b58","ttb runs",[[5,0,0],[6,0,0],[7,0,100]]],
+    ["MarkOrientation","\u5b57\u0301\u5b58","ttb fallback",[[8,0,0],[6,0,0],[7,0,100]]],
+    ["LigatureMark","\u4e00\u4e8c\u0302","ttb runs",[[12,0,0],[11,0,100]]],
+    ["LigatureMark","\u4e00\u4e8c\u0302","ttb primary",[[12,0,0],[11,0,100]]]
+  ]
+}

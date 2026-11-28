@@ -343,7 +343,9 @@ public abstract class FontMetrics
     internal abstract bool TryGetKerningOffset(ushort previousId, ushort currentId, out Vector2 vector);
 
     /// <summary>
-    /// Applies any available positioning updates to the collection of glyphs.
+    /// Applies any available positioning updates to the collection of glyphs. The default-ignorable glyphs stay until
+    /// every font has positioned its glyphs, and <see cref="GlyphPositioningCollection.HideDefaultIgnorables"/> hides
+    /// them.
     /// </summary>
     /// <param name="collection">The glyph positioning collection.</param>
     internal abstract void UpdatePositions(GlyphPositioningCollection collection);

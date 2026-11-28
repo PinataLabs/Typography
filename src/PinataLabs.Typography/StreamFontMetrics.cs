@@ -445,7 +445,6 @@ internal partial class StreamFontMetrics : FontMetrics
         }
 
         FallbackMarkPositioner.PlaceMarksAfterKerning(this, collection, this.positioning);
-        collection.HideDefaultIgnorables(this);
     }
 
     /// <summary>

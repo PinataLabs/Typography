@@ -139,70 +139,34 @@ internal class GSubTable : Table
         // Shapers must query the font that is actually being shaped, not the font of the text run.
         collection.FontMetrics = fontMetrics;
 
-        for (int i = 0; i < collection.Count; i++)
+        // A run ends where the orientation changes, which is known for a Tr glyph only once the vert lookups are probed.
+        this.ResolveVerticalForms(fontMetrics, collection);
+        collection.ResolveRunOrientations();
+
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext() && runs.Start < maxCount)
         {
-            // Choose a shaper based on the script.
-            // This determines which features to apply to which glyphs.
-            ScriptClass current = collection.TextOptions.GetScriptClass(collection[i].CodePoint);
+            // Each run has a shaper of its script, so that the shapers of different scripts do not interfere.
+            ScriptClass script = runs.Script;
+            int index = runs.Start;
+            BaseShaper shaper = ShaperFactory.Create(script, this.GetScriptTag(script), collection.TextOptions);
 
-            int index = i;
-            int count = 1;
-            while (i < collection.Count - 1)
-            {
-                // We want to assign the same feature lookups to individual sections of the text rather
-                // than the text as a whole to ensure that different language shapers do not interfere
-                // with each other when the text contains multiple languages.
-                ScriptClass next = collection.TextOptions.GetScriptClass(collection[i + 1].CodePoint);
-                if (next != current &&
-                    current is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited &&
-                    next is not ScriptClass.Common and not ScriptClass.Unknown and not ScriptClass.Inherited)
-                {
-                    break;
-                }
+            // As in HarfBuzz, which shapes each run in a buffer of its own, lookups apply within the run.
+            collection.SetRun(index, runs.Count);
 
-                if (current is ScriptClass.Common or ScriptClass.Unknown or ScriptClass.Inherited)
-                {
-                    current = next;
-                }
-
-                i++;
-                count++;
-
-                if (i >= maxCount)
-                {
-                    break;
-                }
-            }
-
-            BaseShaper shaper = ShaperFactory.Create(current, this.GetScriptTag(current), collection.TextOptions);
-
-            // As in HarfBuzz, which shapes each script run in a buffer of its own, lookups apply within the run.
-            collection.SetRun(index, count);
-
-            // Plan substitution features for each glyph.
-            // Shapers can adjust the count during initialization and feature processing so we must capture
-            // the current count to allow resetting indexes and processing counts.
-            ResolveVerticalForms(fontMetrics, this, collection, index, count, current, shaper.DisabledFeatureTags);
-            int collectionCount = collection.Count;
-            shaper.Plan(collection, index, count);
-            int delta = collection.Count - collectionCount;
-            i += delta;
-            count += delta;
+            // Plan substitution features for each glyph. A shaper can change the number of glyphs of the run, which
+            // the run follows.
+            shaper.Plan(collection, index, runs.Count);
 
             IReadOnlyList<ShapingStage> stages = shaper.GetShapingStages();
-            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, current, collection.TextOptions.Language, stages);
+            int requiredFeatureStage = LookupFeatures.GetRequiredFeatureStage(this.ScriptList, this.FeatureList, script, collection.TextOptions.Language, stages);
             SkippingGlyphIterator iterator = new(fontMetrics, collection, index, default);
             for (int s = 0; s < stages.Count; s++)
             {
                 ShapingStage stage = stages[s];
-                collectionCount = collection.Count;
-                stage.PreProcessFeatures(collection, index, count);
+                stage.PreProcessFeatures(collection, index, runs.Count);
 
-                // Account for substitutions changing the length of the collection.
-                delta = collection.Count - collectionCount;
-                count += delta;
-                i += delta;
-
+                int count = runs.Count;
                 this.ApplyFeatures(
                     fontMetrics,
                     collection,
@@ -210,22 +174,14 @@ internal class GSubTable : Table
                     stage.Features,
                     shaper.DisabledFeatureTags,
                     s == requiredFeatureStage,
-                    current,
+                    script,
                     index,
                     ref count,
-                    ref i,
-                    ref collectionCount,
                     maxCount,
                     maxOperationsCount,
                     ref currentOperations);
 
-                collectionCount = collection.Count;
-                stage.PostProcessFeatures(collection, index, count);
-
-                // Account for substitutions changing the length of the collection.
-                delta = collection.Count - collectionCount;
-                count += delta;
-                i += delta;
+                stage.PostProcessFeatures(collection, index, runs.Count);
             }
 
             // GPOS reads it when it positions the glyphs of the run.
@@ -246,29 +202,41 @@ internal class GSubTable : Table
     /// glyph in a vertical mixed layout has a vertical form in this font. Glyphs the <c>vert</c> feature
     /// substitutes are laid out upright; the others stay rotated and are shaped like any horizontal glyph.
     /// </summary>
-    private static void ResolveVerticalForms(
+    private void ResolveVerticalForms(FontMetrics fontMetrics, GlyphSubstitutionCollection collection)
+    {
+        TextOptions options = collection.TextOptions;
+        if (!options.LayoutMode.IsVerticalMixed())
+        {
+            return;
+        }
+
+        // The orientations are not resolved yet, so these runs do not split by them. Each glyph is probed alone, with the
+        // script of its script run.
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByScriptAndDirection(collection);
+        while (runs.MoveNext())
+        {
+            ScriptClass script = runs.Script;
+            IReadOnlyList<Tag> disabledFeatures = ShaperFactory.Create(script, this.GetScriptTag(script), options).DisabledFeatureTags;
+            this.ResolveVerticalForms(fontMetrics, collection, runs.Start, runs.End, script, disabledFeatures);
+        }
+    }
+
+    private void ResolveVerticalForms(
         FontMetrics fontMetrics,
-        GSubTable table,
         GlyphSubstitutionCollection collection,
-        int index,
-        int count,
+        int start,
+        int end,
         ScriptClass script,
         IReadOnlyList<Tag> disabledFeatures)
     {
-        if (!collection.TextOptions.LayoutMode.IsVerticalMixed())
-        {
-            return;
-        }
-
         Tag vert = Tag.Parse("vert");
         PlannedFeature[] vertOnly = [new(vert)];
-        TextOptions options = collection.TextOptions;
-        if (!table.TryGetFeatureLookups(vert, script, options.Language, disabledFeatures, out _))
+        if (!this.TryGetFeatureLookups(vert, script, collection.TextOptions.Language, disabledFeatures, out _))
         {
             return;
         }
 
-        for (int i = index; i < index + count; i++)
+        for (int i = start; i < end; i++)
         {
             GlyphShapingData data = collection[i];
             if (data.HasVerticalForm || CodePoint.GetVerticalOrientationType(data.CodePoint) != VerticalOrientationType.TransformRotate)
@@ -278,15 +246,13 @@ internal class GSubTable : Table
 
             // Probe the vert lookups with the glyph on its own.
             GlyphSubstitutionCollection probe = new(collection.TextOptions) { FontMetrics = fontMetrics };
-            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0, data.Cluster);
+            probe.AddGlyph(data.GlyphId, data.CodePoint, data.Direction, data.TextRun, 0, data.Cluster, data.Grapheme);
             probe.AddShapingFeature(0, new TagEntry(vert, true));
 
             SkippingGlyphIterator iterator = new(fontMetrics, probe, 0, default);
             int probeCount = 1;
-            int probeIndex = 0;
-            int probeCollectionCount = 1;
             int operations = 0;
-            table.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, disabledFeatures, false, script, 0, ref probeCount, ref probeIndex, ref probeCollectionCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
+            this.ApplyFeatures(fontMetrics, probe, ref iterator, vertOnly, disabledFeatures, false, script, 0, ref probeCount, AdvancedTypographicUtils.GetMaxAllowableShapingCollectionCount(1), AdvancedTypographicUtils.GetMaxAllowableShapingOperationsCount(1), ref operations);
             data.HasVerticalForm = probe[0].GlyphId != data.GlyphId;
         }
     }
@@ -307,8 +273,6 @@ internal class GSubTable : Table
         ScriptClass current,
         int index,
         ref int count,
-        ref int i,
-        ref int collectionCount,
         int maxCount,
         int maxOperationsCount,
         ref int currentOperations)
@@ -357,14 +321,12 @@ internal class GSubTable : Table
                     continue;
                 }
 
-                collectionCount = collection.Count;
+                int collectionCount = collection.Count;
                 lookupTable.TrySubstitution(fontMetrics, this, collection, lookupFeatures, iterator.Index, count - (iterator.Index - index));
                 iterator.Next();
 
                 // Account for substitutions changing the length of the collection.
-                int delta = collection.Count - collectionCount;
-                count += delta;
-                i += delta;
+                count += collection.Count - collectionCount;
             }
         }
     }

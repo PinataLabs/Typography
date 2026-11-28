@@ -19,8 +19,8 @@ public class LookupType2Format1SubTableTests
         TextRun run = new() { Start = 0, End = 2 };
 
         GlyphSubstitutionCollection substitutions = new(options);
-        substitutions.AddGlyph(1, new CodePoint('A'), TextDirection.LeftToRight, run, 0, 0);
-        substitutions.AddGlyph(2, new CodePoint('B'), TextDirection.LeftToRight, run, 1, 1);
+        substitutions.AddGlyph(1, new CodePoint('A'), TextDirection.LeftToRight, run, 0, 0, 0);
+        substitutions.AddGlyph(2, new CodePoint('B'), TextDirection.LeftToRight, run, 1, 1, 1);
 
         GlyphPositioningCollection positionings = new(options);
         positionings.TryAdd(font, substitutions);

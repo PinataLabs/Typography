@@ -884,18 +884,23 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 ## Script run context reference
 
 `generate_script_run_context_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/ScriptRunContext.ttf` and
-writes `ScriptRunContext.harfbuzz.json` next to it. A caller of HarfBuzz shapes each script run in a buffer of its
-own, so no lookup matches or attaches a glyph of the run next to it. Each case of the font has a GSUB or GPOS lookup
-that applies only with a glyph of another script next to the glyph it changes: a chained context, a context, a
-reverse chaining and a ligature lookup, a pair, mark-to-base, mark-to-mark, mark-to-ligature and cursive lookup, and
-lookups across Han, Hiragana and Katakana. The script splits each text into script runs as the library does, with
-Common and Inherited characters in the run before them, and shapes each run in its own buffer. For each case that
-crosses a boundary it also shapes the text in one buffer of one script, where the lookup applies. Other cases check
-where the nested lookups of a context lookup apply: not at a second input glyph that a ligature of the first nested
-lookup took, and at the glyph after a ZWJ that the input names, not the one after it. The reference holds the glyph ID
-and the place of each glyph.
+writes `ScriptRunContext.harfbuzz.json` next to it. A caller of HarfBuzz shapes each run of one script, one direction
+and, in vertical text, one orientation in a buffer of its own, so no lookup matches or attaches a glyph of the run next
+to it. Each case of the font has a GSUB or GPOS lookup that applies only with a glyph of another script next to the
+glyph it changes: a chained context, a context, a reverse chaining and a ligature lookup, a pair, mark-to-base,
+mark-to-mark, mark-to-ligature and cursive lookup, and lookups across Han, Hiragana and Katakana. Two more cases
+apply only with a digit next to a Hebrew letter, which the Unicode Bidirectional Algorithm gives the other direction,
+one gives a digit an alternate only in the Hebrew script, one applies only with an upright Han character next to a
+sideways hyphen-minus, one checks that a mark stays in the upright run of its base, and one that the sideways ZWJ of an
+emoji ZWJ sequence stays in the upright run of its grapheme cluster, and one that an emoji after a letter and ZWJ is
+a grapheme cluster and an upright run of its own, and one that ZWNJ continues the upright grapheme cluster of an emoji. The script splits each text into script runs as the library does, with Common and Inherited characters in the run before them, the Hebrew texts into runs of
+one direction too, which keep the Hebrew script, and the vertical text into runs of one orientation, and shapes each
+run in its own buffer. For each case that crosses a boundary it also shapes the text in one buffer, where the lookup
+applies. Other cases check where the nested lookups of a context lookup apply: not at a second input glyph that a
+ligature of the first nested lookup took, and at the glyph after a ZWJ that the input names, not the one after it. The
+reference holds the glyph ID and the place of each glyph, and only the glyph ID for vertical text.
 
-`ScriptRunContextTests` checks that the library gives the same glyphs in the same places.
+`ScriptRunContextTests` checks that `TextShaper.Shape` and the layout give the same glyphs in the same places.
 
 To write the font and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
 repository root:
@@ -924,6 +929,35 @@ repository root:
 
 ```
 python tests/tools/generate_nesting_limit_reference.py
+```
+
+The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
+
+## Font run context reference
+
+`generate_font_run_context_reference.py` builds `tests/PinataLabs.Typography.Tests/Fonts/FontRunContext.ttf` and
+`FontRunContextFallback.ttf` and writes `FontRunContext.harfbuzz.json` next to them. A caller of HarfBuzz shapes the
+characters that each font draws in a buffer of that font, so no lookup of one font sees a glyph of another. The two
+fonts give the same glyph IDs to different characters, and each case has a GPOS lookup that would apply if it took a
+glyph of the other font for its own: a pair lookup of either font, and a chained context and a mark-to-base lookup of
+the fallback font. More cases put a default-ignorable character between glyphs of the other font, or in a grapheme
+cluster that the fallback font draws, where a mark-to-base lookup and a ZWJ ligature apply only in one buffer. The script
+splits each text into runs of the characters that one font draws, the font of the text where it has the character, and
+shapes each run in a buffer of its font. A default-ignorable character takes the font of the rest of its grapheme
+cluster (UAX #29), as a caller that takes a font for each grapheme cluster gives it: the fallback font when another
+character of the grapheme cluster takes it, and else the font of the text. So ZWNJ after a letter takes the font of
+the letter, and ZWJ between a letter and an emoji the font of the letter. HarfBuzz hides it in a font that lacks it,
+with the space glyph of a font that has one. A
+vertical case starts a run of the fallback font at a mark, which keeps the upright orientation of its cluster. As a control, it also shapes a text in one
+buffer of the font, where the lookup applies. The reference holds the glyph ID and the place of each glyph.
+
+`FontRunContextTests` checks that the layout gives the same glyphs in the same places.
+
+To write the fonts and the reference again, install fontTools 4.68 or later and uharfbuzz, and run this from the
+repository root:
+
+```
+python tests/tools/generate_font_run_context_reference.py
 ```
 
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.

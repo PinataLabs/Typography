@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PinataLabs.Typography.Tables.AdvancedTypographic;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tests;
@@ -84,24 +86,58 @@ public class GlyphClusterTests
         await Assert.That(collection.Count).IsEqualTo(4);
     }
 
+    // In vertical mixed text U+5B57 and U+4E00 are upright, a is sideways, and each sideways mark takes the orientation
+    // of its grapheme cluster. A reordering that moves U+4E00 before U+5B57, as a shaper moves a pre-base sign, leaves
+    // the mark of U+4E00 after the mark of U+5B57, where it keeps the orientation of U+4E00. So the reordered glyphs stay
+    // one upright run.
+    [Test]
+    public async Task AReorderedGlyphKeepsTheOrientationOfItsGraphemeCluster()
+    {
+        GlyphSubstitutionCollection collection = Collection("\u5B57\u0301\u4E00\u0302a", LayoutMode.VerticalMixedLeftRight);
+        collection.ResolveRunOrientations();
+
+        collection.MoveGlyph(2, 0);
+
+        await Assert.That(RunLengths(collection)).IsEquivalentTo(new[] { 4, 1 });
+    }
+
     private static int[] Clusters(string text) => Clusters(Collection(text));
 
     private static int[] Clusters(GlyphSubstitutionCollection collection)
         => Enumerable.Range(0, collection.Count).Select(i => collection[i].Cluster).ToArray();
 
-    private static GlyphSubstitutionCollection Collection(string text)
+    private static int[] RunLengths(GlyphSubstitutionCollection collection)
+    {
+        List<int> lengths = [];
+        ShapingRunEnumerator runs = new(collection);
+        while (runs.MoveNext())
+        {
+            lengths.Add(runs.Count);
+        }
+
+        return [.. lengths];
+    }
+
+    private static GlyphSubstitutionCollection Collection(string text, LayoutMode layoutMode = LayoutMode.HorizontalTopBottom)
     {
         Font font = FakeFont.CreateFont("a");
-        GlyphSubstitutionCollection collection = new(new TextOptions(font));
+        GlyphSubstitutionCollection collection = new(new TextOptions(font) { LayoutMode = layoutMode });
         TextRun run = new() { Start = 0, End = text.Length, Font = font };
         int offset = 0;
         int index = 0;
-        while (index < text.Length)
+        int grapheme = 0;
+        SpanGraphemeEnumerator graphemes = new(text);
+        while (graphemes.MoveNext())
         {
-            CodePoint codePoint = CodePoint.DecodeFromUtf16At(text, index, out int consumed);
-            collection.AddGlyph((ushort)(offset + 1), codePoint, TextDirection.LeftToRight, run, offset, index);
-            index += consumed;
-            offset++;
+            SpanCodePointEnumerator codePoints = new(graphemes.Current);
+            while (codePoints.MoveNext())
+            {
+                collection.AddGlyph((ushort)(offset + 1), codePoints.Current, TextDirection.LeftToRight, run, offset, index, grapheme);
+                index += codePoints.Current.Utf16SequenceLength;
+                offset++;
+            }
+
+            grapheme++;
         }
 
         return collection;

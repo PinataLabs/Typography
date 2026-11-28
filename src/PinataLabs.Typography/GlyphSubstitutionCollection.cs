@@ -35,7 +35,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     private int[] normalizedOffsets = [];
 
-    // The glyphs before and after the script run that the table shapes. Substitutions add and remove glyphs of the run
+    // The glyphs before and after the run that the table shapes. Substitutions add and remove glyphs of the run
     // only, so the glyphs after it keep their number, and the end of the run follows the substitutions.
     private int runStart;
     private int glyphsAfterRun;
@@ -66,6 +66,9 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
 
     /// <inheritdoc />
     public bool NestingLimitReached { get; set; }
+
+    /// <inheritdoc />
+    public bool AreRunOrientationsResolved { get; private set; }
 
     /// <summary>
     /// Gets or sets the metrics of the font currently being shaped. This can differ from the font
@@ -103,7 +106,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Sets the script run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
+    /// Sets the run that the lookups apply to, as <see cref="RunStart"/> and <see cref="RunEnd"/> give it.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph of the run.</param>
     /// <param name="count">The number of glyphs of the run.</param>
@@ -215,11 +218,13 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <param name="textRun">The text run this glyph belongs to.</param>
     /// <param name="offset">The zero-based index within the input codepoint collection.</param>
     /// <param name="charIndex">The zero-based UTF-16 index of the codepoint in the text.</param>
-    public void AddGlyph(ushort glyphId, CodePoint codePoint, TextDirection direction, TextRun textRun, int offset, int charIndex)
+    /// <param name="grapheme">The zero-based index in the text of the grapheme cluster of the codepoint.</param>
+    public void AddGlyph(ushort glyphId, CodePoint codePoint, TextDirection direction, TextRun textRun, int offset, int charIndex, int grapheme)
     {
         // A variation selector that the cmap table folds into its base has no glyph of its own, so a mark after it joins
         // the cluster of the base.
         int cluster = this.ContinuesCluster(codePoint) ? this.glyphs[^1].Data.Cluster : charIndex;
+        this.AreRunOrientationsResolved = false;
 
         this.glyphs.Add(new(offset, new(textRun)
         {
@@ -227,6 +232,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             Direction = direction,
             GlyphId = glyphId,
             Cluster = cluster,
+            Grapheme = grapheme,
             SourceOffset = offset,
         }));
     }
@@ -335,6 +341,26 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     }
 
     /// <summary>
+    /// Gives each glyph the orientation of the first glyph of its grapheme cluster, which
+    /// <see cref="GlyphShapingData.IsInUprightRun"/> keeps. Call it once the orientation of each <c>Tr</c> glyph is
+    /// resolved, before a shaper reorders the glyphs.
+    /// </summary>
+    internal void ResolveRunOrientations()
+    {
+        LayoutMode layoutMode = this.TextOptions.LayoutMode;
+        for (int i = 0; i < this.glyphs.Count; i++)
+        {
+            GlyphShapingData data = this.glyphs[i].Data;
+            GlyphShapingData? previous = i > 0 ? this.glyphs[i - 1].Data : null;
+            data.IsInUprightRun = previous?.Grapheme == data.Grapheme
+                ? previous.IsInUprightRun
+                : AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, data.HasVerticalForm);
+        }
+
+        this.AreRunOrientationsResolved = true;
+    }
+
+    /// <summary>
     /// Moves the specified glyph to the specified position.
     /// </summary>
     /// <param name="fromIndex">The index to move from.</param>
@@ -412,6 +438,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     public void Clear()
     {
         this.glyphs.Clear();
+        this.AreRunOrientationsResolved = false;
         this.regionalIndicators = 0;
         this.LigatureId = 1;
         this.SetRun(0, 0);
