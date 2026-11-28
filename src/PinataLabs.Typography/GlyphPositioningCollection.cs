@@ -194,7 +194,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// missing glyph takes the fallback font once the fallback font draws the rest of the grapheme cluster, as a caller of
     /// HarfBuzz shapes the grapheme cluster in a buffer of that font, also when the font of the text has the character.
     /// When the fallback font lacks it too, it takes the .notdef of the fallback font, which
-    /// <see cref="HideDefaultIgnorables"/> hides.
+    /// <see cref="HideDefaultIgnorables"/> hides, or leaves out when the fallback font has no U+0020.
     /// </summary>
     /// <param name="font">The fallback font.</param>
     /// <param name="collection">The glyphs of the whole text, shaped with the fallback font.</param>
@@ -619,9 +619,11 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <summary>
     /// Hides the default-ignorable characters that GSUB did not substitute, as HarfBuzz does once they have done their
     /// work in shaping. Each takes the glyph of U+0020 of its font with no advance and no offset, or is left out when
-    /// the font has no U+0020. The character stays, so line breaking does not change. Every font positions its glyphs
-    /// first, so that a glyph that one font leaves out still ends the runs of another, as the buffers of a caller of
-    /// HarfBuzz do.
+    /// the font has no U+0020, as HarfBuzz leaves it out of the buffer of that font. That font is the fallback font when
+    /// the rest of the grapheme cluster takes it. The layout then skips the character, as it skips a character that a
+    /// ligature takes in, so line breaking does not change and the character has no bounds. Every font positions its
+    /// glyphs first, so that a glyph that one font leaves out still ends the runs of another, as the buffers of a caller
+    /// of HarfBuzz do.
     /// </summary>
     public void HideDefaultIgnorables()
     {

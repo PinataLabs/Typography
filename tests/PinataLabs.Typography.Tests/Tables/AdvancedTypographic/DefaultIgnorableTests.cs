@@ -98,6 +98,31 @@ public class DefaultIgnorableTests
         await Assert.That(TextMeasurer.CountLines(text, options)).IsEqualTo(2);
     }
 
+    // ZWNJ takes the fallback font with the x of its grapheme cluster. The fallback font has no U+0020, so ZWNJ is left
+    // out, as HarfBuzz leaves it out of the buffer of that font. The line still breaks at the space, and each glyph has
+    // its bounds.
+    [Test]
+    public async Task AJoinerThatAFallbackFontLeavesOutKeepsTheLineBreaks()
+    {
+        FontCollection collection = new();
+        Font font = collection.Add(TestFonts.FontRunContextFile).CreateFont(72 * 1000);
+        FontFamily fallback = collection.Add(TestFonts.FontRunContextFallbackFile);
+        const string text = "ax‌b ax‌b";
+        TextOptions options = new(font) { Dpi = 1, WrappingLength = 2500, FallbackFontFamilies = [fallback] };
+
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
+        float[] lines = layout.Select(g => g.PenLocation.Y).Distinct().ToArray();
+        int[] secondLine = layout.Where(g => g.PenLocation.Y == lines[^1]).Select(g => g.CodePoint.Value).ToArray();
+        TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
+        int boundsCount = bounds.Length;
+
+        await Assert.That(layout.Any(g => g.CodePoint.Value == 0x200C)).IsFalse();
+        await Assert.That(lines.Length).IsEqualTo(2);
+        await Assert.That(secondLine).IsEquivalentTo([0x61, 0x78, 0x62], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(TextMeasurer.CountLines(text, options)).IsEqualTo(2);
+        await Assert.That(boundsCount).IsEqualTo(layout.Count);
+    }
+
     private static Font GetFont(string fontName)
     {
         lock (Fonts)
