@@ -14,10 +14,11 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every glyph of a cluster keeps the orientation of the first glyph of the cluster, as a grapheme cluster does in CSS:
-/// a mark that of its base, and the ZWJ and the emoji of an emoji ZWJ sequence that of the first emoji. A run that
-/// starts inside a cluster, at a mark of a fallback font, takes the orientation of the cluster. The clusters are those
-/// of <see cref="GlyphShapingData.Cluster"/>, as HarfBuzz forms them. The orientation of a Tr glyph is
+/// Every glyph of a grapheme cluster keeps the orientation of the first glyph of the cluster, as in CSS: a mark that of
+/// its base, and the ZWJ and the emoji of an emoji ZWJ sequence that of the first emoji. A run that starts inside a
+/// grapheme cluster, at a mark of a fallback font, takes the orientation of the cluster. A grapheme cluster starts where
+/// a <see cref="GlyphShapingData.Cluster"/> does, and also at an emoji after ZWJ that no emoji comes before: HarfBuzz
+/// joins such an emoji to the cluster before it, but UAX #29 does not (rule GB11). The orientation of a Tr glyph is
 /// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A glyph of
 /// another font ends a run, also a default-ignorable one.
 /// </para>
@@ -104,14 +105,14 @@ internal struct ShapingRunEnumerator
     private readonly int GetRunEnd(int start, int scriptRunEnd)
     {
         GlyphShapingData first = this.collection[start];
-        bool upright = this.IsUpright(this.GetClusterStart(start));
+        bool upright = this.IsUpright(this.GetGraphemeStart(start));
         FontMetrics? font = this.fonts?.GetMetrics(start).FontMetrics;
         int end = start + 1;
         while (end < scriptRunEnd)
         {
             GlyphShapingData data = this.collection[end];
             if (data.Direction != first.Direction
-                || (data.Cluster != this.collection[end - 1].Cluster && this.IsUpright(data) != upright)
+                || (this.StartsGrapheme(end) && this.IsUpright(data) != upright)
                 || (font is not null && this.fonts!.GetMetrics(end).FontMetrics != font))
             {
                 break;
@@ -123,17 +124,42 @@ internal struct ShapingRunEnumerator
         return end;
     }
 
-    // The first glyph of the cluster of the glyph, which may be in the run before, of another font.
-    private readonly GlyphShapingData GetClusterStart(int index)
+    // The first glyph of the grapheme cluster of the glyph, which may be in the run before, of another font.
+    private readonly GlyphShapingData GetGraphemeStart(int index)
     {
-        int cluster = this.collection[index].Cluster;
-        while (index > 0 && this.collection[index - 1].Cluster == cluster)
+        while (!this.StartsGrapheme(index))
         {
             index--;
         }
 
         return this.collection[index];
     }
+
+    private readonly bool StartsGrapheme(int index)
+    {
+        if (index == 0 || this.collection[index].Cluster != this.collection[index - 1].Cluster)
+        {
+            return true;
+        }
+
+        if (this.GetGraphemeClass(index) != GraphemeClusterClass.ExtendedPictographic
+            || this.GetGraphemeClass(index - 1) != GraphemeClusterClass.ZeroWidthJoiner)
+        {
+            return false;
+        }
+
+        // GB11: ExtPict Extend* ZWJ × ExtPict.
+        int before = index - 2;
+        while (before >= 0 && this.GetGraphemeClass(before) == GraphemeClusterClass.Extend)
+        {
+            before--;
+        }
+
+        return before < 0 || this.GetGraphemeClass(before) != GraphemeClusterClass.ExtendedPictographic;
+    }
+
+    private readonly GraphemeClusterClass GetGraphemeClass(int index)
+        => CodePoint.GetGraphemeClusterClass(this.collection[index].CodePoint);
 
     private readonly bool IsUpright(GlyphShapingData data)
         => AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, this.collection.TextOptions.LayoutMode, data.HasVerticalForm);
