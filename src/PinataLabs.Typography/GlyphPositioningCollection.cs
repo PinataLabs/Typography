@@ -53,6 +53,9 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public bool NestingLimitReached { get; set; }
 
     /// <inheritdoc />
+    public bool AreRunOrientationsResolved { get; private set; } = true;
+
+    /// <inheritdoc />
     public GlyphShapingData this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -201,6 +204,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <returns><see langword="true"/> if no glyph needs a fallback font any more; otherwise <see langword="false"/>.</returns>
     public bool TryUpdate(Font font, GlyphSubstitutionCollection collection)
     {
+        this.AreRunOrientationsResolved &= collection.AreRunOrientationsResolved;
         Dictionary<int, Character> characters = [];
         HashSet<int> graphemes = this.GetUnresolvedGraphemes(null);
         for (int i = 0; i < this.glyphs.Count; i++)
@@ -514,6 +518,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public bool TryAdd(Font font, GlyphSubstitutionCollection collection)
     {
         int start = this.glyphs.Count;
+        this.AreRunOrientationsResolved &= collection.AreRunOrientationsResolved;
         FontMetrics fontMetrics = font.FontMetrics;
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         ColorFontSupport colorFontSupport = this.TextOptions.ColorFontSupport;

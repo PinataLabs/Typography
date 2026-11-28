@@ -210,9 +210,9 @@ internal class GSubTable : Table
             return;
         }
 
-        // These runs end at orientations that are not yet resolved. Each glyph is probed alone, with the script of its
-        // script run, so that does not change what it resolves to.
-        ShapingRunEnumerator runs = new(collection);
+        // The orientations are not resolved yet, so these runs do not split by them. Each glyph is probed alone, with the
+        // script of its script run.
+        ShapingRunEnumerator runs = ShapingRunEnumerator.ByScriptAndDirection(collection);
         while (runs.MoveNext())
         {
             ScriptClass script = runs.Script;

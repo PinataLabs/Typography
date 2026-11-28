@@ -30,6 +30,8 @@ internal sealed class SubstitutingFakeFontInstance : FakeFontInstance
 
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
     {
+        // As the GSUB table does, before it substitutes.
+        collection.ResolveRunOrientations();
         this.TryGetGlyphId(this.replacement, out ushort replacementId);
         for (int i = 0; i < collection.Count; i++)
         {

@@ -49,6 +49,13 @@ internal interface IGlyphShapingCollection
     bool NestingLimitReached { get; set; }
 
     /// <summary>
+    /// Gets a value indicating whether each glyph has the orientation of its grapheme cluster,
+    /// <see cref="GlyphShapingData.IsInUprightRun"/>, which <see cref="ShapingRunEnumerator"/> splits the runs of vertical
+    /// mixed text by.
+    /// </summary>
+    bool AreRunOrientationsResolved { get; }
+
+    /// <summary>
     /// Gets the glyph shaping data at the specified index.
     /// </summary>
     /// <param name="index">The zero-based index of the elements to get.</param>

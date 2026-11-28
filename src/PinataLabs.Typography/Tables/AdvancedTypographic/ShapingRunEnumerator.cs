@@ -1,6 +1,7 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Diagnostics;
 using PinataLabs.Typography.Unicode;
 
 namespace PinataLabs.Typography.Tables.AdvancedTypographic;
@@ -31,6 +32,7 @@ internal struct ShapingRunEnumerator
 {
     private readonly IGlyphShapingCollection collection;
     private readonly GlyphPositioningCollection? fonts;
+    private readonly bool splitsOrientations;
     private int glyphsAfterRun;
     private int glyphsAfterScriptRun;
 
@@ -39,14 +41,18 @@ internal struct ShapingRunEnumerator
     /// </summary>
     /// <param name="collection">The glyphs to split.</param>
     public ShapingRunEnumerator(IGlyphShapingCollection collection)
-        : this(collection, null)
+        : this(collection, null, true)
     {
     }
 
-    private ShapingRunEnumerator(IGlyphShapingCollection collection, GlyphPositioningCollection? fonts)
+    private ShapingRunEnumerator(IGlyphShapingCollection collection, GlyphPositioningCollection? fonts, bool splitsOrientations)
     {
+        Debug.Assert(
+            !splitsOrientations || !collection.TextOptions.LayoutMode.IsVerticalMixed() || collection.AreRunOrientationsResolved,
+            "The runs of vertical mixed text split by orientation, which GlyphSubstitutionCollection.ResolveRunOrientations gives.");
         this.collection = collection;
         this.fonts = fonts;
+        this.splitsOrientations = splitsOrientations;
         this.glyphsAfterRun = collection.Count;
         this.glyphsAfterScriptRun = collection.Count;
     }
@@ -77,7 +83,15 @@ internal struct ShapingRunEnumerator
     /// </summary>
     /// <param name="collection">The glyphs to split.</param>
     /// <returns>The enumerator, before the first run.</returns>
-    public static ShapingRunEnumerator ByFont(GlyphPositioningCollection collection) => new(collection, collection);
+    public static ShapingRunEnumerator ByFont(GlyphPositioningCollection collection) => new(collection, collection, true);
+
+    /// <summary>
+    /// Gets the runs of one script and one direction, which do not split by orientation, for the glyphs whose orientation
+    /// is not resolved yet.
+    /// </summary>
+    /// <param name="collection">The glyphs to split.</param>
+    /// <returns>The enumerator, before the first run.</returns>
+    public static ShapingRunEnumerator ByScriptAndDirection(IGlyphShapingCollection collection) => new(collection, null, false);
 
     /// <summary>
     /// Moves to the run after the current one.
@@ -110,7 +124,7 @@ internal struct ShapingRunEnumerator
         {
             GlyphShapingData data = this.collection[end];
             if (data.Direction != first.Direction
-                || data.IsInUprightRun != first.IsInUprightRun
+                || (this.splitsOrientations && data.IsInUprightRun != first.IsInUprightRun)
                 || (font is not null && this.fonts!.GetMetrics(end).FontMetrics != font))
             {
                 break;

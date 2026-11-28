@@ -21,6 +21,8 @@ internal sealed class PairLigatingFakeFontInstance : FakeFontInstance
 
     internal override void ApplySubstitution(GlyphSubstitutionCollection collection)
     {
+        // As the GSUB table does, before it substitutes.
+        collection.ResolveRunOrientations();
         for (int i = 0; i < collection.Count - 1; i++)
         {
             if (collection[i].CodePoint.Value == this.first && collection[i + 1].CodePoint.Value == this.second)

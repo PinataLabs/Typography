@@ -67,6 +67,9 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <inheritdoc />
     public bool NestingLimitReached { get; set; }
 
+    /// <inheritdoc />
+    public bool AreRunOrientationsResolved { get; private set; }
+
     /// <summary>
     /// Gets or sets the metrics of the font currently being shaped. This can differ from the font
     /// of a glyph's text run when the glyph is being shaped by a fallback font.
@@ -221,6 +224,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         // A variation selector that the cmap table folds into its base has no glyph of its own, so a mark after it joins
         // the cluster of the base.
         int cluster = this.ContinuesCluster(codePoint) ? this.glyphs[^1].Data.Cluster : charIndex;
+        this.AreRunOrientationsResolved = false;
 
         this.glyphs.Add(new(offset, new(textRun)
         {
@@ -352,6 +356,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
                 ? previous.IsInUprightRun
                 : AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, data.HasVerticalForm);
         }
+
+        this.AreRunOrientationsResolved = true;
     }
 
     /// <summary>
@@ -432,6 +438,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     public void Clear()
     {
         this.glyphs.Clear();
+        this.AreRunOrientationsResolved = false;
         this.regionalIndicators = 0;
         this.LigatureId = 1;
         this.SetRun(0, 0);
