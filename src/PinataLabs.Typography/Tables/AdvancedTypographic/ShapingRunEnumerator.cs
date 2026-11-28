@@ -14,7 +14,10 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A mark keeps the orientation of its base, as a grapheme cluster does in CSS. The orientation of a Tr glyph is
+/// Every glyph of a cluster keeps the orientation of the first glyph of the cluster, as a grapheme cluster does in CSS:
+/// a mark that of its base, and the ZWJ and the emoji of an emoji ZWJ sequence that of the first emoji. A run that
+/// starts inside a cluster, at a mark of a fallback font, takes the orientation of the cluster. The clusters are those
+/// of <see cref="GlyphShapingData.Cluster"/>, as HarfBuzz forms them. The orientation of a Tr glyph is
 /// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A glyph of
 /// another font ends a run, also a default-ignorable one.
 /// </para>
@@ -101,14 +104,14 @@ internal struct ShapingRunEnumerator
     private readonly int GetRunEnd(int start, int scriptRunEnd)
     {
         GlyphShapingData first = this.collection[start];
-        bool upright = this.IsUpright(first);
+        bool upright = this.IsUpright(this.GetClusterStart(start));
         FontMetrics? font = this.fonts?.GetMetrics(start).FontMetrics;
         int end = start + 1;
         while (end < scriptRunEnd)
         {
             GlyphShapingData data = this.collection[end];
             if (data.Direction != first.Direction
-                || (this.IsUpright(data) != upright && !CodePoint.IsMark(data.CodePoint))
+                || (data.Cluster != this.collection[end - 1].Cluster && this.IsUpright(data) != upright)
                 || (font is not null && this.fonts!.GetMetrics(end).FontMetrics != font))
             {
                 break;
@@ -118,6 +121,18 @@ internal struct ShapingRunEnumerator
         }
 
         return end;
+    }
+
+    // The first glyph of the cluster of the glyph, which may be in the run before, of another font.
+    private readonly GlyphShapingData GetClusterStart(int index)
+    {
+        int cluster = this.collection[index].Cluster;
+        while (index > 0 && this.collection[index - 1].Cluster == cluster)
+        {
+            index--;
+        }
+
+        return this.collection[index];
     }
 
     private readonly bool IsUpright(GlyphShapingData data)

@@ -492,7 +492,9 @@ Unicode conformance suites to that version.
   lookup of alef before digit one, and a pair of bet and digit two, no longer apply in the layout. The digits keep the
   script of their script run, so a lookup of the Hebrew script still applies to them. In vertical mixed text they
   apply only within a run of one orientation, so a `ccmp` lookup of upright U+5B57 before the sideways hyphen-minus no
-  longer applies. A mark keeps the orientation of its base. A `c` and an upright copyright sign no longer form a
+  longer applies. Every glyph of a grapheme cluster keeps the orientation of the cluster, so a mark keeps that of its
+  base, also when a fallback font draws the mark, and the sideways ZWJ of an emoji ZWJ sequence stays in the upright
+  run of its emoji, where the sequence still forms its ligature. A `c` and an upright copyright sign no longer form a
   ligature in vertical mixed text. (#202)
 - The GPOS lookups and the `kern` table of a font apply only within a run of the glyphs that the font draws, as
   HarfBuzz does when its caller shapes the characters of each font in a buffer of their own. A lookup matched the
