@@ -24,6 +24,8 @@
     ["PrimaryNonJoiner","x\u200cz","runs",[[1,0,0],[4,500,0]]],
     ["PrimaryNonJoiner","x\u200cz","fallback",[[1,0,0],[4,500,0]]],
     ["MarkOrientation","\u5b57\u0301\u5b58","ttb runs",[[5,0,0],[6,0,0],[7,0,100]]],
-    ["MarkOrientation","\u5b57\u0301\u5b58","ttb fallback",[[8,0,0],[6,0,0],[7,0,100]]]
+    ["MarkOrientation","\u5b57\u0301\u5b58","ttb fallback",[[8,0,0],[6,0,0],[7,0,100]]],
+    ["LigatureMark","\u4e00\u4e8c\u0302","ttb runs",[[12,0,0],[11,0,100]]],
+    ["LigatureMark","\u4e00\u4e8c\u0302","ttb primary",[[12,0,0],[11,0,100]]]
   ]
 }

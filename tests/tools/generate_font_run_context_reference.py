@@ -10,7 +10,8 @@ Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
 
 A caller of HarfBuzz shapes the characters that each font draws in a buffer of that font, so a lookup of one font
 never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e, ZWJ, U+5B57, the word
-joiner U+2060, ZWNJ and space, glyphs 1 to 8. HarfBuzz hides a default-ignorable character with the space glyph of
+joiner U+2060, ZWNJ and space, glyphs 1 to 8, and U+4E00, U+4E8C, the combining circumflex and a ligature of U+4E00
+and U+4E8C. HarfBuzz hides a default-ignorable character with the space glyph of
 its font, so the space shows which font a hidden character took. FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z, w, the
 combining acute, U+5B58, U+5B57, ZWJ and the man and woman emoji, glyphs 1 to 11, and their ZWJ ligature, so a and x,
 b and y, and e and U+034F have the same glyph IDs. Its GDEF table makes w and the acute marks. Neither font has the tag
@@ -50,6 +51,10 @@ else the font of the text, which hides it when it lacks it. Any other character 
   is sideways on its own, but it takes the upright orientation of its grapheme cluster, so the run of the fallback font
   that starts at it is one upright run with U+5B58. The vertical rows give the offset of each glyph from its vertical
   origin.
+* LigatureMark, in vertical mixed text: the font of the text ligates the upright U+4E00 and U+4E8C, two grapheme
+  clusters, and moves the circumflex up after the ligature. The circumflex is sideways on its own, but it takes
+  the upright orientation of the grapheme cluster of U+4E8C, which the ligature joins to that of U+4E00, so the text
+  is one upright run.
 
 Each text is shaped as the runs of a caller, in a buffer for each run of characters that one font draws, and, as a
 control, in one buffer of the font whose lookup the case tests, where the lookup applies. Each row holds the case, the
@@ -67,7 +72,8 @@ from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 
 REFERENCE = os.path.join(FONTS, "FontRunContext.harfbuzz.json")
 
-PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57, 0x2060, 0x200C, 0x0020]
+PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57, 0x2060, 0x200C, 0x0020, 0x4E00, 0x4E8C, 0x0302]
+PRIMARY_LIGATURES = ["u4E00_u4E8C"]
 FALLBACK = [0x0078, 0x0079, 0x034F, 0x007A, 0x0077, 0x0301, 0x5B58, 0x5B57, 0x200D, 0x1F468, 0x1F469]
 FALLBACK_LIGATURES = ["u1F468_u200D_u1F469"]
 
@@ -80,6 +86,20 @@ languagesystem latn dflt;
 """
 
 PRIMARY_FEATURES = LANGUAGES + """
+languagesystem hani dflt;
+
+table GDEF {
+    GlyphClassDef [u4E00 u4E8C], [u4E00_u4E8C], [u0302], ;
+} GDEF;
+
+feature ccmp {
+    sub u4E00 u4E8C by u4E00_u4E8C;
+} ccmp;
+
+feature mark {
+    pos u4E00_u4E8C u0302' <0 100 0 0>;
+} mark;
+
 feature kern {
     pos u0062 <0 0 0 0> u0061 <-100 0 0 0>;
     pos u0065 <0 0 0 0> u0061 <-100 0 0 0>;
@@ -137,6 +157,7 @@ CASES = [
 # The cases of vertical text, as CASES.
 VERTICAL_CASES = [
     ("MarkOrientation", [0x5B57, 0x0301, 0x5B58], "fallback", [0x5B57, 0x0301, 0x5B58]),
+    ("LigatureMark", [0x4E00, 0x4E8C, 0x0302], "primary", [0x4E00, 0x4E8C, 0x0302]),
 ]
 
 
@@ -215,7 +236,7 @@ def shape(fonts, code_points, runs, direction="ltr"):
 
 def main():
     fonts = {
-        "primary": load_font(build_font("FontRunContext.ttf", PRIMARY, PRIMARY_FEATURES)),
+        "primary": load_font(build_font("FontRunContext.ttf", PRIMARY, PRIMARY_FEATURES, PRIMARY_LIGATURES)),
         "fallback": load_font(build_font("FontRunContextFallback.ttf", FALLBACK, FALLBACK_FEATURES, FALLBACK_LIGATURES)),
     }
 
