@@ -46,6 +46,9 @@ the start of the text. Each case of the font has a lookup that applies only when
   U+5B57 its alternate before the hyphen-minus. HarfBuzz applies calt only to horizontal text.
 * MarkOrientation: a mark takes the orientation of its base, as a grapheme cluster does in CSS, so the sideways acute
   after U+5B57 is in its upright run, where a ccmp lookup gives the acute its alternate after U+5B57.
+* ZwjOrientation: every character of a grapheme cluster takes the orientation of the cluster. The man and woman emoji
+  are upright and ZWJ is sideways, but they are one cluster, so they are one upright run, where a ccmp lookup ligates
+  them.
 
 Each text is shaped as the runs of a caller, and, for the cases that a script names, also in one buffer of that
 script, which shows that the lookup applies. Each row holds the case, the text, how the text is split, and the glyph
@@ -107,6 +110,7 @@ BIDI_CASES = [
 VERTICAL_CASES = [
     ("OrientationChange", [0x5B57, 0x002D], [(0, 1, "ttb"), (1, 2, "ltr")]),
     ("MarkOrientation", [0x5B57, 0x0301], [(0, 2, "ttb")]),
+    ("ZwjOrientation", [0x1F468, 0x200D, 0x1F469], [(0, 3, "ttb")]),
 ]
 
 MARKS = [0x0301, 0x0483, 0x0484, 0x0487]
@@ -219,6 +223,10 @@ feature ccmp {
         sub u5B57' u002D by u5B57.alt;
         sub u5B57 u0301' by u0301.alt;
     } ORIENTATION;
+
+    lookup ZWJ_SEQUENCE {
+        sub u1F468 u200D u1F469 by u1F468_u200D_u1F469;
+    } ZWJ_SEQUENCE;
 } ccmp;
 
 feature kern {
@@ -277,6 +285,7 @@ EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
     "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u006F_u0070", "u0070.alt", "u03C9.alt", "u0072.alt",
     "u0076.tail", "u0077.alt", "u0076.tail.alt", "u05D0.alt", "u0033.alt", "u5B57.alt", "u0301.alt",
+    "u1F468_u200D_u1F469",
 ]
 
 
@@ -330,7 +339,7 @@ def main():
     # substitutions and positions.
     font = TTFont(path)
     types = [lookup.LookupType for lookup in font["GSUB"].table.LookupList.Lookup]
-    assert types == [1, 4, 1, 2, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5, 5, 6, 1, 1, 6, 1], types
+    assert types == [1, 4, 1, 2, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5, 5, 6, 1, 1, 6, 1, 4], types
     types = [lookup.LookupType for lookup in font["GPOS"].table.LookupList.Lookup]
     assert types == [1, 1, 2, 8, 1, 8, 8, 2, 4, 5, 6, 3], types
 
