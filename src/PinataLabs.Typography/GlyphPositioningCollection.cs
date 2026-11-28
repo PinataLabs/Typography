@@ -489,9 +489,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// </summary>
     /// <param name="font">The font face with metrics.</param>
     /// <param name="collection">The glyph substitution collection.</param>
-    /// <returns><see langword="true"/> if no glyph needs a fallback font; otherwise <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if no glyph that this call adds needs a fallback font; otherwise <see langword="false"/>.</returns>
     public bool TryAdd(Font font, GlyphSubstitutionCollection collection)
     {
+        int start = this.glyphs.Count;
         FontMetrics fontMetrics = font.FontMetrics;
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         ColorFontSupport colorFontSupport = this.TextOptions.ColorFontSupport;
@@ -529,7 +530,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
         }
 
-        return !this.glyphs.Exists(IsUnresolved);
+        return this.glyphs.FindIndex(start, IsUnresolved) < 0;
     }
 
     /// <summary>
