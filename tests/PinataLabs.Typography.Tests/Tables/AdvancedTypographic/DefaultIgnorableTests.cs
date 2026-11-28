@@ -111,8 +111,8 @@ public class DefaultIgnorableTests
         TextOptions options = new(font) { Dpi = 1, WrappingLength = 2500, FallbackFontFamilies = [fallback] };
 
         IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
-        float[] lines = layout.Select(g => g.PenLocation.Y).Distinct().ToArray();
-        int[] secondLine = layout.Where(g => g.PenLocation.Y == lines[^1]).Select(g => g.CodePoint.Value).ToArray();
+        IGrouping<float, GlyphLayout>[] lines = [.. layout.GroupBy(g => g.PenLocation.Y)];
+        int[] secondLine = [.. lines[^1].Select(g => g.CodePoint.Value)];
         TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
         int boundsCount = bounds.Length;
 
