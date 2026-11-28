@@ -9,9 +9,9 @@ Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
     python tests/tools/generate_font_run_context_reference.py
 
 A caller of HarfBuzz shapes the characters that each font draws in a buffer of that font, so a lookup of one font
-never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e and ZWJ, glyphs 1 to 4.
-FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z and w, glyphs 1 to 5, so a and x, b and y,
-and e and U+034F have the same glyph IDs. Its GDEF table makes w a mark. Each case has a lookup that would apply if it
+never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e, ZWJ and U+5B57, glyphs 1 to
+5. FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z, w, the combining acute, U+5B58 and
+U+5B57, glyphs 1 to 8, so a and x, b and y, and e and U+034F have the same glyph IDs. Its GDEF table makes w a mark. Each case has a lookup that would apply if it
 took the glyph of the other font for its own:
 
 * FallbackPair: the fallback font moves z after x, and a comes before z.
@@ -28,10 +28,15 @@ took the glyph of the other font for its own:
 A default-ignorable character that the font of the text lacks takes the fallback font only with another character of
 its grapheme cluster, which the fallback font draws.
 
+* MarkOrientation, in vertical mixed text: the fallback font moves U+5B58 up after the acute. The acute after U+5B57
+  is sideways on its own, but it takes the upright orientation of its grapheme cluster, so the run of the fallback font
+  that starts at it is one upright run with U+5B58. The vertical rows give the offset of each glyph from its vertical
+  origin.
+
 Each text is shaped as the runs of a caller, in a buffer for each run of characters that one font draws, and, as a
 control, in one buffer of the font whose lookup the case tests, where the lookup applies. Each row holds the case, the
-text, how the text is shaped ("runs", or the font of the one buffer, "primary" or "fallback"), and the glyph ID, x and
-y of each glyph. FontRunContextTests reads it.
+text, how the text is shaped ("runs", or the font of the one buffer, "primary" or "fallback", after "ttb " for vertical
+text), and the glyph ID, x and y of each glyph. FontRunContextTests reads it.
 The output is deterministic for one HarfBuzz version. The reference records the version that wrote it.
 """
 
@@ -44,8 +49,8 @@ from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 
 REFERENCE = os.path.join(FONTS, "FontRunContext.harfbuzz.json")
 
-PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D]
-FALLBACK = [0x0078, 0x0079, 0x034F, 0x007A, 0x0077]
+PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57]
+FALLBACK = [0x0078, 0x0079, 0x034F, 0x007A, 0x0077, 0x0301, 0x5B58, 0x5B57]
 
 # The default-ignorable characters of the cases.
 IGNORABLE = [0x034F, 0x200D]
@@ -80,7 +85,13 @@ feature kern {
 markClass u0077 <anchor 0 500> @TOP;
 
 feature mark {
-    pos base u0078 <anchor 300 700> mark @TOP;
+    lookup MARK_TO_BASE {
+        pos base u0078 <anchor 300 700> mark @TOP;
+    } MARK_TO_BASE;
+
+    lookup AFTER_ACUTE {
+        pos u0301 u5B58' <0 100 0 0>;
+    } AFTER_ACUTE;
 } mark;
 """
 
@@ -92,6 +103,11 @@ CASES = [
     ("PrimaryPair", [0x0061, 0x0079, 0x0061], "primary", [0x0061, 0x0062, 0x0061]),
     ("FallbackIgnorable", [0x0061, 0x034F, 0x0061], "primary", [0x0065, 0x0061]),
     ("PrimaryIgnorable", [0x0078, 0x200D, 0x007A], "fallback", [0x0078, 0x200D, 0x007A]),
+]
+
+# The cases of vertical text, as CASES.
+VERTICAL_CASES = [
+    ("MarkOrientation", [0x5B57, 0x0301, 0x5B58], "fallback", [0x5B57, 0x0301, 0x5B58]),
 ]
 
 
@@ -122,7 +138,7 @@ def font_runs(code_points):
     return runs
 
 
-def shape(fonts, code_points, runs):
+def shape(fonts, code_points, runs, direction="ltr"):
     """Shapes each run in a buffer of its font, with the rest of the text as context, and gives the glyph ID, x and y
     of each glyph, in font units from the start of the line."""
     glyphs = []
@@ -131,9 +147,16 @@ def shape(fonts, code_points, runs):
         buffer = hb.Buffer()
         buffer.add_codepoints(code_points, start, end - start)
         buffer.guess_segment_properties()
-        assert buffer.direction == "ltr", buffer.direction
+        if direction == "ttb":
+            buffer.direction = direction
+        assert buffer.direction == direction, buffer.direction
         hb.shape(fonts[font], buffer)
         for info, position in zip(buffer.glyph_infos, buffer.glyph_positions):
+            if direction == "ttb":
+                # HarfBuzz gives the offset from the horizontal origin; the offset that GPOS gave is from the vertical one.
+                origin_x, origin_y = fonts[font].get_glyph_v_origin(info.codepoint)
+                glyphs.append([info.codepoint, position.x_offset + origin_x, position.y_offset + origin_y])
+                continue
             glyphs.append([info.codepoint, x + position.x_offset, position.y_offset])
             x += position.x_advance
     return glyphs
@@ -149,6 +172,10 @@ def main():
     for case, text, font, control in CASES:
         rows.append([case, "".join(map(chr, text)), "runs", shape(fonts, text, font_runs(text))])
         rows.append([case, "".join(map(chr, control)), font, shape(fonts, control, [(0, len(control), font)])])
+
+    for case, text, font, control in VERTICAL_CASES:
+        rows.append([case, "".join(map(chr, text)), "ttb runs", shape(fonts, text, font_runs(text), "ttb")])
+        rows.append([case, "".join(map(chr, control)), "ttb " + font, shape(fonts, control, [(0, len(control), font)], "ttb")])
 
     write_reference(REFERENCE, rows)
 

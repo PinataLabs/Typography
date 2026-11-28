@@ -942,7 +942,8 @@ glyph of the other font for its own: a pair lookup of either font, and a chained
 the fallback font. Two more cases put a default-ignorable character of one font between glyphs of the other. The script
 splits each text into runs of the characters that one font draws, the font of the text where it has the character, and
 shapes each run in a buffer of its font. HarfBuzz hides a default-ignorable character that a font lacks, so the script
-gives one that the font of the text lacks to the fallback font only with another character of its grapheme cluster. As a control, it also shapes a text in one
+gives one that the font of the text lacks to the fallback font only with another character of its grapheme cluster. A
+vertical case starts a run of the fallback font at a mark, which keeps the upright orientation of its cluster. As a control, it also shapes a text in one
 buffer of the font, where the lookup applies. The reference holds the glyph ID and the place of each glyph.
 
 `FontRunContextTests` checks that the layout gives the same glyphs in the same places.

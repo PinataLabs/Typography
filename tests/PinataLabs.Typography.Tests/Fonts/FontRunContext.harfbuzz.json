@@ -12,6 +12,8 @@
     ["FallbackIgnorable","a\u034fa","runs",[[1,0,0],[1,600,0]]],
     ["FallbackIgnorable","ea","primary",[[3,0,0],[1,500,0]]],
     ["PrimaryIgnorable","x\u200dz","runs",[[1,0,0],[4,600,0]]],
-    ["PrimaryIgnorable","x\u200dz","fallback",[[1,0,0],[4,500,0]]]
+    ["PrimaryIgnorable","x\u200dz","fallback",[[1,0,0],[4,500,0]]],
+    ["MarkOrientation","\u5b57\u0301\u5b58","ttb runs",[[5,0,0],[6,0,0],[7,0,100]]],
+    ["MarkOrientation","\u5b57\u0301\u5b58","ttb fallback",[[8,0,0],[6,0,0],[7,0,100]]]
   ]
 }
