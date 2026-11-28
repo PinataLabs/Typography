@@ -57,6 +57,31 @@ public class GlyphPositioningCollectionTests
         await Assert.That(isComplete).IsTrue();
     }
 
+    // The layout adds the glyphs of each text run in turn and takes a fallback pass if any run needs one, so each call
+    // tells only about the glyphs that it adds, and does not look at the glyphs of the runs before it again.
+    [Test]
+    public async Task AddingTellsWhetherTheGlyphsItAddsNeedAFallbackFont()
+    {
+        Font font = new FontCollection().Add(TestFonts.FontRunContextFile).CreateFont(12);
+        TextOptions options = new(font);
+        GlyphPositioningCollection collection = new(options);
+
+        bool isFirstComplete = collection.TryAdd(font, Substitutions(font, options, 'x', 0));
+        bool isSecondComplete = collection.TryAdd(font, Substitutions(font, options, 'a', 1));
+
+        await Assert.That(isFirstComplete).IsFalse();
+        await Assert.That(isSecondComplete).IsTrue();
+    }
+
+    private static GlyphSubstitutionCollection Substitutions(Font font, TextOptions options, char character, int offset)
+    {
+        GlyphSubstitutionCollection substitutions = new(options);
+        font.FontMetrics.TryGetGlyphId(new CodePoint(character), out ushort glyphId);
+        TextRun textRun = new() { Start = offset, End = offset + 1, Font = font };
+        substitutions.AddGlyph(glyphId, new CodePoint(character), TextDirection.LeftToRight, textRun, offset, offset, offset);
+        return substitutions;
+    }
+
     // A control character needs no fallback font, so it keeps the .notdef of the font of the text when a fallback font
     // draws another character of the text.
     [Test]
@@ -67,7 +92,7 @@ public class GlyphPositioningCollectionTests
         FontFamily fallback = collection.Add(TestFonts.FontRunContextFallbackFile);
         TextOptions options = new(font) { FallbackFontFamilies = [fallback] };
 
-        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout("ax".AsSpan(), options);
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout("ax\u0001".AsSpan(), options);
 
         GlyphMetrics a = layout.Single(g => g.Glyph.GlyphMetrics.CodePoint.Value == 'a').Glyph.GlyphMetrics;
         GlyphMetrics control = layout.Single(g => g.Glyph.GlyphMetrics.CodePoint.Value == 1).Glyph.GlyphMetrics;
