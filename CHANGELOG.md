@@ -496,8 +496,9 @@ Unicode conformance suites to that version.
   base, also when a fallback font draws the mark, and the sideways ZWJ of an emoji ZWJ sequence stays in the upright
   run of its emoji, where the sequence still forms its ligature. The grapheme clusters are those of UAX #29, as the
   layout counts them, so an upright emoji after `a` and ZWJ is a run of its own, and a sideways ZWNJ inside an emoji
-  ZWJ sequence stays in its upright run. A `c` and an upright copyright sign no longer form a ligature in vertical
-  mixed text. (#202)
+  ZWJ sequence stays in its upright run. A ligature or a reordering that joins two grapheme clusters makes them one, so
+  a sideways mark after a ligature of two upright characters stays in their upright run. A `c` and an upright
+  copyright sign no longer form a ligature in vertical mixed text. (#202)
 - The GPOS lookups and the `kern` table of a font apply only within a run of the glyphs that the font draws, as
   HarfBuzz does when its caller shapes the characters of each font in a buffer of their own. A lookup matched the
   glyphs of a fallback font, or of the font of the text, by glyph ID, so a glyph of the other font with the same ID
@@ -508,7 +509,8 @@ Unicode conformance suites to that version.
   U+034F after `a`, stays with that font, which hides it, and needs no fallback pass. One in a grapheme cluster that a
   fallback font draws takes that font, also when the font of the text has it, so a fallback emoji font forms its
   ligature of an emoji ZWJ sequence, ZWNJ after a letter of the fallback font goes with the letter, and an acute after
-  a tag character attaches to its base. When the fallback font lacks it too, its .notdef is hidden. The ZWJ between
+  a tag character attaches to its base. When the fallback font lacks it too, its .notdef is hidden. A
+  fallback font with no U+0020 leaves it out, as HarfBuzz does. The ZWJ between
   `a` and an emoji of the fallback font stays with `a`. A control character keeps the font of the text when a fallback
   font draws other characters. (#198)
 - A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
