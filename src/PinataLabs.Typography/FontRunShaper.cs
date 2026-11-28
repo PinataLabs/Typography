@@ -57,7 +57,7 @@ internal static class FontRunShaper
     /// <param name="bidiRuns">The bidi runs of the text.</param>
     /// <param name="substitutions">The collection of glyphs to shape, which this method clears first.</param>
     /// <param name="positionings">The collection that receives the shaped glyphs.</param>
-    /// <returns><see langword="true"/> if the font has a glyph for every character of the run.</returns>
+    /// <returns><see langword="true"/> if no glyph of the text needs a fallback font any more.</returns>
     public static bool Shape(
         ReadOnlySpan<char> text,
         ReadOnlySpan<char> textBefore,

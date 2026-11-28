@@ -167,8 +167,9 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Gets the <see cref="GlyphShapingData.SourceOffset"/> of each character that no font so far has a glyph for and
-    /// that a fallback font replaces.
+    /// Gets the <see cref="GlyphShapingData.SourceOffset"/> of each character that needs a fallback font: one that no
+    /// font so far has a glyph for, other than a default-ignorable one, and each default-ignorable character of the
+    /// cluster of one.
     /// </summary>
     /// <returns>The offsets within the input codepoint collection.</returns>
     public HashSet<int> GetUnresolvedOffsets()
@@ -189,11 +190,14 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <summary>
     /// Replaces the glyphs that no font so far has with the glyphs that a fallback font gives the same character. The font
     /// of the text decided which glyphs the text has and in what order, so the new glyphs take the place of the glyphs
-    /// they replace, wherever the shaper of that font put them.
+    /// they replace, wherever the shaper of that font put them. A default-ignorable character of a cluster with a missing
+    /// glyph takes the fallback font once the fallback font draws the rest of the cluster, as a caller of HarfBuzz shapes
+    /// the cluster in a buffer of that font, also when the font of the text has the character. When the fallback font
+    /// lacks it too, it takes the .notdef of the fallback font, which <see cref="HideDefaultIgnorables"/> hides.
     /// </summary>
     /// <param name="font">The fallback font.</param>
     /// <param name="collection">The glyphs of the whole text, shaped with the fallback font.</param>
-    /// <returns><see langword="true"/> if the metrics collection does not contain any fallbacks; otherwise <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if no glyph needs a fallback font any more; otherwise <see langword="false"/>.</returns>
     public bool TryUpdate(Font font, GlyphSubstitutionCollection collection)
     {
         Dictionary<int, Character> characters = [];
@@ -222,11 +226,32 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
         }
 
-        bool hasFallBacks = false;
         Dictionary<int, GlyphPositioningData[]> replacements = [];
+        List<Character> ignorables = [];
         foreach (Character character in characters.Values)
         {
-            hasFallBacks |= !this.TryReplaceCharacter(font.FontMetrics, character, replacements);
+            if (this.glyphs[character.Indices[0]].Data.IsDefaultIgnorable)
+            {
+                ignorables.Add(character);
+            }
+            else
+            {
+                this.ReplaceCharacter(font.FontMetrics, character, replacements);
+            }
+        }
+
+        foreach (Character character in ignorables)
+        {
+            int cluster = this.glyphs[character.Indices[0]].Data.Cluster;
+            if (this.IsReplaced(cluster, replacements)
+                && this.TryCreateGlyphs(font.FontMetrics, character.Fallback, this.glyphs[character.Indices[0]], out GlyphPositioningData[] glyphs))
+            {
+                replacements.Add(character.Indices[0], glyphs);
+                for (int i = 1; i < character.Indices.Count; i++)
+                {
+                    replacements.Add(character.Indices[i], []);
+                }
+            }
         }
 
         this.TakeLigatureProperties(replacements);
@@ -246,15 +271,38 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
         this.glyphs.Clear();
         this.glyphs.AddRange(updated);
-        return !hasFallBacks;
+        return !this.HasUnresolved();
     }
 
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
 
     // HarfBuzz hides a default-ignorable character that the font lacks, so a caller of HarfBuzz finds no missing glyph
-    // there. It takes a fallback font for the character only with another character of its cluster that needs one.
+    // there. A caller takes another font for each cluster with a missing glyph, so a default-ignorable character takes a
+    // fallback font with the rest of its cluster, whether the font has it or not.
     private static bool NeedsFallback(GlyphPositioningData glyph, HashSet<int> missingClusters)
-        => IsMissing(glyph) && (!glyph.Data.IsDefaultIgnorable || missingClusters.Contains(glyph.Data.Cluster));
+        => glyph.Data.IsDefaultIgnorable ? missingClusters.Contains(glyph.Data.Cluster) : IsMissing(glyph);
+
+    // Whether a glyph still needs a fallback font. A control character needs none.
+    private bool HasUnresolved()
+    {
+        HashSet<int> clusters = this.GetMissingClusters();
+        return this.glyphs.Exists(glyph => NeedsFallback(glyph, clusters) && !CodePoint.IsControl(glyph.Data.CodePoint));
+    }
+
+    // Whether the fallback font replaces every missing glyph of the cluster that is not default-ignorable.
+    private bool IsReplaced(int cluster, Dictionary<int, GlyphPositioningData[]> replacements)
+    {
+        for (int i = 0; i < this.glyphs.Count; i++)
+        {
+            GlyphShapingData data = this.glyphs[i].Data;
+            if (data.Cluster == cluster && IsMissing(this.glyphs[i]) && !data.IsDefaultIgnorable && !replacements.ContainsKey(i))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     // The clusters that have a missing glyph that is not default-ignorable.
     private HashSet<int> GetMissingClusters()
@@ -318,13 +366,13 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// circle that the font drew. So it does when the font drew none of the character and the fallback font has glyphs of
     /// it left, as when it splits a sign that the font kept whole. Its glyphs then take the place of the last missing
     /// glyph, where a shaper puts a sign that it keeps whole, and the other glyphs of the character go. A dotted circle
-    /// that the font drew stays, unless the fallback font draws its own, alone or in a ligature.
+    /// that the font drew stays, unless the fallback font draws its own, alone or in a ligature. A glyph that the fallback
+    /// font lacks too stays for the next fallback font.
     /// </summary>
     /// <param name="fontMetrics">The fallback font.</param>
     /// <param name="character">The glyphs of the character here and in the fallback font.</param>
     /// <param name="replacements">The glyphs that replace each glyph, by index. An empty array removes the glyph.</param>
-    /// <returns><see langword="false"/> if the fallback font lacks a glyph too, which is left for the next fallback font.</returns>
-    private bool TryReplaceCharacter(FontMetrics fontMetrics, Character character, Dictionary<int, GlyphPositioningData[]> replacements)
+    private void ReplaceCharacter(FontMetrics fontMetrics, Character character, Dictionary<int, GlyphPositioningData[]> replacements)
     {
         // The font of the text decided whether the character has an inserted glyph, such as a dotted circle.
         List<int> indices = character.Indices;
@@ -365,7 +413,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             int last = indices.FindLast(i => IsMissing(this.glyphs[i]));
             if (!this.TryCreateGlyphs(fontMetrics, fallback, this.glyphs[last], out GlyphPositioningData[] whole))
             {
-                return false;
+                return;
             }
 
             bool hasFallbackInserted = fallback.Exists(g => g.HoldsInsertedGlyph);
@@ -381,23 +429,16 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
                 }
             }
 
-            return true;
+            return;
         }
 
-        bool isComplete = true;
         foreach (KeyValuePair<int, List<GlyphShapingData>> part in parts)
         {
             if (this.TryCreateGlyphs(fontMetrics, part.Value, this.glyphs[part.Key], out GlyphPositioningData[] glyphs))
             {
                 replacements.Add(part.Key, glyphs);
             }
-            else
-            {
-                isComplete = false;
-            }
         }
-
-        return isComplete;
     }
 
     /// <summary>
@@ -407,7 +448,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <param name="shapes">The glyphs of the fallback font, in its order.</param>
     /// <param name="place">The glyph whose place they take.</param>
     /// <param name="glyphs">The new glyphs.</param>
-    /// <returns><see langword="false"/> if the fallback font lacks one of the glyphs too.</returns>
+    /// <returns><see langword="false"/> if the fallback font lacks one of the glyphs too, other than a default-ignorable one.</returns>
     private bool TryCreateGlyphs(FontMetrics fontMetrics, List<GlyphShapingData> shapes, GlyphPositioningData place, out GlyphPositioningData[] glyphs)
     {
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
@@ -426,7 +467,8 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             TextDecorations textDecorations = shape.TextRun.TextDecorations;
             foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport, shape.HasVerticalForm))
             {
-                if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint))
+                // A default-ignorable glyph takes the .notdef, which is hidden once the fonts have positioned the glyphs.
+                if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint) && !shape.IsDefaultIgnorable)
                 {
                     return false;
                 }
@@ -461,14 +503,12 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
     /// <summary>
     /// Adds the collection of glyph ids to the metrics collection.
-    /// identified as fallbacks.
     /// </summary>
     /// <param name="font">The font face with metrics.</param>
     /// <param name="collection">The glyph substitution collection.</param>
-    /// <returns><see langword="true"/> if the metrics collection does not contain any fallbacks; otherwise <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if no glyph needs a fallback font; otherwise <see langword="false"/>.</returns>
     public bool TryAdd(Font font, GlyphSubstitutionCollection collection)
     {
-        bool hasFallBacks = false;
         FontMetrics fontMetrics = font.FontMetrics;
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         ColorFontSupport colorFontSupport = this.TextOptions.ColorFontSupport;
@@ -488,11 +528,6 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
             foreach (GlyphMetrics gm in fontMetrics.GetGlyphMetrics(codePoint, id, textAttributes, textDecorations, layoutMode, colorFontSupport, data.HasVerticalForm))
             {
-                if (gm.GlyphType == GlyphType.Fallback && !CodePoint.IsControl(codePoint))
-                {
-                    hasFallBacks = true;
-                }
-
                 metrics.Add(gm.CloneForRendering(data.TextRun, codePoint));
             }
 
@@ -511,7 +546,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
         }
 
-        return !hasFallBacks;
+        return !this.HasUnresolved();
     }
 
     /// <summary>
