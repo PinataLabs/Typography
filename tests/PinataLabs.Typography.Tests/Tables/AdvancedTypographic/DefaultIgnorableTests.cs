@@ -107,11 +107,11 @@ public class DefaultIgnorableTests
         FontCollection collection = new();
         Font font = collection.Add(TestFonts.FontRunContextFile).CreateFont(72 * 1000);
         FontFamily fallback = collection.Add(TestFonts.FontRunContextFallbackFile);
-        const string text = "ax‌b ax‌b";
+        const string text = "ax\u200Cb ax\u200Cb";
         TextOptions options = new(font) { Dpi = 1, WrappingLength = 2500, FallbackFontFamilies = [fallback] };
 
         IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout(text.AsSpan(), options);
-        IGrouping<float, GlyphLayout>[] lines = [.. layout.GroupBy(g => g.PenLocation.Y)];
+        IGrouping<int, GlyphLayout>[] lines = [.. layout.GroupBy(g => (int)MathF.Round(g.PenLocation.Y))];
         int[] secondLine = [.. lines[^1].Select(g => g.CodePoint.Value)];
         TextMeasurer.TryMeasureCharacterBounds(text, options, out ReadOnlySpan<GlyphBounds> bounds);
         int boundsCount = bounds.Length;
