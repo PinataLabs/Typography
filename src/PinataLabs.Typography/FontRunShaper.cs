@@ -124,7 +124,7 @@ internal static class FontRunShaper
 
                 // Get the glyph id for the codepoint and add to the collection.
                 font.FontMetrics.TryGetGlyphId(current, next, out ushort glyphId, out skipNextCodePoint);
-                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex, codePointTextIndex);
+                substitutions.AddGlyph(glyphId, current, (TextDirection)bidiRuns[bidiRunIndex].Direction, textRuns[textRunIndex], codePointIndex, codePointTextIndex, graphemeIndex);
 
                 codePointIndex++;
                 graphemeCodePointIndex++;

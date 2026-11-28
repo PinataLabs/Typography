@@ -16,9 +16,8 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// <para>
 /// Every glyph of a grapheme cluster keeps the orientation of the first glyph of the cluster, as in CSS: a mark that of
 /// its base, and the ZWJ and the emoji of an emoji ZWJ sequence that of the first emoji. A run that starts inside a
-/// grapheme cluster, at a mark of a fallback font, takes the orientation of the cluster. A grapheme cluster starts where
-/// a <see cref="GlyphShapingData.Cluster"/> does, and also at an emoji after ZWJ that no emoji comes before: HarfBuzz
-/// joins such an emoji to the cluster before it, but UAX #29 does not (rule GB11). The orientation of a Tr glyph is
+/// grapheme cluster, at a mark of a fallback font, takes the orientation of the cluster. The grapheme clusters are those
+/// of <see cref="GlyphShapingData.Grapheme"/>, as font fallback takes them too. The orientation of a Tr glyph is
 /// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A glyph of
 /// another font ends a run, also a default-ignorable one.
 /// </para>
@@ -136,30 +135,7 @@ internal struct ShapingRunEnumerator
     }
 
     private readonly bool StartsGrapheme(int index)
-    {
-        if (index == 0 || this.collection[index].Cluster != this.collection[index - 1].Cluster)
-        {
-            return true;
-        }
-
-        if (this.GetGraphemeClass(index) != GraphemeClusterClass.ExtendedPictographic
-            || this.GetGraphemeClass(index - 1) != GraphemeClusterClass.ZeroWidthJoiner)
-        {
-            return false;
-        }
-
-        // GB11: ExtPict Extend* ZWJ × ExtPict.
-        int before = index - 2;
-        while (before >= 0 && this.GetGraphemeClass(before) == GraphemeClusterClass.Extend)
-        {
-            before--;
-        }
-
-        return before < 0 || this.GetGraphemeClass(before) != GraphemeClusterClass.ExtendedPictographic;
-    }
-
-    private readonly GraphemeClusterClass GetGraphemeClass(int index)
-        => CodePoint.GetGraphemeClusterClass(this.collection[index].CodePoint);
+        => index == 0 || this.collection[index].Grapheme != this.collection[index - 1].Grapheme;
 
     private readonly bool IsUpright(GlyphShapingData data)
         => AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, this.collection.TextOptions.LayoutMode, data.HasVerticalForm);

@@ -893,7 +893,7 @@ apply only with a digit next to a Hebrew letter, which the Unicode Bidirectional
 one gives a digit an alternate only in the Hebrew script, one applies only with an upright Han character next to a
 sideways hyphen-minus, one checks that a mark stays in the upright run of its base, and one that the sideways ZWJ of an
 emoji ZWJ sequence stays in the upright run of its grapheme cluster, and one that an emoji after a letter and ZWJ is
-a grapheme cluster and an upright run of its own. The script splits each text into script runs as the library does, with Common and Inherited characters in the run before them, the Hebrew texts into runs of
+a grapheme cluster and an upright run of its own, and one that ZWNJ continues the upright grapheme cluster of an emoji. The script splits each text into script runs as the library does, with Common and Inherited characters in the run before them, the Hebrew texts into runs of
 one direction too, which keep the Hebrew script, and the vertical text into runs of one orientation, and shapes each
 run in its own buffer. For each case that crosses a boundary it also shapes the text in one buffer, where the lookup
 applies. Other cases check where the nested lookups of a context lookup apply: not at a second input glyph that a
@@ -940,12 +940,14 @@ The output is deterministic for one HarfBuzz version. The reference records the 
 characters that each font draws in a buffer of that font, so no lookup of one font sees a glyph of another. The two
 fonts give the same glyph IDs to different characters, and each case has a GPOS lookup that would apply if it took a
 glyph of the other font for its own: a pair lookup of either font, and a chained context and a mark-to-base lookup of
-the fallback font. More cases put a default-ignorable character between glyphs of the other font, or in a cluster
-that the fallback font draws, where a mark-to-base lookup and a ZWJ ligature apply only in one buffer. The script
+the fallback font. More cases put a default-ignorable character between glyphs of the other font, or in a grapheme
+cluster that the fallback font draws, where a mark-to-base lookup and a ZWJ ligature apply only in one buffer. The script
 splits each text into runs of the characters that one font draws, the font of the text where it has the character, and
-shapes each run in a buffer of its font. A default-ignorable character takes the font of the rest of its cluster, as
-a caller that takes another font for each cluster with a missing glyph gives it: the fallback font when another
-character of the cluster takes it, and else the font of the text. HarfBuzz hides it in a font that lacks it. A
+shapes each run in a buffer of its font. A default-ignorable character takes the font of the rest of its grapheme
+cluster (UAX #29), as a caller that takes a font for each grapheme cluster gives it: the fallback font when another
+character of the grapheme cluster takes it, and else the font of the text. So ZWNJ after a letter takes the font of
+the letter, and ZWJ between a letter and an emoji the font of the letter. HarfBuzz hides it in a font that lacks it,
+with the space glyph of a font that has one. A
 vertical case starts a run of the fallback font at a mark, which keeps the upright orientation of its cluster. As a control, it also shapes a text in one
 buffer of the font, where the lookup applies. The reference holds the glyph ID and the place of each glyph.
 

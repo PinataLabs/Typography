@@ -99,7 +99,7 @@ public class GlyphClusterTests
         while (index < text.Length)
         {
             CodePoint codePoint = CodePoint.DecodeFromUtf16At(text, index, out int consumed);
-            collection.AddGlyph((ushort)(offset + 1), codePoint, TextDirection.LeftToRight, run, offset, index);
+            collection.AddGlyph((ushort)(offset + 1), codePoint, TextDirection.LeftToRight, run, offset, index, offset);
             index += consumed;
             offset++;
         }

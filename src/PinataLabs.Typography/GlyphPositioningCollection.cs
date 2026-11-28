@@ -168,17 +168,17 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
     /// <summary>
     /// Gets the <see cref="GlyphShapingData.SourceOffset"/> of each character that needs a fallback font: one that no
-    /// font so far has a glyph for, other than a default-ignorable one, and each default-ignorable character of the
-    /// cluster of one.
+    /// font so far has a glyph for, other than a default-ignorable or a control character, and each default-ignorable
+    /// character of the grapheme cluster of one.
     /// </summary>
     /// <returns>The offsets within the input codepoint collection.</returns>
     public HashSet<int> GetUnresolvedOffsets()
     {
         HashSet<int> offsets = [];
-        HashSet<int> clusters = this.GetMissingClusters();
+        HashSet<int> graphemes = this.GetUnresolvedGraphemes(null);
         foreach (GlyphPositioningData glyph in this.glyphs)
         {
-            if (NeedsFallback(glyph, clusters) && !glyph.Data.IsInserted)
+            if (NeedsFallback(glyph, graphemes) && !glyph.Data.IsInserted)
             {
                 offsets.Add(glyph.Data.SourceOffset);
             }
@@ -190,10 +190,11 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     /// <summary>
     /// Replaces the glyphs that no font so far has with the glyphs that a fallback font gives the same character. The font
     /// of the text decided which glyphs the text has and in what order, so the new glyphs take the place of the glyphs
-    /// they replace, wherever the shaper of that font put them. A default-ignorable character of a cluster with a missing
-    /// glyph takes the fallback font once the fallback font draws the rest of the cluster, as a caller of HarfBuzz shapes
-    /// the cluster in a buffer of that font, also when the font of the text has the character. When the fallback font
-    /// lacks it too, it takes the .notdef of the fallback font, which <see cref="HideDefaultIgnorables"/> hides.
+    /// they replace, wherever the shaper of that font put them. A default-ignorable character of a grapheme cluster with a
+    /// missing glyph takes the fallback font once the fallback font draws the rest of the grapheme cluster, as a caller of
+    /// HarfBuzz shapes the grapheme cluster in a buffer of that font, also when the font of the text has the character.
+    /// When the fallback font lacks it too, it takes the .notdef of the fallback font, which
+    /// <see cref="HideDefaultIgnorables"/> hides.
     /// </summary>
     /// <param name="font">The fallback font.</param>
     /// <param name="collection">The glyphs of the whole text, shaped with the fallback font.</param>
@@ -201,10 +202,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public bool TryUpdate(Font font, GlyphSubstitutionCollection collection)
     {
         Dictionary<int, Character> characters = [];
-        HashSet<int> clusters = this.GetMissingClusters();
+        HashSet<int> graphemes = this.GetUnresolvedGraphemes(null);
         for (int i = 0; i < this.glyphs.Count; i++)
         {
-            if (NeedsFallback(this.glyphs[i], clusters) && !characters.ContainsKey(this.glyphs[i].Data.SourceOffset))
+            if (NeedsFallback(this.glyphs[i], graphemes) && !characters.ContainsKey(this.glyphs[i].Data.SourceOffset))
             {
                 characters.Add(this.glyphs[i].Data.SourceOffset, new Character());
             }
@@ -240,10 +241,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
         }
 
+        HashSet<int> unreplaced = this.GetUnresolvedGraphemes(replacements);
         foreach (Character character in ignorables)
         {
-            int cluster = this.glyphs[character.Indices[0]].Data.Cluster;
-            if (this.IsReplaced(cluster, replacements)
+            if (!unreplaced.Contains(this.glyphs[character.Indices[0]].Data.Grapheme)
                 && this.TryCreateGlyphs(font.FontMetrics, character.Fallback, this.glyphs[character.Indices[0]], out GlyphPositioningData[] glyphs))
             {
                 replacements.Add(character.Indices[0], glyphs);
@@ -271,52 +272,34 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
 
         this.glyphs.Clear();
         this.glyphs.AddRange(updated);
-        return !this.HasUnresolved();
+        return !this.glyphs.Exists(IsUnresolved);
     }
 
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
 
-    // HarfBuzz hides a default-ignorable character that the font lacks, so a caller of HarfBuzz finds no missing glyph
-    // there. A caller takes another font for each cluster with a missing glyph, so a default-ignorable character takes a
-    // fallback font with the rest of its cluster, whether the font has it or not.
-    private static bool NeedsFallback(GlyphPositioningData glyph, HashSet<int> missingClusters)
-        => glyph.Data.IsDefaultIgnorable ? missingClusters.Contains(glyph.Data.Cluster) : IsMissing(glyph);
+    // Whether the glyph needs a font that has it. HarfBuzz hides a default-ignorable character that the font lacks, so a
+    // caller of HarfBuzz finds no missing glyph there, and a control character needs no font.
+    private static bool IsUnresolved(GlyphPositioningData glyph)
+        => IsMissing(glyph) && !glyph.Data.IsDefaultIgnorable && !CodePoint.IsControl(glyph.Data.CodePoint);
 
-    // Whether a glyph still needs a fallback font. A control character needs none.
-    private bool HasUnresolved()
-    {
-        HashSet<int> clusters = this.GetMissingClusters();
-        return this.glyphs.Exists(glyph => NeedsFallback(glyph, clusters) && !CodePoint.IsControl(glyph.Data.CodePoint));
-    }
+    // A caller of HarfBuzz takes a font for each grapheme cluster, so a default-ignorable character takes a fallback font
+    // with the rest of its grapheme cluster, whether the font has it or not.
+    private static bool NeedsFallback(GlyphPositioningData glyph, HashSet<int> unresolvedGraphemes)
+        => glyph.Data.IsDefaultIgnorable ? unresolvedGraphemes.Contains(glyph.Data.Grapheme) : IsUnresolved(glyph);
 
-    // Whether the fallback font replaces every missing glyph of the cluster that is not default-ignorable.
-    private bool IsReplaced(int cluster, Dictionary<int, GlyphPositioningData[]> replacements)
+    // The grapheme clusters that have an unresolved glyph, other than the glyphs that the replacements replace.
+    private HashSet<int> GetUnresolvedGraphemes(Dictionary<int, GlyphPositioningData[]>? replacements)
     {
+        HashSet<int> graphemes = [];
         for (int i = 0; i < this.glyphs.Count; i++)
         {
-            GlyphShapingData data = this.glyphs[i].Data;
-            if (data.Cluster == cluster && IsMissing(this.glyphs[i]) && !data.IsDefaultIgnorable && !replacements.ContainsKey(i))
+            if (IsUnresolved(this.glyphs[i]) && replacements?.ContainsKey(i) != true)
             {
-                return false;
+                graphemes.Add(this.glyphs[i].Data.Grapheme);
             }
         }
 
-        return true;
-    }
-
-    // The clusters that have a missing glyph that is not default-ignorable.
-    private HashSet<int> GetMissingClusters()
-    {
-        HashSet<int> clusters = [];
-        foreach (GlyphPositioningData glyph in this.glyphs)
-        {
-            if (IsMissing(glyph) && !glyph.Data.IsDefaultIgnorable)
-            {
-                clusters.Add(glyph.Data.Cluster);
-            }
-        }
-
-        return clusters;
+        return graphemes;
     }
 
     /// <summary>
@@ -546,7 +529,7 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
             }
         }
 
-        return !this.HasUnresolved();
+        return !this.glyphs.Exists(IsUnresolved);
     }
 
     /// <summary>

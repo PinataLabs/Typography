@@ -431,7 +431,7 @@ public class VerticalGlyphFormTests
         Font font = FakeFont.CreateFont(text);
         TextOptions options = new(font) { LayoutMode = mode, FeatureTags = featureTags };
         GlyphSubstitutionCollection collection = new(options);
-        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1, Font = font }, 0, 0);
+        collection.AddGlyph(1, CodePoint.DecodeFromUtf16At(text, 0), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1, Font = font }, 0, 0, 0);
         collection[0].HasVerticalForm = hasVerticalForm;
 
         new DefaultShaper(ScriptClass.Common, options).Plan(collection, 0, 1);

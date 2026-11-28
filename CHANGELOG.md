@@ -494,20 +494,23 @@ Unicode conformance suites to that version.
   apply only within a run of one orientation, so a `ccmp` lookup of upright U+5B57 before the sideways hyphen-minus no
   longer applies. Every glyph of a grapheme cluster keeps the orientation of the cluster, so a mark keeps that of its
   base, also when a fallback font draws the mark, and the sideways ZWJ of an emoji ZWJ sequence stays in the upright
-  run of its emoji, where the sequence still forms its ligature. An emoji after ZWJ joins the grapheme cluster only
-  after another emoji, as UAX #29 has it, so an upright emoji after `a` and ZWJ is a run of its own. A `c` and an
-  upright copyright sign no longer form a ligature in vertical mixed text. (#202)
+  run of its emoji, where the sequence still forms its ligature. The grapheme clusters are those of UAX #29, as the
+  layout counts them, so an upright emoji after `a` and ZWJ is a run of its own, and a sideways ZWNJ inside an emoji
+  ZWJ sequence stays in its upright run. A `c` and an upright copyright sign no longer form a ligature in vertical
+  mixed text. (#202)
 - The GPOS lookups and the `kern` table of a font apply only within a run of the glyphs that the font draws, as
   HarfBuzz does when its caller shapes the characters of each font in a buffer of their own. A lookup matched the
   glyphs of a fallback font, or of the font of the text, by glyph ID, so a glyph of the other font with the same ID
   took the pair values, the context or the anchors of a glyph that it is not. A default-ignorable glyph of another font
   ends the run too, also one that its font leaves out, and the marks of a cluster whose base another font draws are
-  still placed across fonts. A default-ignorable character takes the font of the rest of its cluster, as a caller of
-  HarfBuzz that takes another font for each cluster with a missing glyph does. One that the font of the text lacks,
-  such as U+034F after `a`, stays with that font, which hides it, and needs no fallback pass. One in a cluster that a
+  still placed across fonts. A default-ignorable character takes the font of the rest of its grapheme cluster, as a
+  caller of HarfBuzz that takes a font for each grapheme cluster does. One that the font of the text lacks, such as
+  U+034F after `a`, stays with that font, which hides it, and needs no fallback pass. One in a grapheme cluster that a
   fallback font draws takes that font, also when the font of the text has it, so a fallback emoji font forms its
-  ligature of an emoji ZWJ sequence, and an acute after a tag character attaches to its base. When the fallback font
-  lacks it too, its .notdef is hidden. (#198)
+  ligature of an emoji ZWJ sequence, ZWNJ after a letter of the fallback font goes with the letter, and an acute after
+  a tag character attaches to its base. When the fallback font lacks it too, its .notdef is hidden. The ZWJ between
+  `a` and an emoji of the fallback font stays with `a`. A control character keeps the font of the text when a fallback
+  font draws other characters. (#198)
 - A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
   does. It found the glyph of each nested lookup by walking the glyphs again from the first. After a nested ligature
   took the second glyph of the input, a nested lookup at that glyph changed the glyph after the input, which can be

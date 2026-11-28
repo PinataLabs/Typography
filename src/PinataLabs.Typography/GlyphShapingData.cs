@@ -42,6 +42,7 @@ internal class GlyphShapingData
         this.HoldsInsertedGlyph = data.HoldsInsertedGlyph;
         this.SourceOffset = data.SourceOffset;
         this.Cluster = data.Cluster;
+        this.Grapheme = data.Grapheme;
         this.Direction = data.Direction;
         this.TextRun = data.TextRun;
         this.LigatureId = data.LigatureId;
@@ -169,6 +170,17 @@ internal class GlyphShapingData
     /// joins shares the lowest cluster of the glyphs it joins, so the clusters of a run never decrease.
     /// </summary>
     public int Cluster { get; set; }
+
+    /// <summary>
+    /// Gets or sets the index in the text of the grapheme cluster of the character that the glyph comes from, as UAX #29
+    /// forms it and as <see cref="TextRun"/> counts it. A caller of HarfBuzz itemizes text by grapheme cluster: a browser
+    /// takes the orientation of each grapheme cluster in vertical text and a font for each grapheme cluster. So the
+    /// glyphs of one grapheme cluster share a run of one orientation, and a default-ignorable character takes the font
+    /// of the rest of its grapheme cluster. <see cref="Cluster"/> is the cluster of HarfBuzz instead, which a ligature
+    /// or a reordering can widen, and which starts at ZWNJ and joins an emoji after a letter and ZWJ, where no grapheme
+    /// cluster does.
+    /// </summary>
+    public int Grapheme { get; set; }
 
     /// <summary>
     /// Gets or sets the text direction.

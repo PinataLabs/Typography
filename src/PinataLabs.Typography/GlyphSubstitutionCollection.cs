@@ -215,7 +215,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <param name="textRun">The text run this glyph belongs to.</param>
     /// <param name="offset">The zero-based index within the input codepoint collection.</param>
     /// <param name="charIndex">The zero-based UTF-16 index of the codepoint in the text.</param>
-    public void AddGlyph(ushort glyphId, CodePoint codePoint, TextDirection direction, TextRun textRun, int offset, int charIndex)
+    /// <param name="grapheme">The zero-based index in the text of the grapheme cluster of the codepoint.</param>
+    public void AddGlyph(ushort glyphId, CodePoint codePoint, TextDirection direction, TextRun textRun, int offset, int charIndex, int grapheme)
     {
         // A variation selector that the cmap table folds into its base has no glyph of its own, so a mark after it joins
         // the cluster of the base.
@@ -227,6 +228,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             Direction = direction,
             GlyphId = glyphId,
             Cluster = cluster,
+            Grapheme = grapheme,
             SourceOffset = offset,
         }));
     }

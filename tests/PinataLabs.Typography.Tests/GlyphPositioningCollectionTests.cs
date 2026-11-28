@@ -20,7 +20,7 @@ public class GlyphPositioningCollectionTests
         Font font = FakeFont.CreateFont("A");
         TextOptions options = new(font);
         GlyphSubstitutionCollection substitutions = new(options);
-        substitutions.AddGlyph(1, new CodePoint('A'), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1 }, 0, 0);
+        substitutions.AddGlyph(1, new CodePoint('A'), TextDirection.LeftToRight, new TextRun { Start = 0, End = 1 }, 0, 0, 0);
         GlyphPositioningCollection collection = new(options);
         collection.TryAdd(font, substitutions);
 
@@ -49,7 +49,7 @@ public class GlyphPositioningCollectionTests
         for (int i = 0; i < codePoints.Length; i++)
         {
             font.FontMetrics.TryGetGlyphId(codePoints[i], out ushort glyphId);
-            substitutions.AddGlyph(glyphId, codePoints[i], TextDirection.LeftToRight, textRun, i, i);
+            substitutions.AddGlyph(glyphId, codePoints[i], TextDirection.LeftToRight, textRun, i, i, i);
         }
 
         bool isComplete = new GlyphPositioningCollection(options).TryAdd(font, substitutions);
