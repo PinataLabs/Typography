@@ -9,10 +9,12 @@ Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
     python tests/tools/generate_font_run_context_reference.py
 
 A caller of HarfBuzz shapes the characters that each font draws in a buffer of that font, so a lookup of one font
-never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e, ZWJ and U+5B57, glyphs 1 to
-5. FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z, w, the combining acute, U+5B58 and
-U+5B57, glyphs 1 to 8, so a and x, b and y, and e and U+034F have the same glyph IDs. Its GDEF table makes w a mark. Each case has a lookup that would apply if it
-took the glyph of the other font for its own:
+never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e, ZWJ, U+5B57 and the word
+joiner U+2060, glyphs 1 to 6. FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z, w, the
+combining acute, U+5B58, U+5B57, ZWJ and the man and woman emoji, glyphs 1 to 11, and their ZWJ ligature, so a and x,
+b and y, and e and U+034F have the same glyph IDs. Its GDEF table makes w and the acute marks. Neither font has the tag
+character U+E0061. Each case has a lookup that would apply if it took the glyph of the other font for its own, or that
+applies only if the characters of a cluster are in one buffer:
 
 * FallbackPair: the fallback font moves z after x, and a comes before z.
 * FallbackContext: a chained context lookup of the fallback font moves y after x, and a comes before y.
@@ -22,11 +24,21 @@ took the glyph of the other font for its own:
 * FallbackIgnorable: the font of the text moves a after e, and the U+034F that it lacks comes before a. HarfBuzz hides a
   default-ignorable character that the font lacks, so it leaves no missing glyph for its caller to take from another
   font, and the U+034F stays with the a before it, in the buffer of the font of the text.
-* PrimaryIgnorable: the fallback font moves z after x, and the ZWJ of the font of the text comes between them. The
-  caller shapes the ZWJ in a buffer of the font of the text, which has it, so x and z are in two buffers.
+* PrimaryIgnorable: the fallback font moves z after x, and a ZWJ comes between them. The font of the text has the
+  ZWJ, but the ZWJ is in the cluster of the x that it lacks, so the caller shapes the whole cluster with the fallback
+  font, as it takes another font for each cluster with a missing glyph. x, ZWJ and z are then in one buffer.
+* PrimaryWordJoiner: the fallback font moves z after x, and the word joiner of the font of the text, which is a
+  cluster of its own, comes between them. The caller shapes it in a buffer of the font of the text, so x and z are in
+  two buffers.
+* MissingIgnorable: the fallback font attaches the acute to x, and the tag character U+E0061 that neither font has
+  comes between them, in their cluster. The caller shapes the cluster with the fallback font, where HarfBuzz hides the
+  tag character, so the acute attaches.
+* ZwjLigature: the fallback font ligates the man, ZWJ and woman emoji. The font of the text has the ZWJ, but the
+  caller shapes the whole cluster with the fallback font.
 
-A default-ignorable character that the font of the text lacks takes the fallback font only with another character of
-its grapheme cluster, which the fallback font draws.
+A default-ignorable character takes the font of the rest of its cluster: the fallback font when another character of
+the cluster takes it, also when the font of the text has the default-ignorable character, and else the font of the
+text, which hides it when it lacks it.
 
 * MarkOrientation, in vertical mixed text: the fallback font moves U+5B58 up after the acute. The acute after U+5B57
   is sideways on its own, but it takes the upright orientation of its grapheme cluster, so the run of the fallback font
@@ -49,11 +61,12 @@ from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 
 REFERENCE = os.path.join(FONTS, "FontRunContext.harfbuzz.json")
 
-PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57]
-FALLBACK = [0x0078, 0x0079, 0x034F, 0x007A, 0x0077, 0x0301, 0x5B58, 0x5B57]
+PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57, 0x2060]
+FALLBACK = [0x0078, 0x0079, 0x034F, 0x007A, 0x0077, 0x0301, 0x5B58, 0x5B57, 0x200D, 0x1F468, 0x1F469]
+FALLBACK_LIGATURES = ["u1F468_u200D_u1F469"]
 
-# The default-ignorable characters of the cases.
-IGNORABLE = [0x034F, 0x200D]
+# The default-ignorable characters of the cases. Neither font has the tag character U+E0061.
+IGNORABLE = [0x034F, 0x200D, 0xE0061, 0x2060]
 
 LANGUAGES = """
 languagesystem DFLT dflt;
@@ -69,8 +82,12 @@ feature kern {
 
 FALLBACK_FEATURES = LANGUAGES + """
 table GDEF {
-    GlyphClassDef [u0078 u0079 u007A], , [u0077], ;
+    GlyphClassDef [u0078 u0079 u007A u1F468 u1F469 u1F468_u200D_u1F469], , [u0077 u0301], ;
 } GDEF;
+
+feature ccmp {
+    sub u1F468 u200D u1F469 by u1F468_u200D_u1F469;
+} ccmp;
 
 feature kern {
     lookup PAIR {
@@ -83,10 +100,11 @@ feature kern {
 } kern;
 
 markClass u0077 <anchor 0 500> @TOP;
+markClass u0301 <anchor 0 500> @ACUTE;
 
 feature mark {
     lookup MARK_TO_BASE {
-        pos base u0078 <anchor 300 700> mark @TOP;
+        pos base u0078 <anchor 300 700> mark @TOP <anchor 200 800> mark @ACUTE;
     } MARK_TO_BASE;
 
     lookup AFTER_ACUTE {
@@ -103,6 +121,9 @@ CASES = [
     ("PrimaryPair", [0x0061, 0x0079, 0x0061], "primary", [0x0061, 0x0062, 0x0061]),
     ("FallbackIgnorable", [0x0061, 0x034F, 0x0061], "primary", [0x0065, 0x0061]),
     ("PrimaryIgnorable", [0x0078, 0x200D, 0x007A], "fallback", [0x0078, 0x200D, 0x007A]),
+    ("PrimaryWordJoiner", [0x0078, 0x2060, 0x007A], "fallback", [0x0078, 0x007A]),
+    ("MissingIgnorable", [0x0078, 0xE0061, 0x0301], "fallback", [0x0078, 0xE0061, 0x0301]),
+    ("ZwjLigature", [0x1F468, 0x200D, 0x1F469], "fallback", [0x1F468, 0x200D, 0x1F469]),
 ]
 
 # The cases of vertical text, as CASES.
@@ -111,25 +132,36 @@ VERTICAL_CASES = [
 ]
 
 
+def is_extended_pictographic(code_point):
+    """Whether the character is Extended_Pictographic, which is enough for the texts of the cases."""
+    return 0x1F000 <= code_point <= 0x1FAFF
+
+
 def clusters(code_points):
-    """Gives the grapheme cluster of each character: a mark, ZWJ and a character after ZWJ continue the cluster before
-    them, which is enough for the texts of the cases."""
+    """Gives the cluster of each character, as the library forms it from the grapheme cluster classes: a mark, a tag
+    character, ZWJ and an Extended_Pictographic character after ZWJ continue the cluster before them, which is enough
+    for the texts of the cases."""
     cluster = []
     for i, code_point in enumerate(code_points):
-        continues = i > 0 and (unicodedata.category(chr(code_point)).startswith("M") or 0x200D in code_points[i - 1:i + 1])
+        continues = i > 0 and (
+            unicodedata.category(chr(code_point)).startswith("M")
+            or 0xE0020 <= code_point <= 0xE007F
+            or code_point == 0x200D
+            or (code_points[i - 1] == 0x200D and is_extended_pictographic(code_point)))
         cluster.append(cluster[-1] if continues else i)
     return cluster
 
 
 def font_runs(code_points):
     """Splits the text into runs of the characters that one font draws: the font of the text if it has the character,
-    or else the fallback font. A default-ignorable character that the font of the text lacks takes the fallback font
-    only when another character of its cluster does. Gives the start, the end and the font of each run."""
+    or else the fallback font. A default-ignorable character takes the font of the rest of its cluster: the fallback
+    font when another character of its cluster does, whether the font of the text has it or not, and else the font of
+    the text. Gives the start, the end and the font of each run."""
     cluster = clusters(code_points)
     missing = {cluster[i] for i, c in enumerate(code_points) if c not in PRIMARY and c not in IGNORABLE}
     runs = []
     for i, code_point in enumerate(code_points):
-        primary = code_point in PRIMARY or (code_point in IGNORABLE and cluster[i] not in missing)
+        primary = cluster[i] not in missing if code_point in IGNORABLE else code_point in PRIMARY
         font = "primary" if primary else "fallback"
         if runs and runs[-1][2] == font:
             runs[-1][1] = i + 1
@@ -165,7 +197,7 @@ def shape(fonts, code_points, runs, direction="ltr"):
 def main():
     fonts = {
         "primary": load_font(build_font("FontRunContext.ttf", PRIMARY, PRIMARY_FEATURES)),
-        "fallback": load_font(build_font("FontRunContextFallback.ttf", FALLBACK, FALLBACK_FEATURES)),
+        "fallback": load_font(build_font("FontRunContextFallback.ttf", FALLBACK, FALLBACK_FEATURES, FALLBACK_LIGATURES)),
     }
 
     rows = []

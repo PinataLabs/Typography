@@ -15,9 +15,10 @@ namespace PinataLabs.Typography.Tests.Tables.AdvancedTypographic;
 /// characters, and each has GPOS lookups that would apply if they took a glyph of the other font for their own: a pair,
 /// a chained context and a mark-to-base lookup. A caller of HarfBuzz shapes the characters that each font draws in a
 /// buffer of that font, so none of them applies (issue #198). In one buffer of the font, each of them applies. The same
-/// holds for a default-ignorable glyph of one font between glyphs of the other. A default-ignorable character that the
-/// font of the text lacks stays in its buffer, where HarfBuzz hides it, unless another character of its cluster takes
-/// the fallback font. In vertical mixed text, a run of the fallback font that starts at a mark keeps the orientation of
+/// holds for a default-ignorable glyph of one font between glyphs of the other. A default-ignorable character takes
+/// the font of the rest of its cluster, as a caller that takes another font for each cluster with a missing glyph
+/// does: the fallback font, which hides it when it lacks it, also when the font of the text has it, or else the font of
+/// the text. In vertical mixed text, a run of the fallback font that starts at a mark keeps the orientation of
 /// the cluster of the mark.
 /// </summary>
 public class FontRunContextTests

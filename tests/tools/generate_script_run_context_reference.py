@@ -49,6 +49,9 @@ the start of the text. Each case of the font has a lookup that applies only when
 * ZwjOrientation: every character of a grapheme cluster takes the orientation of the cluster. The man and woman emoji
   are upright and ZWJ is sideways, but they are one cluster, so they are one upright run, where a ccmp lookup ligates
   them.
+* ZwjAfterLetter: an emoji after ZWJ continues a grapheme cluster only after another emoji (UAX #29, rule GB11), so
+  the upright U+1F600 after Latin a and ZWJ is a cluster of its own, in a run of its own. A ccmp lookup gives it its
+  alternate after a and ZWJ.
 
 Each text is shaped as the runs of a caller, and, for the cases that a script names, also in one buffer of that
 script, which shows that the lookup applies. Each row holds the case, the text, how the text is split, and the glyph
@@ -111,6 +114,7 @@ VERTICAL_CASES = [
     ("OrientationChange", [0x5B57, 0x002D], [(0, 1, "ttb"), (1, 2, "ltr")]),
     ("MarkOrientation", [0x5B57, 0x0301], [(0, 2, "ttb")]),
     ("ZwjOrientation", [0x1F468, 0x200D, 0x1F469], [(0, 3, "ttb")]),
+    ("ZwjAfterLetter", [0x0061, 0x200D, 0x1F600], [(0, 2, "ltr"), (2, 3, "ttb")]),
 ]
 
 MARKS = [0x0301, 0x0483, 0x0484, 0x0487]
@@ -222,6 +226,7 @@ feature ccmp {
     lookup ORIENTATION {
         sub u5B57' u002D by u5B57.alt;
         sub u5B57 u0301' by u0301.alt;
+        sub u0061 u200D u1F600' by u1F600.alt;
     } ORIENTATION;
 
     lookup ZWJ_SEQUENCE {
@@ -285,7 +290,7 @@ EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
     "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u006F_u0070", "u0070.alt", "u03C9.alt", "u0072.alt",
     "u0076.tail", "u0077.alt", "u0076.tail.alt", "u05D0.alt", "u0033.alt", "u5B57.alt", "u0301.alt",
-    "u1F468_u200D_u1F469",
+    "u1F468_u200D_u1F469", "u1F600.alt",
 ]
 
 

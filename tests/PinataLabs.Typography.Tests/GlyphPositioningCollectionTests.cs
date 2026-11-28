@@ -32,4 +32,25 @@ public class GlyphPositioningCollectionTests
 
         await Assert.That(collection.GetMetrics(0).Offset).IsEqualTo(new Vector2(100, 50));
     }
+
+    // HarfBuzz hides a default-ignorable character that the font lacks, so a font that lacks only U+034F after a needs no
+    // fallback font, and the layout takes no fallback pass.
+    [Test]
+    public async Task AFontThatLacksOnlyADefaultIgnorableCharacterNeedsNoFallbackFont()
+    {
+        Font font = new FontCollection().Add(TestFonts.FontRunContextFile).CreateFont(12);
+        TextOptions options = new(font);
+        GlyphSubstitutionCollection substitutions = new(options);
+        TextRun textRun = new() { Start = 0, End = 1, Font = font };
+        CodePoint[] codePoints = [new('a'), new(0x034F)];
+        for (int i = 0; i < codePoints.Length; i++)
+        {
+            font.FontMetrics.TryGetGlyphId(codePoints[i], out ushort glyphId);
+            substitutions.AddGlyph(glyphId, codePoints[i], TextDirection.LeftToRight, textRun, i, i);
+        }
+
+        bool isComplete = new GlyphPositioningCollection(options).TryAdd(font, substitutions);
+
+        await Assert.That(isComplete).IsTrue();
+    }
 }
