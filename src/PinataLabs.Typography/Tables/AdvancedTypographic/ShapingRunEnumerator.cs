@@ -15,11 +15,11 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// <remarks>
 /// <para>
 /// Every glyph of a grapheme cluster keeps the orientation of the first glyph of the cluster, as in CSS: a mark that of
-/// its base, and the ZWJ and the emoji of an emoji ZWJ sequence that of the first emoji. A run that starts inside a
-/// grapheme cluster, at a mark of a fallback font, takes the orientation of the cluster. The grapheme clusters are those
-/// of <see cref="GlyphShapingData.Grapheme"/>, as font fallback takes them too. The orientation of a Tr glyph is
-/// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A glyph of
-/// another font ends a run, also a default-ignorable one.
+/// its base, and the ZWJ and the emoji of an emoji ZWJ sequence that of the first emoji. The grapheme clusters are those
+/// of <see cref="GlyphShapingData.Grapheme"/>, as font fallback takes them too. GSUB gives each glyph that orientation,
+/// <see cref="GlyphShapingData.IsInUprightRun"/>, before it shapes the runs, so a mark after a ligature of two grapheme
+/// clusters, a glyph that a shaper moves, and a mark of a fallback font keep the orientation of their grapheme cluster.
+/// A glyph of another font ends a run, also a default-ignorable one.
 /// </para>
 /// <para>
 /// The end of a run is kept as the number of glyphs after it, as <see cref="IGlyphShapingCollection.RunEnd"/> is, so a
@@ -104,14 +104,13 @@ internal struct ShapingRunEnumerator
     private readonly int GetRunEnd(int start, int scriptRunEnd)
     {
         GlyphShapingData first = this.collection[start];
-        bool upright = this.IsUpright(this.GetGraphemeStart(start));
         FontMetrics? font = this.fonts?.GetMetrics(start).FontMetrics;
         int end = start + 1;
         while (end < scriptRunEnd)
         {
             GlyphShapingData data = this.collection[end];
             if (data.Direction != first.Direction
-                || (this.StartsGrapheme(end) && this.IsUpright(data) != upright)
+                || data.IsInUprightRun != first.IsInUprightRun
                 || (font is not null && this.fonts!.GetMetrics(end).FontMetrics != font))
             {
                 break;
@@ -122,23 +121,6 @@ internal struct ShapingRunEnumerator
 
         return end;
     }
-
-    // The first glyph of the grapheme cluster of the glyph, which may be in the run before, of another font.
-    private readonly GlyphShapingData GetGraphemeStart(int index)
-    {
-        while (!this.StartsGrapheme(index))
-        {
-            index--;
-        }
-
-        return this.collection[index];
-    }
-
-    private readonly bool StartsGrapheme(int index)
-        => index == 0 || this.collection[index].Grapheme != this.collection[index - 1].Grapheme;
-
-    private readonly bool IsUpright(GlyphShapingData data)
-        => AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, this.collection.TextOptions.LayoutMode, data.HasVerticalForm);
 
     private int GetScriptRunEnd(int start)
     {

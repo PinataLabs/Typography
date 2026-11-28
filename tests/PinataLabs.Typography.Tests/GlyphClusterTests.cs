@@ -86,17 +86,19 @@ public class GlyphClusterTests
         await Assert.That(collection.Count).IsEqualTo(4);
     }
 
-    // In vertical mixed text U+5B57 and U+4E00 are upright, and each sideways mark takes the orientation of its grapheme
-    // cluster. A reordering that moves U+4E00 before U+5B57, as a shaper moves a pre-base sign, joins the two grapheme
-    // clusters, so the mark of U+4E00 after the mark of U+5B57 starts no grapheme cluster, and no run of its own.
+    // In vertical mixed text U+5B57 and U+4E00 are upright, a is sideways, and each sideways mark takes the orientation
+    // of its grapheme cluster. A reordering that moves U+4E00 before U+5B57, as a shaper moves a pre-base sign, leaves
+    // the mark of U+4E00 after the mark of U+5B57, where it keeps the orientation of U+4E00. So the reordered glyphs stay
+    // one upright run.
     [Test]
     public async Task AReorderingJoinsTheGraphemeClustersItMovesOver()
     {
-        GlyphSubstitutionCollection collection = Collection("\u5B57\u0301\u4E00\u0302", LayoutMode.VerticalMixedLeftRight);
+        GlyphSubstitutionCollection collection = Collection("\u5B57\u0301\u4E00\u0302a", LayoutMode.VerticalMixedLeftRight);
+        collection.ResolveRunOrientations();
 
         collection.MoveGlyph(2, 0);
 
-        await Assert.That(RunLengths(collection)).IsEquivalentTo(new[] { 4 });
+        await Assert.That(RunLengths(collection)).IsEquivalentTo(new[] { 4, 1 });
     }
 
     private static int[] Clusters(string text) => Clusters(Collection(text));

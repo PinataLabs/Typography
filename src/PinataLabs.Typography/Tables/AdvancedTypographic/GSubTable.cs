@@ -141,6 +141,7 @@ internal class GSubTable : Table
 
         // A run ends where the orientation changes, which is known for a Tr glyph only once the vert lookups are probed.
         this.ResolveVerticalForms(fontMetrics, collection);
+        collection.ResolveRunOrientations();
 
         ShapingRunEnumerator runs = new(collection);
         while (runs.MoveNext() && runs.Start < maxCount)

@@ -280,8 +280,7 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <summary>
     /// Gives the glyphs in the range the lowest cluster among them, as HarfBuzz does when a ligature, a reordering or a
     /// composition joins glyphs. The glyphs next to the range that share the cluster of its first or last glyph join it,
-    /// so that no cluster is split between two ranges. The glyphs of the cluster also take one
-    /// <see cref="GlyphShapingData.Grapheme"/>.
+    /// so that no cluster is split between two ranges.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph.</param>
     /// <param name="end">The zero-based index after the last glyph.</param>
@@ -312,43 +311,6 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         {
             this.glyphs[i].Data.Cluster = cluster;
         }
-
-        this.MergeGraphemes(start, end);
-    }
-
-    // Gives the glyphs of a merged cluster, and the glyphs next to it of the grapheme clusters that it joins, the lowest
-    // grapheme cluster among them, so that no run splits the cluster. A reordering can leave the glyphs of two grapheme
-    // clusters out of order, and the grapheme cluster of a glyph can go on past its cluster, as at a ZWNJ, so the range
-    // takes every glyph of each.
-    private void MergeGraphemes(int start, int end)
-    {
-        int lowest = this.glyphs[start].Data.Grapheme;
-        int highest = lowest;
-        for (int i = start + 1; i < end; i++)
-        {
-            lowest = Math.Min(lowest, this.glyphs[i].Data.Grapheme);
-            highest = Math.Max(highest, this.glyphs[i].Data.Grapheme);
-        }
-
-        if (lowest == highest)
-        {
-            return;
-        }
-
-        while (end < this.glyphs.Count && this.glyphs[end].Data.Grapheme >= lowest && this.glyphs[end].Data.Grapheme <= highest)
-        {
-            end++;
-        }
-
-        while (start > 0 && this.glyphs[start - 1].Data.Grapheme >= lowest && this.glyphs[start - 1].Data.Grapheme <= highest)
-        {
-            start--;
-        }
-
-        for (int i = start; i < end; i++)
-        {
-            this.glyphs[i].Data.Grapheme = lowest;
-        }
     }
 
     // As HarfBuzz does at its default cluster level, a character shares the cluster of the character before it when it is
@@ -372,6 +334,24 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
             || graphemeClass == GraphemeClusterClass.ZeroWidthJoiner
             || (isRegionalIndicator && (this.regionalIndicators & 1) == 0)
             || (this.glyphs[^1].Data.CodePoint.Value == ZeroWidthJoiner && graphemeClass == GraphemeClusterClass.ExtendedPictographic);
+    }
+
+    /// <summary>
+    /// Gives each glyph the orientation of the first glyph of its grapheme cluster, which
+    /// <see cref="GlyphShapingData.IsInUprightRun"/> keeps. Call it once the orientation of each <c>Tr</c> glyph is
+    /// resolved, before a shaper reorders the glyphs.
+    /// </summary>
+    internal void ResolveRunOrientations()
+    {
+        LayoutMode layoutMode = this.TextOptions.LayoutMode;
+        for (int i = 0; i < this.glyphs.Count; i++)
+        {
+            GlyphShapingData data = this.glyphs[i].Data;
+            GlyphShapingData? previous = i > 0 ? this.glyphs[i - 1].Data : null;
+            data.IsInUprightRun = previous?.Grapheme == data.Grapheme
+                ? previous.IsInUprightRun
+                : AdvancedTypographicUtils.IsVerticalGlyph(data.CodePoint, layoutMode, data.HasVerticalForm);
+        }
     }
 
     /// <summary>
