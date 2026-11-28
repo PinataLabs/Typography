@@ -496,9 +496,10 @@ Unicode conformance suites to that version.
   base, also when a fallback font draws the mark, and the sideways ZWJ of an emoji ZWJ sequence stays in the upright
   run of its emoji, where the sequence still forms its ligature. The grapheme clusters are those of UAX #29, as the
   layout counts them, so an upright emoji after `a` and ZWJ is a run of its own, and a sideways ZWNJ inside an emoji
-  ZWJ sequence stays in its upright run. A ligature or a reordering that joins two grapheme clusters makes them one, so
-  a sideways mark after a ligature of two upright characters stays in their upright run. A `c` and an upright
-  copyright sign no longer form a ligature in vertical mixed text. (#202)
+  ZWJ sequence stays in its upright run. Each glyph takes the orientation of its grapheme cluster before GSUB, and a
+  ligature, a reordering or a fallback font leaves it as it is, so a sideways mark after a ligature of two upright
+  characters stays in their upright run, also when a fallback font draws the mark. A `c` and an upright copyright sign
+  no longer form a ligature in vertical mixed text. (#202)
 - The GPOS lookups and the `kern` table of a font apply only within a run of the glyphs that the font draws, as
   HarfBuzz does when its caller shapes the characters of each font in a buffer of their own. A lookup matched the
   glyphs of a fallback font, or of the font of the text, by glyph ID, so a glyph of the other font with the same ID
