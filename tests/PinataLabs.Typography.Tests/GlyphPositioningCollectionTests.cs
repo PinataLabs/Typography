@@ -92,8 +92,34 @@ public class GlyphPositioningCollectionTests
         FontCollection collection = new();
         Font font = collection.Add(TestFonts.FontRunContextFile).CreateFont(12);
         Font fallback = collection.Add(TestFonts.FontRunContextFallbackFile).CreateFont(12);
+
+        List<int> runLengths = GetVerticalMixedRunLengths("一二́", font, fallback, out int count);
+
+        await Assert.That(count).IsEqualTo(2);
+        await Assert.That(runLengths).IsEquivalentTo([2]);
+    }
+
+    // In vertical mixed text the font of the text has a vert form of U+30FC, so it is upright, and the fallback font,
+    // which lacks U+30FC, draws the circumflex after it. The fallback font alone would turn U+30FC and so the circumflex
+    // sideways, but the circumflex keeps the upright orientation that its grapheme cluster has in the text.
+    [Test]
+    public async Task AFallbackMarkKeepsTheOrientationOfItsBaseInTheFontOfTheText()
+    {
+        FontCollection collection = new();
+        Font font = collection.Add(TestFonts.NotoSansKRRegular).CreateFont(12);
+        Font fallback = collection.Add(TestFonts.FontRunContextFile).CreateFont(12);
+
+        List<int> runLengths = GetVerticalMixedRunLengths("ー̂", font, fallback, out int count);
+
+        await Assert.That(count).IsEqualTo(2);
+        await Assert.That(runLengths).IsEquivalentTo([2]);
+    }
+
+    // Shapes the text in vertical mixed layout with the font and then the fallback font, and gives the length of each
+    // run that is not split by font.
+    private static List<int> GetVerticalMixedRunLengths(string text, Font font, Font fallback, out int count)
+    {
         TextOptions options = new(font) { LayoutMode = LayoutMode.VerticalMixedLeftRight };
-        const string text = "\u4E00\u4E8C\u0301";
         GlyphSubstitutionCollection substitutions = new(options);
         GlyphPositioningCollection positionings = new(options);
         TextRun[] textRuns = [new() { Start = 0, End = text.GetGraphemeCount(), Font = font }];
@@ -113,8 +139,8 @@ public class GlyphPositioningCollectionTests
             runLengths.Add(runs.Count);
         }
 
-        await Assert.That(positionings.Count).IsEqualTo(2);
-        await Assert.That(runLengths).IsEquivalentTo([2]);
+        count = positionings.Count;
+        return runLengths;
     }
 
     // A control character needs no fallback font, so it keeps the .notdef of the font of the text when a fallback font
