@@ -176,9 +176,10 @@ internal class GlyphShapingData
     /// forms it and as <see cref="TextRun"/> counts it. A caller of HarfBuzz itemizes text by grapheme cluster: a browser
     /// takes the orientation of each grapheme cluster in vertical text and a font for each grapheme cluster. So the
     /// glyphs of one grapheme cluster share a run of one orientation, and a default-ignorable character takes the font
-    /// of the rest of its grapheme cluster. <see cref="Cluster"/> is the cluster of HarfBuzz instead, which a ligature
-    /// or a reordering can widen, and which starts at ZWNJ and joins an emoji after a letter and ZWJ, where no grapheme
-    /// cluster does.
+    /// of the rest of its grapheme cluster. A ligature or a reordering that joins glyphs of two grapheme clusters gives
+    /// every glyph of both the lower index, as it gives them one <see cref="Cluster"/>, since HarfBuzz shapes them in
+    /// one buffer. <see cref="Cluster"/> is the cluster of HarfBuzz instead, which starts at ZWNJ and joins an emoji
+    /// after a letter and ZWJ, where no grapheme cluster does.
     /// </summary>
     public int Grapheme { get; set; }
 

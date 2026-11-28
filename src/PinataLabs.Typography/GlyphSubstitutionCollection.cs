@@ -280,7 +280,8 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
     /// <summary>
     /// Gives the glyphs in the range the lowest cluster among them, as HarfBuzz does when a ligature, a reordering or a
     /// composition joins glyphs. The glyphs next to the range that share the cluster of its first or last glyph join it,
-    /// so that no cluster is split between two ranges.
+    /// so that no cluster is split between two ranges. The glyphs of the cluster also take one
+    /// <see cref="GlyphShapingData.Grapheme"/>.
     /// </summary>
     /// <param name="start">The zero-based index of the first glyph.</param>
     /// <param name="end">The zero-based index after the last glyph.</param>
@@ -310,6 +311,43 @@ internal sealed class GlyphSubstitutionCollection : IGlyphShapingCollection
         for (int i = start; i < end; i++)
         {
             this.glyphs[i].Data.Cluster = cluster;
+        }
+
+        this.MergeGraphemes(start, end);
+    }
+
+    // Gives the glyphs of a merged cluster, and the glyphs next to it of the grapheme clusters that it joins, the lowest
+    // grapheme cluster among them, so that no run splits the cluster. A reordering can leave the glyphs of two grapheme
+    // clusters out of order, and the grapheme cluster of a glyph can go on past its cluster, as at a ZWNJ, so the range
+    // takes every glyph of each.
+    private void MergeGraphemes(int start, int end)
+    {
+        int lowest = this.glyphs[start].Data.Grapheme;
+        int highest = lowest;
+        for (int i = start + 1; i < end; i++)
+        {
+            lowest = Math.Min(lowest, this.glyphs[i].Data.Grapheme);
+            highest = Math.Max(highest, this.glyphs[i].Data.Grapheme);
+        }
+
+        if (lowest == highest)
+        {
+            return;
+        }
+
+        while (end < this.glyphs.Count && this.glyphs[end].Data.Grapheme >= lowest && this.glyphs[end].Data.Grapheme <= highest)
+        {
+            end++;
+        }
+
+        while (start > 0 && this.glyphs[start - 1].Data.Grapheme >= lowest && this.glyphs[start - 1].Data.Grapheme <= highest)
+        {
+            start--;
+        }
+
+        for (int i = start; i < end; i++)
+        {
+            this.glyphs[i].Data.Grapheme = lowest;
         }
     }
 
