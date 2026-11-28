@@ -498,8 +498,10 @@ Unicode conformance suites to that version.
   HarfBuzz does when its caller shapes the characters of each font in a buffer of their own. A lookup matched the
   glyphs of a fallback font, or of the font of the text, by glyph ID, so a glyph of the other font with the same ID
   took the pair values, the context or the anchors of a glyph that it is not. A default-ignorable glyph of another font
-  does not end the run, and the marks of a cluster whose base another font draws are still placed across fonts.
-  (#198)
+  ends the run too, also one that its font leaves out, and the marks of a cluster whose base another font draws are
+  still placed across fonts. A default-ignorable character that the font of the text lacks, such as U+034F after
+  `a`, now takes a fallback font only when another character of its grapheme cluster does: HarfBuzz hides it, so its
+  caller finds no missing glyph there. (#198)
 - A context or chained context lookup applies its nested lookups at the glyphs that its input matched, as HarfBuzz
   does. It found the glyph of each nested lookup by walking the glyphs again from the first. After a nested ligature
   took the second glyph of the input, a nested lookup at that glyph changed the glyph after the input, which can be

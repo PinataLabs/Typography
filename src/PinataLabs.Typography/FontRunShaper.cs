@@ -35,6 +35,7 @@ internal static class FontRunShaper
         int bidiRunIndex = 0;
         Shape(text, default, default, 0, textRuns, ref textRunIndex, ref codePointIndex, ref bidiRunIndex, false, font, bidiRuns, substitutions, positionings);
         font.FontMetrics.UpdatePositions(positionings);
+        positionings.HideDefaultIgnorables();
         return positionings;
     }
 

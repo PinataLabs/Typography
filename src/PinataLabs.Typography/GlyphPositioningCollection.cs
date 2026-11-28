@@ -167,15 +167,17 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Gets the <see cref="GlyphShapingData.SourceOffset"/> of each character that no font so far has a glyph for.
+    /// Gets the <see cref="GlyphShapingData.SourceOffset"/> of each character that no font so far has a glyph for and
+    /// that a fallback font replaces.
     /// </summary>
     /// <returns>The offsets within the input codepoint collection.</returns>
     public HashSet<int> GetUnresolvedOffsets()
     {
         HashSet<int> offsets = [];
+        HashSet<int> clusters = this.GetMissingClusters();
         foreach (GlyphPositioningData glyph in this.glyphs)
         {
-            if (glyph.Metrics[0].GlyphType == GlyphType.Fallback && !glyph.Data.IsInserted)
+            if (NeedsFallback(glyph, clusters) && !glyph.Data.IsInserted)
             {
                 offsets.Add(glyph.Data.SourceOffset);
             }
@@ -195,9 +197,10 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     public bool TryUpdate(Font font, GlyphSubstitutionCollection collection)
     {
         Dictionary<int, Character> characters = [];
+        HashSet<int> clusters = this.GetMissingClusters();
         for (int i = 0; i < this.glyphs.Count; i++)
         {
-            if (IsMissing(this.glyphs[i]) && !characters.ContainsKey(this.glyphs[i].Data.SourceOffset))
+            if (NeedsFallback(this.glyphs[i], clusters) && !characters.ContainsKey(this.glyphs[i].Data.SourceOffset))
             {
                 characters.Add(this.glyphs[i].Data.SourceOffset, new Character());
             }
@@ -247,6 +250,26 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     private static bool IsMissing(GlyphPositioningData glyph) => glyph.Metrics[0].GlyphType == GlyphType.Fallback;
+
+    // HarfBuzz hides a default-ignorable character that the font lacks, so a caller of HarfBuzz finds no missing glyph
+    // there. It takes a fallback font for the character only with another character of its cluster that needs one.
+    private static bool NeedsFallback(GlyphPositioningData glyph, HashSet<int> missingClusters)
+        => IsMissing(glyph) && (!glyph.Data.IsDefaultIgnorable || missingClusters.Contains(glyph.Data.Cluster));
+
+    // The clusters that have a missing glyph that is not default-ignorable.
+    private HashSet<int> GetMissingClusters()
+    {
+        HashSet<int> clusters = [];
+        foreach (GlyphPositioningData glyph in this.glyphs)
+        {
+            if (IsMissing(glyph) && !glyph.Data.IsDefaultIgnorable)
+            {
+                clusters.Add(glyph.Data.Cluster);
+            }
+        }
+
+        return clusters;
+    }
 
     /// <summary>
     /// Gives the glyphs of a fallback font ligature ids that no glyph here has, as each font numbers its own ligatures. A
@@ -576,25 +599,26 @@ internal sealed class GlyphPositioningCollection : IGlyphShapingCollection
     }
 
     /// <summary>
-    /// Hides the default-ignorable characters that the font drew and GSUB did not substitute, as HarfBuzz does once
-    /// they have done their work in shaping. Each takes the glyph of U+0020 with no advance and no offset, or is
-    /// left out when the font has no U+0020. The character stays, so line breaking does not change.
+    /// Hides the default-ignorable characters that GSUB did not substitute, as HarfBuzz does once they have done their
+    /// work in shaping. Each takes the glyph of U+0020 of its font with no advance and no offset, or is left out when
+    /// the font has no U+0020. The character stays, so line breaking does not change. Every font positions its glyphs
+    /// first, so that a glyph that one font leaves out still ends the runs of another, as the buffers of a caller of
+    /// HarfBuzz do.
     /// </summary>
-    /// <param name="fontMetrics">The font whose glyphs to hide.</param>
-    public void HideDefaultIgnorables(FontMetrics fontMetrics)
+    public void HideDefaultIgnorables()
     {
-        bool hasSpace = fontMetrics.TryGetGlyphId(new CodePoint(SpaceFallback.Space), out ushort space);
         LayoutMode layoutMode = this.TextOptions.LayoutMode;
         for (int i = this.glyphs.Count - 1; i >= 0; i--)
         {
             GlyphPositioningData glyph = this.glyphs[i];
             GlyphShapingData data = glyph.Data;
-            if (!this.ShouldProcess(fontMetrics, i) || !data.IsDefaultIgnorable)
+            if (!data.IsDefaultIgnorable)
             {
                 continue;
             }
 
-            if (!hasSpace)
+            FontMetrics fontMetrics = glyph.Metrics[0].FontMetrics;
+            if (!fontMetrics.TryGetGlyphId(new CodePoint(SpaceFallback.Space), out ushort space))
             {
                 this.glyphs.RemoveAt(i);
                 continue;

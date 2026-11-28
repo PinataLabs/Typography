@@ -15,9 +15,8 @@ namespace PinataLabs.Typography.Tables.AdvancedTypographic;
 /// <remarks>
 /// <para>
 /// A mark keeps the orientation of its base, as a grapheme cluster does in CSS. The orientation of a Tr glyph is
-/// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A default-ignorable
-/// glyph of another font does not end a run: HarfBuzz hides such a character that a font lacks, so its caller takes no
-/// other font for it.
+/// <see cref="GlyphShapingData.HasVerticalForm"/>, which GSUB resolves before it shapes the runs. A glyph of
+/// another font ends a run, also a default-ignorable one.
 /// </para>
 /// <para>
 /// The end of a run is kept as the number of glyphs after it, as <see cref="IGlyphShapingCollection.RunEnd"/> is, so a
@@ -110,7 +109,7 @@ internal struct ShapingRunEnumerator
             GlyphShapingData data = this.collection[end];
             if (data.Direction != first.Direction
                 || (this.IsUpright(data) != upright && !CodePoint.IsMark(data.CodePoint))
-                || (font is not null && !data.IsDefaultIgnorable && this.fonts!.GetMetrics(end).FontMetrics != font))
+                || (font is not null && this.fonts!.GetMetrics(end).FontMetrics != font))
             {
                 break;
             }

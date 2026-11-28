@@ -235,6 +235,8 @@ internal static class TextLayout
             }
         }
 
+        positionings.HideDefaultIgnorables();
+
         // A cluster whose base and marks come from two fonts takes the places of its marks once both fonts have
         // positioned their own glyphs.
         if (hasManyFonts)
