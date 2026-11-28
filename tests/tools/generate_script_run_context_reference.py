@@ -52,6 +52,10 @@ the start of the text. Each case of the font has a lookup that applies only when
 * ZwjAfterLetter: an emoji after ZWJ continues a grapheme cluster only after another emoji (UAX #29, rule GB11), so
   the upright U+1F600 after Latin a and ZWJ is a cluster of its own, in a run of its own. A ccmp lookup gives it its
   alternate after a and ZWJ.
+* ZwnjOrientation: HarfBuzz starts a cluster at ZWNJ, which is sideways, but ZWNJ is Extend and continues the grapheme
+  cluster of the man emoji (UAX #29, rule GB9), and the woman emoji after ZWJ continues it too (rule GB11). So the
+  text is one upright run. ZWNJ keeps the emoji from forming their ligature, and a ccmp lookup gives the woman emoji
+  its alternate after the man emoji, which ZWNJ and ZWJ do not hide from a context.
 
 Each text is shaped as the runs of a caller, and, for the cases that a script names, also in one buffer of that
 script, which shows that the lookup applies. Each row holds the case, the text, how the text is split, and the glyph
@@ -115,6 +119,7 @@ VERTICAL_CASES = [
     ("MarkOrientation", [0x5B57, 0x0301], [(0, 2, "ttb")]),
     ("ZwjOrientation", [0x1F468, 0x200D, 0x1F469], [(0, 3, "ttb")]),
     ("ZwjAfterLetter", [0x0061, 0x200D, 0x1F600], [(0, 2, "ltr"), (2, 3, "ttb")]),
+    ("ZwnjOrientation", [0x1F468, 0x200C, 0x200D, 0x1F469], [(0, 4, "ttb")]),
 ]
 
 MARKS = [0x0301, 0x0483, 0x0484, 0x0487]
@@ -232,6 +237,10 @@ feature ccmp {
     lookup ZWJ_SEQUENCE {
         sub u1F468 u200D u1F469 by u1F468_u200D_u1F469;
     } ZWJ_SEQUENCE;
+
+    lookup AFTER_MAN {
+        sub u1F468 u1F469' by u1F469.alt;
+    } AFTER_MAN;
 } ccmp;
 
 feature kern {
@@ -290,7 +299,7 @@ EXTRA_GLYPHS = [
     "u0915.back", "u0915.ahead", "u0061_u03B1", "u0062.alt", "u0063.rsub", "u0064.alt", "u0021.alt",
     "u3042.back", "u30A2.ahead", "u30FC.back", "u006B_u006C", "u006F_u0070", "u0070.alt", "u03C9.alt", "u0072.alt",
     "u0076.tail", "u0077.alt", "u0076.tail.alt", "u05D0.alt", "u0033.alt", "u5B57.alt", "u0301.alt",
-    "u1F468_u200D_u1F469", "u1F600.alt",
+    "u1F468_u200D_u1F469", "u1F600.alt", "u1F469.alt",
 ]
 
 
@@ -344,7 +353,7 @@ def main():
     # substitutions and positions.
     font = TTFont(path)
     types = [lookup.LookupType for lookup in font["GSUB"].table.LookupList.Lookup]
-    assert types == [1, 4, 1, 2, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5, 5, 6, 1, 1, 6, 1, 4], types
+    assert types == [1, 4, 1, 2, 1, 1, 6, 1, 1, 4, 5, 8, 6, 1, 6, 1, 4, 6, 5, 5, 6, 1, 1, 6, 1, 4, 6, 1], types
     types = [lookup.LookupType for lookup in font["GPOS"].table.LookupList.Lookup]
     assert types == [1, 1, 2, 8, 1, 8, 8, 2, 4, 5, 6, 3], types
 

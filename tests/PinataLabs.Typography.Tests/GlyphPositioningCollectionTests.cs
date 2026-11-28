@@ -1,6 +1,9 @@
 // Copyright (c) PinataLabs.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using PinataLabs.Typography.Unicode;
@@ -52,5 +55,22 @@ public class GlyphPositioningCollectionTests
         bool isComplete = new GlyphPositioningCollection(options).TryAdd(font, substitutions);
 
         await Assert.That(isComplete).IsTrue();
+    }
+
+    // A control character needs no fallback font, so it keeps the .notdef of the font of the text when a fallback font
+    // draws another character of the text.
+    [Test]
+    public async Task AControlCharacterKeepsTheFontOfTheTextInAFallbackPass()
+    {
+        FontCollection collection = new();
+        Font font = collection.Add(TestFonts.FontRunContextFile).CreateFont(12);
+        FontFamily fallback = collection.Add(TestFonts.FontRunContextFallbackFile);
+        TextOptions options = new(font) { FallbackFontFamilies = [fallback] };
+
+        IReadOnlyList<GlyphLayout> layout = TextLayout.GenerateLayout("ax".AsSpan(), options);
+
+        GlyphMetrics a = layout.Single(g => g.Glyph.GlyphMetrics.CodePoint.Value == 'a').Glyph.GlyphMetrics;
+        GlyphMetrics control = layout.Single(g => g.Glyph.GlyphMetrics.CodePoint.Value == 1).Glyph.GlyphMetrics;
+        await Assert.That(control.FontMetrics).IsSameReferenceAs(a.FontMetrics);
     }
 }

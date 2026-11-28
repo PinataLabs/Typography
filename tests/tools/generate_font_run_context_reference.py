@@ -9,12 +9,13 @@ Usage (from the repository root, fontTools 4.68 or later and uharfbuzz):
     python tests/tools/generate_font_run_context_reference.py
 
 A caller of HarfBuzz shapes the characters that each font draws in a buffer of that font, so a lookup of one font
-never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e, ZWJ, U+5B57 and the word
-joiner U+2060, glyphs 1 to 6. FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z, w, the
+never sees a glyph of another. FontRunContext.ttf is the font of the text and has a, b, e, ZWJ, U+5B57, the word
+joiner U+2060, ZWNJ and space, glyphs 1 to 8. HarfBuzz hides a default-ignorable character with the space glyph of
+its font, so the space shows which font a hidden character took. FontRunContextFallback.ttf has x, y, the combining grapheme joiner U+034F, z, w, the
 combining acute, U+5B58, U+5B57, ZWJ and the man and woman emoji, glyphs 1 to 11, and their ZWJ ligature, so a and x,
 b and y, and e and U+034F have the same glyph IDs. Its GDEF table makes w and the acute marks. Neither font has the tag
 character U+E0061. Each case has a lookup that would apply if it took the glyph of the other font for its own, or that
-applies only if the characters of a cluster are in one buffer:
+applies only if the characters of a grapheme cluster are in one buffer:
 
 * FallbackPair: the fallback font moves z after x, and a comes before z.
 * FallbackContext: a chained context lookup of the fallback font moves y after x, and a comes before y.
@@ -25,20 +26,25 @@ applies only if the characters of a cluster are in one buffer:
   default-ignorable character that the font lacks, so it leaves no missing glyph for its caller to take from another
   font, and the U+034F stays with the a before it, in the buffer of the font of the text.
 * PrimaryIgnorable: the fallback font moves z after x, and a ZWJ comes between them. The font of the text has the
-  ZWJ, but the ZWJ is in the cluster of the x that it lacks, so the caller shapes the whole cluster with the fallback
-  font, as it takes another font for each cluster with a missing glyph. x, ZWJ and z are then in one buffer.
+  ZWJ, but the ZWJ is in the grapheme cluster of the x that it lacks, so the caller shapes the whole grapheme cluster
+  with the fallback font, as it takes a font for each grapheme cluster. x, ZWJ and z are then in one buffer.
+* PrimaryNonJoiner: as PrimaryIgnorable, with ZWNJ. HarfBuzz starts a cluster at ZWNJ, but ZWNJ is Extend and
+  continues the grapheme cluster of x (UAX #29, rule GB9), so it takes the fallback font with x.
 * PrimaryWordJoiner: the fallback font moves z after x, and the word joiner of the font of the text, which is a
   cluster of its own, comes between them. The caller shapes it in a buffer of the font of the text, so x and z are in
   two buffers.
 * MissingIgnorable: the fallback font attaches the acute to x, and the tag character U+E0061 that neither font has
-  comes between them, in their cluster. The caller shapes the cluster with the fallback font, where HarfBuzz hides the
+  comes between them, in their grapheme cluster. The caller shapes the cluster with the fallback font, where HarfBuzz hides the
   tag character, so the acute attaches.
 * ZwjLigature: the fallback font ligates the man, ZWJ and woman emoji. The font of the text has the ZWJ, but the
-  caller shapes the whole cluster with the fallback font.
+  caller shapes the whole grapheme cluster with the fallback font.
+* JoinerBeforeEmoji: HarfBuzz joins the man emoji after a and ZWJ to their cluster, but an emoji after ZWJ continues a
+  grapheme cluster only after another emoji (UAX #29, rule GB11). So the ZWJ is in the grapheme cluster of a, and
+  takes the font of the text with a, which hides it with its space glyph, while the fallback font draws the emoji.
 
-A default-ignorable character takes the font of the rest of its cluster: the fallback font when another character of
-the cluster takes it, also when the font of the text has the default-ignorable character, and else the font of the
-text, which hides it when it lacks it.
+A default-ignorable character takes the font of the rest of its grapheme cluster: the fallback font when another
+character of the grapheme cluster takes it, also when the font of the text has the default-ignorable character, and
+else the font of the text, which hides it when it lacks it. Any other character takes the first font that has it.
 
 * MarkOrientation, in vertical mixed text: the fallback font moves U+5B58 up after the acute. The acute after U+5B57
   is sideways on its own, but it takes the upright orientation of its grapheme cluster, so the run of the fallback font
@@ -61,12 +67,12 @@ from harfbuzz_reference import FONTS, build_font, load_font, write_reference
 
 REFERENCE = os.path.join(FONTS, "FontRunContext.harfbuzz.json")
 
-PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57, 0x2060]
+PRIMARY = [0x0061, 0x0062, 0x0065, 0x200D, 0x5B57, 0x2060, 0x200C, 0x0020]
 FALLBACK = [0x0078, 0x0079, 0x034F, 0x007A, 0x0077, 0x0301, 0x5B58, 0x5B57, 0x200D, 0x1F468, 0x1F469]
 FALLBACK_LIGATURES = ["u1F468_u200D_u1F469"]
 
 # The default-ignorable characters of the cases. Neither font has the tag character U+E0061.
-IGNORABLE = [0x034F, 0x200D, 0xE0061, 0x2060]
+IGNORABLE = [0x034F, 0x200D, 0xE0061, 0x2060, 0x200C]
 
 LANGUAGES = """
 languagesystem DFLT dflt;
@@ -124,6 +130,8 @@ CASES = [
     ("PrimaryWordJoiner", [0x0078, 0x2060, 0x007A], "fallback", [0x0078, 0x007A]),
     ("MissingIgnorable", [0x0078, 0xE0061, 0x0301], "fallback", [0x0078, 0xE0061, 0x0301]),
     ("ZwjLigature", [0x1F468, 0x200D, 0x1F469], "fallback", [0x1F468, 0x200D, 0x1F469]),
+    ("JoinerBeforeEmoji", [0x0061, 0x200D, 0x1F468], "primary", [0x0061, 0x200D]),
+    ("PrimaryNonJoiner", [0x0078, 0x200C, 0x007A], "fallback", [0x0078, 0x200C, 0x007A]),
 ]
 
 # The cases of vertical text, as CASES.
@@ -137,31 +145,42 @@ def is_extended_pictographic(code_point):
     return 0x1F000 <= code_point <= 0x1FAFF
 
 
-def clusters(code_points):
-    """Gives the cluster of each character, as the library forms it from the grapheme cluster classes: a mark, a tag
-    character, ZWJ and an Extended_Pictographic character after ZWJ continue the cluster before them, which is enough
-    for the texts of the cases."""
-    cluster = []
-    for i, code_point in enumerate(code_points):
-        continues = i > 0 and (
-            unicodedata.category(chr(code_point)).startswith("M")
-            or 0xE0020 <= code_point <= 0xE007F
-            or code_point == 0x200D
-            or (code_points[i - 1] == 0x200D and is_extended_pictographic(code_point)))
-        cluster.append(cluster[-1] if continues else i)
-    return cluster
+def continues_grapheme(code_points, i):
+    """Whether the character continues the grapheme cluster before it, as UAX #29 has it, which is enough for the texts
+    of the cases: an Extend character (a nonspacing mark, ZWNJ or a tag character) or ZWJ (rule GB9), and an
+    Extended_Pictographic character after ZWJ after another one, with Extend characters between them (rule GB11)."""
+    code_point = code_points[i]
+    if (unicodedata.category(chr(code_point)) in ("Mn", "Me")
+            or code_point in (0x200C, 0x200D)
+            or 0xE0020 <= code_point <= 0xE007F):
+        return True
+    if not is_extended_pictographic(code_point) or code_points[i - 1] != 0x200D:
+        return False
+    before = i - 2
+    while before >= 0 and unicodedata.category(chr(code_points[before])) in ("Mn", "Me"):
+        before -= 1
+    return before >= 0 and is_extended_pictographic(code_points[before])
+
+
+def graphemes(code_points):
+    """Gives the grapheme cluster of each character, as the index of its first character."""
+    grapheme = []
+    for i in range(len(code_points)):
+        grapheme.append(grapheme[-1] if i > 0 and continues_grapheme(code_points, i) else i)
+    return grapheme
 
 
 def font_runs(code_points):
     """Splits the text into runs of the characters that one font draws: the font of the text if it has the character,
-    or else the fallback font. A default-ignorable character takes the font of the rest of its cluster: the fallback
-    font when another character of its cluster does, whether the font of the text has it or not, and else the font of
-    the text. Gives the start, the end and the font of each run."""
-    cluster = clusters(code_points)
-    missing = {cluster[i] for i, c in enumerate(code_points) if c not in PRIMARY and c not in IGNORABLE}
+    or else the fallback font. A default-ignorable character takes the font of the rest of its grapheme cluster, as a
+    caller that takes a font for each grapheme cluster does: the fallback font when another character of its grapheme
+    cluster takes it, whether the font of the text has it or not, and else the font of the text. Gives the start, the
+    end and the font of each run."""
+    grapheme = graphemes(code_points)
+    missing = {grapheme[i] for i, c in enumerate(code_points) if c not in PRIMARY and c not in IGNORABLE}
     runs = []
     for i, code_point in enumerate(code_points):
-        primary = cluster[i] not in missing if code_point in IGNORABLE else code_point in PRIMARY
+        primary = grapheme[i] not in missing if code_point in IGNORABLE else code_point in PRIMARY
         font = "primary" if primary else "fallback"
         if runs and runs[-1][2] == font:
             runs[-1][1] = i + 1
